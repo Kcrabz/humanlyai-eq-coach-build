@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { ArchetypeSelector } from "@/components/onboarding/ArchetypeSelector";
+import { ArchetypeSelectorWithQuiz } from "@/components/onboarding/ArchetypeSelectorWithQuiz";
 import { CoachingModeSelector } from "@/components/onboarding/CoachingModeSelector";
 import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
@@ -39,7 +39,7 @@ const OnboardingContent = () => {
       <OnboardingProgress />
       
       {currentStep === "archetype" && (
-        <ArchetypeSelector />
+        <ArchetypeSelectorWithQuiz />
       )}
       
       {currentStep === "coaching" && (
