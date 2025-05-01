@@ -1,5 +1,5 @@
-
 import { estimateTokenCount } from "./utils.ts";
+import { handleOpenAIApiError, handleGeneralError } from "./openaiErrorHandler.ts";
 
 // Call OpenAI API with streaming support
 export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
@@ -24,30 +24,7 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
     if (!response.ok) {
       const errorData = await response.json();
       console.error("OpenAI API error:", errorData);
-      
-      // Check for different error types
-      if (errorData.error?.type === 'insufficient_quota' || 
-          errorData.error?.code === 'insufficient_quota' ||
-          errorData.error?.message?.includes('quota')) {
-        
-        throw {
-          type: 'quota_exceeded',
-          message: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
-          details: errorData.error?.message || 'Your OpenAI account has reached its usage limit or has billing issues.'
-        };
-      }
-      
-      if (errorData.error?.type === 'invalid_request_error' && 
-          errorData.error?.message?.includes('API key')) {
-        
-        throw {
-          type: 'invalid_key',
-          message: 'Invalid API key provided. Please check your API key and try again.',
-          details: 'The API key provided was rejected by OpenAI.'
-        };
-      }
-      
-      throw new Error(errorData.error?.message || 'Error calling OpenAI API');
+      throw handleOpenAIApiError(errorData);
     }
     
     // Process the stream
@@ -95,22 +72,7 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
     
     return completeResponse;
   } catch (error) {
-    // Rethrow if it's already our custom error format
-    if (error.type) {
-      throw error;
-    }
-    
-    // Check for quota errors in the error message
-    if (error.message?.includes('quota') || 
-        error.message?.includes('exceeded') || 
-        error.message?.includes('billing')) {
-      throw {
-        type: 'quota_exceeded',
-        message: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
-        details: error.message
-      };
-    }
-    
-    throw new Error(`OpenAI API error: ${error.message}`);
+    // Use shared error handling
+    throw handleGeneralError(error);
   }
 }
