@@ -1,5 +1,5 @@
 
-import { streamOpenAI } from "./openaiService.ts";
+import { streamOpenAI } from "./streamingService.ts";
 import { updateUsageTracking, logChatMessages } from "./usageTracking.ts";
 import { estimateTokenCount, corsHeaders } from "./utils.ts";
 
