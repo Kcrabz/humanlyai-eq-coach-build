@@ -9,8 +9,8 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{error?: Error} | undefined>;
-  signup: (email: string, password: string) => Promise<{error?: Error} | undefined>;
+  login: (email: string, password: string) => Promise<any>; // Updated return type
+  signup: (email: string, password: string) => Promise<any>; // Updated return type
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
   setArchetype: (archetype: EQArchetype) => void;
