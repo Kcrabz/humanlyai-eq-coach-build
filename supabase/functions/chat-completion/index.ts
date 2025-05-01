@@ -520,8 +520,24 @@ async function logChatMessages(supabaseClient: any, userId: string, userMessage:
   }
 }
 
+// Parse request body only once
+async function parseRequestOnce(req: Request) {
+  if (req.headers.get("content-type")?.includes("application/json")) {
+    try {
+      // Clone the request before consuming the body
+      const clonedReq = req.clone();
+      const body = await clonedReq.json();
+      return { body, originalRequest: req };
+    } catch (error) {
+      console.error("Error parsing request body:", error);
+      throw new Error("Invalid JSON in request body");
+    }
+  }
+  return { body: {}, originalRequest: req };
+}
+
 // Stream handler for chat completion
-async function handleStreamingChatCompletion(req: Request) {
+async function handleStreamingChatCompletion(req: Request, reqBody: any) {
   const supabaseClient = createSupabaseClient(req);
   
   try {
@@ -529,8 +545,12 @@ async function handleStreamingChatCompletion(req: Request) {
     const user = await getAuthenticatedUser(supabaseClient);
     console.log(`Processing streaming chat request for user: ${user.id}`);
     
-    // Extract user message from request
-    const { message } = await req.json();
+    // Extract user message from request body
+    const { message } = reqBody;
+    
+    if (!message) {
+      throw new Error("Message content is required");
+    }
     
     // Get OpenAI API key
     const openAiApiKey = await getOpenAIApiKey(supabaseClient, user.id);
@@ -707,7 +727,7 @@ async function handleStreamingChatCompletion(req: Request) {
 }
 
 // Non-streaming handler for chat completion (fallback)
-async function handleChatCompletion(req: Request) {
+async function handleChatCompletion(req: Request, reqBody: any) {
   const supabaseClient = createSupabaseClient(req);
   
   try {
@@ -716,11 +736,10 @@ async function handleChatCompletion(req: Request) {
     console.log(`Processing chat request for user: ${user.id}`);
     
     // Extract user message from request
-    const { message, stream } = await req.json();
+    const { message, stream } = reqBody;
     
-    // If streaming is requested, use the streaming handler
-    if (stream === true) {
-      return handleStreamingChatCompletion(req);
+    if (!message) {
+      throw new Error("Message content is required");
     }
     
     // Get OpenAI API key
@@ -856,17 +875,16 @@ serve(async (req) => {
   }
 
   try {
-    // Check for streaming request via content-type or accept header
-    const contentType = req.headers.get('content-type') || '';
-    const acceptHeader = req.headers.get('accept') || '';
-    const wantsStream = 
-      contentType.includes('text/event-stream') || 
-      acceptHeader.includes('text/event-stream');
+    // Parse the request body once
+    const { body, originalRequest } = await parseRequestOnce(req);
+    
+    // Check for streaming request
+    const wantsStream = body.stream === true;
     
     if (wantsStream) {
-      return handleStreamingChatCompletion(req);
+      return handleStreamingChatCompletion(originalRequest, body);
     } else {
-      return handleChatCompletion(req);
+      return handleChatCompletion(originalRequest, body);
     }
   } catch (error) {
     console.error('Unhandled error in chat completion function:', error);
