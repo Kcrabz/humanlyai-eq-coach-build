@@ -1,7 +1,6 @@
 
-import { useState } from "react";
 import { ARCHETYPES } from "@/lib/constants";
-import { useAuth } from "@/context/AuthContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { EQArchetype } from "@/types";
 import { 
@@ -13,20 +12,13 @@ import {
   CardTitle 
 } from "@/components/ui/card";
 
-interface ArchetypeSelectorProps {
-  onNext: () => void;
-}
-
-export function ArchetypeSelector({ onNext }: ArchetypeSelectorProps) {
-  const { user, setArchetype } = useAuth();
-  const [selectedArchetype, setSelectedArchetype] = useState<EQArchetype | null>(
-    user?.eq_archetype || null
-  );
+export function ArchetypeSelector() {
+  const { state, setArchetype, completeStep } = useOnboarding();
+  const { archetype: selectedArchetype } = state;
 
   const handleContinue = () => {
     if (selectedArchetype) {
-      setArchetype(selectedArchetype);
-      onNext();
+      completeStep("archetype");
     }
   };
 
@@ -49,7 +41,7 @@ export function ArchetypeSelector({ onNext }: ArchetypeSelectorProps) {
                 ? "border-humanly-teal bg-humanly-gray-lightest"
                 : "border-border hover:border-humanly-teal/30"
             }`}
-            onClick={() => setSelectedArchetype(archetype.type)}
+            onClick={() => setArchetype(archetype.type as EQArchetype)}
           >
             <CardHeader>
               <div className="text-2xl mb-2">{archetype.icon}</div>

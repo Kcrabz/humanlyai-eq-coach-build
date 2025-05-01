@@ -2,22 +2,25 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 import { ARCHETYPES, COACHING_MODES } from "@/lib/constants";
 
-interface OnboardingCompleteProps {
-  onBack: () => void;
-}
-
-export function OnboardingComplete({ onBack }: OnboardingCompleteProps) {
+export function OnboardingComplete() {
   const { user, setOnboarded } = useAuth();
+  const { goToStep, completeStep } = useOnboarding();
   const navigate = useNavigate();
   
   const archetype = user?.eq_archetype ? ARCHETYPES[user.eq_archetype] : null;
   const coachingMode = user?.coaching_mode ? COACHING_MODES[user.coaching_mode] : null;
   
-  const handleComplete = () => {
+  const handleComplete = async () => {
+    await completeStep("complete");
     setOnboarded(true);
     navigate("/chat");
+  };
+  
+  const handleBack = () => {
+    goToStep("coaching");
   };
   
   return (
@@ -68,7 +71,7 @@ export function OnboardingComplete({ onBack }: OnboardingCompleteProps) {
       </div>
       
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={handleBack}>
           Back
         </Button>
         <Button onClick={handleComplete}>

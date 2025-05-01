@@ -1,7 +1,6 @@
 
-import { useState } from "react";
 import { COACHING_MODES } from "@/lib/constants";
-import { useAuth } from "@/context/AuthContext";
+import { useOnboarding } from "@/context/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { CoachingMode } from "@/types";
 import { 
@@ -11,22 +10,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-interface CoachingModeSelectorProps {
-  onNext: () => void;
-  onBack: () => void;
-}
-
-export function CoachingModeSelector({ onNext, onBack }: CoachingModeSelectorProps) {
-  const { user, setCoachingMode } = useAuth();
-  const [selectedMode, setSelectedMode] = useState<CoachingMode | null>(
-    user?.coaching_mode || null
-  );
+export function CoachingModeSelector() {
+  const { state, setCoachingMode, completeStep, goToStep } = useOnboarding();
+  const { coachingMode: selectedMode } = state;
 
   const handleContinue = () => {
     if (selectedMode) {
-      setCoachingMode(selectedMode);
-      onNext();
+      completeStep("coaching");
     }
+  };
+
+  const handleBack = () => {
+    goToStep("archetype");
   };
 
   return (
@@ -48,7 +43,7 @@ export function CoachingModeSelector({ onNext, onBack }: CoachingModeSelectorPro
                 ? "border-humanly-teal bg-humanly-gray-lightest"
                 : "border-border hover:border-humanly-teal/30"
             }`}
-            onClick={() => setSelectedMode(mode.type)}
+            onClick={() => setCoachingMode(mode.type as CoachingMode)}
           >
             <CardHeader>
               <CardTitle>{mode.title}</CardTitle>
@@ -66,7 +61,7 @@ export function CoachingModeSelector({ onNext, onBack }: CoachingModeSelectorPro
       </div>
       
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={handleBack}>
           Back
         </Button>
         <Button onClick={handleContinue} disabled={!selectedMode}>

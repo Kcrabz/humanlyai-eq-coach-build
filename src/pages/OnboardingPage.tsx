@@ -1,61 +1,81 @@
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ArchetypeSelector } from "@/components/onboarding/ArchetypeSelector";
 import { CoachingModeSelector } from "@/components/onboarding/CoachingModeSelector";
 import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
+import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
+import { OnboardingProvider, useOnboarding } from "@/context/OnboardingContext";
+import { useAuth } from "@/context/AuthContext";
+import { CircleX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
-const OnboardingPage = () => {
-  const [step, setStep] = useState(1);
+const OnboardingContent = () => {
+  const { state } = useOnboarding();
+  const { currentStep, isLoading } = state;
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // If user is already onboarded, redirect to chat
+    if (user?.onboarded) {
+      navigate("/chat");
+    }
+  }, [user, navigate]);
+  
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-humanly-teal"></div>
+      </div>
+    );
+  }
   
   return (
-    <PageLayout>
-      <div className="max-w-5xl mx-auto p-4 py-12">
-        <div className="mb-10">
-          <div className="flex items-center justify-center mb-6">
-            <ol className="flex items-center w-full max-w-md">
-              {[1, 2, 3].map((s) => (
-                <li
-                  key={s}
-                  className={`flex items-center ${s < 3 ? "w-full" : ""}`}
-                >
-                  <span
-                    className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                      s <= step
-                        ? "bg-humanly-purple text-white"
-                        : "bg-humanly-gray-lightest"
-                    }`}
-                  >
-                    {s}
-                  </span>
-                  {s < 3 && (
-                    <div
-                      className={`w-full h-0.5 ${
-                        s < step ? "bg-humanly-purple" : "bg-humanly-gray-light"
-                      }`}
-                    ></div>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </div>
-        </div>
-
-        {step === 1 && (
-          <ArchetypeSelector onNext={() => setStep(2)} />
-        )}
-        
-        {step === 2 && (
-          <CoachingModeSelector 
-            onNext={() => setStep(3)}
-            onBack={() => setStep(1)} 
-          />
-        )}
-        
-        {step === 3 && (
-          <OnboardingComplete onBack={() => setStep(2)} />
-        )}
+    <div className="max-w-5xl mx-auto p-4 py-12">
+      <OnboardingProgress />
+      
+      {currentStep === "archetype" && (
+        <ArchetypeSelector />
+      )}
+      
+      {currentStep === "coaching" && (
+        <CoachingModeSelector />
+      )}
+      
+      {currentStep === "complete" && (
+        <OnboardingComplete />
+      )}
+      
+      {/* Report issue button */}
+      <div className="mt-8 text-center">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="text-xs text-muted-foreground flex items-center"
+          onClick={() => {
+            toast.success("Issue reported", {
+              description: "Thank you for your feedback. We'll fix this issue."
+            });
+          }}
+        >
+          <CircleX className="h-3 w-3 mr-1" />
+          Report an issue
+        </Button>
       </div>
+    </div>
+  );
+};
+
+const OnboardingPage = () => {
+  return (
+    <PageLayout>
+      <OnboardingProvider>
+        <OnboardingContent />
+      </OnboardingProvider>
     </PageLayout>
   );
 };

@@ -11,19 +11,27 @@ import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
 
 const ChatPage = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/login");
-    } else if (user && !user.onboarded) {
-      navigate("/onboarding");
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        navigate("/login");
+      } else if (user && !user.onboarded) {
+        navigate("/onboarding");
+      }
     }
-  }, [isAuthenticated, navigate, user]);
+  }, [isAuthenticated, navigate, user, isLoading]);
 
-  if (!isAuthenticated || !user?.onboarded) {
-    return null;
+  if (isLoading || !isAuthenticated || !user?.onboarded) {
+    return (
+      <PageLayout fullWidth>
+        <div className="flex justify-center items-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-humanly-teal"></div>
+        </div>
+      </PageLayout>
+    );
   }
   
   const archetype = user.eq_archetype ? ARCHETYPES[user.eq_archetype] : null;
