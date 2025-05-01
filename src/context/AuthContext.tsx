@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
   user: User | null;
@@ -20,55 +21,118 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user data for now - would be replaced with Supabase
-const mockUsers: User[] = [
-  {
-    id: "1",
-    email: "demo@humanly.ai",
-    name: "Demo User", // This is optional in the User type
-    subscription_tier: "free" as SubscriptionTier,
-    onboarded: false,
-  },
-];
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Initialize auth state
   useEffect(() => {
-    // Check for saved user in localStorage
-    const savedUser = localStorage.getItem("humanlyai_user");
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-    setIsLoading(false);
-  }, []);
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setIsLoading(true);
+        
+        if (session) {
+          setSession(session);
+          
+          // Get the user profile from Supabase
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile) {
+            // Convert Supabase profile to our User type
+            const userProfile: User = {
+              id: session.user.id,
+              email: session.user.email!,
+              name: profile.name || undefined,
+              avatar_url: profile.avatar_url || undefined,
+              eq_archetype: profile.eq_archetype as EQArchetype || undefined,
+              coaching_mode: profile.coaching_mode as CoachingMode || undefined,
+              subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
+              onboarded: profile.onboarded || false
+            };
+            
+            setUser(userProfile);
+          } else {
+            // Basic user info if profile not found
+            setUser({
+              id: session.user.id,
+              email: session.user.email!,
+              subscription_tier: 'free',
+              onboarded: false
+            });
+          }
+        } else {
+          setUser(null);
+          setSession(null);
+        }
+        
+        setIsLoading(false);
+      }
+    );
 
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem("humanlyai_user", JSON.stringify(user));
-    }
-  }, [user]);
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSession(session);
+        
+        // Get the user profile
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile) {
+              // Convert Supabase profile to our User type
+              const userProfile: User = {
+                id: session.user.id,
+                email: session.user.email!,
+                name: profile.name || undefined,
+                avatar_url: profile.avatar_url || undefined,
+                eq_archetype: profile.eq_archetype as EQArchetype || undefined,
+                coaching_mode: profile.coaching_mode as CoachingMode || undefined,
+                subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
+                onboarded: profile.onboarded || false
+              };
+              
+              setUser(userProfile);
+            } else {
+              // Basic user info if profile not found
+              setUser({
+                id: session.user.id,
+                email: session.user.email!,
+                subscription_tier: 'free',
+                onboarded: false
+              });
+            }
+            
+            setIsLoading(false);
+          });
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock login - would be replaced with Supabase
-      const foundUser = mockUsers.find((u) => u.email === email);
-      if (!foundUser) {
-        throw new Error("Invalid email or password");
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
       
-      setUser(foundUser);
       toast.success("Logged in successfully");
       
-      // Redirect based on onboarding status
-      if (!foundUser.onboarded) {
-        navigate("/onboarding");
-      } else {
-        navigate("/chat");
-      }
+      // Redirect will happen via the auth state change listener
     } catch (error) {
       console.error("Login error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to login");
@@ -80,18 +144,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // Mock signup - would be replaced with Supabase
-      const newUser: User = {
-        id: String(Math.floor(Math.random() * 1000)),
-        email,
-        subscription_tier: "free",
-        onboarded: false,
-      };
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
       
-      setUser(newUser);
-      mockUsers.push(newUser);
       toast.success("Account created successfully");
-      navigate("/onboarding");
+      // Redirect will happen via the auth state change listener
     } catch (error) {
       console.error("Signup error:", error);
       toast.error(error instanceof Error ? error.message : "Failed to create account");
@@ -100,16 +157,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem("humanlyai_user");
-    setUser(null);
-    navigate("/");
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
-  const updateProfile = (updates: Partial<User>) => {
+  const updateProfile = async (updates: Partial<User>) => {
     if (!user) return;
-    const updatedUser = { ...user, ...updates };
-    setUser(updatedUser);
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+      
+      if (error) throw error;
+      
+      // Update local state
+      setUser({ ...user, ...updates });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile");
+    }
   };
 
   const setArchetype = (archetype: EQArchetype) => {
@@ -126,6 +199,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user) return;
     updateProfile({ onboarded: value });
   };
+
+  // Redirect based on auth state and onboarding status
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (!user.onboarded) {
+        navigate("/onboarding");
+      } else if (window.location.pathname === "/login" || window.location.pathname === "/signup") {
+        navigate("/chat");
+      }
+    }
+  }, [user, isLoading, navigate]);
 
   return (
     <AuthContext.Provider 
