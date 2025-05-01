@@ -61,6 +61,28 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true);
 
     try {
+      // First check if the user has an API key configured
+      const { data: apiKeyData, error: apiKeyError } = await supabase
+        .from('user_api_keys')
+        .select('openai_api_key')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (apiKeyError) {
+        console.error("Error checking API key:", apiKeyError);
+        throw new Error("Failed to check if API key is configured");
+      }
+      
+      if (!apiKeyData?.openai_api_key) {
+        toast.error("OpenAI API key not configured", {
+          action: {
+            label: "Add API Key",
+            onClick: () => navigate("/settings")
+          }
+        });
+        throw new Error("OpenAI API key not configured. Please add your API key in settings.");
+      }
+
       // Call the edge function to get a response from OpenAI
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: {

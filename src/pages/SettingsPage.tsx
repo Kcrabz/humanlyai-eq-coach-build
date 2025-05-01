@@ -56,7 +56,10 @@ const SettingsPage = () => {
         // Update existing entry
         const { error } = await supabase
           .from('user_api_keys')
-          .update({ openai_api_key: apiKey, updated_at: new Date() })
+          .update({ 
+            openai_api_key: apiKey, 
+            updated_at: new Date().toISOString() 
+          })
           .eq('id', data.id);
         
         if (error) throw error;

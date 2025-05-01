@@ -40,7 +40,7 @@ serve(async (req) => {
 
     console.log(`Processing request for user: ${user.id}`);
 
-    // Try to get the user's API key from the database
+    // Get the user's API key from the database
     let userApiKey;
     try {
       const { data: apiKeyData, error: apiKeyError } = await supabaseClient
@@ -51,31 +51,35 @@ serve(async (req) => {
       
       if (!apiKeyError && apiKeyData?.openai_api_key) {
         userApiKey = apiKeyData.openai_api_key;
-        console.log("Using user-provided API key");
+        console.log("Found user-provided API key");
       } else {
-        console.log("No user-provided API key found, will use environment variable");
+        console.error("No user API key found");
+        return new Response(
+          JSON.stringify({ 
+            error: "Please add your OpenAI API key in settings to use the chat feature.",
+            useAnotherKey: true 
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
     } catch (error) {
       console.error("Error fetching user API key:", error);
+      return new Response(
+        JSON.stringify({ 
+          error: "Failed to retrieve your API key. Please check settings.",
+          useAnotherKey: true 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
     
-    // Get API key from environment variable if user doesn't have one
-    const OPENAI_API_KEY = userApiKey || Deno.env.get('OPENAI_API_KEY');
-    
-    if (!OPENAI_API_KEY) {
+    if (!userApiKey) {
       console.error("No OpenAI API key available");
       return new Response(
         JSON.stringify({ error: 'API key not configured. Please add your API key in settings.' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    // Prepare a mock response if we need to test without using OpenAI API
-    const mockResponse = `This is a mock response from the coach. You asked about: "${message}"
-    
-    As your coach, I'd suggest focusing on prioritizing tasks based on their importance and urgency.
-
-    What specific areas are you finding most challenging to prioritize right now?`;
 
     try {
       // Get the user's subscription tier
@@ -114,7 +118,7 @@ serve(async (req) => {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Authorization': `Bearer ${userApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
