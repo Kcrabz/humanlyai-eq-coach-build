@@ -10,70 +10,98 @@ export const useAuthState = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
+    console.log("Initializing auth state...");
+    setIsLoading(true);
+    
+    // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setIsLoading(true);
+      (event, newSession) => {
+        console.log("Auth state changed:", event, newSession?.user?.id);
         
-        if (session) {
-          setSession(session);
+        if (newSession) {
+          setSession(newSession);
           
-          // Get the user profile from Supabase
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          
-          if (profile) {
-            // Convert Supabase profile to our User type
-            const userProfile: User = {
-              id: session.user.id,
-              email: session.user.email!,
-              name: profile.name || undefined,
-              avatar_url: profile.avatar_url || undefined,
-              eq_archetype: profile.eq_archetype as EQArchetype || undefined,
-              coaching_mode: profile.coaching_mode as CoachingMode || undefined,
-              subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
-              onboarded: profile.onboarded || false
-            };
-            
-            setUser(userProfile);
-          } else {
-            // Basic user info if profile not found
-            setUser({
-              id: session.user.id,
-              email: session.user.email!,
-              subscription_tier: 'free',
-              onboarded: false
-            });
+          if (newSession.user) {
+            // Use setTimeout to prevent potential deadlocks with Supabase auth
+            setTimeout(async () => {
+              try {
+                // Get the user profile from Supabase
+                const { data: profile } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', newSession.user.id)
+                  .maybeSingle();
+                
+                console.log("Profile fetched:", profile);
+                
+                if (profile) {
+                  // Convert Supabase profile to our User type
+                  const userProfile: User = {
+                    id: newSession.user.id,
+                    email: newSession.user.email!,
+                    name: profile.name || undefined,
+                    avatar_url: profile.avatar_url || undefined,
+                    eq_archetype: profile.eq_archetype as EQArchetype || undefined,
+                    coaching_mode: profile.coaching_mode as CoachingMode || undefined,
+                    subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
+                    onboarded: profile.onboarded || false
+                  };
+                  
+                  setUser(userProfile);
+                } else {
+                  // Basic user info if profile not found
+                  setUser({
+                    id: newSession.user.id,
+                    email: newSession.user.email!,
+                    subscription_tier: 'free',
+                    onboarded: false
+                  });
+                }
+              } catch (error) {
+                console.error("Error fetching profile:", error);
+                // Still set basic user info even if profile fetch fails
+                setUser({
+                  id: newSession.user.id,
+                  email: newSession.user.email!,
+                  subscription_tier: 'free',
+                  onboarded: false
+                });
+              } finally {
+                setIsLoading(false);
+              }
+            }, 0);
           }
         } else {
           setUser(null);
           setSession(null);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setSession(session);
+    // Then check for existing session
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      console.log("Existing session check:", existingSession?.user?.id);
+      
+      if (existingSession) {
+        setSession(existingSession);
         
-        // Get the user profile
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single()
-          .then(({ data: profile }) => {
+        // Get the user profile - use setTimeout to prevent deadlocks
+        setTimeout(async () => {
+          try {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', existingSession.user.id)
+              .maybeSingle();
+            
+            console.log("Profile loaded from existing session:", profile);
+            
             if (profile) {
               // Convert Supabase profile to our User type
               const userProfile: User = {
-                id: session.user.id,
-                email: session.user.email!,
+                id: existingSession.user.id,
+                email: existingSession.user.email!,
                 name: profile.name || undefined,
                 avatar_url: profile.avatar_url || undefined,
                 eq_archetype: profile.eq_archetype as EQArchetype || undefined,
@@ -86,21 +114,35 @@ export const useAuthState = () => {
             } else {
               // Basic user info if profile not found
               setUser({
-                id: session.user.id,
-                email: session.user.email!,
+                id: existingSession.user.id,
+                email: existingSession.user.email!,
                 subscription_tier: 'free',
                 onboarded: false
               });
             }
-            
+          } catch (error) {
+            console.error("Error fetching profile from existing session:", error);
+            // Still set basic user info even if profile fetch fails
+            setUser({
+              id: existingSession.user.id,
+              email: existingSession.user.email!,
+              subscription_tier: 'free',
+              onboarded: false
+            });
+          } finally {
             setIsLoading(false);
-          });
+          }
+        }, 0);
       } else {
         setIsLoading(false);
       }
+    }).catch(error => {
+      console.error("Error getting session:", error);
+      setIsLoading(false);
     });
 
     return () => {
+      console.log("Cleaning up auth state listener");
       subscription.unsubscribe();
     };
   }, []);

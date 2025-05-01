@@ -13,13 +13,15 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
         password 
       });
       
+      console.log("Login response:", { success: !error, userId: data?.user?.id });
+      
       if (error) {
         console.error("Login error:", error.message);
         toast.error("Login failed", { description: error.message });
         return false;
       }
       
-      if (!data || !data.user) {
+      if (!data?.user) {
         console.error("Login failed: No user data returned");
         toast.error("Login failed", { description: "No user data returned" });
         return false;
@@ -43,8 +45,14 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
       // First, attempt to create the account
       const { data, error } = await supabase.auth.signUp({ 
         email, 
-        password 
+        password,
+        options: {
+          // Ensure we're redirecting to the right place
+          emailRedirectTo: window.location.origin + '/chat'
+        }
       });
+      
+      console.log("Signup response:", { success: !error, userId: data?.user?.id });
       
       if (error) {
         console.error("Signup error:", error.message);
@@ -52,7 +60,7 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
         return false;
       }
       
-      if (!data || !data.user) {
+      if (!data?.user) {
         console.error("Signup failed: No user data returned");
         toast.error("Signup failed", { description: "No user data returned" });
         return false;
@@ -60,8 +68,7 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
 
       console.log("Signup successful for:", email, "User ID:", data.user.id);
       
-      // Auto login - we're already logged in after signup with the latest Supabase version
-      // Just display a success message
+      // With the latest Supabase version, we're already logged in after signup
       toast.success("Account created and logged in successfully");
       return true;
     } catch (error) {
@@ -86,6 +93,10 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
       
       console.log("Logout successful");
       toast.success("Logged out successfully");
+      
+      // Explicitly clear user state
+      setUser(null);
+      
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";

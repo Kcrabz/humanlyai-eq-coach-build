@@ -17,15 +17,16 @@ export function AuthForm({ type }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { login, signup, isAuthenticated } = useAuth();
+  const { login, signup, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isLoading) {
+      console.log("User is authenticated, redirecting to chat page");
       navigate("/chat");
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isLoading, navigate]);
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -80,14 +81,15 @@ export function AuthForm({ type }: AuthFormProps) {
       if (type === "login") {
         success = await login(email, password);
       } else {
-        // When signing up, we'll now be automatically logged in
         success = await signup(email, password);
       }
       
       if (success) {
         console.log("Operation successful, navigating to chat page");
-        // Navigate to chat page for both login and signup (since signup now logs in)
         navigate("/chat");
+      } else {
+        // Set a general error if no specific error was caught
+        setErrorMessage(`Failed to ${type === "login" ? "sign in" : "create account"}. Please try again.`);
       }
     } catch (error) {
       console.error(`Error during ${type}:`, error);
@@ -98,6 +100,15 @@ export function AuthForm({ type }: AuthFormProps) {
       setIsSubmitting(false);
     }
   };
+  
+  // If the authentication is loading, show a loading indicator
+  if (isLoading) {
+    return (
+      <div className="w-full max-w-md flex justify-center items-center p-8">
+        <Loading size="large" className="border-humanly-teal border-t-transparent" />
+      </div>
+    );
+  }
   
   return (
     <div className="w-full max-w-md space-y-6">

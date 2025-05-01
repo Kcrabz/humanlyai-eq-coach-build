@@ -1,9 +1,8 @@
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { useAuthState } from "@/hooks/useAuthState";
 import { useAuthActions } from "@/hooks/useAuthActions";
 import { useProfileActions } from "@/hooks/useProfileActions";
-import { useAuthNavigation } from "@/hooks/useAuthNavigation";
 import { AuthContextType } from "@/types/auth";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -13,8 +12,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { login, signup, logout, updateProfile } = useAuthActions(setUser);
   const { setArchetype, setCoachingMode, setOnboarded } = useProfileActions(setUser);
   
-  // Setup navigation based on auth state
-  useAuthNavigation(user, isLoading);
+  // Debug the auth state
+  useEffect(() => {
+    console.log("Auth state changed:", { 
+      isAuthenticated: !!user, 
+      isLoading,
+      userId: user?.id 
+    });
+  }, [user, isLoading]);
 
   return (
     <AuthContext.Provider 
