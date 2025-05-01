@@ -3,18 +3,25 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { ARCHETYPES, COACHING_MODES } from "@/lib/constants";
+import { useNavigate } from "react-router-dom";
 
 export function OnboardingComplete() {
   const { user } = useAuth();
   const { completeStep, goToStep } = useOnboarding();
+  const navigate = useNavigate();
   
   const archetype = user?.eq_archetype ? ARCHETYPES[user.eq_archetype] : null;
   const coachingMode = user?.coaching_mode ? COACHING_MODES[user.coaching_mode] : null;
   
   const handleComplete = async () => {
-    // Complete the step and let OnboardingContext handle the navigation
-    await completeStep("complete");
-    // Note: We don't need to navigate here because the navigation is now handled in the OnboardingContext
+    try {
+      // Complete the step and let OnboardingContext handle the navigation
+      await completeStep("complete");
+      // Force navigation as a fallback in case context navigation fails
+      navigate("/chat", { replace: true });
+    } catch (error) {
+      console.error("Error completing onboarding:", error);
+    }
   };
   
   const handleBack = () => {

@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User } from "@/types";
@@ -11,20 +12,22 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
       const isOnOnboardingPage = window.location.pathname === "/onboarding";
       // Also check if we're on any of the auth pages
       const isOnAuthPage = window.location.pathname === "/login" || window.location.pathname === "/signup";
+      // Check if we're on the chat page
+      const isOnChatPage = window.location.pathname === "/chat";
       
       if (user) {
-        // If user is authenticated and fully onboarded, redirect to chat from login/signup pages
+        // If user is authenticated and fully onboarded, redirect to chat from login/signup/onboarding pages
         if (user.onboarded) {
-          if (isOnAuthPage || isOnOnboardingPage) {
+          if ((isOnAuthPage || isOnOnboardingPage) && !isOnChatPage) {
             console.log("User is authenticated and onboarded, redirecting to chat");
-            navigate("/chat");
+            navigate("/chat", { replace: true });
           }
         }
         // If user is authenticated but not onboarded, keep them in onboarding flow
         // Only redirect if we're not already on the onboarding page
         else if (!user.onboarded && !isOnOnboardingPage) {
           console.log("User is authenticated but not onboarded, redirecting to onboarding");
-          navigate("/onboarding");
+          navigate("/onboarding", { replace: true });
         }
       }
     }

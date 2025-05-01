@@ -19,10 +19,10 @@ const OnboardingContent = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Only redirect to chat if user is fully onboarded and we're not in the middle of completing the flow
+    // If user is already fully onboarded (coming back somehow), redirect to chat
     if (user?.onboarded && !isLoading && currentStep !== "complete") {
       console.log("User is already onboarded, redirecting to chat from OnboardingContent");
-      navigate("/chat");
+      navigate("/chat", { replace: true });
     }
   }, [user, navigate, isLoading, currentStep]);
   
@@ -72,6 +72,33 @@ const OnboardingContent = () => {
 };
 
 const OnboardingPage = () => {
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Redirect already onboarded users to chat
+  useEffect(() => {
+    if (!isLoading) {
+      // If not authenticated, redirect to login
+      if (!isAuthenticated) {
+        navigate("/login", { replace: true });
+      }
+      // If already onboarded, redirect to chat
+      else if (user?.onboarded) {
+        navigate("/chat", { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, isLoading, navigate]);
+  
+  if (isLoading) {
+    return (
+      <PageLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-humanly-teal"></div>
+        </div>
+      </PageLayout>
+    );
+  }
+  
   return (
     <PageLayout>
       <OnboardingProvider>
