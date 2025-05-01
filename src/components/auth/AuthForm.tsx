@@ -80,16 +80,14 @@ export function AuthForm({ type }: AuthFormProps) {
       if (type === "login") {
         success = await login(email, password);
       } else {
+        // When signing up, we'll now be automatically logged in
         success = await signup(email, password);
       }
       
-      if (success && type === "login") {
-        console.log("Redirect after successful login");
+      if (success) {
+        console.log("Operation successful, navigating to chat page");
+        // Navigate to chat page for both login and signup (since signup now logs in)
         navigate("/chat");
-      } else if (success && type === "signup") {
-        // Redirect to login after signup
-        console.log("Redirect to login after successful signup");
-        navigate("/login");
       }
     } catch (error) {
       console.error(`Error during ${type}:`, error);

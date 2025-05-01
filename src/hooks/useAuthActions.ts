@@ -40,6 +40,7 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
     console.log("Signup attempt started for:", email);
     
     try {
+      // First, attempt to create the account
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password 
@@ -51,10 +52,17 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
         return false;
       }
       
-      console.log("Signup successful for:", email);
-      toast.success("Account created successfully", {
-        description: "You can now sign in with your credentials"
-      });
+      if (!data || !data.user) {
+        console.error("Signup failed: No user data returned");
+        toast.error("Signup failed", { description: "No user data returned" });
+        return false;
+      }
+
+      console.log("Signup successful for:", email, "User ID:", data.user.id);
+      
+      // Auto login - we're already logged in after signup with the latest Supabase version
+      // Just display a success message
+      toast.success("Account created and logged in successfully");
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
