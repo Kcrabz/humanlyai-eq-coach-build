@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
-import { Progress } from "@/components/ui/progress";
 
 interface AuthFormProps {
   type: "login" | "signup";
@@ -16,39 +15,15 @@ export function AuthForm({ type }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login, signup, isLoading } = useAuth();
-  const [progressValue, setProgressValue] = useState(0);
-  
-  // Simulate progress during authentication
-  const simulateProgress = () => {
-    setProgressValue(0);
-    const interval = setInterval(() => {
-      setProgressValue((prev) => {
-        const newValue = prev + 5;
-        if (newValue >= 95) {
-          clearInterval(interval);
-          return 95; // Cap at 95% until actual completion
-        }
-        return newValue;
-      });
-    }, 150);
-    
-    return () => clearInterval(interval);
-  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProgressValue(0);
-    
-    const cleanupProgress = simulateProgress();
     
     if (type === "login") {
       await login(email, password);
     } else {
       await signup(email, password);
     }
-    
-    cleanupProgress();
-    setProgressValue(100);
   };
   
   return (
@@ -98,18 +73,6 @@ export function AuthForm({ type }: AuthFormProps) {
             required
           />
         </div>
-        
-        {isLoading && (
-          <div className="space-y-2">
-            <Progress value={progressValue} className="h-2" />
-            <p className="text-xs text-center text-muted-foreground">
-              {progressValue < 30 ? "Connecting..." : 
-               progressValue < 60 ? "Authenticating..." : 
-               progressValue < 95 ? "Finalizing..." : 
-               "Complete!"}
-            </p>
-          </div>
-        )}
         
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? (
