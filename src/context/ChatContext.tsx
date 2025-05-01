@@ -5,6 +5,7 @@ import { ChatMessage } from "@/types";
 import { toast } from "sonner";
 import { SYSTEM_PROMPT } from "@/lib/constants";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 interface ChatContextType {
   messages: ChatMessage[];
@@ -19,6 +20,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Helper function to create a unique ID
   const createId = () => Math.random().toString(36).substring(2, 11);
@@ -73,23 +75,46 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(error.message || "Failed to send message");
       }
 
-      if (!data || !data.response) {
+      if (!data) {
         console.error("Invalid response from edge function:", data);
         toast.error("No response received. Please try again.");
         throw new Error("No response received from AI assistant");
       }
 
-      const assistantMessage: ChatMessage = {
-        id: createId(),
-        content: data.response,
-        role: "assistant",
-        created_at: new Date().toISOString(),
-      };
+      // Check if there's an error suggesting to use another API key
+      if (data.error && data.useAnotherKey) {
+        toast.error(data.error, {
+          action: {
+            label: "Update API Key",
+            onClick: () => navigate("/settings")
+          }
+        });
+        throw new Error(data.error);
+      }
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      // Check for general error
+      if (data.error) {
+        toast.error(data.error);
+        throw new Error(data.error);
+      }
+
+      // If successful response
+      if (data.response) {
+        const assistantMessage: ChatMessage = {
+          id: createId(),
+          content: data.response,
+          role: "assistant",
+          created_at: new Date().toISOString(),
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        toast.error("Received empty response from the AI assistant");
+        throw new Error("Empty response from AI assistant");
+      }
     } catch (error) {
       console.error("Error sending message:", error);
-      toast.error("Failed to send message. Please try again.");
+      // Toast is already shown in the error handlers above
     } finally {
       setIsLoading(false);
     }

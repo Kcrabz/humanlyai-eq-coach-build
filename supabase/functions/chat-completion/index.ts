@@ -38,14 +38,35 @@ serve(async (req) => {
       );
     }
 
-    // Get API key from environment variable
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    console.log(`Processing request for user: ${user.id}`);
+
+    // Try to get the user's API key from the database
+    let userApiKey;
+    try {
+      const { data: apiKeyData, error: apiKeyError } = await supabaseClient
+        .from('user_api_keys')
+        .select('openai_api_key')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (!apiKeyError && apiKeyData?.openai_api_key) {
+        userApiKey = apiKeyData.openai_api_key;
+        console.log("Using user-provided API key");
+      } else {
+        console.log("No user-provided API key found, will use environment variable");
+      }
+    } catch (error) {
+      console.error("Error fetching user API key:", error);
+    }
+    
+    // Get API key from environment variable if user doesn't have one
+    const OPENAI_API_KEY = userApiKey || Deno.env.get('OPENAI_API_KEY');
     
     if (!OPENAI_API_KEY) {
-      console.error("OpenAI API key not configured");
+      console.error("No OpenAI API key available");
       return new Response(
-        JSON.stringify({ error: 'API configuration error. Please contact support.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'API key not configured. Please add your API key in settings.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -62,7 +83,7 @@ serve(async (req) => {
         .from('profiles')
         .select('subscription_tier, eq_archetype, coaching_mode')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
       
       // Prepare system content based on profile or default values
       let systemContent = systemPrompt;
@@ -72,6 +93,8 @@ serve(async (req) => {
       if (!profileError && profileData) {
         archetype = profileData.eq_archetype || "Not set";
         coachingMode = profileData.coaching_mode || "normal";
+      } else {
+        console.log("No profile data found or error:", profileError);
       }
       
       systemContent += `\n\nUser's EQ Archetype: ${archetype}\nCoaching Mode: ${coachingMode}`;
@@ -83,7 +106,7 @@ serve(async (req) => {
       ];
       
       // Use the model parameter to specify the model
-      const modelToUse = "gpt-4o-mini"; // Using a less expensive model to help with quota issues
+      const modelToUse = "gpt-4o-mini";
       
       console.log(`Calling OpenAI with model: ${modelToUse}`);
       
@@ -106,9 +129,11 @@ serve(async (req) => {
         console.error("OpenAI API error:", errorData);
         
         if (errorData.error?.message?.includes("exceeded your current quota")) {
-          console.log("Using mock response due to quota exceeded");
           return new Response(
-            JSON.stringify({ response: mockResponse }),
+            JSON.stringify({ 
+              error: "API quota exceeded. Please update your API key in settings.",
+              useAnotherKey: true 
+            }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
@@ -127,11 +152,12 @@ serve(async (req) => {
     } catch (openAIError) {
       console.error("Error with OpenAI or profile:", openAIError);
       
-      // Fallback to mock response if OpenAI fails for any reason
-      console.log("Using mock response due to error");
       return new Response(
-        JSON.stringify({ response: mockResponse }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          error: "Failed to get response from OpenAI. Please check your API key in settings.",
+          useAnotherKey: true 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
