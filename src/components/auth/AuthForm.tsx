@@ -22,6 +22,9 @@ export function AuthForm({ type }: AuthFormProps) {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isSubmitting) return; // Prevent multiple submissions
+    
     setError(null);
     setIsSubmitting(true);
     
@@ -30,21 +33,11 @@ export function AuthForm({ type }: AuthFormProps) {
         const result = await login(email, password);
         if (result?.error) {
           setError(result.error.message);
-          toast.error("Login failed", {
-            description: result.error.message
-          });
-        } else {
-          toast.success("Logged in successfully");
         }
       } else {
         const result = await signup(email, password);
         if (result?.error) {
           setError(result.error.message);
-          toast.error("Signup failed", {
-            description: result.error.message
-          });
-        } else {
-          toast.success("Account created successfully");
         }
       }
     } catch (err) {
@@ -54,6 +47,7 @@ export function AuthForm({ type }: AuthFormProps) {
         description: message
       });
     } finally {
+      // Always reset the loading state, even if there's an error
       setIsSubmitting(false);
     }
   };
@@ -113,7 +107,11 @@ export function AuthForm({ type }: AuthFormProps) {
           />
         </div>
         
-        <Button type="submit" className="w-full" disabled={isSubmitting}>
+        <Button 
+          type="submit" 
+          className="w-full" 
+          disabled={isSubmitting}
+        >
           {isSubmitting ? (
             <div className="flex items-center gap-2">
               <Loading size="small" className="border-white border-t-transparent" />

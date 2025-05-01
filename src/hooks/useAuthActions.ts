@@ -9,6 +9,7 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
+        console.error("Login error:", error);
         return { error };
       }
       
@@ -25,6 +26,7 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
       const { data, error } = await supabase.auth.signUp({ email, password });
       
       if (error) {
+        console.error("Signup error:", error);
         return { error };
       }
       
