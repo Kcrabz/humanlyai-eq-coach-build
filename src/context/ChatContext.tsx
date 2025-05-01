@@ -68,10 +68,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) {
-        throw new Error(error.message);
+        console.error("Edge function error:", error);
+        throw new Error(error.message || "Failed to send message");
       }
 
-      if (!data.response) {
+      if (!data || !data.response) {
+        console.error("Invalid response:", data);
         throw new Error("No response received from AI assistant");
       }
 

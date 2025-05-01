@@ -38,7 +38,7 @@ serve(async (req) => {
       );
     }
 
-    // Get API key from environment variable (your centrally managed key)
+    // Get API key from environment variable
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
     if (!OPENAI_API_KEY) {
@@ -49,19 +49,70 @@ serve(async (req) => {
     }
 
     // Get the user's subscription tier
-    const { data: profileData } = await supabaseClient
+    const { data: profileData, error: profileError } = await supabaseClient
       .from('profiles')
       .select('subscription_tier, eq_archetype, coaching_mode')
       .eq('id', user.id)
       .single();
 
-    if (!profileData) {
+    // If there's an error fetching the profile or it doesn't exist, create a default one
+    if (profileError || !profileData) {
+      // Create a default profile for the user
+      await supabaseClient
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          subscription_tier: 'free',
+          onboarded: false
+        });
+      
+      // Use default values
+      const defaultProfileData = {
+        subscription_tier: 'free',
+        eq_archetype: null,
+        coaching_mode: null
+      };
+      
+      // Now we can proceed with these default values
+      const isPremiumUser = defaultProfileData.subscription_tier === 'premium';
+      
+      // Prepare messages array with system prompt
+      let messages = [
+        { 
+          role: 'system', 
+          content: `${systemPrompt}\n\nUser's EQ Archetype: Not set\nCoaching Mode: normal`
+        },
+        { role: 'user', content: message }
+      ];
+
+      // Call OpenAI API
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          messages: messages,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'Error calling OpenAI API');
+      }
+
+      const completion = await response.json();
+      const assistantResponse = completion.choices[0].message.content;
+
       return new Response(
-        JSON.stringify({ error: 'User profile not found' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ response: assistantResponse }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
+    // If we have a valid profile, continue with it
     const isPremiumUser = profileData.subscription_tier === 'premium';
     
     // Prepare messages array with system prompt
@@ -95,7 +146,7 @@ serve(async (req) => {
     // Add the current user message
     messages.push({ role: 'user', content: message });
 
-    // Call OpenAI API using only the environment variable API key
+    // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
