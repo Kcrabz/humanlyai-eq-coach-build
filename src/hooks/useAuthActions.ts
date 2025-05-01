@@ -5,10 +5,9 @@ import { User } from "@/types";
 
 export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   const login = async (email: string, password: string) => {
+    console.log("Login attempt started for:", email);
+    
     try {
-      // Clear previous session to prevent conflicts
-      await supabase.auth.signOut();
-      
       const { data, error } = await supabase.auth.signInWithPassword({ 
         email, 
         password 
@@ -16,21 +15,24 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
       
       if (error) {
         console.error("Login error:", error.message);
-        return { success: false, error };
+        toast.error("Login failed", { description: error.message });
+        return false;
       }
       
-      console.log("Login successful:", data.user?.id);
-      return { success: true, data };
+      console.log("Login successful for:", email);
+      toast.success("Logged in successfully");
+      return true;
     } catch (error) {
-      console.error("Unexpected login error:", error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error : new Error("Failed to login") 
-      };
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      console.error("Unexpected login error:", errorMessage);
+      toast.error("Login failed", { description: errorMessage });
+      return false;
     }
   };
 
   const signup = async (email: string, password: string) => {
+    console.log("Signup attempt started for:", email);
+    
     try {
       const { data, error } = await supabase.auth.signUp({ 
         email, 
@@ -39,59 +41,69 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
       
       if (error) {
         console.error("Signup error:", error.message);
-        return { success: false, error };
+        toast.error("Signup failed", { description: error.message });
+        return false;
       }
       
-      console.log("Signup successful:", data.user?.id);
-      return { success: true, data };
+      console.log("Signup successful for:", email);
+      toast.success("Account created successfully");
+      return true;
     } catch (error) {
-      console.error("Unexpected signup error:", error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error : new Error("Failed to create account") 
-      };
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      console.error("Unexpected signup error:", errorMessage);
+      toast.error("Signup failed", { description: errorMessage });
+      return false;
     }
   };
 
   const logout = async () => {
+    console.log("Logout attempt started");
+    
     try {
       await supabase.auth.signOut();
       toast.success("Logged out successfully");
-      return { success: true };
+      return true;
     } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to log out");
-      return { 
-        success: false, 
-        error: error instanceof Error ? error : new Error("Failed to log out") 
-      };
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      console.error("Logout error:", errorMessage);
+      toast.error("Failed to log out", { description: errorMessage });
+      return false;
     }
   };
 
   const updateProfile = async (updates: Partial<User>) => {
-    if (!setUser) return { success: false };
-
+    console.log("Profile update attempt started");
+    
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      if (!authUser) return { success: false };
+      if (!authUser) {
+        console.error("Profile update error: No authenticated user");
+        toast.error("Failed to update profile", { description: "Not authenticated" });
+        return false;
+      }
 
       const { error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', authUser.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Profile update error:", error.message);
+        toast.error("Failed to update profile", { description: error.message });
+        return false;
+      }
       
       // Update local state
       setUser((prevUser) => prevUser ? { ...prevUser, ...updates } : null);
-      return { success: true };
+      
+      console.log("Profile update successful");
+      toast.success("Profile updated successfully");
+      return true;
     } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
-      return { 
-        success: false, 
-        error: error instanceof Error ? error : new Error("Failed to update profile") 
-      };
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      console.error("Unexpected profile update error:", errorMessage);
+      toast.error("Failed to update profile", { description: errorMessage });
+      return false;
     }
   };
 

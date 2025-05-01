@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
-import { toast } from "sonner";
 import { AlertCircle } from "lucide-react";
 
 interface AuthFormProps {
@@ -16,62 +15,46 @@ interface AuthFormProps {
 export function AuthForm({ type }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { login, signup } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
-      setError("Email and password are required");
-      return;
-    }
     
     if (isSubmitting) {
       console.log("Form submission already in progress");
       return;
     }
     
-    console.log(`Starting ${type} attempt for: ${email}`);
-    setError(null);
+    if (!email || !password) {
+      setErrorMessage("Email and password are required");
+      return;
+    }
+    
+    setErrorMessage(null);
     setIsSubmitting(true);
+    console.log(`Starting ${type} process for: ${email}`);
+    
+    let success = false;
     
     try {
-      let response;
-      
       if (type === "login") {
-        response = await login(email, password);
-        
-        if (response?.success) {
-          toast.success("Logged in successfully");
-        } else if (response?.error) {
-          console.error("Login error:", response.error);
-          setError(response.error.message || "Login failed");
-          toast.error("Login failed", { 
-            description: response.error.message 
-          });
-        }
+        success = await login(email, password);
       } else {
-        response = await signup(email, password);
-        
-        if (response?.success) {
-          toast.success("Account created successfully");
-        } else if (response?.error) {
-          console.error("Signup error:", response.error);
-          setError(response.error.message || "Signup failed");
-          toast.error("Signup failed", { 
-            description: response.error.message 
-          });
-        }
+        success = await signup(email, password);
       }
-    } catch (err) {
-      console.error("Unexpected authentication error:", err);
-      const message = err instanceof Error ? err.message : "Authentication failed";
-      setError(message);
-      toast.error("Authentication error", { description: message });
+      
+      if (success) {
+        console.log(`${type} successful for: ${email}`);
+        // Toast notifications are handled in useAuthActions
+      }
+    } catch (error) {
+      console.error(`Error during ${type}:`, error);
+      const message = error instanceof Error ? error.message : `${type} failed`;
+      setErrorMessage(message);
     } finally {
-      console.log("Authentication attempt completed, resetting submission state");
+      console.log(`${type} process completed, resetting submission state`);
       setIsSubmitting(false);
     }
   };
@@ -90,10 +73,10 @@ export function AuthForm({ type }: AuthFormProps) {
       </div>
       
       <form className="space-y-4" onSubmit={handleSubmit}>
-        {error && (
+        {errorMessage && (
           <div className="bg-destructive/15 p-3 rounded-md flex items-start gap-2 text-sm">
             <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-            <p className="text-destructive">{error}</p>
+            <p className="text-destructive">{errorMessage}</p>
           </div>
         )}
         
