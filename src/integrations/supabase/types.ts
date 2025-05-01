@@ -9,6 +9,42 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          coaching_mode: string | null
+          created_at: string | null
+          eq_archetype: string | null
+          id: string
+          name: string | null
+          onboarded: boolean | null
+          subscription_tier: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          coaching_mode?: string | null
+          created_at?: string | null
+          eq_archetype?: string | null
+          id: string
+          name?: string | null
+          onboarded?: boolean | null
+          subscription_tier?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          coaching_mode?: string | null
+          created_at?: string | null
+          eq_archetype?: string | null
+          id?: string
+          name?: string | null
+          onboarded?: boolean | null
+          subscription_tier?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_api_keys: {
         Row: {
           created_at: string | null

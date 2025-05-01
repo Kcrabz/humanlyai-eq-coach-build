@@ -14,11 +14,6 @@ serve(async (req) => {
   }
 
   try {
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not set');
-    }
-
     // Create a Supabase client with the Auth context of the logged in user
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -42,6 +37,29 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Get the user's API key
+    const { data: apiKeyData, error: apiKeyError } = await supabaseClient
+      .from('user_api_keys')
+      .select('openai_api_key')
+      .eq('user_id', user.id)
+      .single();
+
+    // Check if API key exists
+    if (apiKeyError || !apiKeyData?.openai_api_key) {
+      // Fall back to environment variable if user hasn't set their own API key
+      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+      
+      if (!OPENAI_API_KEY) {
+        return new Response(
+          JSON.stringify({ error: 'No API key available. Please add your OpenAI API key in settings.' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+    
+    // Use user's API key or fall back to environment variable
+    const apiKey = apiKeyData?.openai_api_key || Deno.env.get('OPENAI_API_KEY');
 
     // Get the user's subscription tier
     const { data: profileData } = await supabaseClient
@@ -94,7 +112,7 @@ serve(async (req) => {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
