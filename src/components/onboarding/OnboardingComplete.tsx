@@ -1,27 +1,19 @@
 
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { ARCHETYPES, COACHING_MODES } from "@/lib/constants";
 
 export function OnboardingComplete() {
-  const { user, setOnboarded } = useAuth();
-  const { goToStep, completeStep } = useOnboarding();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { completeStep, goToStep } = useOnboarding();
   
   const archetype = user?.eq_archetype ? ARCHETYPES[user.eq_archetype] : null;
   const coachingMode = user?.coaching_mode ? COACHING_MODES[user.coaching_mode] : null;
   
   const handleComplete = async () => {
-    // First complete the step
+    // Complete the step and let OnboardingContext handle the navigation
     await completeStep("complete");
-    
-    // Then set user as onboarded
-    await setOnboarded(true);
-    
-    // Finally navigate to chat page
-    navigate("/chat");
   };
   
   const handleBack = () => {

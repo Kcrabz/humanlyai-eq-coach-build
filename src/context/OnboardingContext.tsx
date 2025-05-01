@@ -38,7 +38,7 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 
 export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<OnboardingState>(initialState);
-  const { user, setArchetype: updateUserArchetype, setCoachingMode: updateUserCoachingMode } = useAuth();
+  const { user, setArchetype: updateUserArchetype, setCoachingMode: updateUserCoachingMode, setOnboarded } = useAuth();
   const navigate = useNavigate();
 
   // Load saved progress from database on initial load
@@ -46,6 +46,12 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const loadSavedProgress = async () => {
       if (!user) {
         setState({ ...initialState, isLoading: false });
+        return;
+      }
+
+      // If user is already onboarded, redirect to chat
+      if (user.onboarded) {
+        navigate("/chat");
         return;
       }
 
@@ -73,7 +79,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
 
     loadSavedProgress();
-  }, [user]);
+  }, [user, navigate]);
 
   const goToStep = (step: OnboardingStep) => {
     setState((prev) => ({ ...prev, currentStep: step }));
@@ -95,6 +101,27 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         toast.error("Failed to save your coaching mode selection");
         return;
       }
+    } else if (step === "complete") {
+      try {
+        // Mark user as onboarded in the database and update local state
+        const { error } = await supabase
+          .from('profiles')
+          .update({ onboarded: true })
+          .eq('id', user?.id);
+          
+        if (error) throw error;
+        
+        // Update the user's onboarded status in the auth context
+        await setOnboarded(true);
+        
+        // Navigate to chat page
+        navigate("/chat");
+        return; // Exit early as we've navigated away
+      } catch (error) {
+        console.error("Failed to complete onboarding:", error);
+        toast.error("Failed to complete onboarding. Please try again.");
+        return;
+      }
     }
 
     // Update completed steps
@@ -114,22 +141,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         currentStep: nextStep,
       };
     });
-
-    // If this is the last step, mark the user as onboarded
-    if (step === "complete") {
-      try {
-        // Mark user as onboarded in the database
-        const { error } = await supabase
-          .from('profiles')
-          .update({ onboarded: true })
-          .eq('id', user?.id);
-          
-        if (error) throw error;
-      } catch (error) {
-        console.error("Failed to complete onboarding:", error);
-        toast.error("Failed to complete onboarding. Please try again.");
-      }
-    }
   };
 
   const setArchetype = (archetype: EQArchetype) => {
