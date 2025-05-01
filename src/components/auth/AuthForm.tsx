@@ -23,31 +23,42 @@ export function AuthForm({ type }: AuthFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isSubmitting) return; // Prevent multiple submissions
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      console.log("Form submission already in progress");
+      return;
+    }
     
+    console.log(`Attempting to ${type}`);
     setError(null);
     setIsSubmitting(true);
     
     try {
       if (type === "login") {
-        const result = await login(email, password);
-        if (result?.error) {
-          setError(result.error.message);
+        console.log("Calling login function");
+        const response = await login(email, password);
+        console.log("Login response:", response);
+        
+        if (response?.error) {
+          console.error("Login error in component:", response.error);
+          setError(response.error.message);
         }
       } else {
-        const result = await signup(email, password);
-        if (result?.error) {
-          setError(result.error.message);
+        console.log("Calling signup function");
+        const response = await signup(email, password);
+        console.log("Signup response:", response);
+        
+        if (response?.error) {
+          console.error("Signup error in component:", response.error);
+          setError(response.error.message);
         }
       }
     } catch (err) {
+      console.error("Authentication error:", err);
       const message = err instanceof Error ? err.message : "Authentication failed";
       setError(message);
-      toast.error(type === "login" ? "Login failed" : "Signup failed", {
-        description: message
-      });
     } finally {
-      // Always reset the loading state, even if there's an error
+      console.log("Setting isSubmitting to false");
       setIsSubmitting(false);
     }
   };

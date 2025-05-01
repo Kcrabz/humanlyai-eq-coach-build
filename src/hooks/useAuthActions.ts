@@ -6,34 +6,42 @@ import { User } from "@/types";
 export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   const login = async (email: string, password: string) => {
     try {
+      console.log("Login attempt for:", email);
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
         console.error("Login error:", error);
+        toast.error("Login failed", { description: error.message });
         return { error };
       }
       
+      console.log("Login successful:", data.user?.id);
       toast.success("Logged in successfully");
-      return data;
+      return { data };
     } catch (error) {
       console.error("Login error:", error);
+      toast.error("Login failed");
       return { error: error instanceof Error ? error : new Error("Failed to login") };
     }
   };
 
   const signup = async (email: string, password: string) => {
     try {
+      console.log("Signup attempt for:", email);
       const { data, error } = await supabase.auth.signUp({ email, password });
       
       if (error) {
         console.error("Signup error:", error);
+        toast.error("Signup failed", { description: error.message });
         return { error };
       }
       
+      console.log("Signup successful:", data.user?.id);
       toast.success("Account created successfully");
-      return data;
+      return { data };
     } catch (error) {
       console.error("Signup error:", error);
+      toast.error("Signup failed");
       return { error: error instanceof Error ? error : new Error("Failed to create account") };
     }
   };
@@ -41,8 +49,10 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
   const logout = async () => {
     try {
       await supabase.auth.signOut();
+      toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout error:", error);
+      toast.error("Failed to log out");
     }
   };
 
