@@ -1,0 +1,97 @@
+
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { ChatProvider } from "@/context/ChatContext";
+import { ChatList } from "@/components/chat/ChatList";
+import { ChatInput } from "@/components/chat/ChatInput";
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { ARCHETYPES } from "@/lib/constants";
+
+const ChatPage = () => {
+  const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login");
+    } else if (user && !user.onboarded) {
+      navigate("/onboarding");
+    }
+  }, [isAuthenticated, navigate, user]);
+
+  if (!isAuthenticated || !user?.onboarded) {
+    return null;
+  }
+  
+  const archetype = user.eq_archetype ? ARCHETYPES[user.eq_archetype] : null;
+
+  return (
+    <PageLayout fullWidth>
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar */}
+        <div className="hidden md:block w-64 bg-humanly-gray-lightest border-r p-4">
+          <div className="mb-6">
+            <h2 className="font-semibold">Your EQ Coach</h2>
+            <p className="text-xs text-muted-foreground">
+              Start a conversation anytime
+            </p>
+          </div>
+
+          {user.eq_archetype && archetype && (
+            <div className="mb-6">
+              <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Your Archetype</h3>
+              <div className="bg-white p-3 rounded-lg border">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl">{archetype.icon}</span>
+                  <span className="font-medium">{archetype.title}</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {archetype.description.substring(0, 100)}...
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div className="mb-6">
+            <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Subscription</h3>
+            <div className="bg-white p-3 rounded-lg border">
+              <p className="font-medium">Free Trial</p>
+              <div className="flex justify-between items-center mt-1">
+                <p className="text-xs text-muted-foreground">Expires in 24h</p>
+                <Button size="sm" variant="outline" onClick={() => navigate("/pricing")}>
+                  Upgrade
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Chat Area */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="border-b p-4 flex items-center justify-between">
+            <div>
+              <h1 className="font-bold">HumanlyAI Coach</h1>
+              <p className="text-xs text-muted-foreground">
+                Personalized for {user.eq_archetype || "you"}
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => navigate("/subscription")}>
+              {user.subscription_tier === "free" ? "Upgrade" : "Manage Plan"}
+            </Button>
+          </div>
+          
+          <ChatProvider>
+            <div className="flex-1 overflow-hidden flex flex-col">
+              <ChatList />
+              <ChatInput />
+            </div>
+          </ChatProvider>
+        </div>
+      </div>
+    </PageLayout>
+  );
+};
+
+export default ChatPage;
