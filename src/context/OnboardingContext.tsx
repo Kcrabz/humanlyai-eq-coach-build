@@ -121,7 +121,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         // Update the user's onboarded status in the auth context
         await setOnboarded(true);
         
-        // Navigate to chat page
+        // Navigation is now handled here instead of relying on the component to redirect
         toast.success("Onboarding completed!");
         console.log("Navigating to chat from completeStep");
         navigate("/chat", { replace: true });

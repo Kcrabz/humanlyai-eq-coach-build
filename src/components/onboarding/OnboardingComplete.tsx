@@ -14,6 +14,7 @@ export function OnboardingComplete() {
   const handleComplete = async () => {
     // Complete the step and let OnboardingContext handle the navigation
     await completeStep("complete");
+    // Note: We don't need to navigate here because the navigation is now handled in the OnboardingContext
   };
   
   const handleBack = () => {

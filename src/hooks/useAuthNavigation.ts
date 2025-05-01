@@ -15,12 +15,10 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
       if (user) {
         // If user is authenticated and fully onboarded, redirect to chat from login/signup pages
         if (user.onboarded) {
-          if (isOnAuthPage) {
-            console.log("User is authenticated and onboarded, redirecting to chat from auth page");
+          if (isOnAuthPage || isOnOnboardingPage) {
+            console.log("User is authenticated and onboarded, redirecting to chat");
             navigate("/chat");
           }
-          // Don't redirect from onboarding if they are already in the flow
-          // This prevents interfering with the onboarding state machine
         }
         // If user is authenticated but not onboarded, keep them in onboarding flow
         // Only redirect if we're not already on the onboarding page
