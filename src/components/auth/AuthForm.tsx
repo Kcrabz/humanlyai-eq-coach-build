@@ -55,7 +55,7 @@ export function AuthForm({ type }: AuthFormProps) {
             {type === "login" && (
               <Link 
                 to="/forgot-password"
-                className="text-sm text-humanly-purple hover:text-humanly-purple-dark"
+                className="text-sm text-humanly-teal hover:text-humanly-teal-dark"
               >
                 Forgot password?
               </Link>
@@ -85,14 +85,14 @@ export function AuthForm({ type }: AuthFormProps) {
         {type === "login" ? (
           <p>
             Don't have an account?{" "}
-            <Link to="/signup" className="text-humanly-purple hover:text-humanly-purple-dark font-medium">
+            <Link to="/signup" className="text-humanly-teal hover:text-humanly-teal-dark font-medium">
               Sign Up
             </Link>
           </p>
         ) : (
           <p>
             Already have an account?{" "}
-            <Link to="/login" className="text-humanly-purple hover:text-humanly-purple-dark font-medium">
+            <Link to="/login" className="text-humanly-teal hover:text-humanly-teal-dark font-medium">
               Sign In
             </Link>
           </p>

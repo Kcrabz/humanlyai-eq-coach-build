@@ -20,7 +20,7 @@ export function Header() {
     <header className="border-b py-4 px-4 sm:px-6">
       <div className="container mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <span className="bg-gradient-to-r from-humanly-purple to-humanly-purple-light bg-clip-text text-transparent text-2xl font-bold">
+          <span className="bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent text-2xl font-bold">
             HumanlyAI
           </span>
         </Link>

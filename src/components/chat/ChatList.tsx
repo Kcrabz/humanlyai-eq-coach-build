@@ -17,7 +17,7 @@ export function ChatList() {
       {messages.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-center p-4">
           <div className="mb-4">
-            <span className="inline-block p-4 rounded-full bg-humanly-purple-light/10">
+            <span className="inline-block p-4 rounded-full bg-humanly-teal-light/10">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -28,7 +28,7 @@ export function ChatList() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="text-humanly-purple"
+                className="text-humanly-teal"
               >
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
               </svg>

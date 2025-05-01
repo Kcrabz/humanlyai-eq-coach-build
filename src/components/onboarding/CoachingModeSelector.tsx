@@ -45,8 +45,8 @@ export function CoachingModeSelector({ onNext, onBack }: CoachingModeSelectorPro
             key={mode.type}
             className={`cursor-pointer border-2 transition-all ${
               selectedMode === mode.type
-                ? "border-humanly-purple bg-humanly-gray-lightest"
-                : "border-border hover:border-humanly-purple/30"
+                ? "border-humanly-teal bg-humanly-gray-lightest"
+                : "border-border hover:border-humanly-teal/30"
             }`}
             onClick={() => setSelectedMode(mode.type)}
           >

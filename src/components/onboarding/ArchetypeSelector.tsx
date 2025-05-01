@@ -46,8 +46,8 @@ export function ArchetypeSelector({ onNext }: ArchetypeSelectorProps) {
             key={archetype.type}
             className={`cursor-pointer border-2 transition-all ${
               selectedArchetype === archetype.type
-                ? "border-humanly-purple bg-humanly-gray-lightest"
-                : "border-border hover:border-humanly-purple/30"
+                ? "border-humanly-teal bg-humanly-gray-lightest"
+                : "border-border hover:border-humanly-teal/30"
             }`}
             onClick={() => setSelectedArchetype(archetype.type)}
           >
@@ -67,7 +67,7 @@ export function ArchetypeSelector({ onNext }: ArchetypeSelectorProps) {
                   {archetype.strengths.map((strength) => (
                     <span 
                       key={strength} 
-                      className="px-2 py-1 bg-humanly-purple/10 text-humanly-purple text-xs rounded-full"
+                      className="px-2 py-1 bg-humanly-teal/10 text-humanly-teal text-xs rounded-full"
                     >
                       {strength}
                     </span>
