@@ -64,10 +64,15 @@ export default {
 					ring: 'hsl(var(--sidebar-ring))'
 				},
 				humanly: {
-					purple: {
-						light: '#9b87f5',
-						DEFAULT: '#7E69AB', 
-						dark: '#6E59A5'
+					teal: {
+						light: '#4fb5c7',
+						DEFAULT: '#0097b2', 
+						dark: '#007d94'
+					},
+					green: {
+						light: '#a1e47a',
+						DEFAULT: '#7ed957',
+						dark: '#64c03d'
 					},
 					gray: {
 						lightest: '#F1F0FB',
@@ -116,9 +121,12 @@ export default {
 				'gradient-flow': 'gradient-flow 6s ease infinite'
 			},
 			fontFamily: {
-				sans: ['Inter', 'system-ui', 'sans-serif'],
-				display: ['Montserrat', 'system-ui', 'sans-serif']
-			}
+				sans: ['Inter', 'Lato', 'system-ui', 'sans-serif'],
+				display: ['Inter', 'Lato', 'system-ui', 'sans-serif']
+			},
+			backgroundSize: {
+				'size-200': '200% 200%',
+			},
 		}
 	},
 	plugins: [require("tailwindcss-animate")],
