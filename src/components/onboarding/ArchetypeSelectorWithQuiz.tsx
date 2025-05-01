@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,11 +20,7 @@ export const ArchetypeSelectorWithQuiz = () => {
     handleSelectArchetype(archetype);
   };
   
-  const handleSkipQuiz = () => {
-    setManualMode(true);
-    setQuizMode(false);
-  };
-  
+  // If quiz mode is selected, directly show the quiz
   if (quizMode) {
     return (
       <div className="max-w-4xl mx-auto px-4">
@@ -34,12 +29,13 @@ export const ArchetypeSelectorWithQuiz = () => {
         </h1>
         <ArchetypeQuiz 
           onSelect={handleQuizResult} 
-          onSkip={handleSkipQuiz} 
+          onSkip={() => setManualMode(true)} 
         />
       </div>
     );
   }
   
+  // Initial selection screen - choose quiz or manual
   if (!manualMode) {
     return (
       <div className="max-w-lg mx-auto px-4 text-center">
