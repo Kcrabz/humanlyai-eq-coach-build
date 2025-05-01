@@ -17,11 +17,13 @@ export function AuthForm({ type }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, signup, isLoading } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setIsSubmitting(true);
     
     try {
       if (type === "login") {
@@ -47,6 +49,8 @@ export function AuthForm({ type }: AuthFormProps) {
       toast.error(type === "login" ? "Login failed" : "Signup failed", {
         description: message
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
   
@@ -79,7 +83,7 @@ export function AuthForm({ type }: AuthFormProps) {
             placeholder="m@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            disabled={isLoading}
+            disabled={isSubmitting}
             required
           />
         </div>
@@ -100,13 +104,13 @@ export function AuthForm({ type }: AuthFormProps) {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            disabled={isLoading}
+            disabled={isSubmitting}
             required
           />
         </div>
         
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
+        <Button type="submit" className="w-full" disabled={isSubmitting}>
+          {isSubmitting ? (
             <div className="flex items-center gap-2">
               <Loading size="small" className="border-white border-t-transparent" />
               <span>
