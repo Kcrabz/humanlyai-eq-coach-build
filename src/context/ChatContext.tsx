@@ -14,6 +14,7 @@ interface ChatContextType {
   startNewChat: () => void;
   usageInfo: UsageInfo | null;
   error: string | null;
+  retryLastMessage: () => Promise<void>;
 }
 
 interface UsageInfo {
@@ -29,6 +30,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(false);
   const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lastSentMessage, setLastSentMessage] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -55,6 +57,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const startNewChat = () => {
     setMessages([]);
     setError(null);
+    setLastSentMessage(null);
+  };
+
+  const retryLastMessage = async () => {
+    if (!lastSentMessage) return;
+    
+    setError(null);
+    await sendMessage(lastSentMessage);
   };
 
   const sendMessage = async (content: string) => {
@@ -62,6 +72,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Reset any previous errors
     setError(null);
+    setLastSentMessage(content);
 
     // Add user message to the chat
     const userMessage: ChatMessage = {
@@ -125,10 +136,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Check for quota exceeded errors
       if (data.error && data.quotaExceeded) {
-        const errorMessage = "Our AI service has reached its usage limits";
+        const errorMessage = data.details || "OpenAI API quota exceeded";
         setError(errorMessage);
-        toast.error(errorMessage, {
-          description: "Our team has been notified. Please try again later.",
+        toast.error("API service has reached its usage limits", {
+          description: "Please check your OpenAI account billing status or contact support.",
+        });
+        throw new Error(data.error);
+      }
+      
+      // Check for invalid key errors
+      if (data.error && data.invalidKey) {
+        const errorMessage = data.details || "Invalid API key";
+        setError(errorMessage);
+        toast.error("Invalid API Key", {
+          description: "The API key provided was rejected by OpenAI. Please check your key."
         });
         throw new Error(data.error);
       }
@@ -161,6 +182,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             percentage: (data.usage.currentUsage / data.usage.limit) * 100
           });
         }
+        
+        // Clear last sent message since it was successful
+        setLastSentMessage(null);
       } else {
         setError("Empty response received from the AI assistant");
         toast.error("Received empty response from the AI assistant");
@@ -172,23 +196,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If we haven't set a specific error message already, set a generic one
       if (!error.message?.includes("You've reached your monthly message limit") && 
           !error.message?.includes("No response received") &&
-          !error.message?.includes("Our AI service has reached its usage limits")) {
+          !error.message?.includes("OpenAI API quota exceeded") &&
+          !error.message?.includes("Invalid API key")) {
         
         setError("An error occurred while sending your message. Our team has been notified.");
         
-        // Check for OpenAI quota errors
-        if (error.message?.includes("quota") || 
-            error.message?.includes("exceeded") || 
-            error.message?.includes("billing")) {
-          toast.error("AI service temporarily unavailable", {
-            description: "The AI system is currently overloaded or has reached usage limits. Our team has been notified.",
-          });
-        } else {
-          // Generic error
-          toast.error("Failed to send message", {
-            description: "Please try again or report this issue to our support team.",
-          });
-        }
+        // Generic error
+        toast.error("Failed to send message", {
+          description: "Please try again or report this issue to our support team.",
+        });
       }
     } finally {
       setIsLoading(false);
@@ -196,7 +212,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <ChatContext.Provider value={{ messages, sendMessage, isLoading, startNewChat, usageInfo, error }}>
+    <ChatContext.Provider value={{ 
+      messages, 
+      sendMessage, 
+      isLoading, 
+      startNewChat, 
+      usageInfo, 
+      error,
+      retryLastMessage 
+    }}>
       {children}
     </ChatContext.Provider>
   );

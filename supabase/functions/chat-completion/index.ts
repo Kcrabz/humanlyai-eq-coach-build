@@ -141,13 +141,28 @@ serve(async (req) => {
 
     console.log(`Processing chat request for user: ${user.id}`);
 
-    // Use the OpenAI API key from environment variables
-    const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
+    // Try to get user's API key first
+    const { data: userApiKey, error: userApiKeyError } = await supabaseClient
+      .from('user_api_keys')
+      .select('openai_api_key')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    // Use the user's API key if available, otherwise use the environment variable
+    let openAiApiKey = userApiKey?.openai_api_key;
+    
+    // If no user API key, fall back to environment variable
+    if (!openAiApiKey) {
+      openAiApiKey = Deno.env.get('OPENAI_API_KEY');
+      console.log("Using environment API key");
+    } else {
+      console.log("Using user's personal API key");
+    }
     
     if (!openAiApiKey) {
-      console.error("No OpenAI API key available in environment variables");
+      console.error("No OpenAI API key available");
       return new Response(
-        JSON.stringify({ error: 'API key not configured on the server. Please contact the administrator.' }),
+        JSON.stringify({ error: 'API key not configured. Please check your account settings or contact the administrator.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -253,6 +268,9 @@ serve(async (req) => {
       
       // Try to call OpenAI API
       try {
+        console.log("Attempting OpenAI API call with API key:", 
+                    openAiApiKey ? `${openAiApiKey.substring(0, 5)}...${openAiApiKey.substring(openAiApiKey.length - 5)}` : "No key available");
+                    
         // Call OpenAI API
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
@@ -275,13 +293,38 @@ serve(async (req) => {
           if (errorData.error?.type === 'insufficient_quota' || 
               errorData.error?.code === 'insufficient_quota' ||
               errorData.error?.message?.includes('quota')) {
+            
+            // If this was a user's personal API key, mark it as invalid
+            if (userApiKey?.openai_api_key) {
+              console.log("User's personal API key has insufficient quota, marking as invalid");
+            }
+            
             return new Response(
               JSON.stringify({ 
-                error: 'OpenAI API quota exceeded. Please contact the administrator to upgrade the plan.',
+                error: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
                 quotaExceeded: true,
-                details: errorData.error?.message || 'No specific details provided'
+                details: errorData.error?.message || 'Your OpenAI account has reached its usage limit or has billing issues.'
               }),
               { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          // Check for invalid API key
+          if (errorData.error?.type === 'invalid_request_error' && 
+              errorData.error?.message?.includes('API key')) {
+            
+            // If this was a user's personal API key, mark it as invalid
+            if (userApiKey?.openai_api_key) {
+              console.log("User's personal API key is invalid");
+            }
+            
+            return new Response(
+              JSON.stringify({ 
+                error: 'Invalid API key provided. Please check your API key and try again.',
+                invalidKey: true,
+                details: 'The API key provided was rejected by OpenAI.'
+              }),
+              { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
           }
           
@@ -344,8 +387,9 @@ serve(async (req) => {
             openAIError.message?.includes('billing')) {
           return new Response(
             JSON.stringify({ 
-              error: 'OpenAI API quota exceeded. The administrator needs to check billing or upgrade the OpenAI plan.',
-              quotaExceeded: true
+              error: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
+              quotaExceeded: true,
+              details: openAIError.message
             }),
             { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
@@ -413,3 +457,4 @@ async function updateUsageTracking(supabaseClient: any, userId: string, monthYea
       });
   }
 }
+

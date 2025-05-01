@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useChat } from "@/context/ChatContext";
 import { Loading } from "@/components/ui/loading";
-import { AlertCircle, ExternalLink } from "lucide-react";
+import { AlertCircle, ExternalLink, RefreshCw } from "lucide-react";
 
 export function ChatInput() {
   const [message, setMessage] = useState("");
-  const { sendMessage, isLoading, error } = useChat();
+  const { sendMessage, isLoading, error, retryLastMessage } = useChat();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -18,29 +18,68 @@ export function ChatInput() {
     setMessage("");
   };
 
-  // Check if the error is related to API quota
+  // Check for specific error types
   const isQuotaError = error && 
     (error.includes("quota") || 
      error.includes("exceeded") || 
-     error.includes("limit"));
+     error.includes("limit") ||
+     error.includes("billing"));
+
+  const isInvalidKeyError = error &&
+    error.includes("Invalid API key");
 
   return (
     <form onSubmit={handleSubmit} className="border-t p-4 bg-background sticky bottom-0">
       {error && (
-        <div className={`mb-2 p-3 rounded-md ${isQuotaError ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-red-50 border border-red-200 text-red-800'} text-sm flex items-start`}>
+        <div className={`mb-2 p-3 rounded-md ${
+          isQuotaError 
+            ? 'bg-amber-50 border border-amber-200 text-amber-800' 
+            : isInvalidKeyError 
+              ? 'bg-orange-50 border border-orange-200 text-orange-800'
+              : 'bg-red-50 border border-red-200 text-red-800'
+          } text-sm flex items-start`}
+        >
           <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
           <div>
             <p className="font-medium">
               {isQuotaError 
                 ? "API usage limit reached" 
-                : "Failed to send message"}
+                : isInvalidKeyError
+                  ? "Invalid API key"
+                  : "Failed to send message"}
             </p>
             <p className="text-xs mt-1">
               {isQuotaError 
-                ? "Our system has reached its API usage limit. Please try again later when the quota resets or contact support for assistance." 
-                : "Please try again or contact support if the issue persists."}
+                ? "Your OpenAI account has reached its usage limit or has billing issues. Please check your OpenAI account billing status." 
+                : isInvalidKeyError
+                  ? "The API key provided was rejected by OpenAI. Please check your key and try again."
+                  : "Please try again or contact support if the issue persists."}
             </p>
             <div className="mt-2 flex gap-2">
+              {isQuotaError && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs" 
+                  onClick={() => window.open("https://platform.openai.com/account/billing/overview", "_blank")}
+                >
+                  <ExternalLink className="h-3 w-3 mr-1" />
+                  Check OpenAI Billing
+                </Button>
+              )}
+              
+              {retryLastMessage && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="text-xs" 
+                  onClick={retryLastMessage}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Retry
+                </Button>
+              )}
+              
               <Button 
                 variant="outline" 
                 size="sm" 
