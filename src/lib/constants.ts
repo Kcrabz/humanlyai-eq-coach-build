@@ -1,26 +1,27 @@
+
 import { ArchetypeInfo, CoachingModeInfo, SubscriptionPlan } from "@/types";
 
 export const ARCHETYPES: Record<string, ArchetypeInfo> = {
   reflector: {
     type: "reflector",
     title: "The Reflector",
-    description: "You're thoughtful and self-aware, often spending time analyzing your emotions and experiences. Your strength is deep self-understanding.",
+    description: "You're deeply self-aware and often in tune with your inner world. You're thoughtful, reflective, and naturally introspective.",
     strengths: ["Self-awareness", "Empathy", "Thoughtfulness"],
     growthAreas: ["Taking action", "Decision-making", "Self-compassion"],
     icon: "🧠"
   },
   activator: {
     type: "activator",
-    title: "The Activator",
-    description: "You're action-oriented and decisive, quickly turning ideas into reality. Your strength is getting things done with passion.",
+    title: "The Driver",
+    description: "You're motivated, goal-driven, and resilient. You thrive on results and have a strong inner fire.",
     strengths: ["Motivation", "Goal-setting", "Energy"],
     growthAreas: ["Patience", "Reflection", "Listening skills"],
     icon: "⚡"
   },
   regulator: {
     type: "regulator",
-    title: "The Regulator",
-    description: "You're composed and controlled, rarely letting emotions overwhelm you. Your strength is stability and calm under pressure.",
+    title: "The Harmonizer",
+    description: "You have a well-rounded EQ with solid skills across awareness, empathy, and regulation. You're balanced but may seek mastery in specific areas.",
     strengths: ["Emotional stability", "Stress management", "Consistency"],
     growthAreas: ["Emotional expression", "Vulnerability", "Spontaneity"],
     icon: "⚖️"
@@ -28,7 +29,7 @@ export const ARCHETYPES: Record<string, ArchetypeInfo> = {
   connector: {
     type: "connector",
     title: "The Connector",
-    description: "You're socially skilled and relationship-focused, naturally bringing people together. Your strength is building meaningful connections.",
+    description: "You're highly empathetic and naturally attuned to others' emotions. People trust you and feel heard in your presence.",
     strengths: ["Social awareness", "Relationship building", "Communication"],
     growthAreas: ["Setting boundaries", "Independence", "Self-reflection"],
     icon: "🤝"

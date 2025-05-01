@@ -16,16 +16,26 @@ export const useQuiz = () => {
   const [state, setState] = useState<QuizState>({
     currentQuestionIndex: 0,
     answers: {},
+    answerScores: {},
     isCompleted: false,
   });
 
   const selectOption = (optionId: string) => {
     const currentQuestion = quizQuestions[state.currentQuestionIndex];
     
-    // Save the answer
+    // Find the selected option to get its value
+    const selectedOption = currentQuestion.options.find(o => o.id === optionId);
+    if (!selectedOption) return;
+
+    // Save the answer and score
     const newAnswers = {
       ...state.answers,
       [currentQuestion.id]: optionId
+    };
+
+    const newAnswerScores = {
+      ...state.answerScores,
+      [currentQuestion.id]: selectedOption.value
     };
     
     const nextIndex = state.currentQuestionIndex + 1;
@@ -33,41 +43,68 @@ export const useQuiz = () => {
     
     if (isLastQuestion) {
       // Calculate results if this is the last question
-      const result = calculateResults(newAnswers);
+      const result = calculateResults(newAnswers, newAnswerScores);
       
       setState({
         ...state,
         answers: newAnswers,
+        answerScores: newAnswerScores,
         isCompleted: true,
         result
       });
       
       // Save the result to the user's profile
       if (user) {
-        setArchetype(result.dominantArchetype as EQArchetype);
+        setArchetype(mapArchetypeToLegacy(result.dominantArchetype));
       }
     } else {
       // Move to the next question
       setState({
         ...state,
         currentQuestionIndex: nextIndex,
-        answers: newAnswers
+        answers: newAnswers,
+        answerScores: newAnswerScores
       });
     }
   };
 
-  const calculateResults = (answers: Record<string, string>): {
+  // Map the new archetype names to the legacy ones for backwards compatibility
+  const mapArchetypeToLegacy = (archetype: string): EQArchetype => {
+    switch(archetype) {
+      case 'reflector':
+        return 'reflector';
+      case 'connector':
+        return 'connector';
+      case 'driver':
+        return 'activator'; // Map driver to activator
+      case 'harmonizer':
+        return 'regulator'; // Map harmonizer to regulator
+      default:
+        return 'reflector';
+    }
+  };
+
+  const calculateResults = (
+    answers: Record<string, string>,
+    answerScores: Record<string, number>
+  ): {
     dominantArchetype: string;
+    eqPotentialScore: number;
     scores: Record<string, number>;
+    strengths: string[];
+    growthAreas: string[];
+    eqPotentialCategory: 'High EQ Potential' | 'Developing EQ' | 'Growth Opportunity';
   } => {
     // Initialize scores for each archetype
     const scores: Record<string, number> = {
       reflector: 0,
-      activator: 0,
-      regulator: 0,
       connector: 0,
-      observer: 0
+      driver: 0,
+      harmonizer: 0
     };
+    
+    // Calculate total EQ potential score (sum of all answer scores)
+    const eqPotentialScore = Object.values(answerScores).reduce((sum, score) => sum + score, 0);
     
     // Sum up scores based on answers
     Object.entries(answers).forEach(([questionId, optionId]) => {
@@ -95,10 +132,56 @@ export const useQuiz = () => {
         highestScore = score;
       }
     });
+
+    // Determine EQ potential category
+    let eqPotentialCategory: 'High EQ Potential' | 'Developing EQ' | 'Growth Opportunity';
+    if (eqPotentialScore >= 60) {
+      eqPotentialCategory = 'High EQ Potential';
+    } else if (eqPotentialScore >= 40) {
+      eqPotentialCategory = 'Developing EQ';
+    } else {
+      eqPotentialCategory = 'Growth Opportunity';
+    }
+    
+    // Determine strengths and growth areas based on highest and lowest scores
+    const sortedScores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    const strengths = sortedScores.slice(0, 2).map(([archetype]) => {
+      switch(archetype) {
+        case 'reflector':
+          return 'Self-awareness and introspection';
+        case 'connector':
+          return 'Empathy and building relationships';
+        case 'driver':
+          return 'Goal-setting and motivation';
+        case 'harmonizer':
+          return 'Emotional balance and adaptability';
+        default:
+          return '';
+      }
+    });
+    
+    const growthAreas = sortedScores.slice(-2).map(([archetype]) => {
+      switch(archetype) {
+        case 'reflector':
+          return 'Translating insights into action';
+        case 'connector':
+          return 'Setting healthy boundaries';
+        case 'driver':
+          return 'Slowing down to consider emotional nuance';
+        case 'harmonizer':
+          return 'Developing depth in specific EQ areas';
+        default:
+          return '';
+      }
+    });
     
     return {
       dominantArchetype,
-      scores
+      eqPotentialScore,
+      scores,
+      strengths,
+      growthAreas,
+      eqPotentialCategory
     };
   };
 
@@ -106,6 +189,7 @@ export const useQuiz = () => {
     setState({
       currentQuestionIndex: 0,
       answers: {},
+      answerScores: {},
       isCompleted: false,
       result: undefined
     });

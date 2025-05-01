@@ -19,8 +19,7 @@ export const Quiz = ({ onComplete }: QuizProps) => {
   if (state.isCompleted && state.result) {
     return (
       <QuizResults
-        dominantArchetype={state.result.dominantArchetype}
-        scores={state.result.scores}
+        result={state.result}
         onContinue={handleContinue}
         onRestart={restartQuiz}
       />
@@ -28,13 +27,20 @@ export const Quiz = ({ onComplete }: QuizProps) => {
   }
   
   const currentQuestion = getCurrentQuestion();
+  const totalQuestions = 15; // Updated to 15 questions
   
   return (
     <div className="w-full">
       <div className="mb-4 text-center">
         <p className="text-sm text-gray-500">
-          Question {state.currentQuestionIndex + 1} of {5}
+          Question {state.currentQuestionIndex + 1} of {totalQuestions}
         </p>
+        <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+          <div 
+            className="bg-humanly-teal h-2 rounded-full transition-all duration-300"
+            style={{ width: `${((state.currentQuestionIndex + 1) / totalQuestions) * 100}%` }}
+          ></div>
+        </div>
       </div>
       {currentQuestion && (
         <QuizQuestion 
