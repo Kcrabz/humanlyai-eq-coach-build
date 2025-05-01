@@ -14,9 +14,10 @@ export function CoachingModeSelector() {
   const { state, setCoachingMode, completeStep, goToStep } = useOnboarding();
   const { coachingMode: selectedMode } = state;
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedMode) {
-      completeStep("coaching");
+      // Wait for the step to complete before proceeding
+      await completeStep("coaching");
     }
   };
 

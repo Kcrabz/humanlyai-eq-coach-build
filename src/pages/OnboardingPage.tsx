@@ -19,12 +19,12 @@ const OnboardingContent = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // If user is already onboarded, redirect to chat
-    if (user?.onboarded && !isLoading) {
-      console.log("User is already onboarded, redirecting to chat");
+    // Only redirect to chat if user is fully onboarded and we're not in the middle of completing the flow
+    if (user?.onboarded && !isLoading && currentStep !== "complete") {
+      console.log("User is already onboarded, redirecting to chat from OnboardingContent");
       navigate("/chat");
     }
-  }, [user, navigate, isLoading]);
+  }, [user, navigate, isLoading, currentStep]);
   
   // Show loading state
   if (isLoading) {

@@ -19,7 +19,7 @@ interface OnboardingState {
 interface OnboardingContextType {
   state: OnboardingState;
   goToStep: (step: OnboardingStep) => void;
-  completeStep: (step: OnboardingStep, data?: any) => void;
+  completeStep: (step: OnboardingStep, data?: any) => Promise<void>;
   setArchetype: (archetype: EQArchetype) => void;
   setCoachingMode: (mode: CoachingMode) => void;
   resetOnboarding: () => void;
@@ -87,19 +87,25 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const completeStep = async (step: OnboardingStep, data?: any) => {
+    console.log(`Completing step: ${step}`);
+    
     // Save the step data based on which step it is
     if (step === "archetype" && state.archetype) {
       try {
         await updateUserArchetype(state.archetype);
+        toast.success("Archetype saved successfully");
       } catch (error) {
         toast.error("Failed to save your archetype selection");
+        console.error("Error saving archetype:", error);
         return;
       }
     } else if (step === "coaching" && state.coachingMode) {
       try {
         await updateUserCoachingMode(state.coachingMode);
+        toast.success("Coaching mode saved successfully");
       } catch (error) {
         toast.error("Failed to save your coaching mode selection");
+        console.error("Error saving coaching mode:", error);
         return;
       }
     } else if (step === "complete") {
@@ -127,7 +133,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
     }
 
-    // Update completed steps
+    // Update completed steps and move to next step
     setState((prev) => {
       const completedSteps = prev.completedSteps.includes(step) 
         ? prev.completedSteps 
@@ -138,6 +144,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (step === "archetype") nextStep = "coaching";
       else if (step === "coaching") nextStep = "complete";
 
+      console.log(`Moving to next step: ${nextStep}`);
+      
       return {
         ...prev,
         completedSteps,
