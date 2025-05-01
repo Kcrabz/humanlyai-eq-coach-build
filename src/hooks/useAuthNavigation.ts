@@ -30,6 +30,11 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
           navigate("/onboarding", { replace: true });
         }
       }
+      // If user is not authenticated and on protected pages, redirect to login
+      else if (!user && !isOnAuthPage && (isOnChatPage || isOnOnboardingPage)) {
+        console.log("User is not authenticated, redirecting to login");
+        navigate("/login", { replace: true });
+      }
     }
   }, [user, isLoading, navigate]);
 

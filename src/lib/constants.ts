@@ -1,46 +1,50 @@
-
 import { ArchetypeInfo, CoachingModeInfo, SubscriptionPlan } from "@/types";
 
-export const ARCHETYPES: Record<string, ArchetypeInfo> = {
+export const ARCHETYPES = {
   reflector: {
-    type: "reflector",
-    title: "The Reflector",
-    description: "You're deeply self-aware and often in tune with your inner world. You're thoughtful, reflective, and naturally introspective.",
-    strengths: ["Self-awareness", "Empathy", "Thoughtfulness"],
-    growthAreas: ["Taking action", "Decision-making", "Self-compassion"],
-    icon: "🧠"
+    type: 'reflector',
+    title: 'Reflector',
+    icon: '🔮',
+    description: 'You\'re highly self-aware and introspective, with a deep understanding of your inner emotional landscape.',
+    strengths: ['Self-awareness', 'Thoughtful decision making', 'Emotional clarity'],
+    growthAreas: ['Taking action', 'External focus', 'Less overthinking'],
+    microPractice: 'Choose one small decision today and make it within 60 seconds, without analysis.'
   },
   activator: {
-    type: "activator",
-    title: "The Driver",
-    description: "You're motivated, goal-driven, and resilient. You thrive on results and have a strong inner fire.",
-    strengths: ["Motivation", "Goal-setting", "Energy"],
-    growthAreas: ["Patience", "Reflection", "Listening skills"],
-    icon: "⚡"
-  },
-  regulator: {
-    type: "regulator",
-    title: "The Harmonizer",
-    description: "You have a well-rounded EQ with solid skills across awareness, empathy, and regulation. You're balanced but may seek mastery in specific areas.",
-    strengths: ["Emotional stability", "Stress management", "Consistency"],
-    growthAreas: ["Emotional expression", "Vulnerability", "Spontaneity"],
-    icon: "⚖️"
+    type: 'activator',
+    title: 'Activator',
+    icon: '⚡️',
+    description: 'You\'re action-oriented and decisive, moving quickly from thought to implementation.',
+    strengths: ['Decision making', 'Taking initiative', 'Driving results'],
+    growthAreas: ['Pausing before reacting', 'Deeper reflection', 'Emotional awareness'],
+    microPractice: 'Before reacting to a situation today, take three deep breaths and name your emotion.'
   },
   connector: {
-    type: "connector",
-    title: "The Connector",
-    description: "You're highly empathetic and naturally attuned to others' emotions. People trust you and feel heard in your presence.",
-    strengths: ["Social awareness", "Relationship building", "Communication"],
-    growthAreas: ["Setting boundaries", "Independence", "Self-reflection"],
-    icon: "🤝"
+    type: 'connector',
+    title: 'Connector',
+    icon: '🤝',
+    description: 'You\'re naturally empathetic and relationally focused, skilled at building and nurturing connections.',
+    strengths: ['Empathy', 'Relationship building', 'Supporting others'],
+    growthAreas: ['Setting boundaries', 'Self-prioritization', 'Direct communication'],
+    microPractice: 'Practice saying "no" to one small request today without explaining yourself.'
+  },
+  regulator: {
+    type: 'regulator',
+    title: 'Regulator',
+    icon: '🧘‍♂️',
+    description: 'You\'re skilled at emotional regulation, maintaining balance and calm even in challenging situations.',
+    strengths: ['Emotional stability', 'Stress management', 'Level-headed thinking'],
+    growthAreas: ['Emotional expression', 'Showing vulnerability', 'Embracing change'],
+    microPractice: 'Share one genuine feeling with someone today that you would normally keep to yourself.'
   },
   observer: {
-    type: "observer",
-    title: "The Observer",
-    description: "You're analytical and perceptive, noticing patterns others miss. Your strength is objectivity and clear insight.",
-    strengths: ["Analytical thinking", "Objectivity", "Pattern recognition"],
-    growthAreas: ["Emotional engagement", "Self-expression", "Intuitive decisions"],
-    icon: "👁️"
+    type: 'observer',
+    title: 'Observer',
+    icon: '👁️',
+    description: 'You\'re analytically minded and perceptive, noticing patterns and details others might miss.',
+    strengths: ['Analytical thinking', 'Objectivity', 'Pattern recognition'],
+    growthAreas: ['Emotional engagement', 'Intuitive decisions', 'Vulnerability'],
+    microPractice: 'Make one decision today based purely on how you feel, not logic.'
   }
 };
 

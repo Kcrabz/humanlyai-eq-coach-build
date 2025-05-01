@@ -1,80 +1,62 @@
 
-import { OnboardingStep, useOnboarding } from "@/context/OnboardingContext";
-import { Check } from "lucide-react";
-
-interface StepInfo {
-  step: OnboardingStep;
-  label: string;
-  number: number;
-}
-
-const steps: StepInfo[] = [
-  { step: "archetype", label: "Select Archetype", number: 1 },
-  { step: "coaching", label: "Choose Coaching Style", number: 2 },
-  { step: "complete", label: "Complete Setup", number: 3 },
-];
+import { useOnboarding } from "@/context/OnboardingContext";
 
 export function OnboardingProgress() {
-  const { state, goToStep, isStepComplete } = useOnboarding();
+  const { state, isStepComplete } = useOnboarding();
   const { currentStep } = state;
-
-  const handleStepClick = (step: OnboardingStep) => {
-    // Only allow navigation to completed steps or the current one
-    if (isStepComplete(step) || steps.find(s => s.step === step)?.number < steps.find(s => s.step === currentStep)?.number!) {
-      goToStep(step);
-    }
-  };
+  
+  const steps = [
+    { id: "goal", label: "Your Goal" },
+    { id: "archetype", label: "EQ Assessment" },
+    { id: "complete", label: "Results" }
+  ];
   
   return (
     <div className="mb-10">
-      <div className="flex items-center justify-center mb-6">
-        <ol className="flex items-center w-full max-w-md">
-          {steps.map((stepInfo, index) => {
-            const isActive = currentStep === stepInfo.step;
-            const isCompleted = isStepComplete(stepInfo.step);
+      <div className="flex justify-between items-center">
+        {steps.map((step, index) => (
+          <div key={step.id} className="flex flex-col items-center relative">
+            {/* Line connecting steps */}
+            {index < steps.length - 1 && (
+              <div 
+                className={`absolute top-3 left-1/2 w-full h-[2px] ${
+                  isStepComplete(step.id) ? 'bg-humanly-teal' : 'bg-gray-200'
+                }`}
+                style={{ transform: 'translateX(50%)' }}
+              />
+            )}
             
-            return (
-              <li 
-                key={stepInfo.step} 
-                className={`flex items-center ${index < steps.length - 1 ? "w-full" : ""}`}
-              >
-                <button
-                  type="button"
-                  onClick={() => handleStepClick(stepInfo.step)}
-                  disabled={!isCompleted && !isActive}
-                  className={`flex items-center justify-center w-8 h-8 rounded-full ${
-                    isActive
-                      ? "bg-humanly-teal text-white"
-                      : isCompleted
-                      ? "bg-humanly-teal/80 text-white"
-                      : "bg-humanly-gray-lightest"
-                  } transition-colors ${(isCompleted || isActive) ? "cursor-pointer" : "cursor-not-allowed"}`}
-                  aria-current={isActive ? "step" : undefined}
-                >
-                  {isCompleted ? (
-                    <Check className="w-4 h-4" />
-                  ) : (
-                    <span>{stepInfo.number}</span>
-                  )}
-                </button>
-                
-                {index < steps.length - 1 && (
-                  <div
-                    className={`w-full h-0.5 transition-colors ${
-                      index < steps.findIndex(s => s.step === currentStep)
-                        ? "bg-humanly-teal"
-                        : "bg-humanly-gray-light"
-                    }`}
-                  ></div>
-                )}
-                
-                <span className="absolute mt-16 text-xs font-medium text-gray-500">
-                  {stepInfo.label}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+            {/* Step circle */}
+            <div 
+              className={`w-6 h-6 rounded-full z-10 flex items-center justify-center ${
+                currentStep === step.id
+                  ? 'bg-humanly-teal text-white'
+                  : isStepComplete(step.id)
+                  ? 'bg-humanly-teal text-white'
+                  : 'bg-gray-200 text-gray-500'
+              }`}
+            >
+              {isStepComplete(step.id) && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              )}
+            </div>
+            
+            {/* Step label */}
+            <div 
+              className={`mt-2 text-xs ${
+                currentStep === step.id
+                  ? 'text-humanly-teal font-semibold'
+                  : isStepComplete(step.id)
+                  ? 'text-humanly-teal font-semibold'
+                  : 'text-gray-500'
+              }`}
+            >
+              {step.label}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

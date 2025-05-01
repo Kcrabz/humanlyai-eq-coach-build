@@ -6,13 +6,13 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export type OnboardingStep = "archetype" | "coaching" | "complete";
+export type OnboardingStep = "goal" | "archetype" | "complete";
 
 interface OnboardingState {
   currentStep: OnboardingStep;
   completedSteps: OnboardingStep[];
+  goal: string | null;
   archetype: EQArchetype | null;
-  coachingMode: CoachingMode | null;
   isLoading: boolean;
 }
 
@@ -20,17 +20,17 @@ interface OnboardingContextType {
   state: OnboardingState;
   goToStep: (step: OnboardingStep) => void;
   completeStep: (step: OnboardingStep, data?: any) => Promise<void>;
+  setGoal: (goal: string) => void;
   setArchetype: (archetype: EQArchetype) => void;
-  setCoachingMode: (mode: CoachingMode) => void;
   resetOnboarding: () => void;
   isStepComplete: (step: OnboardingStep) => boolean;
 }
 
 const initialState: OnboardingState = {
-  currentStep: "archetype",
+  currentStep: "goal",
   completedSteps: [],
+  goal: null,
   archetype: null,
-  coachingMode: null,
   isLoading: true,
 };
 
@@ -38,7 +38,7 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 
 export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<OnboardingState>(initialState);
-  const { user, setArchetype: updateUserArchetype, setCoachingMode: updateUserCoachingMode, setOnboarded } = useAuth();
+  const { user, setArchetype: updateUserArchetype, setOnboarded } = useAuth();
   const navigate = useNavigate();
 
   // Load saved progress from database on initial load
@@ -52,7 +52,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // If user is already onboarded, redirect to chat
       if (user.onboarded) {
         console.log("User is already onboarded, navigate to chat from OnboardingContext");
-        navigate("/chat");
+        navigate("/chat", { replace: true });
         return;
       }
 
@@ -62,14 +62,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         
         if (user.eq_archetype) {
           newState.archetype = user.eq_archetype;
-          newState.completedSteps = ["archetype"];
-          newState.currentStep = "coaching";
-
-          if (user.coaching_mode) {
-            newState.coachingMode = user.coaching_mode;
-            newState.completedSteps = ["archetype", "coaching"];
-            newState.currentStep = "complete";
-          }
+          newState.completedSteps = ["goal", "archetype"];
+          newState.currentStep = "complete";
         }
 
         setState({ ...newState, isLoading: false });
@@ -97,15 +91,6 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       } catch (error) {
         toast.error("Failed to save your archetype selection");
         console.error("Error saving archetype:", error);
-        return;
-      }
-    } else if (step === "coaching" && state.coachingMode) {
-      try {
-        await updateUserCoachingMode(state.coachingMode);
-        toast.success("Coaching mode saved successfully");
-      } catch (error) {
-        toast.error("Failed to save your coaching mode selection");
-        console.error("Error saving coaching mode:", error);
         return;
       }
     } else if (step === "complete") {
@@ -141,8 +126,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       // Determine the next step
       let nextStep: OnboardingStep = prev.currentStep;
-      if (step === "archetype") nextStep = "coaching";
-      else if (step === "coaching") nextStep = "complete";
+      if (step === "goal") nextStep = "archetype";
+      else if (step === "archetype") nextStep = "complete";
 
       console.log(`Moving to next step: ${nextStep}`);
       
@@ -154,12 +139,12 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     });
   };
 
-  const setArchetype = (archetype: EQArchetype) => {
-    setState((prev) => ({ ...prev, archetype }));
+  const setGoal = (goal: string) => {
+    setState((prev) => ({ ...prev, goal }));
   };
 
-  const setCoachingMode = (coachingMode: CoachingMode) => {
-    setState((prev) => ({ ...prev, coachingMode }));
+  const setArchetype = (archetype: EQArchetype) => {
+    setState((prev) => ({ ...prev, archetype }));
   };
 
   const resetOnboarding = () => {
@@ -176,8 +161,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         state,
         goToStep,
         completeStep,
+        setGoal,
         setArchetype,
-        setCoachingMode,
         resetOnboarding,
         isStepComplete,
       }}

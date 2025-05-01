@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ArchetypeSelectorWithQuiz } from "@/components/onboarding/ArchetypeSelectorWithQuiz";
-import { CoachingModeSelector } from "@/components/onboarding/CoachingModeSelector";
+import { GoalSelector } from "@/components/onboarding/GoalSelector";
 import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { OnboardingProvider, useOnboarding } from "@/context/OnboardingContext";
@@ -39,12 +39,12 @@ const OnboardingContent = () => {
     <div className="max-w-5xl mx-auto p-4 py-12">
       <OnboardingProgress />
       
-      {currentStep === "archetype" && (
-        <ArchetypeSelectorWithQuiz />
+      {currentStep === "goal" && (
+        <GoalSelector />
       )}
       
-      {currentStep === "coaching" && (
-        <CoachingModeSelector />
+      {currentStep === "archetype" && (
+        <ArchetypeSelectorWithQuiz />
       )}
       
       {currentStep === "complete" && (
