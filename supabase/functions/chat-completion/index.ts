@@ -38,28 +38,15 @@ serve(async (req) => {
       );
     }
 
-    // Get the user's API key
-    const { data: apiKeyData, error: apiKeyError } = await supabaseClient
-      .from('user_api_keys')
-      .select('openai_api_key')
-      .eq('user_id', user.id)
-      .single();
-
-    // Check if API key exists
-    if (apiKeyError || !apiKeyData?.openai_api_key) {
-      // Fall back to environment variable if user hasn't set their own API key
-      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-      
-      if (!OPENAI_API_KEY) {
-        return new Response(
-          JSON.stringify({ error: 'No API key available. Please add your OpenAI API key in settings.' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
+    // Get API key from environment variable (your centrally managed key)
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     
-    // Use user's API key or fall back to environment variable
-    const apiKey = apiKeyData?.openai_api_key || Deno.env.get('OPENAI_API_KEY');
+    if (!OPENAI_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: 'API configuration error. Please contact support.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Get the user's subscription tier
     const { data: profileData } = await supabaseClient
@@ -108,11 +95,11 @@ serve(async (req) => {
     // Add the current user message
     messages.push({ role: 'user', content: message });
 
-    // Call OpenAI API
+    // Call OpenAI API using only the environment variable API key
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
