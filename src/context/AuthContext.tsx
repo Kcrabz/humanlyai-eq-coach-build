@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -24,7 +23,7 @@ const mockUsers = [
   {
     id: "1",
     email: "demo@humanly.ai",
-    name: "Demo User",
+    name: "Demo User", // This is optional in the User type
     subscription_tier: "free" as SubscriptionTier,
     onboarded: false,
   },
