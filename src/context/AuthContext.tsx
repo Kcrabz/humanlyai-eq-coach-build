@@ -1,7 +1,9 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthContextType {
   user: User | null;
@@ -19,7 +21,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Mock user data for now - would be replaced with Supabase
-const mockUsers = [
+const mockUsers: User[] = [
   {
     id: "1",
     email: "demo@humanly.ai",
