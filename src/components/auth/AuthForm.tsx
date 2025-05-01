@@ -23,42 +23,55 @@ export function AuthForm({ type }: AuthFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent multiple submissions
+    if (!email || !password) {
+      setError("Email and password are required");
+      return;
+    }
+    
     if (isSubmitting) {
       console.log("Form submission already in progress");
       return;
     }
     
-    console.log(`Attempting to ${type}`);
+    console.log(`Starting ${type} attempt for: ${email}`);
     setError(null);
     setIsSubmitting(true);
     
     try {
+      let response;
+      
       if (type === "login") {
-        console.log("Calling login function");
-        const response = await login(email, password);
-        console.log("Login response:", response);
+        response = await login(email, password);
         
-        if (response?.error) {
-          console.error("Login error in component:", response.error);
-          setError(response.error.message);
+        if (response?.success) {
+          toast.success("Logged in successfully");
+        } else if (response?.error) {
+          console.error("Login error:", response.error);
+          setError(response.error.message || "Login failed");
+          toast.error("Login failed", { 
+            description: response.error.message 
+          });
         }
       } else {
-        console.log("Calling signup function");
-        const response = await signup(email, password);
-        console.log("Signup response:", response);
+        response = await signup(email, password);
         
-        if (response?.error) {
-          console.error("Signup error in component:", response.error);
-          setError(response.error.message);
+        if (response?.success) {
+          toast.success("Account created successfully");
+        } else if (response?.error) {
+          console.error("Signup error:", response.error);
+          setError(response.error.message || "Signup failed");
+          toast.error("Signup failed", { 
+            description: response.error.message 
+          });
         }
       }
     } catch (err) {
-      console.error("Authentication error:", err);
+      console.error("Unexpected authentication error:", err);
       const message = err instanceof Error ? err.message : "Authentication failed";
       setError(message);
+      toast.error("Authentication error", { description: message });
     } finally {
-      console.log("Setting isSubmitting to false");
+      console.log("Authentication attempt completed, resetting submission state");
       setIsSubmitting(false);
     }
   };
