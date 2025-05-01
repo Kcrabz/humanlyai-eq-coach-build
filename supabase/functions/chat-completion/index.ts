@@ -40,44 +40,14 @@ serve(async (req) => {
 
     console.log(`Processing request for user: ${user.id}`);
 
-    // Get the user's API key from the database
-    let userApiKey;
-    try {
-      const { data: apiKeyData, error: apiKeyError } = await supabaseClient
-        .from('user_api_keys')
-        .select('openai_api_key')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (!apiKeyError && apiKeyData?.openai_api_key) {
-        userApiKey = apiKeyData.openai_api_key;
-        console.log("Found user-provided API key");
-      } else {
-        console.error("No user API key found");
-        return new Response(
-          JSON.stringify({ 
-            error: "Please add your OpenAI API key in settings to use the chat feature.",
-            useAnotherKey: true 
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    } catch (error) {
-      console.error("Error fetching user API key:", error);
-      return new Response(
-        JSON.stringify({ 
-          error: "Failed to retrieve your API key. Please check settings.",
-          useAnotherKey: true 
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // Use the OpenAI API key from environment variables
+    const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
     
-    if (!userApiKey) {
-      console.error("No OpenAI API key available");
+    if (!openAiApiKey) {
+      console.error("No OpenAI API key available in environment variables");
       return new Response(
-        JSON.stringify({ error: 'API key not configured. Please add your API key in settings.' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'API key not configured on the server. Please contact the administrator.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -118,7 +88,7 @@ serve(async (req) => {
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${userApiKey}`,
+          'Authorization': `Bearer ${openAiApiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -131,16 +101,6 @@ serve(async (req) => {
       if (!response.ok) {
         const errorData = await response.json();
         console.error("OpenAI API error:", errorData);
-        
-        if (errorData.error?.message?.includes("exceeded your current quota")) {
-          return new Response(
-            JSON.stringify({ 
-              error: "API quota exceeded. Please update your API key in settings.",
-              useAnotherKey: true 
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
         
         throw new Error(errorData.error?.message || 'Error calling OpenAI API');
       }
@@ -158,8 +118,7 @@ serve(async (req) => {
       
       return new Response(
         JSON.stringify({ 
-          error: "Failed to get response from OpenAI. Please check your API key in settings.",
-          useAnotherKey: true 
+          error: "Failed to get response from OpenAI. Please try again later or contact support."
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
