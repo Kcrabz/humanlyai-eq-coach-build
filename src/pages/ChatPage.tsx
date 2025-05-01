@@ -9,6 +9,7 @@ import { ChatUsage } from "@/components/chat/ChatUsage";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
+import { ExternalLink } from "lucide-react";
 
 const ChatPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -76,6 +77,18 @@ const ChatPage = () => {
                 </Button>
               </div>
             </div>
+          </div>
+          
+          <div className="mt-auto">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full text-xs" 
+              onClick={() => window.open("https://humanlyai.me/support", "_blank")}
+            >
+              <ExternalLink className="h-3 w-3 mr-1" />
+              Report an Issue
+            </Button>
           </div>
         </div>
 

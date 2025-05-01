@@ -13,6 +13,7 @@ interface ChatContextType {
   isLoading: boolean;
   startNewChat: () => void;
   usageInfo: UsageInfo | null;
+  error: string | null;
 }
 
 interface UsageInfo {
@@ -27,6 +28,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -52,10 +54,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const startNewChat = () => {
     setMessages([]);
+    setError(null);
   };
 
   const sendMessage = async (content: string) => {
     if (!content.trim() || !user) return;
+
+    // Reset any previous errors
+    setError(null);
 
     // Add user message to the chat
     const userMessage: ChatMessage = {
@@ -70,27 +76,35 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     try {
       // Call the edge function to get a response from OpenAI
-      const { data, error } = await supabase.functions.invoke('chat-completion', {
+      const { data, error: apiError } = await supabase.functions.invoke('chat-completion', {
         body: {
           message: content
         }
       });
 
-      if (error) {
-        console.error("Edge function error:", error);
-        toast.error("Failed to send message. Please try again.");
-        throw new Error(error.message || "Failed to send message");
+      if (apiError) {
+        console.error("Edge function error:", apiError);
+        setError("Failed to connect to AI assistant. Please try again later.");
+        toast.error("Failed to connect to AI assistant", {
+          description: "Our servers are experiencing issues. Please try again later.",
+        });
+        throw new Error(apiError.message || "Failed to send message");
       }
 
       if (!data) {
         console.error("Invalid response from edge function:", data);
-        toast.error("No response received. Please try again.");
+        setError("No response received from AI assistant");
+        toast.error("No response received", {
+          description: "Please try again or contact support if the issue persists.",
+        });
         throw new Error("No response received from AI assistant");
       }
 
       // Check if there's a usage limit error
       if (data.error && data.usageLimit) {
-        toast.error(data.error, {
+        const errorMessage = "You've reached your monthly message limit";
+        setError(errorMessage);
+        toast.error(errorMessage, {
           description: "Please upgrade your subscription to continue using the AI coach.",
           action: {
             label: "Upgrade",
@@ -111,7 +125,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Check if there's any other error
       if (data.error) {
-        toast.error(data.error);
+        setError(data.error);
+        toast.error("Error from AI assistant", {
+          description: data.error,
+        });
         throw new Error(data.error);
       }
 
@@ -135,19 +152,32 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         }
       } else {
+        setError("Empty response received from the AI assistant");
         toast.error("Received empty response from the AI assistant");
         throw new Error("Empty response from AI assistant");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending message:", error);
-      // Toast is already shown in the error handlers above
+      
+      // If we haven't set a specific error message already, set a generic one
+      if (!error.message?.includes("You've reached your monthly message limit") && 
+          !error.message?.includes("No response received")) {
+        setError("An error occurred while sending your message. Our team has been notified.");
+        
+        // Check for OpenAI quota errors
+        if (error.message?.includes("quota") || error.message?.includes("exceeded")) {
+          toast.error("Service temporarily unavailable", {
+            description: "Our AI system is currently unavailable. Our team has been notified and is working on it.",
+          });
+        }
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <ChatContext.Provider value={{ messages, sendMessage, isLoading, startNewChat, usageInfo }}>
+    <ChatContext.Provider value={{ messages, sendMessage, isLoading, startNewChat, usageInfo, error }}>
       {children}
     </ChatContext.Provider>
   );
