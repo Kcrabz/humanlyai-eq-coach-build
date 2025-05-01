@@ -2,12 +2,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+// CORS headers for all responses
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// The enhanced system prompt as provided
+// The enhanced system prompt
 const KAI_SYSTEM_PROMPT = `Overview
 You are Kai, the HumanlyAI Coach — a highly skilled Emotional Intelligence (EQ) mentor. Your mission is to help users grow their Human Skills: self-awareness, emotional regulation, empathy, motivation, and connection.
 
@@ -96,7 +97,7 @@ Mention when relevant:
 ✓ Try a new challenge tomorrow  
 ✓ Reflect on a quote?"`;
 
-// Token limits per tier
+// Token limits per subscription tier
 const TIER_LIMITS = {
   free: 15000,     // Free trial
   basic: 105000,   // Basic tier
@@ -108,353 +109,455 @@ function estimateTokenCount(text: string): number {
   return Math.ceil(text.length / 4);
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+// Helper function to handle OPTIONS requests
+function handleOptionsRequest() {
+  return new Response(null, { headers: corsHeaders });
+}
+
+// Helper function to create error responses
+function createErrorResponse(message: string, status = 500, additionalData = {}) {
+  return new Response(
+    JSON.stringify({ 
+      error: message,
+      ...additionalData 
+    }),
+    { 
+      status, 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+    }
+  );
+}
+
+// Create Supabase client with auth context
+function createSupabaseClient(req: Request) {
+  return createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    { 
+      global: { headers: { Authorization: req.headers.get('Authorization')! } },
+      auth: { persistSession: false }
+    }
+  );
+}
+
+// Helper function to get authenticated user
+async function getAuthenticatedUser(supabaseClient: any) {
+  const { data: { user }, error } = await supabaseClient.auth.getUser();
+  
+  if (error || !user) {
+    throw new Error('Unauthorized');
   }
+  
+  return user;
+}
 
-  try {
-    // Create a Supabase client with the Auth context of the logged in user
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { 
-        global: { headers: { Authorization: req.headers.get('Authorization')! } },
-        auth: { persistSession: false }
-      }
-    );
-
-    const { message } = await req.json();
-
-    // Get the user from the request
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
-
-    if (!user) {
-      return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log(`Processing chat request for user: ${user.id}`);
-
-    // Try to get user's API key first
-    const { data: userApiKey, error: userApiKeyError } = await supabaseClient
-      .from('user_api_keys')
-      .select('openai_api_key')
-      .eq('user_id', user.id)
-      .maybeSingle();
-    
-    // Use the user's API key if available, otherwise use the environment variable
-    let openAiApiKey = userApiKey?.openai_api_key;
-    
-    // If no user API key, fall back to environment variable
-    if (!openAiApiKey) {
-      openAiApiKey = Deno.env.get('OPENAI_API_KEY');
-      console.log("Using environment API key");
-    } else {
-      console.log("Using user's personal API key");
-    }
-    
-    if (!openAiApiKey) {
-      console.error("No OpenAI API key available");
-      return new Response(
-        JSON.stringify({ error: 'API key not configured. Please check your account settings or contact the administrator.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    try {
-      // Get current month-year for usage tracking
-      const today = new Date();
-      const monthYear = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-
-      // Get the user's subscription tier and usage
-      const { data: profileData, error: profileError } = await supabaseClient
-        .from('profiles')
-        .select('subscription_tier, eq_archetype, coaching_mode')
-        .eq('id', user.id)
-        .maybeSingle();
-      
-      // Get user's current month usage
-      const { data: usageData, error: usageError } = await supabaseClient
-        .from('usage_logs')
-        .select('token_count')
-        .eq('user_id', user.id)
-        .eq('month_year', monthYear)
-        .maybeSingle();
-
-      // Prepare system content based on profile or default values
-      let archetype = "Not set";
-      let coachingMode = "normal";
-      let subscriptionTier = "free";
-      
-      if (!profileError && profileData) {
-        archetype = profileData.eq_archetype || "Not set";
-        coachingMode = profileData.coaching_mode || "normal";
-        subscriptionTier = profileData.subscription_tier || "free";
-      } else {
-        console.log("No profile data found or error:", profileError);
-      }
-
-      // Check if user has exceeded their monthly token limit
-      const currentUsage = usageData?.token_count || 0;
-      const tierLimit = TIER_LIMITS[subscriptionTier as keyof typeof TIER_LIMITS] || TIER_LIMITS.free;
-      
-      if (currentUsage >= tierLimit) {
-        return new Response(
-          JSON.stringify({ 
-            error: `You've reached your monthly token limit (${tierLimit} tokens). Please upgrade your plan to continue.`,
-            usageLimit: true,
-            currentUsage,
-            tierLimit
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Create the dynamic personalization header
-      const personalizationHeader = 
-        `Coaching Mode: ${coachingMode}.\n` +
-        `EQ Archetype: ${archetype}.\n`;
-      
-      // Always use the KAI_SYSTEM_PROMPT as the base, with personalization added
-      let systemContent = personalizationHeader + KAI_SYSTEM_PROMPT;
-      
-      // Prepare messages for OpenAI
-      let messages = [
-        { role: 'system', content: systemContent },
-        { role: 'user', content: message }
-      ];
-      
-      // For premium users, add conversation history as context
-      if (subscriptionTier === 'premium') {
-        // Get the last 5 messages from chat_logs
-        const { data: chatHistory, error: chatHistoryError } = await supabaseClient
-          .from('chat_logs')
-          .select('content, role')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
-        
-        if (!chatHistoryError && chatHistory && chatHistory.length > 0) {
-          // Add previous messages to the conversation context (in correct order)
-          const previousMessages = chatHistory
-            .reverse()
-            .map(msg => ({ role: msg.role, content: msg.content }));
-          
-          // Insert previous messages between system message and current user message
-          messages = [
-            messages[0], // System message
-            ...previousMessages, // Previous conversation
-            messages[1]  // Current user message
-          ];
-          
-          console.log(`Added ${previousMessages.length} previous messages as context for premium user`);
-        }
-      }
-      
-      // Use a more affordable and reliable model option
-      const modelToUse = "gpt-4o-mini";
-      
-      console.log(`Calling OpenAI with model: ${modelToUse}`);
-      
-      // Calculate estimated token count for the input
-      const inputText = messages.map(m => m.content).join(' ');
-      const estimatedInputTokens = estimateTokenCount(inputText);
-      
-      // Try to call OpenAI API
-      try {
-        console.log("Attempting OpenAI API call with API key:", 
-                    openAiApiKey ? `${openAiApiKey.substring(0, 5)}...${openAiApiKey.substring(openAiApiKey.length - 5)}` : "No key available");
-                    
-        // Call OpenAI API
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openAiApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: modelToUse,
-            messages: messages,
-            max_tokens: 500
-          }),
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("OpenAI API error:", errorData);
-          
-          // Check for quota errors specifically
-          if (errorData.error?.type === 'insufficient_quota' || 
-              errorData.error?.code === 'insufficient_quota' ||
-              errorData.error?.message?.includes('quota')) {
-            
-            // If this was a user's personal API key, mark it as invalid
-            if (userApiKey?.openai_api_key) {
-              console.log("User's personal API key has insufficient quota, marking as invalid");
-            }
-            
-            return new Response(
-              JSON.stringify({ 
-                error: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
-                quotaExceeded: true,
-                details: errorData.error?.message || 'Your OpenAI account has reached its usage limit or has billing issues.'
-              }),
-              { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-          
-          // Check for invalid API key
-          if (errorData.error?.type === 'invalid_request_error' && 
-              errorData.error?.message?.includes('API key')) {
-            
-            // If this was a user's personal API key, mark it as invalid
-            if (userApiKey?.openai_api_key) {
-              console.log("User's personal API key is invalid");
-            }
-            
-            return new Response(
-              JSON.stringify({ 
-                error: 'Invalid API key provided. Please check your API key and try again.',
-                invalidKey: true,
-                details: 'The API key provided was rejected by OpenAI.'
-              }),
-              { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-          }
-          
-          throw new Error(errorData.error?.message || 'Error calling OpenAI API');
-        }
-        
-        const completion = await response.json();
-        const assistantResponse = completion.choices[0].message.content;
-
-        // Calculate estimated token count for the output
-        const estimatedOutputTokens = estimateTokenCount(assistantResponse);
-        // Total tokens for this request
-        const totalTokensUsed = estimatedInputTokens + estimatedOutputTokens;
-        
-        // Update usage tracking for all tiers
-        await updateUsageTracking(supabaseClient, user.id, monthYear, totalTokensUsed);
-        
-        // Only log conversations for Premium tier
-        if (subscriptionTier === 'premium') {
-          // Log user message
-          await supabaseClient
-            .from('chat_logs')
-            .insert({
-              user_id: user.id,
-              content: message,
-              role: 'user',
-              token_count: estimatedInputTokens
-            });
-            
-          // Log assistant response
-          await supabaseClient
-            .from('chat_logs')
-            .insert({
-              user_id: user.id,
-              content: assistantResponse,
-              role: 'assistant',
-              token_count: estimatedOutputTokens
-            });
-        }
-        
-        return new Response(
-          JSON.stringify({ 
-            response: assistantResponse,
-            usage: {
-              currentUsage: currentUsage + totalTokensUsed,
-              limit: tierLimit,
-              tokensUsed: totalTokensUsed
-            }
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-        
-      } catch (openAIError) {
-        // Log the specific OpenAI error for troubleshooting
-        console.error("Error with OpenAI call:", openAIError);
-        
-        // Check if it's a quota error based on the error message
-        if (openAIError.message?.includes('quota') || 
-            openAIError.message?.includes('exceeded') || 
-            openAIError.message?.includes('billing')) {
-          return new Response(
-            JSON.stringify({ 
-              error: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
-              quotaExceeded: true,
-              details: openAIError.message
-            }),
-            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-        
-        throw openAIError;  // Re-throw for general error handling
-      }
-      
-    } catch (processError) {
-      console.error("Error processing request:", processError);
-      
-      return new Response(
-        JSON.stringify({ 
-          error: "Failed to process your message. Our team has been notified.",
-          details: processError.message
-        }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-  } catch (error) {
-    console.error('Error in chat completion function:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: "An unexpected error occurred processing your request.",
-        details: error.message || "No specific details available" 
-      }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+// Get the API key to use (user's personal or environment)
+async function getOpenAIApiKey(supabaseClient: any, userId: string) {
+  console.log(`Getting API key for user: ${userId}`);
+  
+  // Try to get user's API key first
+  const { data: userApiKey, error: userApiKeyError } = await supabaseClient
+    .from('user_api_keys')
+    .select('openai_api_key')
+    .eq('user_id', userId)
+    .maybeSingle();
+  
+  // Use the user's API key if available, otherwise use the environment variable
+  let openAiApiKey = userApiKey?.openai_api_key;
+  
+  // If no user API key, fall back to environment variable
+  if (!openAiApiKey) {
+    openAiApiKey = Deno.env.get('OPENAI_API_KEY');
+    console.log("Using environment API key");
+  } else {
+    console.log("Using user's personal API key");
   }
-});
+  
+  if (!openAiApiKey) {
+    throw new Error('API key not configured. Please check your account settings or contact the administrator.');
+  }
+  
+  return openAiApiKey;
+}
 
-// Helper function to update usage tracking
-async function updateUsageTracking(supabaseClient: any, userId: string, monthYear: string, tokenCount: number) {
-  // Try to update existing record
-  const { data, error } = await supabaseClient
+// Get user's subscription tier and usage data
+async function getUserProfileAndUsage(supabaseClient: any, userId: string) {
+  // Get current month-year for usage tracking
+  const today = new Date();
+  const monthYear = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+  // Get the user's subscription tier and profile data
+  const { data: profileData, error: profileError } = await supabaseClient
+    .from('profiles')
+    .select('subscription_tier, eq_archetype, coaching_mode')
+    .eq('id', userId)
+    .maybeSingle();
+  
+  // Get user's current month usage
+  const { data: usageData, error: usageError } = await supabaseClient
     .from('usage_logs')
-    .select('id, token_count')
+    .select('token_count')
     .eq('user_id', userId)
     .eq('month_year', monthYear)
     .maybeSingle();
-    
-  if (error) {
-    console.error("Error fetching usage:", error);
-    return;
+
+  // Set default values if no data found
+  const archetype = profileData?.eq_archetype || "Not set";
+  const coachingMode = profileData?.coaching_mode || "normal";
+  const subscriptionTier = profileData?.subscription_tier || "free";
+  const currentUsage = usageData?.token_count || 0;
+
+  return {
+    archetype,
+    coachingMode,
+    subscriptionTier,
+    currentUsage,
+    monthYear
+  };
+}
+
+// Check if user has exceeded their monthly token limit
+function checkUsageLimit(currentUsage: number, subscriptionTier: string) {
+  const tierLimit = TIER_LIMITS[subscriptionTier as keyof typeof TIER_LIMITS] || TIER_LIMITS.free;
+  
+  if (currentUsage >= tierLimit) {
+    throw {
+      type: 'usage_limit',
+      message: `You've reached your monthly token limit (${tierLimit} tokens). Please upgrade your plan to continue.`,
+      currentUsage,
+      tierLimit
+    };
   }
   
-  if (data) {
-    // Update existing record
-    await supabaseClient
-      .from('usage_logs')
-      .update({ 
-        token_count: data.token_count + tokenCount,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', data.id);
-  } else {
-    // Insert new record
-    await supabaseClient
-      .from('usage_logs')
-      .insert({
-        user_id: userId,
-        month_year: monthYear,
-        token_count: tokenCount
-      });
+  return tierLimit;
+}
+
+// Prepare messages for OpenAI API
+function prepareMessages(message: string, archetype: string, coachingMode: string, chatHistory: any[] = []) {
+  // Create the dynamic personalization header
+  const personalizationHeader = 
+    `Coaching Mode: ${coachingMode}.\n` +
+    `EQ Archetype: ${archetype}.\n`;
+  
+  // Always use the KAI_SYSTEM_PROMPT as the base, with personalization added
+  const systemContent = personalizationHeader + KAI_SYSTEM_PROMPT;
+  
+  // Base messages with system prompt and current user message
+  let messages = [
+    { role: 'system', content: systemContent },
+    { role: 'user', content: message }
+  ];
+  
+  // If we have chat history, add it between system message and current user message
+  if (chatHistory && chatHistory.length > 0) {
+    // Add previous messages to the conversation context (in correct order)
+    const previousMessages = chatHistory
+      .reverse()
+      .map(msg => ({ role: msg.role, content: msg.content }));
+    
+    // Insert previous messages between system message and current user message
+    messages = [
+      messages[0], // System message
+      ...previousMessages, // Previous conversation
+      messages[1]  // Current user message
+    ];
+    
+    console.log(`Added ${previousMessages.length} previous messages as context`);
+  }
+  
+  return messages;
+}
+
+// Call OpenAI API
+async function callOpenAI(openAiApiKey: string, messages: any[]) {
+  console.log("Calling OpenAI with model: gpt-4o-mini");
+  
+  try {
+    // Call OpenAI API
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: messages,
+        max_tokens: 500
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("OpenAI API error:", errorData);
+      
+      // Check for different error types
+      if (errorData.error?.type === 'insufficient_quota' || 
+          errorData.error?.code === 'insufficient_quota' ||
+          errorData.error?.message?.includes('quota')) {
+        
+        throw {
+          type: 'quota_exceeded',
+          message: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
+          details: errorData.error?.message || 'Your OpenAI account has reached its usage limit or has billing issues.'
+        };
+      }
+      
+      if (errorData.error?.type === 'invalid_request_error' && 
+          errorData.error?.message?.includes('API key')) {
+        
+        throw {
+          type: 'invalid_key',
+          message: 'Invalid API key provided. Please check your API key and try again.',
+          details: 'The API key provided was rejected by OpenAI.'
+        };
+      }
+      
+      throw new Error(errorData.error?.message || 'Error calling OpenAI API');
+    }
+    
+    const completion = await response.json();
+    return completion.choices[0].message.content;
+  } catch (error) {
+    // Rethrow if it's already our custom error format
+    if (error.type) {
+      throw error;
+    }
+    
+    // Check for quota errors in the error message
+    if (error.message?.includes('quota') || 
+        error.message?.includes('exceeded') || 
+        error.message?.includes('billing')) {
+      throw {
+        type: 'quota_exceeded',
+        message: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
+        details: error.message
+      };
+    }
+    
+    throw new Error(`OpenAI API error: ${error.message}`);
   }
 }
 
+// Update usage tracking in the database
+async function updateUsageTracking(supabaseClient: any, userId: string, monthYear: string, tokenCount: number) {
+  try {
+    // Try to update existing record
+    const { data, error } = await supabaseClient
+      .from('usage_logs')
+      .select('id, token_count')
+      .eq('user_id', userId)
+      .eq('month_year', monthYear)
+      .maybeSingle();
+      
+    if (error) {
+      console.error("Error fetching usage:", error);
+      return;
+    }
+    
+    if (data) {
+      // Update existing record
+      await supabaseClient
+        .from('usage_logs')
+        .update({ 
+          token_count: data.token_count + tokenCount,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', data.id);
+    } else {
+      // Insert new record
+      await supabaseClient
+        .from('usage_logs')
+        .insert({
+          user_id: userId,
+          month_year: monthYear,
+          token_count: tokenCount
+        });
+    }
+  } catch (error) {
+    console.error("Error updating usage tracking:", error);
+  }
+}
+
+// Log chat messages for premium users
+async function logChatMessages(supabaseClient: any, userId: string, userMessage: string, assistantResponse: string, estimatedInputTokens: number, estimatedOutputTokens: number) {
+  try {
+    // Log user message
+    await supabaseClient
+      .from('chat_logs')
+      .insert({
+        user_id: userId,
+        content: userMessage,
+        role: 'user',
+        token_count: estimatedInputTokens
+      });
+      
+    // Log assistant response
+    await supabaseClient
+      .from('chat_logs')
+      .insert({
+        user_id: userId,
+        content: assistantResponse,
+        role: 'assistant',
+        token_count: estimatedOutputTokens
+      });
+  } catch (error) {
+    console.error("Error logging chat messages:", error);
+  }
+}
+
+// Main handler function
+async function handleChatCompletion(req: Request) {
+  const supabaseClient = createSupabaseClient(req);
+  
+  try {
+    // Get authenticated user
+    const user = await getAuthenticatedUser(supabaseClient);
+    console.log(`Processing chat request for user: ${user.id}`);
+    
+    // Extract user message from request
+    const { message } = await req.json();
+    
+    // Get OpenAI API key
+    const openAiApiKey = await getOpenAIApiKey(supabaseClient, user.id);
+    
+    // Get user profile and usage data
+    const { 
+      archetype, 
+      coachingMode, 
+      subscriptionTier, 
+      currentUsage, 
+      monthYear 
+    } = await getUserProfileAndUsage(supabaseClient, user.id);
+    
+    // Check usage limits
+    const tierLimit = checkUsageLimit(currentUsage, subscriptionTier);
+    
+    // Get chat history for premium users
+    let chatHistory = [];
+    if (subscriptionTier === 'premium') {
+      // Get the last 10 messages from chat_logs
+      const { data: chatHistoryData, error: chatHistoryError } = await supabaseClient
+        .from('chat_logs')
+        .select('content, role')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (!chatHistoryError && chatHistoryData) {
+        chatHistory = chatHistoryData;
+        console.log(`Retrieved ${chatHistory.length} previous messages for premium user`);
+      }
+    }
+    
+    // Prepare messages for OpenAI
+    const messages = prepareMessages(message, archetype, coachingMode, chatHistory);
+    
+    // Calculate estimated token count for input
+    const inputText = messages.map(m => m.content).join(' ');
+    const estimatedInputTokens = estimateTokenCount(inputText);
+    
+    // Make OpenAI API call
+    const assistantResponse = await callOpenAI(openAiApiKey, messages);
+    
+    // Calculate estimated token count for output
+    const estimatedOutputTokens = estimateTokenCount(assistantResponse);
+    const totalTokensUsed = estimatedInputTokens + estimatedOutputTokens;
+    
+    // Update usage tracking
+    await updateUsageTracking(supabaseClient, user.id, monthYear, totalTokensUsed);
+    
+    // Log chat messages for premium users
+    if (subscriptionTier === 'premium') {
+      await logChatMessages(
+        supabaseClient, 
+        user.id, 
+        message, 
+        assistantResponse, 
+        estimatedInputTokens, 
+        estimatedOutputTokens
+      );
+    }
+    
+    // Return successful response
+    return new Response(
+      JSON.stringify({ 
+        response: assistantResponse,
+        usage: {
+          currentUsage: currentUsage + totalTokensUsed,
+          limit: tierLimit,
+          tokensUsed: totalTokensUsed
+        }
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+    
+  } catch (error) {
+    console.error('Error in chat completion function:', error);
+    
+    // Handle specific error types
+    if (error.type === 'usage_limit') {
+      return createErrorResponse(
+        error.message,
+        402,
+        { 
+          usageLimit: true,
+          currentUsage: error.currentUsage,
+          tierLimit: error.tierLimit
+        }
+      );
+    }
+    
+    if (error.type === 'quota_exceeded') {
+      return createErrorResponse(
+        error.message,
+        429,
+        { 
+          quotaExceeded: true,
+          details: error.details
+        }
+      );
+    }
+    
+    if (error.type === 'invalid_key') {
+      return createErrorResponse(
+        error.message,
+        401,
+        { 
+          invalidKey: true,
+          details: error.details
+        }
+      );
+    }
+    
+    if (error.message === 'Unauthorized') {
+      return createErrorResponse('Unauthorized', 401);
+    }
+    
+    // Generic error response
+    return createErrorResponse(
+      "An unexpected error occurred processing your request.",
+      500,
+      { details: error.message || "No specific details available" }
+    );
+  }
+}
+
+// Main entry point
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return handleOptionsRequest();
+  }
+
+  try {
+    return await handleChatCompletion(req);
+  } catch (error) {
+    console.error('Unhandled error in chat completion function:', error);
+    return createErrorResponse(
+      "An unexpected error occurred processing your request.",
+      500,
+      { details: error.message || "No specific details available" }
+    );
+  }
+});
