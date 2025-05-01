@@ -27,7 +27,7 @@ export const useChatMessages = () => {
   // Helper function to create a unique ID
   const createId = () => Math.random().toString(36).substring(2, 11);
 
-  const addUserMessage = (content: string): ChatMessage => {
+  const addUserMessage = (content: string): string => {
     const userMessage: ChatMessage = {
       id: createId(),
       content,
@@ -36,7 +36,7 @@ export const useChatMessages = () => {
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    return userMessage;
+    return userMessage.id;
   };
 
   const addAssistantMessage = (content: string) => {
@@ -48,6 +48,18 @@ export const useChatMessages = () => {
     };
 
     setMessages((prev) => [...prev, assistantMessage]);
+    return assistantMessage.id;
+  };
+
+  // New function to update an existing message (for streaming)
+  const updateAssistantMessage = (id: string, content: string) => {
+    setMessages((prev) => 
+      prev.map((message) => 
+        message.id === id 
+          ? { ...message, content }
+          : message
+      )
+    );
   };
 
   const clearMessages = () => {
@@ -58,6 +70,7 @@ export const useChatMessages = () => {
     messages,
     addUserMessage,
     addAssistantMessage,
+    updateAssistantMessage,
     clearMessages,
   };
 };

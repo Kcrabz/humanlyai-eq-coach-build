@@ -24,7 +24,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { 
     messages, 
     addUserMessage, 
-    addAssistantMessage, 
+    addAssistantMessage,
+    updateAssistantMessage, 
     clearMessages 
   } = useChatMessages();
   
@@ -33,6 +34,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     usageInfo,
     error,
     sendMessage: apiSendMessage,
+    sendMessageStream,
     retryLastMessage: apiRetryLastMessage,
     setError
   } = useChatApi();
@@ -40,15 +42,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
     
-    // Add user message to the chat first
-    addUserMessage(content);
-    
-    // Then send to API
-    await apiSendMessage(content, addUserMessage, addAssistantMessage);
+    // Use streaming by default for better user experience
+    await sendMessageStream(content, addUserMessage, updateAssistantMessage);
   };
 
   const retryLastMessage = async () => {
-    await apiRetryLastMessage(addUserMessage, addAssistantMessage);
+    await apiRetryLastMessage(addUserMessage, addAssistantMessage, updateAssistantMessage);
   };
 
   const startNewChat = () => {

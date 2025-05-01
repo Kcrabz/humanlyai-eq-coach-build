@@ -268,7 +268,121 @@ function prepareMessages(message: string, archetype: string, coachingMode: strin
   return messages;
 }
 
-// Call OpenAI API
+// Call OpenAI API with streaming support
+async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
+  console.log("Streaming from OpenAI with model: gpt-4o-mini");
+  
+  try {
+    // Call OpenAI API with streaming enabled
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: messages,
+        max_tokens: 500,
+        stream: true
+      }),
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("OpenAI API error:", errorData);
+      
+      // Check for different error types
+      if (errorData.error?.type === 'insufficient_quota' || 
+          errorData.error?.code === 'insufficient_quota' ||
+          errorData.error?.message?.includes('quota')) {
+        
+        throw {
+          type: 'quota_exceeded',
+          message: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
+          details: errorData.error?.message || 'Your OpenAI account has reached its usage limit or has billing issues.'
+        };
+      }
+      
+      if (errorData.error?.type === 'invalid_request_error' && 
+          errorData.error?.message?.includes('API key')) {
+        
+        throw {
+          type: 'invalid_key',
+          message: 'Invalid API key provided. Please check your API key and try again.',
+          details: 'The API key provided was rejected by OpenAI.'
+        };
+      }
+      
+      throw new Error(errorData.error?.message || 'Error calling OpenAI API');
+    }
+    
+    // Process the stream
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("Failed to get reader from response");
+    }
+    
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let completeResponse = "";
+    
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      
+      // Decode chunk
+      const chunk = decoder.decode(value);
+      buffer += chunk;
+      
+      // Process all complete lines in buffer
+      let lines = buffer.split('\n');
+      buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
+      
+      for (const line of lines) {
+        if (line.trim() === '') continue;
+        if (line.trim() === 'data: [DONE]') continue;
+        
+        // Extract data portion
+        const dataMatch = line.match(/^data: (.*)$/);
+        if (!dataMatch) continue;
+        
+        try {
+          const json = JSON.parse(dataMatch[1]);
+          const contentDelta = json.choices[0]?.delta?.content || '';
+          if (contentDelta) {
+            completeResponse += contentDelta;
+            yield contentDelta;
+          }
+        } catch (e) {
+          console.error("Error parsing streaming JSON:", e);
+        }
+      }
+    }
+    
+    return completeResponse;
+  } catch (error) {
+    // Rethrow if it's already our custom error format
+    if (error.type) {
+      throw error;
+    }
+    
+    // Check for quota errors in the error message
+    if (error.message?.includes('quota') || 
+        error.message?.includes('exceeded') || 
+        error.message?.includes('billing')) {
+      throw {
+        type: 'quota_exceeded',
+        message: 'OpenAI API quota exceeded. Please check your billing status or contact support.',
+        details: error.message
+      };
+    }
+    
+    throw new Error(`OpenAI API error: ${error.message}`);
+  }
+}
+
+// Call OpenAI API (non-streaming version for fallback)
 async function callOpenAI(openAiApiKey: string, messages: any[]) {
   console.log("Calling OpenAI with model: gpt-4o-mini");
   
@@ -406,7 +520,193 @@ async function logChatMessages(supabaseClient: any, userId: string, userMessage:
   }
 }
 
-// Main handler function
+// Stream handler for chat completion
+async function handleStreamingChatCompletion(req: Request) {
+  const supabaseClient = createSupabaseClient(req);
+  
+  try {
+    // Get authenticated user
+    const user = await getAuthenticatedUser(supabaseClient);
+    console.log(`Processing streaming chat request for user: ${user.id}`);
+    
+    // Extract user message from request
+    const { message } = await req.json();
+    
+    // Get OpenAI API key
+    const openAiApiKey = await getOpenAIApiKey(supabaseClient, user.id);
+    
+    // Get user profile and usage data
+    const { 
+      archetype, 
+      coachingMode, 
+      subscriptionTier, 
+      currentUsage, 
+      monthYear 
+    } = await getUserProfileAndUsage(supabaseClient, user.id);
+    
+    // Check usage limits
+    const tierLimit = checkUsageLimit(currentUsage, subscriptionTier);
+    
+    // Get chat history for premium users
+    let chatHistory = [];
+    if (subscriptionTier === 'premium') {
+      // Get the last 10 messages from chat_logs
+      const { data: chatHistoryData, error: chatHistoryError } = await supabaseClient
+        .from('chat_logs')
+        .select('content, role')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      if (!chatHistoryError && chatHistoryData) {
+        chatHistory = chatHistoryData;
+        console.log(`Retrieved ${chatHistory.length} previous messages for premium user`);
+      }
+    }
+    
+    // Prepare messages for OpenAI
+    const messages = prepareMessages(message, archetype, coachingMode, chatHistory);
+    
+    // Calculate estimated token count for input
+    const inputText = messages.map(m => m.content).join(' ');
+    const estimatedInputTokens = estimateTokenCount(inputText);
+    
+    // Create a transformer to handle the streaming response
+    const encoder = new TextEncoder();
+    let fullResponse = "";
+    
+    // Set up streaming response
+    const stream = new TransformStream();
+    const writer = stream.writable.getWriter();
+    
+    // Process the streaming response
+    (async () => {
+      try {
+        // Send initial data packet with message info
+        const initialData = {
+          type: 'init',
+          message: 'Stream initialized'
+        };
+        await writer.write(encoder.encode(`data: ${JSON.stringify(initialData)}\n\n`));
+        
+        // Process streaming responses
+        for await (const chunk of streamOpenAI(openAiApiKey, messages)) {
+          // Add each chunk to the full response
+          fullResponse += chunk;
+          
+          // Send chunk to client
+          const chunkData = {
+            type: 'chunk',
+            content: chunk
+          };
+          await writer.write(encoder.encode(`data: ${JSON.stringify(chunkData)}\n\n`));
+        }
+        
+        // Calculate estimated token count for output
+        const estimatedOutputTokens = estimateTokenCount(fullResponse);
+        const totalTokensUsed = estimatedInputTokens + estimatedOutputTokens;
+        
+        // Update usage tracking
+        await updateUsageTracking(supabaseClient, user.id, monthYear, totalTokensUsed);
+        
+        // Log chat messages for premium users
+        if (subscriptionTier === 'premium') {
+          await logChatMessages(
+            supabaseClient, 
+            user.id, 
+            message, 
+            fullResponse, 
+            estimatedInputTokens, 
+            estimatedOutputTokens
+          );
+        }
+        
+        // Send completion message with usage info
+        const completionData = {
+          type: 'complete',
+          usage: {
+            currentUsage: currentUsage + totalTokensUsed,
+            limit: tierLimit,
+            tokensUsed: totalTokensUsed
+          }
+        };
+        await writer.write(encoder.encode(`data: ${JSON.stringify(completionData)}\n\n`));
+      } catch (error) {
+        console.error('Error in streaming:', error);
+        
+        // Send error message to client
+        const errorData = {
+          type: 'error',
+          error: error.message || 'Unknown error',
+          details: error
+        };
+        await writer.write(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
+      } finally {
+        await writer.close();
+      }
+    })();
+    
+    // Return the stream response
+    return new Response(stream.readable, {
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      }
+    });
+  } catch (error) {
+    console.error('Error in streaming chat completion:', error);
+    
+    // Handle specific error types
+    if (error.type === 'usage_limit') {
+      return createErrorResponse(
+        error.message,
+        402,
+        { 
+          usageLimit: true,
+          currentUsage: error.currentUsage,
+          tierLimit: error.tierLimit
+        }
+      );
+    }
+    
+    if (error.type === 'quota_exceeded') {
+      return createErrorResponse(
+        error.message,
+        429,
+        { 
+          quotaExceeded: true,
+          details: error.details
+        }
+      );
+    }
+    
+    if (error.type === 'invalid_key') {
+      return createErrorResponse(
+        error.message,
+        401,
+        { 
+          invalidKey: true,
+          details: error.details
+        }
+      );
+    }
+    
+    if (error.message === 'Unauthorized') {
+      return createErrorResponse('Unauthorized', 401);
+    }
+    
+    // Generic error response
+    return createErrorResponse(
+      "An unexpected error occurred processing your request.",
+      500,
+      { details: error.message || "No specific details available" }
+    );
+  }
+}
+
+// Non-streaming handler for chat completion (fallback)
 async function handleChatCompletion(req: Request) {
   const supabaseClient = createSupabaseClient(req);
   
@@ -416,7 +716,12 @@ async function handleChatCompletion(req: Request) {
     console.log(`Processing chat request for user: ${user.id}`);
     
     // Extract user message from request
-    const { message } = await req.json();
+    const { message, stream } = await req.json();
+    
+    // If streaming is requested, use the streaming handler
+    if (stream === true) {
+      return handleStreamingChatCompletion(req);
+    }
     
     // Get OpenAI API key
     const openAiApiKey = await getOpenAIApiKey(supabaseClient, user.id);
@@ -551,7 +856,18 @@ serve(async (req) => {
   }
 
   try {
-    return await handleChatCompletion(req);
+    // Check for streaming request via content-type or accept header
+    const contentType = req.headers.get('content-type') || '';
+    const acceptHeader = req.headers.get('accept') || '';
+    const wantsStream = 
+      contentType.includes('text/event-stream') || 
+      acceptHeader.includes('text/event-stream');
+    
+    if (wantsStream) {
+      return handleStreamingChatCompletion(req);
+    } else {
+      return handleChatCompletion(req);
+    }
   } catch (error) {
     console.error('Unhandled error in chat completion function:', error);
     return createErrorResponse(
