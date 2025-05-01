@@ -96,6 +96,18 @@ Mention when relevant:
 ✓ Try a new challenge tomorrow  
 ✓ Reflect on a quote?"`;
 
+// Token limits per tier
+const TIER_LIMITS = {
+  free: 15000,     // Free trial
+  basic: 105000,   // Basic tier
+  premium: 245000  // Premium tier
+};
+
+// Utility to count tokens (simple approximation)
+function estimateTokenCount(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -113,7 +125,7 @@ serve(async (req) => {
       }
     );
 
-    const { message, systemPrompt } = await req.json();
+    const { message } = await req.json();
 
     // Get the user from the request
     const {
@@ -127,7 +139,7 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Processing request for user: ${user.id}`);
+    console.log(`Processing chat request for user: ${user.id}`);
 
     // Use the OpenAI API key from environment variables
     const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -141,22 +153,52 @@ serve(async (req) => {
     }
 
     try {
-      // Get the user's subscription tier
+      // Get current month-year for usage tracking
+      const today = new Date();
+      const monthYear = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+
+      // Get the user's subscription tier and usage
       const { data: profileData, error: profileError } = await supabaseClient
         .from('profiles')
         .select('subscription_tier, eq_archetype, coaching_mode')
         .eq('id', user.id)
         .maybeSingle();
       
+      // Get user's current month usage
+      const { data: usageData, error: usageError } = await supabaseClient
+        .from('usage_logs')
+        .select('token_count')
+        .eq('user_id', user.id)
+        .eq('month_year', monthYear)
+        .maybeSingle();
+
       // Prepare system content based on profile or default values
       let archetype = "Not set";
       let coachingMode = "normal";
+      let subscriptionTier = "free";
       
       if (!profileError && profileData) {
         archetype = profileData.eq_archetype || "Not set";
         coachingMode = profileData.coaching_mode || "normal";
+        subscriptionTier = profileData.subscription_tier || "free";
       } else {
         console.log("No profile data found or error:", profileError);
+      }
+
+      // Check if user has exceeded their monthly token limit
+      const currentUsage = usageData?.token_count || 0;
+      const tierLimit = TIER_LIMITS[subscriptionTier as keyof typeof TIER_LIMITS] || TIER_LIMITS.free;
+      
+      if (currentUsage >= tierLimit) {
+        return new Response(
+          JSON.stringify({ 
+            error: `You've reached your monthly token limit (${tierLimit} tokens). Please upgrade your plan to continue.`,
+            usageLimit: true,
+            currentUsage,
+            tierLimit
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       
       // Create the dynamic personalization header
@@ -173,10 +215,41 @@ serve(async (req) => {
         { role: 'user', content: message }
       ];
       
+      // For premium users, add conversation history as context
+      if (subscriptionTier === 'premium') {
+        // Get the last 5 messages from chat_logs
+        const { data: chatHistory, error: chatHistoryError } = await supabaseClient
+          .from('chat_logs')
+          .select('content, role')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(10);
+        
+        if (!chatHistoryError && chatHistory && chatHistory.length > 0) {
+          // Add previous messages to the conversation context (in correct order)
+          const previousMessages = chatHistory
+            .reverse()
+            .map(msg => ({ role: msg.role, content: msg.content }));
+          
+          // Insert previous messages between system message and current user message
+          messages = [
+            messages[0], // System message
+            ...previousMessages, // Previous conversation
+            messages[1]  // Current user message
+          ];
+          
+          console.log(`Added ${previousMessages.length} previous messages as context for premium user`);
+        }
+      }
+      
       // Use the model parameter to specify the model
       const modelToUse = "gpt-4o-mini";
       
       console.log(`Calling OpenAI with model: ${modelToUse}`);
+      
+      // Calculate estimated token count for the input
+      const inputText = messages.map(m => m.content).join(' ');
+      const estimatedInputTokens = estimateTokenCount(inputText);
       
       // Call OpenAI API
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -201,9 +274,47 @@ serve(async (req) => {
       
       const completion = await response.json();
       const assistantResponse = completion.choices[0].message.content;
+
+      // Calculate estimated token count for the output
+      const estimatedOutputTokens = estimateTokenCount(assistantResponse);
+      // Total tokens for this request
+      const totalTokensUsed = estimatedInputTokens + estimatedOutputTokens;
+      
+      // Update usage tracking for all tiers
+      await updateUsageTracking(supabaseClient, user.id, monthYear, totalTokensUsed);
+      
+      // Only log conversations for Premium tier
+      if (subscriptionTier === 'premium') {
+        // Log user message
+        await supabaseClient
+          .from('chat_logs')
+          .insert({
+            user_id: user.id,
+            content: message,
+            role: 'user',
+            token_count: estimatedInputTokens
+          });
+          
+        // Log assistant response
+        await supabaseClient
+          .from('chat_logs')
+          .insert({
+            user_id: user.id,
+            content: assistantResponse,
+            role: 'assistant',
+            token_count: estimatedOutputTokens
+          });
+      }
       
       return new Response(
-        JSON.stringify({ response: assistantResponse }),
+        JSON.stringify({ 
+          response: assistantResponse,
+          usage: {
+            currentUsage: currentUsage + totalTokensUsed,
+            limit: tierLimit,
+            tokensUsed: totalTokensUsed
+          }
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
       
@@ -226,3 +337,39 @@ serve(async (req) => {
     );
   }
 });
+
+// Helper function to update usage tracking
+async function updateUsageTracking(supabaseClient: any, userId: string, monthYear: string, tokenCount: number) {
+  // Try to update existing record
+  const { data, error } = await supabaseClient
+    .from('usage_logs')
+    .select('id, token_count')
+    .eq('user_id', userId)
+    .eq('month_year', monthYear)
+    .maybeSingle();
+    
+  if (error) {
+    console.error("Error fetching usage:", error);
+    return;
+  }
+  
+  if (data) {
+    // Update existing record
+    await supabaseClient
+      .from('usage_logs')
+      .update({ 
+        token_count: data.token_count + tokenCount,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', data.id);
+  } else {
+    // Insert new record
+    await supabaseClient
+      .from('usage_logs')
+      .insert({
+        user_id: userId,
+        month_year: monthYear,
+        token_count: tokenCount
+      });
+  }
+}

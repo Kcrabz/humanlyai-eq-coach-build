@@ -5,6 +5,7 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { ChatProvider } from "@/context/ChatContext";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatInput } from "@/components/chat/ChatInput";
+import { ChatUsage } from "@/components/chat/ChatUsage";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
@@ -57,11 +58,13 @@ const ChatPage = () => {
           <div className="mb-6">
             <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Subscription</h3>
             <div className="bg-white p-3 rounded-lg border">
-              <p className="font-medium">Free Trial</p>
+              <p className="font-medium">{user.subscription_tier === 'premium' ? 'Premium' : (user.subscription_tier === 'basic' ? 'Basic' : 'Free Trial')}</p>
               <div className="flex justify-between items-center mt-1">
-                <p className="text-xs text-muted-foreground">Expires in 24h</p>
+                <p className="text-xs text-muted-foreground">
+                  {user.subscription_tier === 'free' ? 'Expires in 24h' : 'Monthly plan'}
+                </p>
                 <Button size="sm" variant="outline" onClick={() => navigate("/pricing")}>
-                  Upgrade
+                  {user.subscription_tier === 'premium' ? 'Manage' : 'Upgrade'}
                 </Button>
               </div>
             </div>
@@ -84,6 +87,7 @@ const ChatPage = () => {
           
           <ChatProvider>
             <div className="flex-1 overflow-hidden flex flex-col">
+              <ChatUsage />
               <ChatList />
               <ChatInput />
             </div>

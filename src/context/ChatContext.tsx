@@ -12,6 +12,13 @@ interface ChatContextType {
   sendMessage: (content: string) => Promise<void>;
   isLoading: boolean;
   startNewChat: () => void;
+  usageInfo: UsageInfo | null;
+}
+
+interface UsageInfo {
+  currentUsage: number;
+  limit: number;
+  percentage: number;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -19,6 +26,7 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [usageInfo, setUsageInfo] = useState<UsageInfo | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -64,8 +72,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Call the edge function to get a response from OpenAI
       const { data, error } = await supabase.functions.invoke('chat-completion', {
         body: {
-          message: content,
-          systemPrompt: SYSTEM_PROMPT
+          message: content
         }
       });
 
@@ -81,7 +88,28 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error("No response received from AI assistant");
       }
 
-      // Check if there's an error
+      // Check if there's a usage limit error
+      if (data.error && data.usageLimit) {
+        toast.error(data.error, {
+          description: "Please upgrade your subscription to continue using the AI coach.",
+          action: {
+            label: "Upgrade",
+            onClick: () => navigate("/pricing")
+          }
+        });
+
+        if (data.currentUsage && data.tierLimit) {
+          setUsageInfo({
+            currentUsage: data.currentUsage,
+            limit: data.tierLimit,
+            percentage: (data.currentUsage / data.tierLimit) * 100
+          });
+        }
+        
+        throw new Error(data.error);
+      }
+      
+      // Check if there's any other error
       if (data.error) {
         toast.error(data.error);
         throw new Error(data.error);
@@ -97,6 +125,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
 
         setMessages((prev) => [...prev, assistantMessage]);
+        
+        // Update usage info if provided
+        if (data.usage) {
+          setUsageInfo({
+            currentUsage: data.usage.currentUsage,
+            limit: data.usage.limit,
+            percentage: (data.usage.currentUsage / data.usage.limit) * 100
+          });
+        }
       } else {
         toast.error("Received empty response from the AI assistant");
         throw new Error("Empty response from AI assistant");
@@ -110,7 +147,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <ChatContext.Provider value={{ messages, sendMessage, isLoading, startNewChat }}>
+    <ChatContext.Provider value={{ messages, sendMessage, isLoading, startNewChat, usageInfo }}>
       {children}
     </ChatContext.Provider>
   );
