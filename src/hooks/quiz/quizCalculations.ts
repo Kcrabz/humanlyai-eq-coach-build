@@ -39,9 +39,11 @@ export const calculateArchetypeScores = (
     const option = question.options.find((o: QuizOption) => o.id === optionId);
     if (!option) return;
     
-    // Add scores for each archetype
+    // Add scores for each archetype - fix the type issue here
     Object.entries(option.archetypeScores).forEach(([archetype, score]) => {
-      scores[archetype] = (scores[archetype] || 0) + score;
+      if (typeof score === 'number') {  // Add type check to ensure score is a number
+        scores[archetype] = (scores[archetype] || 0) + score;
+      }
     });
   });
   
