@@ -39,7 +39,7 @@ export const useChatMessages = () => {
     return userMessage.id;
   };
 
-  const addAssistantMessage = (content: string) => {
+  const addAssistantMessage = (content: string): string => {
     const assistantMessage: ChatMessage = {
       id: createId(),
       content,
@@ -52,7 +52,7 @@ export const useChatMessages = () => {
   };
 
   // New function to update an existing message (for streaming)
-  const updateAssistantMessage = (id: string, content: string) => {
+  const updateAssistantMessage = (id: string, content: string): void => {
     setMessages((prev) => 
       prev.map((message) => 
         message.id === id 

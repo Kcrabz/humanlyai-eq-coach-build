@@ -105,7 +105,11 @@ export const useChatApi = () => {
   };
 
   // Streaming message send function
-  const sendMessageStream = async (content: string, addUserMessage: Function, updateAssistantMessage: Function) => {
+  const sendMessageStream = async (
+    content: string, 
+    addUserMessage: (message: string) => string, 
+    updateAssistantMessage: (id: string, content: string) => void
+  ) => {
     if (!content.trim()) return;
 
     // Reset any previous errors
@@ -155,7 +159,11 @@ export const useChatApi = () => {
     }
   };
 
-  const retryLastMessage = async (addUserMessage: Function, addAssistantMessage: Function, updateAssistantMessage: Function) => {
+  const retryLastMessage = async (
+    addUserMessage: (message: string) => string, 
+    addAssistantMessage: (message: string) => void, 
+    updateAssistantMessage: (id: string, content: string) => void
+  ) => {
     if (!lastSentMessage) return;
     
     setError(null);
