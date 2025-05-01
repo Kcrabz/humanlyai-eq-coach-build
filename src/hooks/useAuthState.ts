@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { User } from '@/types';
+import { User, EQArchetype, CoachingMode, SubscriptionTier } from '@/types';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -32,9 +32,9 @@ export const useAuthState = () => {
               email: session.user.email!,
               name: profile.name || undefined,
               avatar_url: profile.avatar_url || undefined,
-              eq_archetype: profile.eq_archetype || undefined,
-              coaching_mode: profile.coaching_mode || undefined,
-              subscription_tier: profile.subscription_tier || 'free',
+              eq_archetype: profile.eq_archetype as EQArchetype || undefined,
+              coaching_mode: profile.coaching_mode as CoachingMode || undefined,
+              subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
               onboarded: profile.onboarded || false
             };
             
