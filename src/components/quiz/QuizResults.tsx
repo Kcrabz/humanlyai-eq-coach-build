@@ -13,6 +13,7 @@ interface QuizResultsProps {
     strengths: string[];
     growthAreas: string[];
     eqPotentialCategory: 'High EQ Potential' | 'Developing EQ' | 'Growth Opportunity';
+    bio?: string;
   };
   onContinue: () => void;
   onRestart?: () => void;
@@ -34,6 +35,15 @@ export const QuizResults = ({
       case 'connector':
         legacyType = 'connector';
         break;
+      case 'observer':
+        legacyType = 'observer';
+        break;
+      case 'activator':
+        legacyType = 'activator';
+        break;
+      case 'regulator':
+        legacyType = 'regulator';
+        break;
       case 'driver':
         legacyType = 'activator'; // Map driver to activator
         break;
@@ -47,33 +57,26 @@ export const QuizResults = ({
     return ARCHETYPES[legacyType];
   };
   
-  // Get archetype descriptions based on dominant type
+  // Get archetype descriptions based on dominant type if we don't have a bio from GPT
   const getArchetypeDescription = (archetype: string) => {
+    // If we have a bio from GPT, use that instead
+    if (result.bio) {
+      return result.bio;
+    }
+    
     switch(archetype) {
       case 'reflector':
         return "You're deeply self-aware and often in tune with your inner world. You're thoughtful, reflective, and naturally introspective. While your inner clarity is strong, your next level lies in building deeper social connections and expressing your insights outwardly.";
       case 'connector':
         return "You're highly empathetic and naturally attuned to others' emotions. People trust you and feel heard in your presence. Your growth edge lies in regulating your own emotions under stress and setting healthy boundaries while maintaining compassion.";
       case 'driver':
+      case 'activator':
         return "You're motivated, goal-driven, and resilient. You thrive on results and have a strong inner fire. Sometimes, your focus on achievement can overlook the emotional undercurrents around you. Growth comes from tuning into emotional nuance—yours and others'.";
       case 'harmonizer':
+      case 'regulator':
         return "You have a well-rounded EQ with solid skills across awareness, empathy, and regulation. You're balanced but may seek mastery or depth in specific areas to take your leadership or relationships to the next level.";
-      default:
-        return "";
-    }
-  };
-  
-  // Get growth tips based on dominant type
-  const getGrowthTips = (archetype: string) => {
-    switch(archetype) {
-      case 'reflector':
-        return "Work on translating your self-awareness into action and expressing your insights with others.";
-      case 'connector':
-        return "Practice setting healthy boundaries while still maintaining your natural empathy and connection with others.";
-      case 'driver':
-        return "Take time to slow down and tune into the emotional nuances in situations before taking action.";
-      case 'harmonizer':
-        return "Develop deeper mastery in specific EQ areas that resonate most with your personal and professional goals.";
+      case 'observer':
+        return "You approach situations analytically and prefer to process emotions privately. You excel at objective decision-making but may benefit from embracing more emotional vulnerability in your interactions with others.";
       default:
         return "";
     }
@@ -92,14 +95,19 @@ export const QuizResults = ({
     'reflector': 'The Reflector',
     'connector': 'The Connector',
     'driver': 'The Driver',
-    'harmonizer': 'The Harmonizer'
+    'activator': 'The Activator',
+    'harmonizer': 'The Harmonizer',
+    'regulator': 'The Regulator',
+    'observer': 'The Observer'
   };
   
   return (
     <Card className="w-full max-w-3xl mx-auto">
       <CardHeader className="text-center">
         <div className="mb-2 text-4xl">{archetypeInfo.icon}</div>
-        <CardTitle className="text-2xl md:text-3xl">Your EQ Archetype: {archetypeTitles[result.dominantArchetype]}</CardTitle>
+        <CardTitle className="text-2xl md:text-3xl">
+          Your EQ Archetype: {archetypeTitles[result.dominantArchetype] || archetypeTitles[archetypeInfo.type]}
+        </CardTitle>
         <CardDescription className="text-lg mt-2">
           {getArchetypeDescription(result.dominantArchetype)}
         </CardDescription>
@@ -149,8 +157,8 @@ export const QuizResults = ({
         </div>
         
         <div className="p-4 border border-humanly-teal/30 rounded-lg">
-          <h3 className="font-medium mb-2">Growth Tips</h3>
-          <p>{getGrowthTips(result.dominantArchetype)}</p>
+          <h3 className="font-medium mb-2">Growth Tip</h3>
+          <p>{result.growthAreas[0] || "Practice daily reflection on your emotional responses to situations."}</p>
         </div>
       </CardContent>
       <CardFooter className="flex gap-2">

@@ -3,3 +3,6 @@ project_id = "acboajrjgqqnfrtozssb"
 
 [functions.chat-completion]
 verify_jwt = true
+
+[functions.analyze-eq-archetype]
+verify_jwt = true

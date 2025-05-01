@@ -6,6 +6,8 @@ import { ARCHETYPES } from '@/lib/constants';
 import { quizQuestions } from '@/components/quiz/questions';
 import { useProfileActions } from './useProfileActions';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const useQuiz = () => {
   const { user } = useAuth();
@@ -20,7 +22,7 @@ export const useQuiz = () => {
     isCompleted: false,
   });
 
-  const selectOption = (optionId: string) => {
+  const selectOption = async (optionId: string) => {
     const currentQuestion = quizQuestions[state.currentQuestionIndex];
     
     // Find the selected option to get its value
@@ -42,20 +44,94 @@ export const useQuiz = () => {
     const isLastQuestion = nextIndex >= quizQuestions.length;
     
     if (isLastQuestion) {
-      // Calculate results if this is the last question
-      const result = calculateResults(newAnswers, newAnswerScores);
-      
-      setState({
-        ...state,
-        answers: newAnswers,
-        answerScores: newAnswerScores,
-        isCompleted: true,
-        result
-      });
-      
-      // Save the result to the user's profile
-      if (user) {
-        setArchetype(mapArchetypeToLegacy(result.dominantArchetype));
+      try {
+        setState(prev => ({
+          ...prev,
+          answers: newAnswers,
+          answerScores: newAnswerScores,
+          isLoading: true
+        }));
+        
+        // Prepare answers for the edge function
+        const formattedAnswers: Record<string, number> = {};
+        Object.keys(newAnswers).forEach(questionId => {
+          const questionIndex = quizQuestions.findIndex(q => q.id === questionId);
+          const option = quizQuestions[questionIndex].options.find(o => o.id === newAnswers[questionId]);
+          if (option) {
+            formattedAnswers[questionId] = option.value;
+          }
+        });
+        
+        // Call the Supabase Edge Function for GPT-based analysis
+        const { data, error } = await supabase.functions.invoke('analyze-eq-archetype', {
+          body: { 
+            answers: formattedAnswers,
+            userId: user?.id
+          }
+        });
+
+        if (error) {
+          console.error("Error calling analyze-eq-archetype:", error);
+          toast.error("Error analyzing your results. Using local calculation instead.");
+          // Fall back to local calculation
+          const result = calculateResults(newAnswers, newAnswerScores);
+          setState({
+            ...state,
+            answers: newAnswers,
+            answerScores: newAnswerScores,
+            isCompleted: true,
+            result,
+            isLoading: false
+          });
+          
+          if (user) {
+            setArchetype(mapArchetypeToLegacy(result.dominantArchetype));
+          }
+          return;
+        }
+        
+        // Use the GPT-analyzed result
+        const gptResult = {
+          dominantArchetype: data.archetype,
+          eqPotentialScore: Object.values(newAnswerScores).reduce((sum, score) => sum + score, 0),
+          scores: calculateArchetypeScores(newAnswers, newAnswerScores),
+          strengths: [data.focus],
+          growthAreas: [data.tip],
+          eqPotentialCategory: determineEQPotentialCategory(Object.values(newAnswerScores).reduce((sum, score) => sum + score, 0)),
+          bio: data.bio
+        };
+
+        setState({
+          ...state,
+          answers: newAnswers,
+          answerScores: newAnswerScores,
+          isCompleted: true,
+          result: gptResult,
+          isLoading: false
+        });
+        
+        // Save the result to the user's profile
+        if (user) {
+          setArchetype(mapArchetypeToLegacy(gptResult.dominantArchetype));
+        }
+      } catch (error) {
+        console.error("Error processing quiz results:", error);
+        toast.error("Error analyzing results. Using local calculation instead.");
+        
+        // Fall back to local calculation
+        const result = calculateResults(newAnswers, newAnswerScores);
+        setState({
+          ...state,
+          answers: newAnswers,
+          answerScores: newAnswerScores,
+          isCompleted: true,
+          result,
+          isLoading: false
+        });
+        
+        if (user) {
+          setArchetype(mapArchetypeToLegacy(result.dominantArchetype));
+        }
       }
     } else {
       // Move to the next question
@@ -67,6 +143,47 @@ export const useQuiz = () => {
       });
     }
   };
+  
+  const determineEQPotentialCategory = (score: number): 'High EQ Potential' | 'Developing EQ' | 'Growth Opportunity' => {
+    if (score >= 60) {
+      return 'High EQ Potential';
+    } else if (score >= 40) {
+      return 'Developing EQ';
+    } else {
+      return 'Growth Opportunity';
+    }
+  };
+  
+  // Calculate archetype scores from answers
+  const calculateArchetypeScores = (
+    answers: Record<string, string>,
+    answerScores: Record<string, number>
+  ): Record<string, number> => {
+    const scores: Record<string, number> = {
+      reflector: 0,
+      connector: 0,
+      driver: 0,
+      harmonizer: 0
+    };
+    
+    // Sum up scores based on answers
+    Object.entries(answers).forEach(([questionId, optionId]) => {
+      // Find the question
+      const question = quizQuestions.find(q => q.id === questionId);
+      if (!question) return;
+      
+      // Find the selected option
+      const option = question.options.find(o => o.id === optionId);
+      if (!option) return;
+      
+      // Add scores for each archetype
+      Object.entries(option.archetypeScores).forEach(([archetype, score]) => {
+        scores[archetype] = (scores[archetype] || 0) + score;
+      });
+    });
+    
+    return scores;
+  };
 
   // Map the new archetype names to the legacy ones for backwards compatibility
   const mapArchetypeToLegacy = (archetype: string): EQArchetype => {
@@ -75,6 +192,12 @@ export const useQuiz = () => {
         return 'reflector';
       case 'connector':
         return 'connector';
+      case 'observer':
+        return 'observer';
+      case 'activator':
+        return 'activator'; 
+      case 'regulator':
+        return 'regulator';
       case 'driver':
         return 'activator'; // Map driver to activator
       case 'harmonizer':
@@ -191,7 +314,8 @@ export const useQuiz = () => {
       answers: {},
       answerScores: {},
       isCompleted: false,
-      result: undefined
+      result: undefined,
+      isLoading: false
     });
   };
 

@@ -16,6 +16,18 @@ export const Quiz = ({ onComplete }: QuizProps) => {
     }
   };
   
+  // Show loading state when processing the results
+  if (state.isLoading) {
+    return (
+      <div className="flex items-center justify-center py-16">
+        <div className="space-y-4 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-humanly-teal mx-auto"></div>
+          <p className="text-muted-foreground">Analyzing your responses...</p>
+        </div>
+      </div>
+    );
+  }
+  
   if (state.isCompleted && state.result) {
     return (
       <QuizResults

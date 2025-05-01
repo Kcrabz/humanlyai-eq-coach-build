@@ -18,6 +18,7 @@ export interface QuizState {
   answers: Record<string, string>; // questionId -> optionId
   answerScores: Record<string, number>; // questionId -> score (1-5)
   isCompleted: boolean;
+  isLoading?: boolean;
   result?: {
     dominantArchetype: string;
     eqPotentialScore: number;
@@ -25,5 +26,6 @@ export interface QuizState {
     strengths: string[];
     growthAreas: string[];
     eqPotentialCategory: 'High EQ Potential' | 'Developing EQ' | 'Growth Opportunity';
+    bio?: string;
   };
 }
