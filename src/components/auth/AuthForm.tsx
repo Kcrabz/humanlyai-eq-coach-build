@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
+import { toast } from "sonner";
+import { AlertCircle } from "lucide-react";
 
 interface AuthFormProps {
   type: "login" | "signup";
@@ -14,15 +16,37 @@ interface AuthFormProps {
 export function AuthForm({ type }: AuthFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const { login, signup, isLoading } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     
-    if (type === "login") {
-      await login(email, password);
-    } else {
-      await signup(email, password);
+    try {
+      if (type === "login") {
+        const result = await login(email, password);
+        if (result?.error) {
+          setError(result.error.message);
+          toast.error("Login failed", {
+            description: result.error.message
+          });
+        }
+      } else {
+        const result = await signup(email, password);
+        if (result?.error) {
+          setError(result.error.message);
+          toast.error("Signup failed", {
+            description: result.error.message
+          });
+        }
+      }
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Authentication failed";
+      setError(message);
+      toast.error(type === "login" ? "Login failed" : "Signup failed", {
+        description: message
+      });
     }
   };
   
@@ -40,6 +64,13 @@ export function AuthForm({ type }: AuthFormProps) {
       </div>
       
       <form className="space-y-4" onSubmit={handleSubmit}>
+        {error && (
+          <div className="bg-destructive/15 p-3 rounded-md flex items-start gap-2 text-sm">
+            <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+            <p className="text-destructive">{error}</p>
+          </div>
+        )}
+        
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
           <Input

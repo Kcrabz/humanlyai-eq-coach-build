@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -10,8 +9,8 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{error?: Error} | undefined>;
+  signup: (email: string, password: string) => Promise<{error?: Error} | undefined>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
   setArchetype: (archetype: EQArchetype) => void;
@@ -127,15 +126,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        return { error };
+      }
       
       toast.success("Logged in successfully");
-      
       // Redirect will happen via the auth state change listener
+      return data;
     } catch (error) {
       console.error("Login error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to login");
+      return { error: error instanceof Error ? error : new Error("Failed to login") };
     } finally {
       setIsLoading(false);
     }
@@ -144,14 +146,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
-      if (error) throw error;
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      
+      if (error) {
+        return { error };
+      }
       
       toast.success("Account created successfully");
       // Redirect will happen via the auth state change listener
+      return data;
     } catch (error) {
       console.error("Signup error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to create account");
+      return { error: error instanceof Error ? error : new Error("Failed to create account") };
     } finally {
       setIsLoading(false);
     }
