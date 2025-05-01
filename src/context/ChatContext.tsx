@@ -123,6 +123,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(data.error);
       }
       
+      // Check for quota exceeded errors
+      if (data.error && data.quotaExceeded) {
+        const errorMessage = "Our AI service has reached its usage limits";
+        setError(errorMessage);
+        toast.error(errorMessage, {
+          description: "Our team has been notified. Please try again later.",
+        });
+        throw new Error(data.error);
+      }
+      
       // Check if there's any other error
       if (data.error) {
         setError(data.error);
@@ -161,13 +171,22 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // If we haven't set a specific error message already, set a generic one
       if (!error.message?.includes("You've reached your monthly message limit") && 
-          !error.message?.includes("No response received")) {
+          !error.message?.includes("No response received") &&
+          !error.message?.includes("Our AI service has reached its usage limits")) {
+        
         setError("An error occurred while sending your message. Our team has been notified.");
         
         // Check for OpenAI quota errors
-        if (error.message?.includes("quota") || error.message?.includes("exceeded")) {
-          toast.error("Service temporarily unavailable", {
-            description: "Our AI system is currently unavailable. Our team has been notified and is working on it.",
+        if (error.message?.includes("quota") || 
+            error.message?.includes("exceeded") || 
+            error.message?.includes("billing")) {
+          toast.error("AI service temporarily unavailable", {
+            description: "The AI system is currently overloaded or has reached usage limits. Our team has been notified.",
+          });
+        } else {
+          // Generic error
+          toast.error("Failed to send message", {
+            description: "Please try again or report this issue to our support team.",
           });
         }
       }

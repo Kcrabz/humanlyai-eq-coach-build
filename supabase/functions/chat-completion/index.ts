@@ -242,7 +242,7 @@ serve(async (req) => {
         }
       }
       
-      // Use the model parameter to specify the model
+      // Use a more affordable and reliable model option
       const modelToUse = "gpt-4o-mini";
       
       console.log(`Calling OpenAI with model: ${modelToUse}`);
@@ -251,79 +251,116 @@ serve(async (req) => {
       const inputText = messages.map(m => m.content).join(' ');
       const estimatedInputTokens = estimateTokenCount(inputText);
       
-      // Call OpenAI API
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: modelToUse,
-          messages: messages,
-          max_tokens: 500
-        }),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("OpenAI API error:", errorData);
+      // Try to call OpenAI API
+      try {
+        // Call OpenAI API
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openAiApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: modelToUse,
+            messages: messages,
+            max_tokens: 500
+          }),
+        });
         
-        throw new Error(errorData.error?.message || 'Error calling OpenAI API');
-      }
-      
-      const completion = await response.json();
-      const assistantResponse = completion.choices[0].message.content;
-
-      // Calculate estimated token count for the output
-      const estimatedOutputTokens = estimateTokenCount(assistantResponse);
-      // Total tokens for this request
-      const totalTokensUsed = estimatedInputTokens + estimatedOutputTokens;
-      
-      // Update usage tracking for all tiers
-      await updateUsageTracking(supabaseClient, user.id, monthYear, totalTokensUsed);
-      
-      // Only log conversations for Premium tier
-      if (subscriptionTier === 'premium') {
-        // Log user message
-        await supabaseClient
-          .from('chat_logs')
-          .insert({
-            user_id: user.id,
-            content: message,
-            role: 'user',
-            token_count: estimatedInputTokens
-          });
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("OpenAI API error:", errorData);
           
-        // Log assistant response
-        await supabaseClient
-          .from('chat_logs')
-          .insert({
-            user_id: user.id,
-            content: assistantResponse,
-            role: 'assistant',
-            token_count: estimatedOutputTokens
-          });
+          // Check for quota errors specifically
+          if (errorData.error?.type === 'insufficient_quota' || 
+              errorData.error?.code === 'insufficient_quota' ||
+              errorData.error?.message?.includes('quota')) {
+            return new Response(
+              JSON.stringify({ 
+                error: 'OpenAI API quota exceeded. Please contact the administrator to upgrade the plan.',
+                quotaExceeded: true,
+                details: errorData.error?.message || 'No specific details provided'
+              }),
+              { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          throw new Error(errorData.error?.message || 'Error calling OpenAI API');
+        }
+        
+        const completion = await response.json();
+        const assistantResponse = completion.choices[0].message.content;
+
+        // Calculate estimated token count for the output
+        const estimatedOutputTokens = estimateTokenCount(assistantResponse);
+        // Total tokens for this request
+        const totalTokensUsed = estimatedInputTokens + estimatedOutputTokens;
+        
+        // Update usage tracking for all tiers
+        await updateUsageTracking(supabaseClient, user.id, monthYear, totalTokensUsed);
+        
+        // Only log conversations for Premium tier
+        if (subscriptionTier === 'premium') {
+          // Log user message
+          await supabaseClient
+            .from('chat_logs')
+            .insert({
+              user_id: user.id,
+              content: message,
+              role: 'user',
+              token_count: estimatedInputTokens
+            });
+            
+          // Log assistant response
+          await supabaseClient
+            .from('chat_logs')
+            .insert({
+              user_id: user.id,
+              content: assistantResponse,
+              role: 'assistant',
+              token_count: estimatedOutputTokens
+            });
+        }
+        
+        return new Response(
+          JSON.stringify({ 
+            response: assistantResponse,
+            usage: {
+              currentUsage: currentUsage + totalTokensUsed,
+              limit: tierLimit,
+              tokensUsed: totalTokensUsed
+            }
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+        
+      } catch (openAIError) {
+        // Log the specific OpenAI error for troubleshooting
+        console.error("Error with OpenAI call:", openAIError);
+        
+        // Check if it's a quota error based on the error message
+        if (openAIError.message?.includes('quota') || 
+            openAIError.message?.includes('exceeded') || 
+            openAIError.message?.includes('billing')) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'OpenAI API quota exceeded. The administrator needs to check billing or upgrade the OpenAI plan.',
+              quotaExceeded: true
+            }),
+            { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        throw openAIError;  // Re-throw for general error handling
       }
       
-      return new Response(
-        JSON.stringify({ 
-          response: assistantResponse,
-          usage: {
-            currentUsage: currentUsage + totalTokensUsed,
-            limit: tierLimit,
-            tokensUsed: totalTokensUsed
-          }
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-      
-    } catch (openAIError) {
-      console.error("Error with OpenAI or profile:", openAIError);
+    } catch (processError) {
+      console.error("Error processing request:", processError);
       
       return new Response(
         JSON.stringify({ 
-          error: "Failed to get response from OpenAI. Please try again later or contact support."
+          error: "Failed to process your message. Our team has been notified.",
+          details: processError.message
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -332,7 +369,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in chat completion function:', error);
     return new Response(
-      JSON.stringify({ error: error.message || "An unexpected error occurred" }),
+      JSON.stringify({ 
+        error: "An unexpected error occurred processing your request.",
+        details: error.message || "No specific details available" 
+      }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
