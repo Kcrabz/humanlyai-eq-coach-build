@@ -160,7 +160,8 @@ export const useChatApi = () => {
       const assistantMessageId = await addUserMessage(content);
 
       // Call the edge function with stream set to true
-      const response = await supabase.functions.invokeAsync('chat-completion', {
+      // Fixed: using invoke with responseType: 'stream' instead of invokeAsync
+      const response = await supabase.functions.invoke('chat-completion', {
         body: { message: content, stream: true },
         responseType: 'stream'
       });
