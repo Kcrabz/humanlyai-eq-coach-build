@@ -18,7 +18,7 @@ export function AuthForm({ type }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, signup, isLoading } = useAuth();
+  const { login, signup } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +33,8 @@ export function AuthForm({ type }: AuthFormProps) {
           toast.error("Login failed", {
             description: result.error.message
           });
+        } else {
+          toast.success("Logged in successfully");
         }
       } else {
         const result = await signup(email, password);
@@ -41,6 +43,8 @@ export function AuthForm({ type }: AuthFormProps) {
           toast.error("Signup failed", {
             description: result.error.message
           });
+        } else {
+          toast.success("Account created successfully");
         }
       }
     } catch (err) {
