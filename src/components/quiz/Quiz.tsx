@@ -27,7 +27,7 @@ export const Quiz = ({ onComplete }: QuizProps) => {
   }
   
   const currentQuestion = getCurrentQuestion();
-  const totalQuestions = 15; // Updated to 15 questions
+  const totalQuestions = 15; // Fixed to 15 questions as per requirements
   
   return (
     <div className="w-full">

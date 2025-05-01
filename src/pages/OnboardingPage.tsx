@@ -21,6 +21,7 @@ const OnboardingContent = () => {
   useEffect(() => {
     // If user is already onboarded, redirect to chat
     if (user?.onboarded) {
+      console.log("User is already onboarded, redirecting to chat");
       navigate("/chat");
     }
   }, [user, navigate]);

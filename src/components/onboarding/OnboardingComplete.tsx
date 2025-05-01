@@ -14,8 +14,13 @@ export function OnboardingComplete() {
   const coachingMode = user?.coaching_mode ? COACHING_MODES[user.coaching_mode] : null;
   
   const handleComplete = async () => {
+    // First complete the step
     await completeStep("complete");
-    setOnboarded(true);
+    
+    // Then set user as onboarded
+    await setOnboarded(true);
+    
+    // Finally navigate to chat page
     navigate("/chat");
   };
   
