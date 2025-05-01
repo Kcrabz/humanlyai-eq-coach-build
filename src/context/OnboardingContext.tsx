@@ -51,6 +51,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
       // If user is already onboarded, redirect to chat
       if (user.onboarded) {
+        console.log("User is already onboarded, navigate to chat from OnboardingContext");
         navigate("/chat");
         return;
       }
@@ -115,7 +116,9 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         await setOnboarded(true);
         
         // Navigate to chat page
-        navigate("/chat");
+        toast.success("Onboarding completed!");
+        console.log("Navigating to chat from completeStep");
+        navigate("/chat", { replace: true });
         return; // Exit early as we've navigated away
       } catch (error) {
         console.error("Failed to complete onboarding:", error);

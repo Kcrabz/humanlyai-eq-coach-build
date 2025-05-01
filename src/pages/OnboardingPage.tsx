@@ -20,11 +20,11 @@ const OnboardingContent = () => {
 
   useEffect(() => {
     // If user is already onboarded, redirect to chat
-    if (user?.onboarded) {
+    if (user?.onboarded && !isLoading) {
       console.log("User is already onboarded, redirecting to chat");
       navigate("/chat");
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
   
   // Show loading state
   if (isLoading) {
