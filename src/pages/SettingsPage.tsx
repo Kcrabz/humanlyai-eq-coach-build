@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -41,7 +41,7 @@ const SettingsPage = () => {
   });
 
   // Check if user has API key stored
-  useState(() => {
+  useEffect(() => {
     const checkApiKey = async () => {
       if (!user) return;
       
