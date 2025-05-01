@@ -159,9 +159,13 @@ serve(async (req) => {
         console.log("No profile data found or error:", profileError);
       }
       
+      // Create the dynamic personalization header
+      const personalizationHeader = 
+        `Coaching Mode: ${coachingMode}.\n` +
+        `EQ Archetype: ${archetype}.\n`;
+      
       // Always use the KAI_SYSTEM_PROMPT as the base, with personalization added
-      let systemContent = KAI_SYSTEM_PROMPT;
-      systemContent += `\n\nUser's EQ Archetype: ${archetype}\nCoaching Mode: ${coachingMode}`;
+      let systemContent = personalizationHeader + KAI_SYSTEM_PROMPT;
       
       // Prepare messages for OpenAI
       let messages = [
