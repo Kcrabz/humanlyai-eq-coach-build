@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 
 export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     console.log("Login attempt started for:", email);
     
     try {
@@ -19,7 +19,13 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
         return false;
       }
       
-      console.log("Login successful for:", email);
+      if (!data || !data.user) {
+        console.error("Login failed: No user data returned");
+        toast.error("Login failed", { description: "No user data returned" });
+        return false;
+      }
+      
+      console.log("Login successful for:", email, "User data:", data.user.id);
       toast.success("Logged in successfully");
       return true;
     } catch (error) {
@@ -30,7 +36,7 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
     }
   };
 
-  const signup = async (email: string, password: string) => {
+  const signup = async (email: string, password: string): Promise<boolean> => {
     console.log("Signup attempt started for:", email);
     
     try {
@@ -46,7 +52,9 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
       }
       
       console.log("Signup successful for:", email);
-      toast.success("Account created successfully");
+      toast.success("Account created successfully", {
+        description: "You can now sign in with your credentials"
+      });
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
@@ -56,11 +64,19 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
     }
   };
 
-  const logout = async () => {
+  const logout = async (): Promise<boolean> => {
     console.log("Logout attempt started");
     
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("Logout error:", error.message);
+        toast.error("Failed to log out", { description: error.message });
+        return false;
+      }
+      
+      console.log("Logout successful");
       toast.success("Logged out successfully");
       return true;
     } catch (error) {
@@ -71,11 +87,12 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
     }
   };
 
-  const updateProfile = async (updates: Partial<User>) => {
+  const updateProfile = async (updates: Partial<User>): Promise<boolean> => {
     console.log("Profile update attempt started");
     
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
+      
       if (!authUser) {
         console.error("Profile update error: No authenticated user");
         toast.error("Failed to update profile", { description: "Not authenticated" });

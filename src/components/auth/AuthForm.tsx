@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,44 @@ export function AuthForm({ type }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { login, signup } = useAuth();
+  const { login, signup, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/chat");
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setErrorMessage(null);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    setErrorMessage(null);
+  };
+  
+  const validateForm = () => {
+    if (!email.trim()) {
+      setErrorMessage("Email is required");
+      return false;
+    }
+    
+    if (!password) {
+      setErrorMessage("Password is required");
+      return false;
+    }
+    
+    if (type === "signup" && password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters");
+      return false;
+    }
+    
+    return true;
+  };
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,27 +64,32 @@ export function AuthForm({ type }: AuthFormProps) {
       return;
     }
     
-    if (!email || !password) {
-      setErrorMessage("Email and password are required");
+    // Clear previous errors
+    setErrorMessage(null);
+    
+    if (!validateForm()) {
       return;
     }
     
-    setErrorMessage(null);
     setIsSubmitting(true);
     console.log(`Starting ${type} process for: ${email}`);
     
-    let success = false;
-    
     try {
+      let success = false;
+      
       if (type === "login") {
         success = await login(email, password);
       } else {
         success = await signup(email, password);
       }
       
-      if (success) {
-        console.log(`${type} successful for: ${email}`);
-        // Toast notifications are handled in useAuthActions
+      if (success && type === "login") {
+        console.log("Redirect after successful login");
+        navigate("/chat");
+      } else if (success && type === "signup") {
+        // Redirect to login after signup
+        console.log("Redirect to login after successful signup");
+        navigate("/login");
       }
     } catch (error) {
       console.error(`Error during ${type}:`, error);
@@ -87,7 +129,7 @@ export function AuthForm({ type }: AuthFormProps) {
             type="email"
             placeholder="m@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleEmailChange}
             disabled={isSubmitting}
             required
           />
@@ -108,7 +150,7 @@ export function AuthForm({ type }: AuthFormProps) {
             id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={handlePasswordChange}
             disabled={isSubmitting}
             required
           />
