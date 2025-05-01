@@ -160,10 +160,9 @@ export const useChatApi = () => {
       const assistantMessageId = await addUserMessage(content);
 
       // Call the edge function with stream set to true
-      // Fixed: using invoke with responseType: 'stream' instead of invokeAsync
+      // Use the AbortController and ReadableStream approach which is supported by Supabase Functions
       const response = await supabase.functions.invoke('chat-completion', {
-        body: { message: content, stream: true },
-        responseType: 'stream'
+        body: { message: content, stream: true }
       });
 
       if (!response.data) {
@@ -175,8 +174,14 @@ export const useChatApi = () => {
         throw new Error("No response received from AI assistant");
       }
 
+      // Convert the response to a ReadableStream
+      const responseBody = await response.data;
+      if (!(responseBody instanceof ReadableStream)) {
+        throw new Error("Response is not a readable stream");
+      }
+
       // Get the EventSource-compatible reader
-      const reader = response.data.getReader();
+      const reader = responseBody.getReader();
       const decoder = new TextDecoder();
       
       // Initialize empty string for the assistant's response
