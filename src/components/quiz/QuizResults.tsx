@@ -155,11 +155,6 @@ export const QuizResults = ({
             </ul>
           </div>
         </div>
-        
-        <div className="p-4 border border-humanly-teal/30 rounded-lg">
-          <h3 className="font-medium mb-2">Growth Tip</h3>
-          <p>{result.growthAreas[0] !== result.strengths[0] ? result.growthAreas[0] : "Practice daily reflection on your emotional responses to situations."}</p>
-        </div>
       </CardContent>
       <CardFooter className="flex gap-2">
         {onRestart && (
