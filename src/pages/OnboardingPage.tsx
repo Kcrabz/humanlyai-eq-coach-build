@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ArchetypeSelectorWithQuiz } from "@/components/onboarding/ArchetypeSelectorWithQuiz";
 import { GoalSelector } from "@/components/onboarding/GoalSelector";
+import { CoachingModeSelector } from "@/components/onboarding/CoachingModeSelector";
 import { OnboardingComplete } from "@/components/onboarding/OnboardingComplete";
 import { OnboardingProgress } from "@/components/onboarding/OnboardingProgress";
 import { OnboardingProvider, useOnboarding } from "@/context/OnboardingContext";
@@ -45,6 +46,10 @@ const OnboardingContent = () => {
       
       {currentStep === "archetype" && (
         <ArchetypeSelectorWithQuiz />
+      )}
+      
+      {currentStep === "coaching" && (
+        <CoachingModeSelector />
       )}
       
       {currentStep === "complete" && (

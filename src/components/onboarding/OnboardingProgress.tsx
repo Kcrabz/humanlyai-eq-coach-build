@@ -1,13 +1,15 @@
 
 import { useOnboarding } from "@/context/OnboardingContext";
+import { OnboardingStep } from "@/context/OnboardingContext";
 
 export function OnboardingProgress() {
   const { state, isStepComplete } = useOnboarding();
   const { currentStep } = state;
   
-  const steps = [
+  const steps: {id: OnboardingStep; label: string}[] = [
     { id: "goal", label: "Your Goal" },
     { id: "archetype", label: "EQ Assessment" },
+    { id: "coaching", label: "Coaching Style" },
     { id: "complete", label: "Results" }
   ];
   

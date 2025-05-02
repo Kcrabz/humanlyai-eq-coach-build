@@ -6,13 +6,14 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export type OnboardingStep = "goal" | "archetype" | "complete";
+export type OnboardingStep = "goal" | "archetype" | "coaching" | "complete";
 
 interface OnboardingState {
   currentStep: OnboardingStep;
   completedSteps: OnboardingStep[];
   goal: string | null;
   archetype: EQArchetype | null;
+  coachingMode: CoachingMode | null;
   isLoading: boolean;
 }
 
@@ -22,6 +23,7 @@ interface OnboardingContextType {
   completeStep: (step: OnboardingStep, data?: any) => Promise<void>;
   setGoal: (goal: string) => void;
   setArchetype: (archetype: EQArchetype) => void;
+  setCoachingMode: (mode: CoachingMode) => void;
   resetOnboarding: () => void;
   isStepComplete: (step: OnboardingStep) => boolean;
 }
@@ -31,6 +33,7 @@ const initialState: OnboardingState = {
   completedSteps: [],
   goal: null,
   archetype: null,
+  coachingMode: null,
   isLoading: true,
 };
 
@@ -38,7 +41,7 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 
 export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<OnboardingState>(initialState);
-  const { user, setArchetype: updateUserArchetype, setOnboarded } = useAuth();
+  const { user, setArchetype: updateUserArchetype, setCoachingMode: updateUserCoachingMode, setOnboarded } = useAuth();
   const navigate = useNavigate();
 
   // Load saved progress from database on initial load
@@ -63,7 +66,15 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         if (user.eq_archetype) {
           newState.archetype = user.eq_archetype;
           newState.completedSteps = ["goal", "archetype"];
-          newState.currentStep = "complete";
+          newState.currentStep = "coaching";
+        }
+
+        if (user.coaching_mode) {
+          newState.coachingMode = user.coaching_mode;
+          if (newState.completedSteps.includes("archetype")) {
+            newState.completedSteps = ["goal", "archetype", "coaching"];
+            newState.currentStep = "complete";
+          }
         }
 
         setState({ ...newState, isLoading: false });
@@ -91,6 +102,15 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       } catch (error) {
         toast.error("Failed to save your archetype selection");
         console.error("Error saving archetype:", error);
+        return;
+      }
+    } else if (step === "coaching" && state.coachingMode) {
+      try {
+        await updateUserCoachingMode(state.coachingMode);
+        toast.success("Coaching style saved successfully");
+      } catch (error) {
+        toast.error("Failed to save your coaching style");
+        console.error("Error saving coaching mode:", error);
         return;
       }
     } else if (step === "complete") {
@@ -127,7 +147,8 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       // Determine the next step
       let nextStep: OnboardingStep = prev.currentStep;
       if (step === "goal") nextStep = "archetype";
-      else if (step === "archetype") nextStep = "complete";
+      else if (step === "archetype") nextStep = "coaching";
+      else if (step === "coaching") nextStep = "complete";
 
       console.log(`Moving to next step: ${nextStep}`);
       
@@ -147,6 +168,10 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     setState((prev) => ({ ...prev, archetype }));
   };
 
+  const setCoachingMode = (mode: CoachingMode) => {
+    setState((prev) => ({ ...prev, coachingMode: mode }));
+  };
+
   const resetOnboarding = () => {
     setState({ ...initialState, isLoading: false });
   };
@@ -163,6 +188,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         completeStep,
         setGoal,
         setArchetype,
+        setCoachingMode,
         resetOnboarding,
         isStepComplete,
       }}

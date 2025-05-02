@@ -24,7 +24,7 @@ export function OnboardingComplete() {
   };
   
   const handleBack = () => {
-    goToStep("archetype");
+    goToStep("coaching");
   };
   
   return (
