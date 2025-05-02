@@ -107,7 +107,7 @@ serve(async (req) => {
     // Format user's answers for the prompt
     const formattedAnswers = formatAnswersForPrompt(answers);
     
-    // System prompt for GPT-4o
+    // System prompt for GPT-4o - Updated to clarify distinction between Growth Area and Tip
     const systemPrompt = `You are Kai, the HumanlyAI Coach — an expert in Emotional Intelligence. A user has answered 15 questions on a scale from 1 (Strongly Disagree) to 5 (Strongly Agree). Based on their pattern of responses, identify which EQ Archetype best matches them:
 
 - Reflector: Highly introspective, tends to overthink, hesitant to act
@@ -122,7 +122,7 @@ Instructions:
 
 Archetype: [One of the 5]
 Bio: [2–3 sentence summary of their emotional tendencies]
-Focus: [Growth edge to prioritize]
+GrowthArea: [Mindset or belief that needs adjustment]
 Tip: [Simple practice they can begin with today]
 
 Here are the user's answers:
@@ -155,10 +155,11 @@ ${formattedAnswers}`;
     const completion = await response.json();
     const aiResponse = completion.choices[0].message.content;
 
-    // Extract analysis parts (archetype, bio, focus, tip)
+    // Extract analysis parts (archetype, bio, growth area, tip)
     const archetypeMatch = aiResponse.match(/Archetype:\s*([^\n]+)/i);
     const bioMatch = aiResponse.match(/Bio:\s*([^\n]+)/i);
-    const focusMatch = aiResponse.match(/Focus:\s*([^\n]+)/i);
+    // Updated regex to look for GrowthArea instead of Focus
+    const growthAreaMatch = aiResponse.match(/GrowthArea:\s*([^\n]+)/i);
     const tipMatch = aiResponse.match(/Tip:\s*([^\n]+)/i);
 
     // Parse the archetype to match our system
@@ -185,7 +186,7 @@ ${formattedAnswers}`;
       JSON.stringify({
         archetype: mappedArchetype,
         bio: bioMatch ? bioMatch[1].trim() : "",
-        focus: focusMatch ? focusMatch[1].trim() : "",
+        focus: growthAreaMatch ? growthAreaMatch[1].trim() : "", // Keep "focus" key for backward compatibility
         tip: tipMatch ? tipMatch[1].trim() : "",
         raw_response: aiResponse
       }),

@@ -147,7 +147,7 @@ export const QuizResults = ({
             </ul>
           </div>
           <div>
-            <h3 className="font-medium mb-2">Growth Areas</h3>
+            <h3 className="font-medium mb-2">Growth Area</h3>
             <ul className="list-disc list-inside space-y-1">
               {result.growthAreas.map((area, index) => (
                 <li key={index}>{area}</li>
@@ -158,7 +158,7 @@ export const QuizResults = ({
         
         <div className="p-4 border border-humanly-teal/30 rounded-lg">
           <h3 className="font-medium mb-2">Growth Tip</h3>
-          <p>{result.growthAreas[0] || "Practice daily reflection on your emotional responses to situations."}</p>
+          <p>{result.growthAreas[0] !== result.strengths[0] ? result.growthAreas[0] : "Practice daily reflection on your emotional responses to situations."}</p>
         </div>
       </CardContent>
       <CardFooter className="flex gap-2">

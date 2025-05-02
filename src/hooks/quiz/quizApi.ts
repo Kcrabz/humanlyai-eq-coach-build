@@ -62,8 +62,8 @@ export const processQuizResults = async (
       dominantArchetype: data.archetype,
       eqPotentialScore: Object.values(answerScores).reduce((sum, score) => sum + score, 0),
       scores: calculateArchetypeScores(answers, answerScores, quizQuestions),
-      strengths: [data.focus],
-      growthAreas: [data.tip],
+      strengths: [data.focus], // Keep existing field structure for compatibility
+      growthAreas: [data.tip], // This will be shown in the Growth Tip section
       eqPotentialCategory: determineEQPotentialCategory(
         Object.values(answerScores).reduce((sum, score) => sum + score, 0)
       ),
