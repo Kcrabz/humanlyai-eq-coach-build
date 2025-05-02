@@ -1,75 +1,63 @@
 
-import { createErrorResponse, corsHeaders } from "./utils.ts";
+import { corsHeaders, createErrorResponse } from "./utils.ts";
 
-// Helper function to handle common error responses
-export function handleCommonErrors(error: any) {
-  console.error('Error in chat completion:', error);
-  
-  // Handle specific error types
-  if (error.type === 'usage_limit') {
-    return createErrorResponse(
-      error.message,
-      402,
-      { 
-        usageLimit: true,
-        currentUsage: error.currentUsage,
-        tierLimit: error.tierLimit
-      }
-    );
-  }
-  
-  if (error.type === 'quota_exceeded') {
-    return createErrorResponse(
-      error.message,
-      429,
-      { 
-        quotaExceeded: true,
-        details: error.details
-      }
-    );
-  }
-  
-  if (error.type === 'invalid_key') {
-    return createErrorResponse(
-      error.message,
-      401,
-      { 
-        invalidKey: true,
-        details: error.details
-      }
-    );
-  }
-  
-  if (error.message === 'Unauthorized') {
-    return createErrorResponse('Unauthorized', 401);
-  }
-  
-  // Generic error response
-  return createErrorResponse(
-    "An unexpected error occurred processing your request.",
-    500,
-    { details: error.message || "No specific details available" }
-  );
-}
-
-// Handler for premium user chat history retrieval
-export async function retrieveChatHistory(supabaseClient: any, userId: string, subscriptionTier: string) {
-  let chatHistory = [];
-  
-  if (subscriptionTier === 'premium') {
-    // Get the last 10 messages from chat_logs
-    const { data: chatHistoryData, error: chatHistoryError } = await supabaseClient
+// Retrieve chat history for a user
+export async function retrieveChatHistory(supabaseClient: any, userId: string, messageLimit: number = 10) {
+  try {
+    // For premium users, fetch recent chat history
+    const { data, error } = await supabaseClient
       .from('chat_logs')
       .select('content, role')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(10);
+      .limit(messageLimit * 2); // Fetch both user and assistant messages (2 messages per exchange)
     
-    if (!chatHistoryError && chatHistoryData) {
-      chatHistory = chatHistoryData;
-      console.log(`Retrieved ${chatHistory.length} previous messages for premium user`);
+    if (error) {
+      console.error("Error fetching chat history:", error);
+      return [];
     }
+    
+    // Return chat history in chronological order (oldest first)
+    return data?.reverse() || [];
+  } catch (error) {
+    console.error("Error retrieving chat history:", error);
+    return []; // Return empty array on error
+  }
+}
+
+// Common error handler for chat completion functions
+export function handleCommonErrors(error: any) {
+  console.error("Error in chat completion:", error);
+  
+  // Handle OpenAI-specific errors
+  if (error.type === 'openai_error') {
+    return createErrorResponse(
+      error.message || "OpenAI API error",
+      400,
+      { details: error.details || "No details provided" }
+    );
   }
   
-  return chatHistory;
+  // Handle usage limit errors
+  if (error.type === 'usage_limit') {
+    return new Response(
+      JSON.stringify({
+        error: error.message,
+        usageLimit: true,
+        currentUsage: error.currentUsage,
+        tierLimit: error.tierLimit
+      }),
+      {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    );
+  }
+  
+  // Handle other types of errors
+  return createErrorResponse(
+    error.message || "An error occurred during chat completion",
+    500,
+    { details: error.stack || "No stack trace available" }
+  );
 }

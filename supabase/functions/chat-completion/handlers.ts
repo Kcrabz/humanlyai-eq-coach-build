@@ -15,8 +15,13 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
     const user = await getAuthenticatedUser(supabaseClient);
     console.log(`Processing streaming chat request for user: ${user.id}`);
     
-    // Extract user message from request body
-    const { message } = reqBody;
+    // Extract user message and optional context from request body
+    const { 
+      message, 
+      subscriptionTier: clientSubscriptionTier,
+      archetype: clientArchetype,
+      coachingMode: clientCoachingMode 
+    } = reqBody;
     
     if (!message) {
       throw new Error("Message content is required");
@@ -34,14 +39,21 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
       monthYear 
     } = await getUserProfileAndUsage(supabaseClient, user.id);
     
+    // Use client-provided values as fallbacks if available
+    const effectiveArchetype = archetype || clientArchetype || 'unknown';
+    const effectiveCoachingMode = coachingMode || clientCoachingMode || 'normal';
+    const effectiveSubscriptionTier = subscriptionTier || clientSubscriptionTier || 'free';
+    
     // Check usage limits
-    const tierLimit = checkUsageLimit(currentUsage, subscriptionTier);
+    const tierLimit = checkUsageLimit(currentUsage, effectiveSubscriptionTier);
     
     // Get chat history for premium users
-    const chatHistory = await retrieveChatHistory(supabaseClient, user.id, subscriptionTier);
+    const chatHistory = effectiveSubscriptionTier === 'premium' ? 
+      await retrieveChatHistory(supabaseClient, user.id, 5) : 
+      [];
     
     // Prepare messages for OpenAI
-    const messages = prepareMessages(message, archetype, coachingMode, chatHistory);
+    const messages = prepareMessages(message, effectiveArchetype, effectiveCoachingMode, chatHistory);
     
     // Create and return streaming response
     return await createStreamResponse(
@@ -50,7 +62,7 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
       supabaseClient, 
       user.id, 
       monthYear, 
-      subscriptionTier, 
+      effectiveSubscriptionTier, 
       currentUsage, 
       tierLimit
     );
@@ -69,8 +81,13 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
     const user = await getAuthenticatedUser(supabaseClient);
     console.log(`Processing chat request for user: ${user.id}`);
     
-    // Extract user message from request
-    const { message } = reqBody;
+    // Extract user message and optional context from request
+    const { 
+      message,
+      subscriptionTier: clientSubscriptionTier,
+      archetype: clientArchetype,
+      coachingMode: clientCoachingMode 
+    } = reqBody;
     
     if (!message) {
       throw new Error("Message content is required");
@@ -88,14 +105,21 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
       monthYear 
     } = await getUserProfileAndUsage(supabaseClient, user.id);
     
-    // Check usage limits
-    const tierLimit = checkUsageLimit(currentUsage, subscriptionTier);
+    // Use client-provided values as fallbacks if available
+    const effectiveArchetype = archetype || clientArchetype || 'unknown';
+    const effectiveCoachingMode = coachingMode || clientCoachingMode || 'normal';
+    const effectiveSubscriptionTier = subscriptionTier || clientSubscriptionTier || 'free';
     
-    // Get chat history for premium users
-    const chatHistory = await retrieveChatHistory(supabaseClient, user.id, subscriptionTier);
+    // Check usage limits
+    const tierLimit = checkUsageLimit(currentUsage, effectiveSubscriptionTier);
+    
+    // Get chat history for premium users only
+    const chatHistory = effectiveSubscriptionTier === 'premium' ? 
+      await retrieveChatHistory(supabaseClient, user.id, 5) : 
+      [];
     
     // Prepare messages for OpenAI
-    const messages = prepareMessages(message, archetype, coachingMode, chatHistory);
+    const messages = prepareMessages(message, effectiveArchetype, effectiveCoachingMode, chatHistory);
     
     // Calculate estimated token count for input
     const inputText = messages.map(m => m.content).join(' ');
@@ -112,7 +136,7 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
     await updateUsageTracking(supabaseClient, user.id, monthYear, totalTokensUsed);
     
     // Log chat messages for premium users
-    if (subscriptionTier === 'premium') {
+    if (effectiveSubscriptionTier === 'premium') {
       await logChatMessages(
         supabaseClient, 
         user.id, 

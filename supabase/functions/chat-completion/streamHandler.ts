@@ -52,10 +52,10 @@ export async function createStreamResponse(
       const estimatedOutputTokens = estimateTokenCount(fullResponse);
       const totalTokensUsed = estimatedInputTokens + estimatedOutputTokens;
       
-      // Update usage tracking
+      // Update usage tracking for all users
       await updateUsageTracking(supabaseClient, userId, monthYear, totalTokensUsed);
       
-      // Log chat messages for premium users
+      // Log chat messages for premium users only
       if (subscriptionTier === 'premium') {
         await logChatMessages(
           supabaseClient, 
@@ -65,6 +65,10 @@ export async function createStreamResponse(
           estimatedInputTokens, 
           estimatedOutputTokens
         );
+        
+        console.log("Logged chat messages for premium user");
+      } else {
+        console.log(`Chat messages not logged for ${subscriptionTier} tier user`);
       }
       
       // Send completion message with usage info

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { handleApiErrors, handleUsageLimitError } from "@/utils/chatErrorHandler";
 import { handleChatStream, UsageInfo } from "@/utils/chatStreamHandler";
+import { useAuth } from "@/context/AuthContext";
 
 export const useChatApi = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -12,6 +13,7 @@ export const useChatApi = () => {
   const [error, setError] = useState<string | null>(null);
   const [lastSentMessage, setLastSentMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Error handling options
   const errorOptions = {
@@ -121,9 +123,18 @@ export const useChatApi = () => {
       // Create a message ID for the streaming assistant response
       const assistantMessageId = await addUserMessage(content);
 
-      // Call the edge function with stream set to true
+      // Call the edge function with stream set to true and pass subscription tier
+      const subscriptionTier = user?.subscription_tier || 'free';
+      
       const response = await supabase.functions.invoke('chat-completion', {
-        body: { message: content, stream: true }
+        body: { 
+          message: content, 
+          stream: true,
+          // Include important user context
+          subscriptionTier: subscriptionTier,
+          archetype: user?.eq_archetype || 'unknown',
+          coachingMode: user?.coaching_mode || 'normal'
+        }
       });
 
       if (!response.data) {
