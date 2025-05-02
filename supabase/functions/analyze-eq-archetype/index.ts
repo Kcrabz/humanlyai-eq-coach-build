@@ -1,8 +1,11 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
 // CORS headers
 const corsHeaders = {
@@ -11,7 +14,7 @@ const corsHeaders = {
 };
 
 // Format the quiz answers for the prompt
-function formatAnswersForPrompt(answers: Record<string, number>): string {
+function formatAnswersForPrompt(answers: number[]): string {
   const questions = [
     "I reflect on my emotions before reacting.",
     "I often take quick action without hesitation.",
@@ -31,14 +34,41 @@ function formatAnswersForPrompt(answers: Record<string, number>): string {
   ];
   
   let formattedAnswers = "";
-  Object.keys(answers).sort().forEach((questionId, index) => {
+  answers.forEach((rating, index) => {
     const questionNumber = index + 1;
     const questionText = questions[index];
-    const rating = answers[questionId];
     formattedAnswers += `${questionNumber}. "${questionText}" - Rating: ${rating}/5\n`;
   });
   
   return formattedAnswers;
+}
+
+async function updateUserArchetype(userId: string, archetype: string): Promise<boolean> {
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("Missing Supabase credentials");
+    return false;
+  }
+
+  try {
+    // Initialize Supabase client with service role key for admin privileges
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    // Update the user's profile with the determined archetype
+    const { error } = await supabase
+      .from('profiles')
+      .update({ eq_archetype: archetype })
+      .eq('id', userId);
+    
+    if (error) {
+      console.error("Error updating user archetype:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error in updateUserArchetype:", error);
+    return false;
+  }
 }
 
 serve(async (req) => {
@@ -47,13 +77,29 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Create Supabase client using auth header from request
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(
+      JSON.stringify({ error: "Missing Authorization header" }),
+      { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   try {
     // Parse request body
     const { answers, userId } = await req.json();
     
-    if (!answers || Object.keys(answers).length !== 15) {
+    if (!answers || answers.length !== 15 || !Array.isArray(answers)) {
       return new Response(
-        JSON.stringify({ error: "Invalid quiz data. Expecting answers to 15 questions." }),
+        JSON.stringify({ error: "Invalid quiz data. Expecting array of 15 numeric answers." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: "Missing userId parameter" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -82,7 +128,7 @@ Tip: [Simple practice they can begin with today]
 Here are the user's answers:
 ${formattedAnswers}`;
 
-    // Call OpenAI API
+    // Call OpenAI API using GPT-4o model
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -90,7 +136,7 @@ ${formattedAnswers}`;
         "Authorization": `Bearer ${openAiApiKey}`
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: "Please analyze my EQ based on my quiz answers." }
@@ -128,6 +174,11 @@ ${formattedAnswers}`;
     };
     
     const mappedArchetype = archetype ? (archetypeMapping[archetype] || "reflector") : "reflector";
+    
+    // Update user's profile with the determined archetype
+    if (mappedArchetype) {
+      await updateUserArchetype(userId, mappedArchetype);
+    }
     
     // Return the analysis
     return new Response(

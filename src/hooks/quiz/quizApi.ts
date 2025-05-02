@@ -13,20 +13,36 @@ export const processQuizResults = async (
   answerScores: Record<string, number>
 ) => {
   try {
-    // Prepare answers for the edge function
-    const formattedAnswers: Record<string, number> = {};
-    Object.keys(answers).forEach(questionId => {
-      const questionIndex = quizQuestions.findIndex(q => q.id === questionId);
-      const option = quizQuestions[questionIndex].options.find(o => o.id === answers[questionId]);
+    // Return early and use local calculation if no userId (user not logged in)
+    if (!userId) {
+      console.log("User not logged in, using local calculation");
+      return calculateLocalResults(answers, answerScores, quizQuestions);
+    }
+
+    // Prepare answers for the edge function - convert to array of numbers
+    const answersArray: number[] = [];
+    quizQuestions.forEach(question => {
+      const option = question.options.find(o => o.id === answers[question.id]);
       if (option) {
-        formattedAnswers[questionId] = option.value;
+        answersArray.push(option.value);
+      } else {
+        answersArray.push(3); // Default to neutral if answer not found
       }
     });
     
-    // Call the Supabase Edge Function for GPT-based analysis
+    // Check we have all 15 answers
+    if (answersArray.length !== 15) {
+      console.error("Error preparing quiz answers: Expected 15 answers but got", answersArray.length);
+      toast.error("Error analyzing your results. Using local calculation instead.");
+      return calculateLocalResults(answers, answerScores, quizQuestions);
+    }
+    
+    console.log("Calling analyze-eq-archetype function with", answersArray.length, "answers");
+    
+    // Call the Supabase Edge Function for GPT-4o analysis
     const { data, error } = await supabase.functions.invoke('analyze-eq-archetype', {
       body: { 
-        answers: formattedAnswers,
+        answers: answersArray,
         userId: userId
       }
     });
@@ -38,6 +54,8 @@ export const processQuizResults = async (
       // Fall back to local calculation
       return calculateLocalResults(answers, answerScores, quizQuestions);
     }
+    
+    console.log("GPT analysis result:", data);
     
     // Use the GPT-analyzed result
     return {
