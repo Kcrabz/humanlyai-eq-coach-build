@@ -5,16 +5,29 @@ import { corsHeaders, createErrorResponse } from "./utils.ts";
 export async function retrieveChatHistory(supabaseClient: any, userId: string, messageLimit: number = 10) {
   try {
     // For premium users, fetch recent chat history
-    const { data, error } = await supabaseClient
-      .from('chat_logs')
+    // First try the new chat_messages table
+    let { data, error } = await supabaseClient
+      .from('chat_messages')
       .select('content, role')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(messageLimit * 2); // Fetch both user and assistant messages (2 messages per exchange)
     
-    if (error) {
-      console.error("Error fetching chat history:", error);
-      return [];
+    if (error || !data || data.length === 0) {
+      // Fall back to legacy chat_logs table if needed
+      const legacyResult = await supabaseClient
+        .from('chat_logs')
+        .select('content, role')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(messageLimit * 2);
+        
+      if (!legacyResult.error) {
+        data = legacyResult.data;
+      } else {
+        console.error("Error fetching chat history:", error);
+        return [];
+      }
     }
     
     // Return chat history in chronological order (oldest first)

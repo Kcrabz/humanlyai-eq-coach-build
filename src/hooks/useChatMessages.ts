@@ -19,8 +19,10 @@ export const useChatMessages = () => {
       if (user.subscription_tier === 'premium') {
         setIsLoadingHistory(true);
         try {
+          // Use chat_logs table for now to maintain backward compatibility
+          // We'll fetch from chat_messages in the future once we have data there
           const { data, error } = await supabase
-            .from('chat_messages')
+            .from('chat_logs')
             .select('*')
             .eq('user_id', user.id)
             .order('created_at', { ascending: true })
@@ -36,7 +38,16 @@ export const useChatMessages = () => {
               setMessages(JSON.parse(savedMessages));
             }
           } else if (data && data.length > 0) {
-            setMessages(data);
+            // Convert database format to ChatMessage format
+            const formattedMessages: ChatMessage[] = data.map(item => ({
+              id: item.id,
+              content: item.content,
+              role: item.role === 'user' || item.role === 'assistant' 
+                ? item.role 
+                : 'user', // Default to user if invalid role
+              created_at: item.created_at
+            }));
+            setMessages(formattedMessages);
           } else {
             // If no messages in database, try loading from localStorage
             const savedMessages = localStorage.getItem(`chat_messages_${user.id}`);
