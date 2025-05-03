@@ -22,6 +22,7 @@ export async function updateUserArchetype(
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
     // Update the user's profile with the determined archetype
+    // Make sure we're using the correct table name ('profiles') and column name ('eq_archetype')
     const { error } = await supabase
       .from('profiles')
       .update({ eq_archetype: archetype })
