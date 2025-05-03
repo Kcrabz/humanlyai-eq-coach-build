@@ -1,3 +1,4 @@
+
 export interface UsageInfo {
   currentUsage: number;
   limit: number;
@@ -68,6 +69,18 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
             fullResponse += data.content;
             updateAssistantMessage(assistantMessageId, fullResponse);
           }
+          // Try to extract content from other formats
+          else if (data.choices && data.choices[0]?.delta?.content) {
+            fullResponse += data.choices[0].delta.content;
+            updateAssistantMessage(assistantMessageId, fullResponse);
+          }
+          else if (data.choices && data.choices[0]?.message?.content) {
+            const content = data.choices[0].message.content;
+            if (!fullResponse.includes(content)) {
+              fullResponse = content; // Replace with full message
+              updateAssistantMessage(assistantMessageId, fullResponse);
+            }
+          }
         } catch (err) {
           console.error("Error parsing stream data:", err, "Line:", line);
         }
@@ -109,6 +122,15 @@ export function processSseText(text: string, options: StreamOptions) {
             limit: data.usage.limit,
             percentage: (data.usage.currentUsage / data.usage.limit) * 100
           });
+        } else if (data.content) {
+          fullResponse += data.content;
+          updateAssistantMessage(assistantMessageId, fullResponse);
+        } else if (data.choices && data.choices[0]?.delta?.content) {
+          fullResponse += data.choices[0].delta.content;
+          updateAssistantMessage(assistantMessageId, fullResponse);
+        } else if (data.choices && data.choices[0]?.message?.content) {
+          fullResponse = data.choices[0].message.content; // Replace with full message
+          updateAssistantMessage(assistantMessageId, fullResponse);
         }
       } catch (e) {
         console.error("Error parsing SSE line:", e, "Line:", line);
