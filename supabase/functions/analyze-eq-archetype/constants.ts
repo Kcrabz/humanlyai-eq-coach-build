@@ -1,5 +1,5 @@
 
-// Constants used throughout the application
+// Constants for the analyze-eq-archetype function
 
 export const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -8,7 +8,7 @@ export const CORS_HEADERS = {
 
 export const ARCHETYPE_MAPPING: Record<string, string> = {
   "reflector": "reflector",
-  "activator": "activator", 
+  "activator": "activator",
   "regulator": "regulator",
   "connector": "connector",
   "observer": "observer"

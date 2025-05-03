@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArchetypeQuiz } from "./ArchetypeQuiz";
+import { QuizForm } from "../quiz/QuizForm";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { EQArchetype } from "@/types";
 import { toast } from "sonner";
@@ -68,7 +68,7 @@ export const ArchetypeSelectorWithQuiz = () => {
           </div>
         </div>
       ) : (
-        <ArchetypeQuiz onSelect={handleQuizResult} />
+        <QuizForm onComplete={handleQuizResult} />
       )}
     </div>
   );
