@@ -65,7 +65,6 @@ export const handleChatStream = async (
             
             try {
               const data = JSON.parse(jsonStr);
-              console.log("Parsed data:", data);
               
               // Handle different message types
               if (data.type === 'init') {
@@ -77,7 +76,6 @@ export const handleChatStream = async (
                 if (data.content) {
                   // Append to the existing assistant message
                   assistantResponse += data.content;
-                  console.log("Updating assistant message with content:", assistantResponse.substring(0, 50) + "...");
                   updateAssistantMessage(assistantMessageId, assistantResponse);
                 }
               }
@@ -118,6 +116,12 @@ export const handleChatStream = async (
                 console.log("Got direct OpenAI API response:", content);
                 assistantResponse = content;
                 updateAssistantMessage(assistantMessageId, content);
+              } else if (data.content || data.response) {
+                // Direct content in non-standard format
+                const content = data.content || data.response;
+                console.log("Got direct content:", content);
+                assistantResponse += content;
+                updateAssistantMessage(assistantMessageId, assistantResponse);
               }
             } catch (parseError) {
               console.error("Error parsing JSON data:", parseError, "Raw data:", jsonStr);

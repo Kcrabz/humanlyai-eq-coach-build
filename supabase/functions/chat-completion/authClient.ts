@@ -1,130 +1,135 @@
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "./utils.ts";
+import { createClient } from '@supabase/supabase-js';
 
-// Create Supabase client with auth context
+// Create a Supabase client with the URL and key from environment variables
 export function createSupabaseClient(req: Request) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+  
+  const authHeader = req.headers.get('Authorization') || '';
+  
   return createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-    { 
-      global: { headers: { Authorization: req.headers.get('Authorization')! } },
-      auth: { persistSession: false }
+    supabaseUrl,
+    supabaseServiceKey,
+    {
+      global: {
+        headers: {
+          Authorization: authHeader,
+        },
+      },
     }
   );
 }
 
-// Helper function to get authenticated user
+// Get authenticated user from request
 export async function getAuthenticatedUser(supabaseClient: any) {
-  const { data: { user }, error } = await supabaseClient.auth.getUser();
+  const {
+    data: { user },
+    error,
+  } = await supabaseClient.auth.getUser();
   
   if (error || !user) {
-    console.error("Authentication error:", error?.message || "No user found");
-    throw new Error('Unauthorized');
+    throw { 
+      type: 'auth_error',
+      message: error?.message || "User is not authenticated",
+      status: 401 
+    };
   }
   
   return user;
 }
 
-// Get the API key to use (user's personal or environment)
+// Get OpenAI API key
 export async function getOpenAIApiKey(supabaseClient: any, userId: string) {
   console.log(`Getting API key for user: ${userId}`);
   
-  // Try to get user's API key first
-  const { data: userApiKey, error: userApiKeyError } = await supabaseClient
+  // First check if the user has their own API key
+  const { data: userKey, error: userKeyError } = await supabaseClient
     .from('user_api_keys')
     .select('openai_api_key')
     .eq('user_id', userId)
-    .maybeSingle();
-  
-  // Use the user's API key if available, otherwise use the environment variable
-  let openAiApiKey = userApiKey?.openai_api_key;
-  
-  // If no user API key, fall back to environment variable
-  if (!openAiApiKey) {
-    openAiApiKey = Deno.env.get('OPENAI_API_KEY');
-    console.log("Using environment API key");
-  } else {
-    console.log("Using user's personal API key");
+    .single();
+    
+  if (!userKeyError && userKey?.openai_api_key) {
+    return userKey.openai_api_key;
   }
   
-  if (!openAiApiKey) {
-    throw new Error('API key not configured. Please check your account settings or contact the administrator.');
+  // If no user key, use environment key
+  const envKey = Deno.env.get('OPENAI_API_KEY');
+  if (!envKey) {
+    throw new Error('OpenAI API key not found');
   }
   
-  return openAiApiKey;
+  console.log("Using environment API key");
+  return envKey;
 }
 
-// Get user's subscription tier and usage data
+// Get user profile and usage data
 export async function getUserProfileAndUsage(supabaseClient: any, userId: string) {
-  // Get current month-year for usage tracking
-  const today = new Date();
-  const monthYear = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-
-  // Check if profile exists for the user
-  const { data: profileData, error: profileError } = await supabaseClient
-    .from('profiles')
-    .select('subscription_tier, eq_archetype, coaching_mode')
-    .eq('id', userId)
-    .maybeSingle();
-  
-  if (profileError) {
-    console.error("Error fetching profile:", profileError.message);
-  }
-  
-  // If profile doesn't exist, create it with default values
-  if (!profileData) {
-    console.log(`No profile found for user ${userId}. Creating default profile...`);
-    try {
-      // Insert default profile - using upsert to avoid duplicates
-      const { error: insertError } = await supabaseClient
-        .from('profiles')
-        .upsert({
-          id: userId,
-          subscription_tier: 'free',
-          eq_archetype: 'Not set',
-          coaching_mode: 'normal',
-          onboarded: false
-        }, {
-          onConflict: 'id'  // Use id as conflict detection
-        });
+  try {
+    // Get user profile
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('profiles')
+      .select('eq_archetype, coaching_mode, subscription_tier')
+      .eq('id', userId)
+      .single();
       
-      if (insertError) {
-        console.error("Error creating default profile:", insertError.message);
-      } else {
-        console.log("Default profile created successfully");
+    if (profileError || !profile) {
+      console.log(`No profile found for user ${userId}. Creating default profile...`);
+      
+      // Try to create a default profile if none exists
+      try {
+        await supabaseClient
+          .from('profiles')
+          .insert({
+            id: userId,
+            eq_archetype: 'Not set',
+            coaching_mode: 'normal',
+            subscription_tier: 'free',
+            onboarded: false
+          });
+      } catch (createError) {
+        console.error(`Error creating default profile: ${createError.message || createError}`);
       }
-    } catch (err) {
-      console.error("Exception creating default profile:", err);
     }
+    
+    // Get current usage data
+    const currentDate = new Date();
+    const monthYear = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    const { data: usageData } = await supabaseClient
+      .from('usage_logs')
+      .select('token_count')
+      .eq('user_id', userId)
+      .eq('month_year', monthYear)
+      .maybeSingle();
+      
+    const currentUsage = usageData?.token_count || 0;
+    
+    console.log(`Current usage: ${currentUsage} tokens for ${monthYear}`);
+    
+    // Use profile if it exists, otherwise use defaults
+    const result = {
+      archetype: profile?.eq_archetype || 'Not set',
+      coachingMode: profile?.coaching_mode || 'normal',
+      subscriptionTier: profile?.subscription_tier || 'free',
+      currentUsage,
+      monthYear
+    };
+    
+    console.log(`User profile info - Archetype: ${result.archetype}, Mode: ${result.coachingMode}, Tier: ${result.subscriptionTier}`);
+    
+    return result;
+  } catch (error) {
+    console.error(`Error getting user profile: ${error.message || error}`);
+    
+    // Return defaults if anything goes wrong
+    return {
+      archetype: 'Not set',
+      coachingMode: 'normal',
+      subscriptionTier: 'free',
+      currentUsage: 0,
+      monthYear: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
+    };
   }
-  
-  // Get user's current month usage
-  const { data: usageData, error: usageError } = await supabaseClient
-    .from('usage_logs')
-    .select('token_count')
-    .eq('user_id', userId)
-    .eq('month_year', monthYear)
-    .maybeSingle();
-
-  if (usageError) {
-    console.error("Error fetching usage data:", usageError.message);
-  }
-
-  // Set default values if no data found
-  const archetype = profileData?.eq_archetype || "Not set";
-  const coachingMode = profileData?.coaching_mode || "normal";
-  const subscriptionTier = profileData?.subscription_tier || "free";
-  const currentUsage = usageData?.token_count || 0;
-
-  console.log(`User profile info - Archetype: ${archetype}, Mode: ${coachingMode}, Tier: ${subscriptionTier}`);
-  console.log(`Current usage: ${currentUsage} tokens for ${monthYear}`);
-
-  return {
-    archetype,
-    coachingMode,
-    subscriptionTier,
-    currentUsage,
-    monthYear
-  };
 }

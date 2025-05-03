@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export function OnboardingComplete() {
   const { user, setUser } = useAuth();
@@ -20,24 +21,70 @@ export function OnboardingComplete() {
     const markComplete = async () => {
       if (user?.id) {
         try {
-          // Update the profile in Supabase
-          const { error } = await supabase
+          console.log("Completing onboarding for user:", user.id);
+          
+          // Check if profile exists
+          const { data: existingProfile, error: checkError } = await supabase
             .from("profiles")
-            .update({ onboarded: true })
-            .eq("id", user.id);
-
-          if (!error) {
-            // Update local user state
-            setUser(prevUser => prevUser ? { ...prevUser, onboarded: true } : null);
-            
-            // Navigate to chat
-            console.log("Navigating to chat from OnboardingComplete useEffect");
-            navigate("/chat", { replace: true });
-          } else {
-            console.error("Failed to complete onboarding:", error.message);
+            .select("id, onboarded")
+            .eq("id", user.id)
+            .maybeSingle();
+          
+          if (checkError) {
+            console.error("Error checking profile:", checkError.message);
           }
+          
+          if (!existingProfile) {
+            console.log("Creating new profile for user");
+            // Create profile if it doesn't exist
+            const { error: insertError } = await supabase
+              .from("profiles")
+              .insert({ 
+                id: user.id,
+                onboarded: true,
+                subscription_tier: 'free',
+                eq_archetype: state.archetype || 'Not set',
+                coaching_mode: state.coachingMode || 'normal'
+              });
+
+            if (insertError) {
+              console.error("Failed to create profile:", insertError.message);
+              toast.error("Error completing onboarding. Please try again.");
+              return;
+            }
+          } else {
+            console.log("Updating existing profile");
+            // Update existing profile
+            const { error } = await supabase
+              .from("profiles")
+              .update({ 
+                onboarded: true,
+                eq_archetype: state.archetype || 'Not set',
+                coaching_mode: state.coachingMode || 'normal',
+              })
+              .eq("id", user.id);
+
+            if (error) {
+              console.error("Failed to update onboarding status:", error.message);
+              toast.error("Error completing onboarding. Please try again.");
+              return;
+            }
+          }
+          
+          // Update local user state
+          setUser(prevUser => prevUser ? { 
+            ...prevUser, 
+            onboarded: true,
+            eq_archetype: state.archetype || 'Not set',
+            coaching_mode: state.coachingMode || 'normal'
+          } : null);
+          
+          toast.success("Onboarding completed!");
+          console.log("Navigating to chat from OnboardingComplete useEffect");
+          navigate("/chat", { replace: true });
         } catch (error) {
           console.error("Error in markComplete:", error);
+          toast.error("Error completing onboarding. Please try again.");
         }
       }
     };
@@ -46,7 +93,7 @@ export function OnboardingComplete() {
     if (state.currentStep === "complete") {
       markComplete();
     }
-  }, [user, navigate, state.currentStep, setUser]);
+  }, [user?.id, navigate, state.currentStep, setUser, state.archetype, state.coachingMode]);
   
   const handleComplete = async () => {
     try {
@@ -56,6 +103,7 @@ export function OnboardingComplete() {
       navigate("/chat", { replace: true });
     } catch (error) {
       console.error("Error completing onboarding:", error);
+      toast.error("Error completing onboarding. Please try again.");
     }
   };
   
@@ -75,9 +123,9 @@ export function OnboardingComplete() {
             <div className="text-5xl animate-float">{archetype?.icon}</div>
           </div>
         </div>
-        <h1 className="text-3xl md:text-4xl font-semibold">Your EQ Archetype: <span className="text-humanly-teal">{archetype?.title}</span></h1>
+        <h1 className="text-3xl md:text-4xl font-semibold">Your EQ Archetype: <span className="text-humanly-teal">{archetype?.title || 'Not Set'}</span></h1>
         <p className="text-muted-foreground text-lg">
-          {archetype?.description}
+          {archetype?.description || 'Complete onboarding to discover your EQ strengths and growth opportunities.'}
         </p>
       </div>
       
@@ -90,12 +138,14 @@ export function OnboardingComplete() {
             </div>
           </div>
           <ul className="space-y-2">
-            {archetype?.growthAreas.map((area, index) => (
+            {archetype?.growthAreas?.map((area, index) => (
               <li key={index} className="flex items-center gap-2 text-muted-foreground">
                 <div className="w-1.5 h-1.5 rounded-full bg-humanly-teal"></div>
                 <span>{area}</span>
               </li>
-            ))}
+            )) || (
+              <li className="text-muted-foreground">Complete your profile to see growth areas</li>
+            )}
           </ul>
           {/* Progress bar */}
           <div className="mt-3">
@@ -110,13 +160,15 @@ export function OnboardingComplete() {
         <div className="border-t pt-6">
           <h2 className="font-semibold text-lg mb-2">Your Strengths</h2>
           <div className="flex flex-wrap gap-2 mt-3">
-            {archetype?.strengths.map((strength, index) => (
+            {archetype?.strengths?.map((strength, index) => (
               <span key={index} 
                 className="px-3 py-1.5 bg-humanly-pastel-lavender text-humanly-teal rounded-full text-sm"
               >
                 {strength}
               </span>
-            ))}
+            )) || (
+              <span className="text-muted-foreground">Complete your profile to see your strengths</span>
+            )}
           </div>
         </div>
         

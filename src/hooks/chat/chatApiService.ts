@@ -146,7 +146,7 @@ export async function sendMessageStream(
         stream: true,
         // Include important user context
         subscriptionTier: subscriptionTier,
-        archetype: user?.eq_archetype || 'unknown',
+        archetype: user?.eq_archetype || 'Not set',
         coachingMode: user?.coaching_mode || 'normal'
       }
     });
