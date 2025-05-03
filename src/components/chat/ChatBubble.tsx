@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown from "react-markdown";
 
 interface ChatBubbleProps {
   message: ChatMessage;
