@@ -44,7 +44,7 @@ export function OnboardingComplete() {
     if (state.currentStep === "complete") {
       markComplete();
     }
-  }, [user, navigate, state.currentStep]);
+  }, [user, navigate, state.currentStep, setUser]);
   
   const handleComplete = async () => {
     try {

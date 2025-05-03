@@ -8,7 +8,11 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
   
   useEffect(() => {
     if (!isLoading) {
-      console.log("Auth navigation check:", {user, pathname: window.location.pathname});
+      console.log("Auth navigation check:", {
+        user, 
+        pathname: window.location.pathname,
+        isOnboarded: user?.onboarded
+      });
       
       // Don't navigate if we're already on the onboarding page
       const isOnOnboardingPage = window.location.pathname === "/onboarding";
@@ -25,12 +29,12 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
         }
       } 
       // Authenticated but not onboarded -> redirect to onboarding
-      else if (user && !user.onboarded && !isOnOnboardingPage) {
+      else if (user && user.onboarded === false && !isOnOnboardingPage) {
         console.log("User is authenticated but not onboarded, redirecting to onboarding");
         navigate("/onboarding", { replace: true });
       }
       // Authenticated and onboarded -> redirect to chat from login/signup/onboarding 
-      else if (user && user.onboarded && (isOnAuthPage || isOnOnboardingPage)) {
+      else if (user && user.onboarded === true && (isOnAuthPage || isOnOnboardingPage)) {
         console.log("User is authenticated and onboarded, redirecting to chat");
         navigate("/chat", { replace: true });
       }

@@ -17,9 +17,15 @@ const ChatPage = () => {
   
   useEffect(() => {
     if (!isLoading) {
+      console.log("Chat page auth check:", { 
+        isAuthenticated, 
+        user, 
+        isOnboarded: user?.onboarded 
+      });
+      
       if (!isAuthenticated) {
         navigate("/login");
-      } else if (user && !user.onboarded) {
+      } else if (user && user.onboarded === false) {
         navigate("/onboarding");
       }
     }
