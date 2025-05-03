@@ -12,4 +12,5 @@ export interface AuthContextType {
   setArchetype: (archetype: EQArchetype) => void;
   setCoachingMode: (mode: CoachingMode) => void;
   setOnboarded: (value: boolean) => void;
+  setUser: (updater: ((prevUser: User | null) => User | null) | User | null) => void;
 }
