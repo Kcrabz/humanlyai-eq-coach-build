@@ -121,7 +121,10 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           .update({ onboarded: true })
           .eq('id', user?.id);
           
-        if (error) throw error;
+        if (error) {
+          console.error("Failed to update onboarding status:", error.message);
+          throw error;
+        }
         
         // Update the user's onboarded status in the auth context
         await setOnboarded(true);
