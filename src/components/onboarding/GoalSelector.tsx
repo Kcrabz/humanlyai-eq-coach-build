@@ -37,45 +37,63 @@ export function GoalSelector() {
     try {
       // Create or update profile with default values
       if (user?.id) {
-        // Check if profile already exists
-        const { data: existingProfile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', user.id)
-          .single();
+        try {
+          console.log("Checking for existing profile for user:", user.id);
+          // Check if profile already exists
+          const { data: existingProfile, error: fetchError } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (fetchError) {
+            console.error("Error checking for existing profile:", fetchError.message);
+            throw fetchError;
+          }
           
-        if (!existingProfile) {
-          // Create profile if it doesn't exist yet
-          console.log("Creating default profile for user:", user.id);
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              subscription_tier: 'free',
-              eq_archetype: 'Not set' as EQArchetype,
-              coaching_mode: 'normal' as CoachingMode,
-              onboarded: true
-            });
+          if (!existingProfile) {
+            // Create profile if it doesn't exist yet
+            console.log("Creating default profile for user:", user.id);
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: user.id,
+                subscription_tier: 'free',
+                eq_archetype: 'Not set' as EQArchetype,
+                coaching_mode: 'normal' as CoachingMode,
+                onboarded: true
+              });
+              
+            if (insertError) {
+              console.error("Error creating profile:", insertError);
+              throw insertError;
+            }
             
-          if (insertError) {
-            console.error("Error creating profile:", insertError.message);
-            throw insertError;
-          }
-        } else {
-          // Update existing profile
-          const { error } = await supabase
-            .from('profiles')
-            .update({ 
-              onboarded: true,
-              eq_archetype: 'Not set' as EQArchetype,
-              coaching_mode: 'normal' as CoachingMode,
-            })
-            .eq('id', user.id);
+            console.log("Successfully created default profile");
+          } else {
+            // Update existing profile
+            console.log("Updating existing profile for user:", user.id);
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ 
+                onboarded: true,
+                eq_archetype: 'Not set' as EQArchetype,
+                coaching_mode: 'normal' as CoachingMode,
+              })
+              .eq('id', user.id);
+              
+            if (updateError) {
+              console.error("Failed to update onboarding status:", updateError);
+              throw updateError;
+            }
             
-          if (error) {
-            console.error("Failed to update onboarding status:", error.message);
-            throw error;
+            console.log("Successfully updated profile");
           }
+        } catch (error: any) {
+          console.error("Database operation failed:", error.message || error);
+          toast.error("Could not update your profile. Please try again.");
+          setIsSkipping(false);
+          return;
         }
         
         // Update local user state
@@ -88,6 +106,11 @@ export function GoalSelector() {
             coaching_mode: 'normal' as CoachingMode
           };
         });
+      } else {
+        console.error("No user ID available");
+        toast.error("User information not available. Please try again or log out and back in.");
+        setIsSkipping(false);
+        return;
       }
 
       // Mark user as onboarded in both database and local state
