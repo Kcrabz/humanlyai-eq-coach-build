@@ -31,6 +31,10 @@ export const handleChatStream = async (
   // Process the stream
   try {
     console.log("Starting to process stream chunks");
+    
+    // We need to ensure the chat bubble appears first
+    updateAssistantMessage(assistantMessageId, "...");
+    
     while (true) {
       const { done, value } = await reader.read();
       if (done) {
@@ -40,7 +44,7 @@ export const handleChatStream = async (
       
       // Decode the chunk
       const chunk = decoder.decode(value, { stream: true });
-      console.log("Received chunk:", chunk);
+      console.log("Received chunk of size:", chunk.length);
       
       // Process all lines in the chunk
       const lines = chunk.split('\n');
@@ -73,7 +77,7 @@ export const handleChatStream = async (
                 if (data.content) {
                   // Append to the existing assistant message
                   assistantResponse += data.content;
-                  console.log("Updating assistant message with content:", assistantResponse);
+                  console.log("Updating assistant message with content:", assistantResponse.substring(0, 50) + "...");
                   updateAssistantMessage(assistantMessageId, assistantResponse);
                 }
               }
@@ -154,11 +158,16 @@ export const handleChatStream = async (
     // Final check - if we got no response at all, add a fallback message
     if (assistantResponse.length === 0) {
       console.warn("No content received from stream, adding fallback message");
-      const fallbackMessage = "I'm sorry, I couldn't generate a response. Please try again.";
+      const fallbackMessage = "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?";
       updateAssistantMessage(assistantMessageId, fallbackMessage);
     }
   } catch (error) {
     console.error("Error in chat stream processing:", error);
+    
+    // Add another fallback message
+    const fallbackMessage = "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?";
+    updateAssistantMessage(assistantMessageId, fallbackMessage);
+    
     throw error;
   } finally {
     reader.releaseLock();

@@ -43,22 +43,57 @@ export const useOnboardingActions = (
         }
       } else if (step === "complete") {
         try {
-          // Mark user as onboarded in the database and update local state
-          const { error } = await supabase
+          // First ensure we have a profile record for the user
+          const { data: existingProfile } = await supabase
             .from('profiles')
-            .update({ onboarded: true })
-            .eq('id', user?.id);
+            .select('id')
+            .eq('id', user?.id)
+            .single();
             
-          if (error) {
-            console.error("Failed to update onboarding status:", error.message);
-            throw error;
+          if (!existingProfile) {
+            // Create profile if it doesn't exist yet
+            console.log("Creating profile for user:", user?.id);
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert({
+                id: user?.id,
+                subscription_tier: 'free',
+                eq_archetype: state.archetype || 'Not set',
+                coaching_mode: state.coachingMode || 'normal',
+                onboarded: true
+              });
+              
+            if (insertError) {
+              console.error("Error creating profile:", insertError.message);
+              throw insertError;
+            }
+          } else {
+            // Update existing profile
+            const { error } = await supabase
+              .from('profiles')
+              .update({ 
+                onboarded: true,
+                eq_archetype: state.archetype || 'Not set',
+                coaching_mode: state.coachingMode || 'normal',
+              })
+              .eq('id', user?.id);
+              
+            if (error) {
+              console.error("Failed to update onboarding status:", error.message);
+              throw error;
+            }
           }
           
           // Update the user's onboarded status in the auth context
           await setOnboarded(true);
           
           // Directly update the local user state as well for immediate UI feedback
-          setUser(prev => prev ? { ...prev, onboarded: true } : null);
+          setUser(prev => prev ? { 
+            ...prev, 
+            onboarded: true,
+            eq_archetype: state.archetype || 'Not set',
+            coaching_mode: state.coachingMode || 'normal'
+          } : null);
           
           // Navigation is now handled here to ensure it happens after database updates
           toast.success("Onboarding completed!");

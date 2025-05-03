@@ -76,15 +76,17 @@ export async function getUserProfileAndUsage(supabaseClient: any, userId: string
   if (!profileData) {
     console.log(`No profile found for user ${userId}. Creating default profile...`);
     try {
-      // Insert default profile
+      // Insert default profile - using upsert to avoid duplicates
       const { error: insertError } = await supabaseClient
         .from('profiles')
-        .insert({
+        .upsert({
           id: userId,
           subscription_tier: 'free',
           eq_archetype: 'Not set',
           coaching_mode: 'normal',
           onboarded: false
+        }, {
+          onConflict: 'id'  // Use id as conflict detection
         });
       
       if (insertError) {

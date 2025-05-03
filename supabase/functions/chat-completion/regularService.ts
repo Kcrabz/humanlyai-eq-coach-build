@@ -16,6 +16,8 @@ export async function callOpenAI(openAiApiKey: string, messages: any[]) {
       }
     }
     
+    console.log("Making fetch call to OpenAI API...");
+    
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -31,19 +33,28 @@ export async function callOpenAI(openAiApiKey: string, messages: any[]) {
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenAI API error:", errorData);
-      throw handleOpenAIApiError(errorData);
+      try {
+        const errorData = await response.json();
+        console.error("OpenAI API error:", errorData);
+        throw handleOpenAIApiError(errorData);
+      } catch (parseError) {
+        console.error("Error parsing OpenAI error response:", parseError);
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      }
     }
     
+    console.log("Received response from OpenAI API");
     const completion = await response.json();
+    console.log("Parsed response JSON");
     
     if (!completion.choices || !completion.choices[0] || !completion.choices[0].message) {
       console.error("Invalid OpenAI response format:", completion);
       return "I apologize, but I received an invalid response. Please try again.";
     }
     
-    return completion.choices[0].message.content;
+    const content = completion.choices[0].message.content;
+    console.log(`Response content length: ${content.length} characters`);
+    return content;
   } catch (error) {
     console.error("Error in callOpenAI:", error);
     

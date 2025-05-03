@@ -55,42 +55,62 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
     let buffer = "";
     let completeResponse = "";
     
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      
-      // Decode chunk
-      const chunk = decoder.decode(value);
-      buffer += chunk;
-      
-      // Process all complete lines in buffer
-      let lines = buffer.split('\n');
-      buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
-      
-      for (const line of lines) {
-        if (line.trim() === '') continue;
-        if (line.trim() === 'data: [DONE]') continue;
+    // Add explicit "Starting stream..." message to help track progress
+    console.log("Starting to read OpenAI stream...");
+    
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          console.log("Stream reading complete");
+          break;
+        }
         
-        // Extract data portion
-        const dataMatch = line.match(/^data: (.*)$/);
-        if (!dataMatch) continue;
+        // Decode chunk
+        const chunk = decoder.decode(value);
+        buffer += chunk;
+        console.log("Received chunk of length:", chunk.length);
         
-        try {
-          const json = JSON.parse(dataMatch[1]);
-          const contentDelta = json.choices[0]?.delta?.content || '';
-          if (contentDelta) {
-            completeResponse += contentDelta;
-            yield contentDelta;
+        // Process all complete lines in buffer
+        let lines = buffer.split('\n');
+        buffer = lines.pop() || ""; // Keep the last incomplete line in buffer
+        
+        for (const line of lines) {
+          if (line.trim() === '') continue;
+          if (line.trim() === 'data: [DONE]') {
+            console.log("Received [DONE] marker");
+            continue;
           }
-        } catch (e) {
-          console.error("Error parsing streaming JSON:", e, "Line:", line);
+          
+          // Extract data portion
+          const dataMatch = line.match(/^data: (.*)$/);
+          if (!dataMatch) continue;
+          
+          try {
+            const json = JSON.parse(dataMatch[1]);
+            const contentDelta = json.choices[0]?.delta?.content || '';
+            if (contentDelta) {
+              completeResponse += contentDelta;
+              console.log("Yielding content delta of length:", contentDelta.length);
+              yield contentDelta;
+            }
+          } catch (e) {
+            console.error("Error parsing streaming JSON:", e, "Line:", line);
+          }
         }
       }
+    } catch (streamError) {
+      console.error("Error during stream processing:", streamError);
+      // If we've already built some response, return it
+      if (completeResponse.trim() !== '') {
+        return completeResponse;
+      }
+      throw streamError; // Re-throw if we have no response
     }
     
     // If we didn't get any response, provide a fallback
     if (completeResponse.trim() === '') {
-      const fallbackResponse = "I'm here to help with your emotional intelligence development. What would you like to work on today?";
+      const fallbackResponse = "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?";
       yield fallbackResponse;
       return fallbackResponse;
     }

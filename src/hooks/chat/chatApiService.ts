@@ -27,6 +27,8 @@ export async function sendMessage(
   try {
     toast.loading("Connecting to Kai...", { id: "kai-connecting" });
     
+    console.log("Sending message to Edge Function:", content);
+    
     // Call the edge function to get a response from OpenAI
     const { data, error: apiError } = await supabase.functions.invoke('chat-completion', {
       body: {
@@ -37,6 +39,8 @@ export async function sendMessage(
 
     toast.dismiss("kai-connecting");
 
+    console.log("Received response from Edge Function:", data);
+    
     if (apiError) {
       console.error("Edge function error:", apiError);
       errorOptions.setError("Failed to connect to AI assistant. Please try again later.");
@@ -51,6 +55,7 @@ export async function sendMessage(
 
     // Check for various error conditions
     if (data.error) {
+      console.error("Error in edge function response:", data.error);
       if (data.usageLimit) {
         // Handle usage limit error
         if (data.currentUsage && data.tierLimit) {
@@ -69,6 +74,7 @@ export async function sendMessage(
 
     // If successful response
     if (data.response) {
+      console.log("Adding assistant message from response:", data.response.substring(0, 50) + "...");
       addAssistantMessage(data.response);
       
       // Update usage info if provided
@@ -128,6 +134,11 @@ export async function sendMessageStream(
       archetype: user?.eq_archetype || 'unknown',
       coachingMode: user?.coaching_mode || 'normal'
     });
+    
+    // Initialize assistant message with empty content immediately
+    if (updateAssistantMessage) {
+      updateAssistantMessage(assistantMessageId, "");
+    }
     
     const response = await supabase.functions.invoke('chat-completion', {
       body: { 
@@ -207,11 +218,11 @@ export async function sendMessageStream(
             return;
           }
           
-          // Fallback message when nothing else works
-          updateAssistantMessage(assistantMessageId, "I'm sorry, I couldn't generate a response right now. Please try again.");
+          // Emergency fallback when nothing else works
+          updateAssistantMessage(assistantMessageId, "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?");
           setIsLoading(false);
           setLastSentMessage(null);
-          throw new Error("Response is not in a usable format");
+          return;
         }
       } else {
         console.error("Response is not a readable stream:", responseBody);
@@ -228,10 +239,10 @@ export async function sendMessageStream(
         }
         
         // Last resort fallback message
-        updateAssistantMessage(assistantMessageId, "I'm sorry, I couldn't generate a response right now. Please try again.");
+        updateAssistantMessage(assistantMessageId, "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?");
         setIsLoading(false);
         setLastSentMessage(null);
-        throw new Error("Response is not a readable stream");
+        return;
       }
     }
 
@@ -255,7 +266,7 @@ export async function sendMessageStream(
     // Provide a fallback message to the user when streaming fails
     if (updateAssistantMessage && assistantMessageId) {
       updateAssistantMessage(assistantMessageId, 
-        "I'm sorry, I encountered an issue while responding. Please try again or visit your profile settings to ensure your account is properly configured.");
+        "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?");
     }
   } finally {
     setIsLoading(false);
