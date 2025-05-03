@@ -16,15 +16,31 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
     console.log(`Processing streaming chat request for user: ${user.id}`);
     
     // Extract user message and optional context from request body
+    // Handle both formats: {message: string} or {messages: Array}
+    let userMessage;
     const { 
       message, 
+      messages,
       subscriptionTier: clientSubscriptionTier,
       archetype: clientArchetype,
       coachingMode: clientCoachingMode 
     } = reqBody;
     
-    if (!message) {
-      throw new Error("Message content is required");
+    // Determine which message format was used
+    if (message) {
+      userMessage = message;
+      console.log("Using single message format:", userMessage.substring(0, 50) + "...");
+    } else if (messages && Array.isArray(messages) && messages.length > 0) {
+      // If messages array provided, use the last user message
+      const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+      userMessage = lastUserMsg?.content || '';
+      console.log("Using messages array format, last user message:", userMessage.substring(0, 50) + "...");
+    } else {
+      throw new Error("No valid message content found in request");
+    }
+    
+    if (!userMessage || userMessage.trim() === '') {
+      throw new Error("Message content is required and cannot be empty");
     }
     
     // Get OpenAI API key
@@ -44,6 +60,8 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
     const effectiveCoachingMode = coachingMode || clientCoachingMode || 'normal';
     const effectiveSubscriptionTier = subscriptionTier || clientSubscriptionTier || 'free';
     
+    console.log(`User settings: archetype=${effectiveArchetype}, coachingMode=${effectiveCoachingMode}, tier=${effectiveSubscriptionTier}`);
+    
     // Check usage limits
     const tierLimit = checkUsageLimit(currentUsage, effectiveSubscriptionTier);
     
@@ -53,12 +71,14 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
       [];
     
     // Prepare messages for OpenAI
-    const messages = prepareMessages(message, effectiveArchetype, effectiveCoachingMode, chatHistory);
+    const preparedMessages = prepareMessages(userMessage, effectiveArchetype, effectiveCoachingMode, chatHistory);
+    
+    console.log(`Prepared ${preparedMessages.length} messages for OpenAI`);
     
     // Create and return streaming response
     return await createStreamResponse(
       openAiApiKey, 
-      messages, 
+      preparedMessages, 
       supabaseClient, 
       user.id, 
       monthYear, 
@@ -68,6 +88,7 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
     );
     
   } catch (error) {
+    console.error("Error in streaming completion:", error);
     return handleCommonErrors(error);
   }
 }
@@ -82,15 +103,31 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
     console.log(`Processing chat request for user: ${user.id}`);
     
     // Extract user message and optional context from request
+    // Handle both formats: {message: string} or {messages: Array}
+    let userMessage;
     const { 
       message,
+      messages,
       subscriptionTier: clientSubscriptionTier,
       archetype: clientArchetype,
       coachingMode: clientCoachingMode 
     } = reqBody;
     
-    if (!message) {
-      throw new Error("Message content is required");
+    // Determine which message format was used
+    if (message) {
+      userMessage = message;
+      console.log("Using single message format:", userMessage.substring(0, 50) + "...");
+    } else if (messages && Array.isArray(messages) && messages.length > 0) {
+      // If messages array provided, use the last user message
+      const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+      userMessage = lastUserMsg?.content || '';
+      console.log("Using messages array format, last user message:", userMessage.substring(0, 50) + "...");
+    } else {
+      throw new Error("No valid message content found in request");
+    }
+    
+    if (!userMessage || userMessage.trim() === '') {
+      throw new Error("Message content is required and cannot be empty");
     }
     
     // Get OpenAI API key
@@ -110,6 +147,8 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
     const effectiveCoachingMode = coachingMode || clientCoachingMode || 'normal';
     const effectiveSubscriptionTier = subscriptionTier || clientSubscriptionTier || 'free';
     
+    console.log(`User settings: archetype=${effectiveArchetype}, coachingMode=${effectiveCoachingMode}, tier=${effectiveSubscriptionTier}`);
+    
     // Check usage limits
     const tierLimit = checkUsageLimit(currentUsage, effectiveSubscriptionTier);
     
@@ -119,14 +158,14 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
       [];
     
     // Prepare messages for OpenAI
-    const messages = prepareMessages(message, effectiveArchetype, effectiveCoachingMode, chatHistory);
+    const preparedMessages = prepareMessages(userMessage, effectiveArchetype, effectiveCoachingMode, chatHistory);
     
     // Calculate estimated token count for input
-    const inputText = messages.map(m => m.content).join(' ');
+    const inputText = preparedMessages.map(m => m.content).join(' ');
     const estimatedInputTokens = estimateTokenCount(inputText);
     
     // Make OpenAI API call
-    const assistantResponse = await callOpenAI(openAiApiKey, messages);
+    const assistantResponse = await callOpenAI(openAiApiKey, preparedMessages);
     
     // Calculate estimated token count for output
     const estimatedOutputTokens = estimateTokenCount(assistantResponse);
@@ -140,11 +179,15 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
       await logChatMessages(
         supabaseClient, 
         user.id, 
-        message, 
+        userMessage, 
         assistantResponse, 
         estimatedInputTokens, 
         estimatedOutputTokens
       );
+      
+      console.log("Logged chat messages for premium user");
+    } else {
+      console.log(`Chat messages not logged for ${effectiveSubscriptionTier} tier user`);
     }
     
     // Return successful response
@@ -161,6 +204,7 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
     );
     
   } catch (error) {
+    console.error("Error in chat completion:", error);
     return handleCommonErrors(error);
   }
 }

@@ -11,9 +11,16 @@ export const KAI_SYSTEM_PROMPT = `You are Kai, the HumanlyAI Coach — an expert
 // Function to create a personalized system message
 export function createSystemMessage(archetype: string, coachingMode: string): string {
   // Create the dynamic personalization header
+  let archetypeInfo = archetype;
+  
+  // Handle case where archetype is not set yet
+  if (!archetype || archetype === 'unknown' || archetype === 'Not set') {
+    archetypeInfo = "Not yet determined. Help the user discover their EQ strengths and growth areas.";
+  }
+  
   const personalizationHeader = 
-    `Coaching Mode: ${coachingMode}.\n` +
-    `EQ Archetype: ${archetype}.\n`;
+    `Coaching Mode: ${coachingMode || 'normal'}.\n` +
+    `EQ Archetype: ${archetypeInfo}.\n`;
   
   // Combine the personalization header with the system prompt
   return personalizationHeader + KAI_SYSTEM_PROMPT;

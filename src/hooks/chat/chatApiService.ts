@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { handleApiErrors } from "@/utils/chatErrorHandler";
 import { handleChatStream } from "@/utils/chatStreamHandler";
 import { SendMessageOptions, ErrorHandlerOptions, RetryOptions } from "./types";
+import { toast } from "sonner";
 
 /**
  * Send a message without streaming
@@ -24,6 +25,8 @@ export async function sendMessage(
   setIsLoading(true);
 
   try {
+    toast.loading("Connecting to Kai...", { id: "kai-connecting" });
+    
     // Call the edge function to get a response from OpenAI
     const { data, error: apiError } = await supabase.functions.invoke('chat-completion', {
       body: {
@@ -31,6 +34,8 @@ export async function sendMessage(
         stream: false
       }
     });
+
+    toast.dismiss("kai-connecting");
 
     if (apiError) {
       console.error("Edge function error:", apiError);
@@ -86,6 +91,7 @@ export async function sendMessage(
     handleApiErrors(error, errorOptions);
   } finally {
     setIsLoading(false);
+    toast.dismiss("kai-connecting");
   }
 }
 
@@ -110,10 +116,18 @@ export async function sendMessageStream(
   setIsLoading(true);
 
   try {
+    // Show loading toast
+    toast.loading("Connecting to Kai...", { id: "kai-connecting" });
+    
     // Call the edge function with stream set to true and pass subscription tier
     const subscriptionTier = user?.subscription_tier || 'free';
     
     console.log("Sending message stream with content:", content);
+    console.log("User context:", {
+      subscriptionTier: subscriptionTier,
+      archetype: user?.eq_archetype || 'unknown',
+      coachingMode: user?.coaching_mode || 'normal'
+    });
     
     const response = await supabase.functions.invoke('chat-completion', {
       body: { 
@@ -125,6 +139,8 @@ export async function sendMessageStream(
         coachingMode: user?.coaching_mode || 'normal'
       }
     });
+
+    toast.dismiss("kai-connecting");
 
     console.log("Got response from edge function:", response);
 
@@ -142,7 +158,6 @@ export async function sendMessageStream(
 
     // Debug logs to help diagnose response structure
     console.log("Response data type:", typeof response.data);
-    console.log("Response data structure:", JSON.stringify(response.data).substring(0, 500) + "...");
     
     // Convert the response to a ReadableStream
     const responseBody = response.data;
@@ -178,6 +193,10 @@ export async function sendMessageStream(
             content = responseBody.response;
           } else if (typeof responseBody.text === 'function') {
             content = await responseBody.text();
+          } else if (responseBody.error) {
+            // Handle error in response
+            content = `I'm sorry, I encountered an error: ${responseBody.error}`;
+            console.error("Error in response:", responseBody.error);
           }
           
           if (content) {
@@ -188,10 +207,30 @@ export async function sendMessageStream(
             return;
           }
           
+          // Fallback message when nothing else works
+          updateAssistantMessage(assistantMessageId, "I'm sorry, I couldn't generate a response right now. Please try again.");
+          setIsLoading(false);
+          setLastSentMessage(null);
           throw new Error("Response is not in a usable format");
         }
       } else {
         console.error("Response is not a readable stream:", responseBody);
+        // Try one more fallback - see if we can convert the response to string
+        try {
+          if (typeof responseBody === 'string') {
+            updateAssistantMessage(assistantMessageId, responseBody);
+            setIsLoading(false);
+            setLastSentMessage(null);
+            return;
+          }
+        } catch (error) {
+          console.error("Failed to handle non-stream response:", error);
+        }
+        
+        // Last resort fallback message
+        updateAssistantMessage(assistantMessageId, "I'm sorry, I couldn't generate a response right now. Please try again.");
+        setIsLoading(false);
+        setLastSentMessage(null);
         throw new Error("Response is not a readable stream");
       }
     }
@@ -212,8 +251,15 @@ export async function sendMessageStream(
   } catch (error: any) {
     console.error("Error in streaming message:", error);
     handleApiErrors(error, errorOptions);
+    
+    // Provide a fallback message to the user when streaming fails
+    if (updateAssistantMessage && assistantMessageId) {
+      updateAssistantMessage(assistantMessageId, 
+        "I'm sorry, I encountered an issue while responding. Please try again or visit your profile settings to ensure your account is properly configured.");
+    }
   } finally {
     setIsLoading(false);
+    toast.dismiss("kai-connecting");
   }
 }
 

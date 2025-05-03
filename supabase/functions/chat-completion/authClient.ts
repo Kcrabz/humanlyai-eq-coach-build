@@ -19,6 +19,7 @@ export async function getAuthenticatedUser(supabaseClient: any) {
   const { data: { user }, error } = await supabaseClient.auth.getUser();
   
   if (error || !user) {
+    console.error("Authentication error:", error?.message || "No user found");
     throw new Error('Unauthorized');
   }
   
@@ -60,12 +61,41 @@ export async function getUserProfileAndUsage(supabaseClient: any, userId: string
   const today = new Date();
   const monthYear = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 
-  // Get the user's subscription tier and profile data
+  // Check if profile exists for the user
   const { data: profileData, error: profileError } = await supabaseClient
     .from('profiles')
     .select('subscription_tier, eq_archetype, coaching_mode')
     .eq('id', userId)
     .maybeSingle();
+  
+  if (profileError) {
+    console.error("Error fetching profile:", profileError.message);
+  }
+  
+  // If profile doesn't exist, create it with default values
+  if (!profileData) {
+    console.log(`No profile found for user ${userId}. Creating default profile...`);
+    try {
+      // Insert default profile
+      const { error: insertError } = await supabaseClient
+        .from('profiles')
+        .insert({
+          id: userId,
+          subscription_tier: 'free',
+          eq_archetype: 'Not set',
+          coaching_mode: 'normal',
+          onboarded: false
+        });
+      
+      if (insertError) {
+        console.error("Error creating default profile:", insertError.message);
+      } else {
+        console.log("Default profile created successfully");
+      }
+    } catch (err) {
+      console.error("Exception creating default profile:", err);
+    }
+  }
   
   // Get user's current month usage
   const { data: usageData, error: usageError } = await supabaseClient
@@ -75,11 +105,18 @@ export async function getUserProfileAndUsage(supabaseClient: any, userId: string
     .eq('month_year', monthYear)
     .maybeSingle();
 
+  if (usageError) {
+    console.error("Error fetching usage data:", usageError.message);
+  }
+
   // Set default values if no data found
   const archetype = profileData?.eq_archetype || "Not set";
   const coachingMode = profileData?.coaching_mode || "normal";
   const subscriptionTier = profileData?.subscription_tier || "free";
   const currentUsage = usageData?.token_count || 0;
+
+  console.log(`User profile info - Archetype: ${archetype}, Mode: ${coachingMode}, Tier: ${subscriptionTier}`);
+  console.log(`Current usage: ${currentUsage} tokens for ${monthYear}`);
 
   return {
     archetype,

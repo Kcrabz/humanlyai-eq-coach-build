@@ -7,6 +7,16 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
   console.log("Streaming from OpenAI with model: gpt-4o");
   
   try {
+    // Log first few messages to help with debugging
+    if (messages.length > 0) {
+      console.log(`First message role: ${messages[0].role}`);
+      console.log(`First message content preview: ${messages[0].content.substring(0, 50)}...`);
+      
+      if (messages.length > 1) {
+        console.log(`User message preview: ${messages[messages.length-1].content.substring(0, 50)}...`);
+      }
+    }
+    
     // Call OpenAI API with streaming enabled
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -23,9 +33,16 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
     });
     
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error("OpenAI API error:", errorData);
-      throw handleOpenAIApiError(errorData);
+      // For non-streaming error responses, we need to parse as JSON
+      try {
+        const errorData = await response.json();
+        console.error("OpenAI API error:", errorData);
+        throw handleOpenAIApiError(errorData);
+      } catch (parseError) {
+        // If we can't parse as JSON, use the status text
+        console.error("Error parsing OpenAI error response:", parseError);
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      }
     }
     
     // Process the stream
@@ -66,14 +83,29 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
             yield contentDelta;
           }
         } catch (e) {
-          console.error("Error parsing streaming JSON:", e);
+          console.error("Error parsing streaming JSON:", e, "Line:", line);
         }
       }
     }
     
+    // If we didn't get any response, provide a fallback
+    if (completeResponse.trim() === '') {
+      const fallbackResponse = "I'm here to help with your emotional intelligence development. What would you like to work on today?";
+      yield fallbackResponse;
+      return fallbackResponse;
+    }
+    
     return completeResponse;
   } catch (error) {
-    // Use shared error handling
+    console.error("Error in streamOpenAI:", error);
+    
+    // Provide helpful error message that can be streamed
+    const errorMessage = `I apologize, but I'm having trouble responding right now. Error: ${error.message || 'Unknown error'}. Please try again or contact support if the issue persists.`;
+    
+    // Yield the error message as part of the stream
+    yield errorMessage;
+    
+    // Also throw the error for proper handling
     throw handleGeneralError(error);
   }
 }
