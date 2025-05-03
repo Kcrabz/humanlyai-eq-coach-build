@@ -51,9 +51,9 @@ export function ChatBubble({ message }: ChatBubbleProps) {
             <div className="w-1.5 h-1.5 bg-current rounded-full"></div>
           </div>
         ) : (
-          <ReactMarkdown className="prose prose-sm max-w-none">
-            {displayContent}
-          </ReactMarkdown>
+          <div className="prose prose-sm max-w-none">
+            <ReactMarkdown>{displayContent}</ReactMarkdown>
+          </div>
         )}
       </Card>
     </div>
