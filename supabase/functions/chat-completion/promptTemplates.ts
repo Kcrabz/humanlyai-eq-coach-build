@@ -28,5 +28,5 @@ export function createSystemMessage(archetype: string, coachingMode: string): st
     archetypePrompt;
   
   // Combine the personalization header with the system prompt
-  return personalizationHeader + KAI_SYSTEM_PROMPT;
+  return personalizationHeader + "\n\n" + KAI_SYSTEM_PROMPT;
 }

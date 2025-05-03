@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
 import { ExternalLink, ClipboardCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { EQArchetype } from "@/types";
 
 const ChatPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -42,8 +43,10 @@ const ChatPage = () => {
     );
   }
   
-  const archetype = user.eq_archetype && user.eq_archetype !== 'Not set' ? ARCHETYPES[user.eq_archetype] : null;
-  const hasCompletedAssessment = user.eq_archetype && user.eq_archetype !== 'Not set';
+  // Fix the type issues by ensuring proper type checking
+  const userArchetype = user.eq_archetype as EQArchetype | undefined;
+  const archetype = userArchetype && userArchetype !== undefined ? ARCHETYPES[userArchetype] : null;
+  const hasCompletedAssessment = !!userArchetype && userArchetype !== undefined;
 
   return (
     <PageLayout fullWidth>
@@ -129,7 +132,7 @@ const ChatPage = () => {
               <h1 className="font-bold bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent">HumanlyAI Coach</h1>
               <p className="text-xs text-muted-foreground">
                 {hasCompletedAssessment 
-                  ? `Personalized for ${user.eq_archetype}` 
+                  ? `Personalized for ${userArchetype}` 
                   : "General EQ coaching available"}
               </p>
             </div>

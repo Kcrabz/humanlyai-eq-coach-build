@@ -6,7 +6,7 @@ export interface User {
   email: string;
   name?: string;
   avatar_url?: string;
-  eq_archetype?: EQArchetype;
+  eq_archetype?: EQArchetype | "Not set";
   coaching_mode?: CoachingMode;
   subscription_tier: SubscriptionTier;
   onboarded: boolean;
