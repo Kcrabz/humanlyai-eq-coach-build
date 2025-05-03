@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -35,7 +35,7 @@
     --input: 240 5.9% 90%;
     --ring: 188 100% 35%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -87,6 +87,10 @@
     @apply bg-background text-foreground;
   }
 
+  h1, h2, h3, h4, h5 {
+    @apply font-display font-medium tracking-tight;
+  }
+
   .gradient-bg {
     @apply bg-gradient-to-r from-primary to-secondary bg-size-200 animate-gradient-flow;
   }
@@ -99,4 +103,63 @@
     -webkit-text-stroke: 1px #0097b2;
     color: transparent;
   }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-soft-lg hover:-translate-y-1;
+  }
+  
+  .progress-step {
+    @apply transition-all duration-300;
+  }
+  
+  .progress-step.completed {
+    @apply scale-110;
+  }
+}
+
+/* Blob animations */
+.blob-animation {
+  animation: blob-float 8s ease-in-out infinite;
+}
+
+.blob-animation-delayed {
+  animation: blob-float 8s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+@keyframes blob-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
+}
+
+/* Input focus animation */
+.input-focus-animation:focus {
+  @apply ring-2 ring-primary/50 transition-all duration-300;
+  transform: scale(1.01);
+}
+
+/* Selection card animation */
+.selection-card {
+  @apply transition-all duration-300 relative overflow-hidden;
+}
+
+.selection-card::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-humanly-teal/10 to-humanly-green/10 opacity-0 transition-opacity duration-300;
+}
+
+.selection-card:hover::after {
+  @apply opacity-100;
+}
+
+.selection-card.selected {
+  @apply scale-[1.02] shadow-soft;
+}
+
+.selection-card.selected::after {
+  @apply opacity-100 bg-gradient-to-r from-humanly-teal/20 to-humanly-green/20;
 }

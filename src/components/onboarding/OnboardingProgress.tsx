@@ -1,6 +1,8 @@
 
 import { useOnboarding } from "@/context/OnboardingContext";
 import { OnboardingStep } from "@/context/OnboardingContext";
+import { CheckIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function OnboardingProgress() {
   const { state, isStepComplete } = useOnboarding();
@@ -14,51 +16,64 @@ export function OnboardingProgress() {
   ];
   
   return (
-    <div className="mb-10">
-      <div className="flex justify-between items-center">
-        {steps.map((step, index) => (
-          <div key={step.id} className="flex flex-col items-center relative">
-            {/* Line connecting steps */}
-            {index < steps.length - 1 && (
-              <div 
-                className={`absolute top-3 left-1/2 w-full h-[2px] ${
-                  isStepComplete(step.id) ? 'bg-humanly-teal' : 'bg-gray-200'
-                }`}
-                style={{ transform: 'translateX(50%)' }}
-              />
-            )}
-            
-            {/* Step circle */}
-            <div 
-              className={`w-6 h-6 rounded-full z-10 flex items-center justify-center ${
-                currentStep === step.id
-                  ? 'bg-humanly-teal text-white'
-                  : isStepComplete(step.id)
-                  ? 'bg-humanly-teal text-white'
-                  : 'bg-gray-200 text-gray-500'
-              }`}
-            >
-              {isStepComplete(step.id) && (
-                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="20 6 9 17 4 12"/>
-                </svg>
+    <div className="mb-14 mt-4 relative">
+      {/* Background blobs */}
+      <div className="absolute top-0 -left-20 w-64 h-64 bg-humanly-pastel-mint blob-animation -z-10 opacity-50 blob"></div>
+      <div className="absolute top-10 -right-10 w-48 h-48 bg-humanly-pastel-lavender blob-animation-delayed -z-10 opacity-40 blob"></div>
+      
+      <div className="flex justify-between items-center mx-auto max-w-2xl px-4 relative z-0">
+        {steps.map((step, index) => {
+          const isActive = currentStep === step.id;
+          const isComplete = isStepComplete(step.id);
+          
+          return (
+            <div key={step.id} className="flex flex-col items-center relative">
+              {/* Line connecting steps */}
+              {index < steps.length - 1 && (
+                <div 
+                  className={cn(
+                    "absolute top-3 left-1/2 w-full h-[3px] transition-all duration-700",
+                    isComplete ? 'bg-gradient-to-r from-humanly-teal to-humanly-teal/70' : 'bg-gray-200'
+                  )}
+                  style={{ transform: 'translateX(50%)' }}
+                />
               )}
+              
+              {/* Step circle */}
+              <div 
+                className={cn(
+                  "w-7 h-7 rounded-full z-10 flex items-center justify-center transition-all duration-500 progress-step",
+                  isActive && "ring-4 ring-humanly-teal/20",
+                  isComplete 
+                    ? "bg-gradient-to-r from-humanly-teal to-humanly-green text-white shadow-sm" 
+                    : isActive
+                    ? "bg-white border-2 border-humanly-teal text-humanly-teal shadow-sm"
+                    : "bg-gray-100 text-gray-400 border border-gray-200"
+                )}
+              >
+                {isComplete ? (
+                  <CheckIcon size={14} strokeWidth={3} />
+                ) : (
+                  <span className="text-xs font-medium">{index + 1}</span>
+                )}
+              </div>
+              
+              {/* Step label */}
+              <div 
+                className={cn(
+                  "mt-3 text-sm transition-all duration-300 font-medium",
+                  currentStep === step.id
+                    ? "text-humanly-teal scale-105"
+                    : isComplete
+                    ? "text-humanly-teal"
+                    : "text-gray-500"
+                )}
+              >
+                {step.label}
+              </div>
             </div>
-            
-            {/* Step label */}
-            <div 
-              className={`mt-2 text-xs ${
-                currentStep === step.id
-                  ? 'text-humanly-teal font-semibold'
-                  : isStepComplete(step.id)
-                  ? 'text-humanly-teal font-semibold'
-                  : 'text-gray-500'
-              }`}
-            >
-              {step.label}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

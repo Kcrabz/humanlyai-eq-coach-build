@@ -37,7 +37,7 @@ const OnboardingContent = () => {
   }
   
   return (
-    <div className="max-w-5xl mx-auto p-4 py-12">
+    <div className="max-w-5xl mx-auto p-4 py-12 relative">
       <OnboardingProgress />
       
       {currentStep === "goal" && (
@@ -57,11 +57,11 @@ const OnboardingContent = () => {
       )}
       
       {/* Report issue button */}
-      <div className="mt-8 text-center">
+      <div className="mt-12 text-center">
         <Button 
           variant="ghost" 
           size="sm"
-          className="text-xs text-muted-foreground flex items-center"
+          className="text-xs text-muted-foreground flex items-center hover:bg-gray-50 transition-colors"
           onClick={() => {
             toast.success("Issue reported", {
               description: "Thank you for your feedback. We'll fix this issue."
@@ -106,9 +106,11 @@ const OnboardingPage = () => {
   
   return (
     <PageLayout>
-      <OnboardingProvider>
-        <OnboardingContent />
-      </OnboardingProvider>
+      <div className="bg-gradient-to-b from-white to-humanly-gray-lightest min-h-screen">
+        <OnboardingProvider>
+          <OnboardingContent />
+        </OnboardingProvider>
+      </div>
     </PageLayout>
   );
 };
