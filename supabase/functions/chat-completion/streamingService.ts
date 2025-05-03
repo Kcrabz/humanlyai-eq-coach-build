@@ -1,9 +1,10 @@
+
 import { estimateTokenCount } from "./utils.ts";
 import { handleOpenAIApiError, handleGeneralError } from "./openaiErrorHandler.ts";
 
 // Call OpenAI API with streaming support
 export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
-  console.log("Streaming from OpenAI with model: gpt-4o-mini");
+  console.log("Streaming from OpenAI with model: gpt-4o");
   
   try {
     // Call OpenAI API with streaming enabled
@@ -14,7 +15,7 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: messages,
         max_tokens: 500,
         stream: true
