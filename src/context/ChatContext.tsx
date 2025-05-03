@@ -5,6 +5,7 @@ import { useChatMessages } from "@/hooks/useChatMessages";
 import { useChatApi } from "@/hooks/useChatApi";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ChatContextType {
   messages: ChatMessage[];
@@ -103,17 +104,27 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Initialize with empty content
       addAssistantMessage("");
       
-      // Start streaming response
-      console.log("Sending message with streaming:", content);
-      await sendMessageStream(
-        content, 
-        userMessageId, 
-        assistantMessageId,
-        (id, content) => {
-          console.log(`Updating assistant message ${id} with content length: ${content.length}`);
-          updateAssistantMessage(id, content);
-        }
-      );
+      // Replace streaming with direct invoke
+      console.log("Sending message with direct invoke:", content);
+      const { data, error } = await supabase.functions.invoke("chat-completion", {
+        body: { 
+          messages: [...messages, { role: "user", content }],
+          stream: false 
+        },
+      });
+
+      if (error || !data?.response) {
+        console.error("Error from chat-completion function:", error);
+        throw new Error(error?.message || "No response from assistant");
+      }
+
+      console.log("Received response from chat-completion:", data);
+      updateAssistantMessage(assistantMessageId, data.response);
+      
+      // Update usage info if available
+      if (data.usage) {
+        setUsageInfo(data.usage);
+      }
       
       console.log("Message sent and processed successfully");
     } catch (error) {
@@ -121,6 +132,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.error("Failed to send message", {
         description: "Please try again or contact support if the issue persists."
       });
+      setError(error.message);
     }
   };
 

@@ -15,12 +15,14 @@ serve(async (req) => {
     // Parse the request body once
     const { body, originalRequest } = await parseRequestOnce(req);
     
-    // Check for streaming request
+    // Check for streaming request - default to non-streaming now
     const wantsStream = body.stream === true;
     
     if (wantsStream) {
+      console.log("Processing as streaming request");
       return handleStreamingChatCompletion(originalRequest, body);
     } else {
+      console.log("Processing as non-streaming request");
       return handleChatCompletion(originalRequest, body);
     }
   } catch (error) {
