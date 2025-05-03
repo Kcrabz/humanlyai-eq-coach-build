@@ -90,6 +90,12 @@ export const handleChatStream = async (
                   });
                 }
                 
+                // If we didn't get any content through streaming, but have a response in the complete message
+                if (assistantResponse.length === 0 && data.response) {
+                  console.log("Using response from complete message:", data.response);
+                  updateAssistantMessage(assistantMessageId, data.response);
+                }
+                
                 // Clear last sent message since it was successful
                 setLastSentMessage(null);
               }
@@ -101,8 +107,40 @@ export const handleChatStream = async (
                   details: data.details 
                 };
               }
+              // If we get a direct response without a type (fallback case)
+              else if (data.choices && data.choices[0] && data.choices[0].message) {
+                // This is a direct OpenAI API response format
+                const content = data.choices[0].message.content;
+                console.log("Got direct OpenAI API response:", content);
+                assistantResponse = content;
+                updateAssistantMessage(assistantMessageId, content);
+              }
             } catch (parseError) {
               console.error("Error parsing JSON data:", parseError, "Raw data:", jsonStr);
+              
+              // If it's not valid JSON but has text content, try to use it anyway
+              if (jsonStr && typeof jsonStr === 'string' && !jsonStr.includes('[DONE]')) {
+                console.log("Using non-JSON data as content:", jsonStr);
+                assistantResponse += jsonStr;
+                updateAssistantMessage(assistantMessageId, assistantResponse);
+              }
+            }
+          } else if (line.includes('content') || line.includes('response')) {
+            // Try to handle non-standard formats that might contain content
+            console.log("Received possible content line:", line);
+            try {
+              const possibleData = JSON.parse(line);
+              if (possibleData.content || possibleData.response) {
+                const content = possibleData.content || possibleData.response;
+                assistantResponse += content;
+                updateAssistantMessage(assistantMessageId, assistantResponse);
+              }
+            } catch (e) {
+              // Not JSON, could be just text
+              if (!line.includes('{') && !line.includes('}')) {
+                assistantResponse += line;
+                updateAssistantMessage(assistantMessageId, assistantResponse);
+              }
             }
           } else {
             console.log("Received non-data line:", line);
@@ -111,6 +149,13 @@ export const handleChatStream = async (
           console.error("Error processing stream line:", e, line);
         }
       }
+    }
+    
+    // Final check - if we got no response at all, add a fallback message
+    if (assistantResponse.length === 0) {
+      console.warn("No content received from stream, adding fallback message");
+      const fallbackMessage = "I'm sorry, I couldn't generate a response. Please try again.";
+      updateAssistantMessage(assistantMessageId, fallbackMessage);
     }
   } catch (error) {
     console.error("Error in chat stream processing:", error);

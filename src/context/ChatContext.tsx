@@ -73,6 +73,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
     
+    console.log("ChatContext: Sending message:", content);
+    
     // Check if user has exceeded their message limit
     if (user) {
       const userMessages = messages.filter(msg => msg.role === "user").length;
@@ -92,9 +94,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       // Create user message in UI
       const userMessageId = addUserMessage(content);
+      console.log("Added user message with ID:", userMessageId);
       
       // Create placeholder for assistant message
       const assistantMessageId = crypto.randomUUID();
+      console.log("Created assistant message ID:", assistantMessageId);
+      
       // Initialize with empty content
       addAssistantMessage("");
       
@@ -104,8 +109,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         content, 
         userMessageId, 
         assistantMessageId,
-        updateAssistantMessage
+        (id, content) => {
+          console.log(`Updating assistant message ${id} with content length: ${content.length}`);
+          updateAssistantMessage(id, content);
+        }
       );
+      
+      console.log("Message sent and processed successfully");
     } catch (error) {
       console.error("Error in chat message flow:", error);
       toast.error("Failed to send message", {
@@ -115,7 +125,21 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const retryLastMessage = async () => {
-    await apiRetryLastMessage(addUserMessage, addAssistantMessage, updateAssistantMessage);
+    console.log("Retrying last message");
+    await apiRetryLastMessage(
+      (msg) => {
+        console.log("Retry: Adding user message:", msg);
+        return addUserMessage(msg);
+      }, 
+      (msg) => {
+        console.log("Retry: Adding assistant message:", msg);
+        addAssistantMessage(msg);
+      }, 
+      (id, content) => {
+        console.log(`Retry: Updating assistant message ${id} with content length: ${content.length}`);
+        updateAssistantMessage(id, content);
+      }
+    );
   };
 
   const startNewChat = () => {

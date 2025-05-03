@@ -140,6 +140,10 @@ export async function sendMessageStream(
       throw new Error("No response received from AI assistant");
     }
 
+    // Debug logs to help diagnose response structure
+    console.log("Response data type:", typeof response.data);
+    console.log("Response data structure:", JSON.stringify(response.data).substring(0, 500) + "...");
+    
     // Convert the response to a ReadableStream
     const responseBody = response.data;
     
@@ -150,7 +154,15 @@ export async function sendMessageStream(
         // Handle response that might be an object with streaming data
         if ('content' in responseBody) {
           // Simple case: we got direct content
+          console.log("Got direct content response:", responseBody.content);
           updateAssistantMessage(assistantMessageId, responseBody.content);
+          setIsLoading(false);
+          setLastSentMessage(null);
+          return;
+        } else if ('response' in responseBody) {
+          // Handle regular response from non-streaming endpoint
+          console.log("Got regular response:", responseBody.response);
+          updateAssistantMessage(assistantMessageId, responseBody.response);
           setIsLoading(false);
           setLastSentMessage(null);
           return;
@@ -169,6 +181,7 @@ export async function sendMessageStream(
           }
           
           if (content) {
+            console.log("Extracted content:", content);
             updateAssistantMessage(assistantMessageId, content);
             setIsLoading(false);
             setLastSentMessage(null);

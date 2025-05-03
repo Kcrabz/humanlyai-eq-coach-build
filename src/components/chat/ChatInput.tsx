@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useChat } from "@/context/ChatContext";
 import { Loading } from "@/components/ui/loading";
-import { AlertCircle, ExternalLink, RefreshCw } from "lucide-react";
+import { AlertCircle, ExternalLink, RefreshCw, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
 export function ChatInput() {
@@ -22,12 +22,23 @@ export function ChatInput() {
     setMessage("");
     
     try {
+      // Show a processing toast
+      toast.loading("Processing your message...", { id: "message-processing" });
+      
       // Send the message
       await sendMessage(messageToSend);
+      
+      // Dismiss the loading toast on success
+      toast.dismiss("message-processing");
     } catch (error) {
       console.error("Failed to send message:", error);
       // Restore the message if sending fails
       setMessage(messageToSend);
+      
+      // Dismiss the loading toast
+      toast.dismiss("message-processing");
+      
+      // Show error toast
       toast.error("Failed to send message", {
         description: "There was a problem sending your message. Please try again."
       });
@@ -128,9 +139,20 @@ export function ChatInput() {
           disabled={isLoading || !message.trim()}
           className="self-end"
         >
-          {isLoading ? <Loading size="small" /> : "Send"}
+          {isLoading ? <Loading size="small" /> : 
+            <>
+              <MessageSquare className="h-4 w-4 mr-1" />
+              Send
+            </>
+          }
         </Button>
       </div>
+      
+      {isLoading && (
+        <p className="text-xs text-muted-foreground mt-2 animate-pulse">
+          AI coach is thinking...
+        </p>
+      )}
     </form>
   );
 }
