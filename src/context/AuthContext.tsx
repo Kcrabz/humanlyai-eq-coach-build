@@ -33,7 +33,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updateProfile,
         setArchetype,
         setCoachingMode,
-        setOnboarded
+        setOnboarded,
+        setUser // Add the setUser function to the context value
       }}
     >
       {children}
