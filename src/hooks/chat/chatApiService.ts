@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { handleApiErrors } from "@/utils/chatErrorHandler";
 import { handleChatStream } from "@/utils/chatStreamHandler";
-import { SendMessageOptions, ErrorHandlerOptions } from "./types";
+import { SendMessageOptions, ErrorHandlerOptions, RetryOptions } from "./types";
 
 /**
  * Send a message without streaming
