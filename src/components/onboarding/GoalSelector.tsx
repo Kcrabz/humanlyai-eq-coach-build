@@ -1,92 +1,96 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useOnboarding } from "@/context/OnboardingContext";
-
-const GOALS = [
-  {
-    id: "self-awareness",
-    title: "Self-Awareness",
-    description: "Understand my emotions and reactions better"
-  },
-  {
-    id: "empathy",
-    title: "Empathy",
-    description: "Better connect with and understand others"
-  },
-  {
-    id: "boundaries",
-    title: "Boundaries",
-    description: "Set healthier limits in relationships"
-  },
-  {
-    id: "stress",
-    title: "Stress Management",
-    description: "Handle pressure and anxiety more effectively"
-  },
-  {
-    id: "relationships",
-    title: "Relationships",
-    description: "Improve personal and professional connections"
-  }
-];
+import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export function GoalSelector() {
-  const { state, setGoal, completeStep } = useOnboarding();
-  const [selectedGoal, setSelectedGoal] = useState<string | null>(state.goal);
-  
-  const handleSelectGoal = (goalId: string) => {
-    setSelectedGoal(goalId);
-  };
-  
-  const handleContinue = async () => {
-    if (selectedGoal) {
-      setGoal(selectedGoal);
+  const [goal, setGoal] = useState("");
+  const [isSetting, setIsSetting] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
+  const { state, setGoal: updateGoal, completeStep } = useOnboarding();
+  const { setOnboarded } = useAuth();
+  const navigate = useNavigate();
+
+  const handleNext = async () => {
+    if (!goal.trim()) {
+      return;
+    }
+
+    setIsSetting(true);
+    try {
+      updateGoal(goal);
       await completeStep("goal");
+    } finally {
+      setIsSetting(false);
     }
   };
-  
+
+  const handleSkip = async () => {
+    setIsSkipping(true);
+    try {
+      // Mark user as onboarded in both database and local state
+      await setOnboarded(true);
+      toast.success("Welcome to Humanly Chat");
+      // Navigate to chat page
+      navigate("/chat", { replace: true });
+    } catch (error) {
+      console.error("Failed to skip onboarding:", error);
+      toast.error("Failed to skip onboarding. Please try again.");
+    } finally {
+      setIsSkipping(false);
+    }
+  };
+
   return (
-    <div className="max-w-xl mx-auto">
-      <div className="text-center mb-8">
-        <h2 className="text-2xl font-bold mb-2">What do you want to improve?</h2>
-        <p className="text-muted-foreground">
-          Select the area you'd most like to focus on with your EQ coach
-        </p>
-      </div>
+    <div className="max-w-md mx-auto px-4">
+      <h1 className="text-2xl md:text-3xl font-bold mb-6 text-center">
+        What's your main goal with emotional intelligence coaching?
+      </h1>
       
-      <div className="space-y-3">
-        {GOALS.map((goal) => (
-          <Card 
-            key={goal.id}
-            className={`cursor-pointer transition-all ${
-              selectedGoal === goal.id ? 'ring-2 ring-humanly-teal' : 'hover:bg-gray-50'
-            }`}
-            onClick={() => handleSelectGoal(goal.id)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-medium">{goal.title}</h3>
-                  <p className="text-sm text-muted-foreground">{goal.description}</p>
-                </div>
-                {selectedGoal === goal.id && (
-                  <div className="h-4 w-4 rounded-full bg-humanly-teal"></div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-      
-      <div className="mt-8 flex justify-end">
+      <div className="space-y-6">
+        <Input
+          placeholder="e.g., Improve my relationships, manage stress better..."
+          value={goal}
+          onChange={(e) => setGoal(e.target.value)}
+          className="w-full"
+          autoFocus
+        />
+        
         <Button 
-          onClick={handleContinue}
-          disabled={!selectedGoal}
+          onClick={handleNext}
+          disabled={!goal.trim() || isSetting}
+          className="w-full"
         >
-          Continue to Assessment
+          {isSetting ? "Setting goal..." : "Continue"}
         </Button>
+        
+        <div className="text-center mt-6">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline"
+                  className="bg-gray-300 text-gray-700 hover:bg-gray-400 border-none"
+                  onClick={handleSkip}
+                  disabled={isSkipping}
+                >
+                  {isSkipping ? "Redirecting..." : "Skip straight to chatting"}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>You can complete your EQ assessment later in settings.</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <p className="text-xs text-muted-foreground mt-2">
+            You can complete your EQ assessment later in settings.
+          </p>
+        </div>
       </div>
     </div>
   );
