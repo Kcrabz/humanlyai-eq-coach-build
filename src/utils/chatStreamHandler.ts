@@ -45,57 +45,76 @@ export const handleChatStream = async (
       // Process all lines in the chunk
       const lines = chunk.split('\n');
       for (const line of lines) {
-        if (!line.trim() || !line.startsWith('data: ')) continue;
+        if (!line.trim()) continue;
         
         try {
-          // Extract and parse the JSON data
-          const jsonStr = line.substring(6); // Remove 'data: ' prefix
-          const data = JSON.parse(jsonStr);
-          console.log("Parsed data:", data);
-          
-          // Handle different message types
-          if (data.type === 'init') {
-            // Initialize streaming, do nothing special
-            console.log("Stream initialized");
-          } 
-          else if (data.type === 'chunk') {
-            // Received a content chunk
-            if (data.content) {
-              // Append to the existing assistant message
-              assistantResponse += data.content;
-              console.log("Updating assistant message with content:", assistantResponse);
-              updateAssistantMessage(assistantMessageId, assistantResponse);
-            }
-          }
-          else if (data.type === 'complete') {
-            // Stream completed successfully
-            console.log("Streaming completed");
+          // Check if line starts with "data: "
+          if (line.startsWith('data: ')) {
+            // Extract and parse the JSON data
+            const jsonStr = line.substring(6); // Remove 'data: ' prefix
             
-            // Update usage info
-            if (data.usage) {
-              setUsageInfo({
-                currentUsage: data.usage.currentUsage,
-                limit: data.usage.limit,
-                percentage: (data.usage.currentUsage / data.usage.limit) * 100
-              });
+            // Skip [DONE] messages which aren't JSON
+            if (jsonStr.trim() === '[DONE]') {
+              console.log("Received [DONE] message");
+              continue;
             }
             
-            // Clear last sent message since it was successful
-            setLastSentMessage(null);
-          }
-          else if (data.type === 'error') {
-            // Handle error in stream
-            console.error("Error in stream:", data.error, data.details);
-            throw { 
-              message: data.error || "Error in stream", 
-              details: data.details 
-            };
+            try {
+              const data = JSON.parse(jsonStr);
+              console.log("Parsed data:", data);
+              
+              // Handle different message types
+              if (data.type === 'init') {
+                // Initialize streaming, do nothing special
+                console.log("Stream initialized");
+              } 
+              else if (data.type === 'chunk') {
+                // Received a content chunk
+                if (data.content) {
+                  // Append to the existing assistant message
+                  assistantResponse += data.content;
+                  console.log("Updating assistant message with content:", assistantResponse);
+                  updateAssistantMessage(assistantMessageId, assistantResponse);
+                }
+              }
+              else if (data.type === 'complete') {
+                // Stream completed successfully
+                console.log("Streaming completed");
+                
+                // Update usage info
+                if (data.usage) {
+                  setUsageInfo({
+                    currentUsage: data.usage.currentUsage,
+                    limit: data.usage.limit,
+                    percentage: (data.usage.currentUsage / data.usage.limit) * 100
+                  });
+                }
+                
+                // Clear last sent message since it was successful
+                setLastSentMessage(null);
+              }
+              else if (data.type === 'error') {
+                // Handle error in stream
+                console.error("Error in stream:", data.error, data.details);
+                throw { 
+                  message: data.error || "Error in stream", 
+                  details: data.details 
+                };
+              }
+            } catch (parseError) {
+              console.error("Error parsing JSON data:", parseError, "Raw data:", jsonStr);
+            }
+          } else {
+            console.log("Received non-data line:", line);
           }
         } catch (e) {
-          console.error("Error parsing stream data:", e, line);
+          console.error("Error processing stream line:", e, line);
         }
       }
     }
+  } catch (error) {
+    console.error("Error in chat stream processing:", error);
+    throw error;
   } finally {
     reader.releaseLock();
     console.log("Reader released");

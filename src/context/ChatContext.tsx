@@ -89,15 +89,28 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
     
-    // Use streaming by default for better user experience
-    const userMessageId = addUserMessage(content);
-    const assistantMessageId = crypto.randomUUID();
-    updateAssistantMessage(assistantMessageId, "");
-    
     try {
-      await sendMessageStream(content, userMessageId, assistantMessageId);
+      // Create user message in UI
+      const userMessageId = addUserMessage(content);
+      
+      // Create placeholder for assistant message
+      const assistantMessageId = crypto.randomUUID();
+      // Initialize with empty content
+      addAssistantMessage("");
+      
+      // Start streaming response
+      console.log("Sending message with streaming:", content);
+      await sendMessageStream(
+        content, 
+        userMessageId, 
+        assistantMessageId,
+        updateAssistantMessage
+      );
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error("Error in chat message flow:", error);
+      toast.error("Failed to send message", {
+        description: "Please try again or contact support if the issue persists."
+      });
     }
   };
 

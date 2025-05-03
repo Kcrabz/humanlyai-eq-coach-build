@@ -20,8 +20,14 @@ export function ChatInput() {
     // Clear input right away for better UX
     setMessage("");
     
-    // Send the message
-    await sendMessage(messageToSend);
+    try {
+      // Send the message
+      await sendMessage(messageToSend);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+      // Restore the message if sending fails
+      setMessage(messageToSend);
+    }
   };
 
   // Check for specific error types
