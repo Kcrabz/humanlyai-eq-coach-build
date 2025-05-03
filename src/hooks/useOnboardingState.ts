@@ -8,6 +8,7 @@ const initialState: OnboardingState = {
   currentStep: "goal",
   completedSteps: [],
   goal: null,
+  name: null,
   archetype: null,
   coachingMode: null,
   isLoading: true,
@@ -37,16 +38,22 @@ export const useOnboardingState = () => {
         // Try to load any saved progress
         const newState = { ...initialState };
         
+        if (user.name) {
+          newState.name = user.name;
+          newState.completedSteps = ["goal", "name"];
+          newState.currentStep = "archetype";
+        }
+        
         if (user.eq_archetype) {
           newState.archetype = user.eq_archetype;
-          newState.completedSteps = ["goal", "archetype"];
+          newState.completedSteps = ["goal", "name", "archetype"];
           newState.currentStep = "coaching";
         }
 
         if (user.coaching_mode) {
           newState.coachingMode = user.coaching_mode;
           if (newState.completedSteps.includes("archetype")) {
-            newState.completedSteps = ["goal", "archetype", "coaching"];
+            newState.completedSteps = ["goal", "name", "archetype", "coaching"];
             newState.currentStep = "complete";
           }
         }
@@ -63,6 +70,10 @@ export const useOnboardingState = () => {
 
   const setGoal = (goal: string) => {
     setState((prev) => ({ ...prev, goal }));
+  };
+
+  const setName = (name: string) => {
+    setState((prev) => ({ ...prev, name }));
   };
 
   const setArchetype = (archetype: string) => {
@@ -88,6 +99,7 @@ export const useOnboardingState = () => {
   return {
     state,
     setGoal,
+    setName,
     setArchetype,
     setCoachingMode,
     goToStep,

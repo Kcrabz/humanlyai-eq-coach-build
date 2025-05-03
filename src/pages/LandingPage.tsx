@@ -5,12 +5,16 @@ import { useNavigate } from "react-router-dom";
 import { ARCHETYPES } from "@/lib/constants";
 
 const LandingPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
     if (isAuthenticated) {
-      navigate("/chat");
+      if (user?.onboarded) {
+        navigate("/chat");
+      } else {
+        navigate("/onboarding");
+      }
     } else {
       navigate("/signup");
     }

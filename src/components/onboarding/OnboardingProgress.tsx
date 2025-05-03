@@ -10,6 +10,7 @@ export function OnboardingProgress() {
   
   const steps: {id: OnboardingStep; label: string}[] = [
     { id: "goal", label: "Your Goal" },
+    { id: "name", label: "Your Name" },
     { id: "archetype", label: "EQ Assessment" },
     { id: "coaching", label: "Coaching Style" },
     { id: "complete", label: "Results" }

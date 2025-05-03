@@ -10,7 +10,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, isLoading, setUser } = useAuthState();
   const { login, signup, logout, updateProfile } = useAuthActions(setUser);
-  const { setArchetype, setCoachingMode, setOnboarded } = useProfileActions(setUser);
+  const { setName, setArchetype, setCoachingMode, setOnboarded } = useProfileActions(setUser);
   
   // Debug the auth state
   useEffect(() => {
@@ -31,10 +31,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signup,
         logout,
         updateProfile,
+        setName,
         setArchetype,
         setCoachingMode,
         setOnboarded,
-        setUser // Add the setUser function to the context value
+        setUser
       }}
     >
       {children}

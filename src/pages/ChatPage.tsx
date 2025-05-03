@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -5,12 +6,14 @@ import { ChatProvider } from "@/context/ChatContext";
 import { ChatList } from "@/components/chat/ChatList";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { ChatUsage } from "@/components/chat/ChatUsage";
+import { EnhancedChatUI } from "@/components/chat/EnhancedChatUI";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
 import { ExternalLink, ClipboardCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EQArchetype } from "@/types";
+
 const ChatPage = () => {
   const {
     user,
@@ -18,6 +21,7 @@ const ChatPage = () => {
     isLoading
   } = useAuth();
   const navigate = useNavigate();
+
   useEffect(() => {
     if (!isLoading) {
       console.log("Chat page auth check:", {
@@ -32,6 +36,11 @@ const ChatPage = () => {
       }
     }
   }, [isAuthenticated, navigate, user, isLoading]);
+
+  const handleStartAssessment = () => {
+    navigate("/onboarding");
+  };
+
   if (isLoading || !isAuthenticated || !user?.onboarded) {
     return <PageLayout fullWidth>
         <div className="flex justify-center items-center h-96">
@@ -44,6 +53,7 @@ const ChatPage = () => {
   const userArchetype = user.eq_archetype as EQArchetype | undefined;
   const archetype = userArchetype && userArchetype !== undefined ? ARCHETYPES[userArchetype] : null;
   const hasCompletedAssessment = !!userArchetype && userArchetype !== undefined;
+
   return <PageLayout fullWidth>
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
@@ -76,7 +86,7 @@ const ChatPage = () => {
                 <p className="text-xs text-muted-foreground">
                   Take the EQ assessment to get personalized coaching
                 </p>
-                <Button size="sm" variant="outline" className="w-full mt-2 border-humanly-teal/20 text-humanly-teal hover:bg-humanly-teal/5" onClick={() => navigate("/onboarding")}>
+                <Button size="sm" variant="outline" className="w-full mt-2 border-humanly-teal/20 text-humanly-teal hover:bg-humanly-teal/5" onClick={handleStartAssessment}>
                   Start Assessment
                 </Button>
               </div>
@@ -125,7 +135,7 @@ const ChatPage = () => {
                   <ClipboardCheck className="h-4 w-4 text-humanly-teal" />
                   <AlertDescription className="text-sm">
                     For more personalized coaching, consider{" "}
-                    <Button variant="link" size="sm" className="p-0 h-auto text-humanly-teal underline" onClick={() => navigate("/onboarding")}>
+                    <Button variant="link" size="sm" className="p-0 h-auto text-humanly-teal underline" onClick={handleStartAssessment}>
                       completing your EQ assessment
                     </Button>
                   </AlertDescription>
@@ -139,4 +149,5 @@ const ChatPage = () => {
       </div>
     </PageLayout>;
 };
+
 export default ChatPage;

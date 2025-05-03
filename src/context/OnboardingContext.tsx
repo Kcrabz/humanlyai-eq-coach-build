@@ -10,6 +10,7 @@ interface OnboardingContextType {
   goToStep: (step: OnboardingStep) => void;
   completeStep: (step: OnboardingStep, data?: any) => Promise<void>;
   setGoal: (goal: string) => void;
+  setName: (name: string) => void;
   setArchetype: (archetype: EQArchetype) => void;
   setCoachingMode: (mode: CoachingMode) => void;
   resetOnboarding: () => void;
@@ -22,6 +23,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const {
     state,
     setGoal,
+    setName,
     setArchetype,
     setCoachingMode,
     goToStep,
@@ -38,6 +40,7 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         goToStep,
         completeStep,
         setGoal,
+        setName,
         setArchetype,
         setCoachingMode,
         resetOnboarding,

@@ -9,6 +9,7 @@ export interface AuthContextType {
   signup: (email: string, password: string) => Promise<any>;
   logout: () => void;
   updateProfile: (updates: Partial<User>) => void;
+  setName: (name: string) => void;
   setArchetype: (archetype: EQArchetype) => void;
   setCoachingMode: (mode: CoachingMode) => void;
   setOnboarded: (value: boolean) => void;

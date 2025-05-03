@@ -5,15 +5,28 @@ import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/context/AuthContext";
 
 interface ChatBubbleProps {
   message: ChatMessage;
 }
 
 export function ChatBubble({ message }: ChatBubbleProps) {
+  const { user } = useAuth();
   const isUser = message.role === "user";
   const isEmpty = !message.content || message.content.trim() === "";
   const isLoading = isEmpty && !isUser;
+  
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user?.name) return "You";
+    
+    const nameParts = user.name.trim().split(/\s+/);
+    if (nameParts.length === 1) {
+      return nameParts[0].substring(0, 2).toUpperCase();
+    }
+    return (nameParts[0][0] + nameParts[nameParts.length - 1][0]).toUpperCase();
+  };
   
   // For debugging - log incomplete messages
   if (isLoading) {
@@ -30,7 +43,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
       {isUser ? (
         <Avatar className="h-8 w-8">
           <AvatarFallback className="bg-humanly-teal text-white">
-            You
+            {getUserInitials()}
           </AvatarFallback>
         </Avatar>
       ) : (
