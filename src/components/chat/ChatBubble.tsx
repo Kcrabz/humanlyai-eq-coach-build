@@ -12,7 +12,8 @@ interface ChatBubbleProps {
 
 export function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === "user";
-  const displayContent = message.content?.trim() || "...";
+  const isEmpty = !message.content || message.content.trim() === "";
+  const isLoading = isEmpty && !isUser;
   
   return (
     <div
@@ -44,7 +45,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
             : "bg-gray-100 text-gray-900"
         )}
       >
-        {displayContent === "..." ? (
+        {isLoading ? (
           <div className="animate-pulse flex space-x-1 justify-center">
             <div className="w-1.5 h-1.5 bg-current rounded-full"></div>
             <div className="w-1.5 h-1.5 bg-current rounded-full"></div>
@@ -52,7 +53,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
           </div>
         ) : (
           <div className="prose prose-sm max-w-none">
-            <ReactMarkdown>{displayContent}</ReactMarkdown>
+            <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         )}
       </Card>

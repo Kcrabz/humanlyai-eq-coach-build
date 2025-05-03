@@ -1,5 +1,5 @@
 
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loading } from "@/components/ui/loading";
@@ -22,6 +22,7 @@ export function EnhancedChatUI({
 }: EnhancedChatUIProps) {
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>(initialMessages);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { 
     sendChatMessage, 
@@ -32,6 +33,7 @@ export function EnhancedChatUI({
     isInvalidKeyError 
   } = useChatCompletion({
     onSuccess: (response) => {
+      console.log("Received successful response:", response.substring(0, 50) + "...");
       const newAssistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
@@ -41,6 +43,11 @@ export function EnhancedChatUI({
       setChatHistory(prev => [...prev, newAssistantMessage]);
     }
   });
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chatHistory, isLoading]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -60,11 +67,37 @@ export function EnhancedChatUI({
     // Clear input right away for better UX
     setMessage("");
     
+    // Add temporary assistant message with loading state
+    const assistantLoadingMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: "",
+      created_at: new Date().toISOString()
+    };
+    
+    setChatHistory(prev => [...prev, assistantLoadingMessage]);
+    
     // Send message to API
+    console.log("Sending message to API:", message);
     await sendChatMessage(updatedHistory);
   };
 
   const handleRetry = async () => {
+    // Remove the last assistant message if it exists
+    if (chatHistory.length > 1 && chatHistory[chatHistory.length - 1].role === "assistant") {
+      setChatHistory(prev => prev.slice(0, -1));
+    }
+    
+    // Add temporary assistant message with loading state
+    const assistantLoadingMessage: ChatMessage = {
+      id: crypto.randomUUID(),
+      role: "assistant",
+      content: "",
+      created_at: new Date().toISOString()
+    };
+    
+    setChatHistory(prev => [...prev, assistantLoadingMessage]);
+    
     await retry();
   };
 
@@ -87,11 +120,7 @@ export function EnhancedChatUI({
           chatHistory.map((msg) => <ChatBubble key={msg.id} message={msg} />)
         )}
         
-        {isLoading && (
-          <div className="flex justify-center my-4">
-            <Loading />
-          </div>
-        )}
+        <div ref={messagesEndRef} />
       </div>
       
       <div className="border-t p-4 bg-background">

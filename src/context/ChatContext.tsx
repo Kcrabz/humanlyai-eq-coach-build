@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect } from "react";
 import { ChatMessage } from "@/types";
 import { useChatMessages } from "@/hooks/useChatMessages";
@@ -104,7 +105,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Initialize with empty content
       addAssistantMessage("");
       
-      // Replace streaming with direct invoke
       console.log("Sending message with direct invoke:", content);
       const { data, error } = await supabase.functions.invoke("chat-completion", {
         body: { 
@@ -113,16 +113,38 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       });
 
-      if (error || !data?.response) {
+      console.log("Full response data from chat-completion:", data);
+
+      if (error || !data) {
         console.error("Error from chat-completion function:", error);
         throw new Error(error?.message || "No response from assistant");
       }
 
-      console.log("Received response from chat-completion:", data);
-      updateAssistantMessage(assistantMessageId, data.response);
+      // Check both response formats - direct response or nested in response property
+      let assistantResponse = "";
+      if (typeof data === 'string') {
+        assistantResponse = data;
+        console.log("Received string response:", assistantResponse.substring(0, 50) + "...");
+      } else if (data.content) {
+        assistantResponse = data.content;
+        console.log("Received content property:", assistantResponse.substring(0, 50) + "...");
+      } else if (data.response) {
+        assistantResponse = data.response;
+        console.log("Received response property:", assistantResponse.substring(0, 50) + "...");
+      } else if (data.extractedContent) {
+        assistantResponse = data.extractedContent;
+        console.log("Received extractedContent:", assistantResponse.substring(0, 50) + "...");
+      } else {
+        console.error("Unknown response structure:", data);
+        throw new Error("Unrecognized response format from assistant");
+      }
+      
+      // Update the assistant message with the actual response
+      updateAssistantMessage(assistantMessageId, assistantResponse);
       
       // Update usage info if available
       if (data.usage) {
+        console.log("Updating usage info:", data.usage);
         setUsageInfo(data.usage);
       }
       

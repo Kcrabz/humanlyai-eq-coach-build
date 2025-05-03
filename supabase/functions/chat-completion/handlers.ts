@@ -190,7 +190,7 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
       console.log(`Chat messages not logged for ${effectiveSubscriptionTier} tier user`);
     }
     
-    // Return successful response
+    // Return successful response with the response field to match client expectations
     return new Response(
       JSON.stringify({ 
         response: assistantResponse,
