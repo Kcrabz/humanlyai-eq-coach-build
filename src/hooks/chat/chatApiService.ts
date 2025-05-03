@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { handleApiErrors } from "@/utils/chatErrorHandler";
 import { handleChatStream } from "@/utils/chatStreamHandler";
@@ -140,7 +139,7 @@ export async function sendMessageStream(
       updateAssistantMessage(assistantMessageId, "");
     }
     
-    const response = await supabase.functions.invoke('chat-completion', {
+    const { data, error } = await supabase.functions.invoke('chat-completion', {
       body: { 
         message: content, 
         stream: true,
@@ -153,112 +152,190 @@ export async function sendMessageStream(
 
     toast.dismiss("kai-connecting");
 
-    console.log("Got response from edge function:", response);
+    console.log("Got response from edge function:", { data, error });
 
-    if (response.error) {
-      console.error("Edge function error:", response.error);
+    if (error) {
+      console.error("Edge function error:", error);
       errorOptions.setError("Failed to connect to AI assistant. Please try again later.");
-      throw new Error(response.error.message || "Failed to send message");
+      throw new Error(error.message || "Failed to send message");
     }
 
-    if (!response.data) {
-      console.error("Invalid response from edge function:", response);
+    if (!data) {
+      console.error("Invalid response from edge function:", { data, error });
       errorOptions.setError("No response received from AI assistant");
       throw new Error("No response received from AI assistant");
     }
 
-    // Debug logs to help diagnose response structure
-    console.log("Response data type:", typeof response.data);
-    
-    // Convert the response to a ReadableStream
-    const responseBody = response.data;
-    
-    // Check if response is actually a ReadableStream
-    if (!(responseBody instanceof ReadableStream)) {
-      // First try parsing it as a stream if it's not a ReadableStream directly
-      if (typeof responseBody === 'object' && responseBody !== null) {
-        // Handle response that might be an object with streaming data
-        if ('content' in responseBody) {
-          // Simple case: we got direct content
-          console.log("Got direct content response:", responseBody.content);
-          updateAssistantMessage(assistantMessageId, responseBody.content);
-          setIsLoading(false);
-          setLastSentMessage(null);
-          return;
-        } else if ('response' in responseBody) {
-          // Handle regular response from non-streaming endpoint
-          console.log("Got regular response:", responseBody.response);
-          updateAssistantMessage(assistantMessageId, responseBody.response);
-          setIsLoading(false);
-          setLastSentMessage(null);
-          return;
-        } else {
-          // Handle non-stream response gracefully
-          console.warn("Response is not a readable stream, but got data:", responseBody);
-          let content = '';
-          
-          // Try to extract content from response (if it exists)
-          if (typeof responseBody === 'string') {
-            content = responseBody;
-          } else if (typeof responseBody.response === 'string') {
-            content = responseBody.response;
-          } else if (typeof responseBody.text === 'function') {
-            content = await responseBody.text();
-          } else if (responseBody.error) {
-            // Handle error in response
-            content = `I'm sorry, I encountered an error: ${responseBody.error}`;
-            console.error("Error in response:", responseBody.error);
+    // Process the response as a stream
+    if (typeof data === 'string') {
+      // Try to handle directly if it's a string of SSE data
+      console.log("Response is direct string data, length:", data.length);
+      
+      const lines = data.split('\n').filter(line => line.trim() !== '');
+      let fullResponse = '';
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const jsonStr = line.substring(6); // Remove 'data: ' prefix
+            const eventData = JSON.parse(jsonStr);
+            
+            if (eventData.type === 'chunk' && eventData.content) {
+              fullResponse += eventData.content;
+              if (updateAssistantMessage) {
+                updateAssistantMessage(assistantMessageId, fullResponse);
+              }
+            } else if (eventData.type === 'complete' && eventData.usage) {
+              // Update usage info
+              setUsageInfo({
+                currentUsage: eventData.usage.currentUsage,
+                limit: eventData.usage.limit,
+                percentage: (eventData.usage.currentUsage / eventData.usage.limit) * 100
+              });
+            }
+          } catch (e) {
+            console.error("Error parsing SSE line:", e, "Line:", line);
           }
-          
-          if (content) {
-            console.log("Extracted content:", content);
-            updateAssistantMessage(assistantMessageId, content);
-            setIsLoading(false);
-            setLastSentMessage(null);
-            return;
-          }
-          
-          // Emergency fallback when nothing else works
-          updateAssistantMessage(assistantMessageId, "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?");
-          setIsLoading(false);
-          setLastSentMessage(null);
-          return;
         }
-      } else {
-        console.error("Response is not a readable stream:", responseBody);
-        // Try one more fallback - see if we can convert the response to string
-        try {
-          if (typeof responseBody === 'string') {
-            updateAssistantMessage(assistantMessageId, responseBody);
-            setIsLoading(false);
-            setLastSentMessage(null);
-            return;
+      }
+      
+      if (fullResponse) {
+        console.log("Successfully extracted response from string data:", fullResponse.substring(0, 50) + "...");
+        setIsLoading(false);
+        setLastSentMessage(null);
+        return;
+      }
+    } else if (data.body instanceof ReadableStream) {
+      // Handle if it's already a ReadableStream
+      console.log("Response is a ReadableStream, processing...");
+      const reader = data.body.getReader();
+      
+      // Handle the streaming process
+      await handleChatStream(reader, {
+        assistantMessageId,
+        updateAssistantMessage: updateAssistantMessage || (() => {}),
+        setLastSentMessage,
+        setUsageInfo
+      });
+      
+      console.log("Stream processing completed");
+      setIsLoading(false);
+      return;
+    } else if (typeof data === 'object') {
+      console.log("Response is an object:", data);
+      
+      // If it contains the extracted content directly (as seen in logs)
+      if (data.extractedContent && typeof data.extractedContent === 'string') {
+        const extractedContent = data.extractedContent;
+        console.log("Processing extracted content from object:", extractedContent.substring(0, 50) + "...");
+        
+        const lines = extractedContent.split('\n').filter(line => line.trim() !== '');
+        let fullResponse = '';
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonStr = line.substring(6); // Remove 'data: ' prefix
+              const eventData = JSON.parse(jsonStr);
+              
+              if (eventData.type === 'chunk' && eventData.content) {
+                fullResponse += eventData.content;
+                if (updateAssistantMessage) {
+                  updateAssistantMessage(assistantMessageId, fullResponse);
+                }
+              } else if (eventData.type === 'complete' && eventData.usage) {
+                // Update usage info
+                setUsageInfo({
+                  currentUsage: eventData.usage.currentUsage,
+                  limit: eventData.usage.limit,
+                  percentage: (eventData.usage.currentUsage / eventData.usage.limit) * 100
+                });
+              }
+            } catch (e) {
+              console.error("Error parsing SSE line:", e, "Line:", line);
+            }
           }
-        } catch (error) {
-          console.error("Failed to handle non-stream response:", error);
         }
         
-        // Last resort fallback message
-        updateAssistantMessage(assistantMessageId, "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?");
+        if (fullResponse) {
+          console.log("Successfully extracted response from object data:", fullResponse.substring(0, 50) + "...");
+          setIsLoading(false);
+          setLastSentMessage(null);
+          return;
+        }
+      }
+      
+      // Direct content or response field
+      if (data.content) {
+        console.log("Found direct content in response object");
+        if (updateAssistantMessage) {
+          updateAssistantMessage(assistantMessageId, data.content);
+        }
+        setIsLoading(false);
+        setLastSentMessage(null);
+        return;
+      } else if (data.response) {
+        console.log("Found response field in object");
+        if (updateAssistantMessage) {
+          updateAssistantMessage(assistantMessageId, data.response);
+        }
         setIsLoading(false);
         setLastSentMessage(null);
         return;
       }
     }
 
-    // Get the reader and process the stream
-    const reader = responseBody.getReader();
-    console.log("Starting to process stream with reader");
+    // If we reach here, we couldn't extract the response properly
+    console.error("Couldn't properly extract response from:", data);
     
-    // Handle the streaming process
-    await handleChatStream(reader, {
-      assistantMessageId,
-      updateAssistantMessage: updateAssistantMessage || (() => {}),
-      setLastSentMessage,
-      setUsageInfo
-    });
+    // Try one more approach - check if there's any extracted content in logs
+    const consoleLog = console.log;
+    console.log = function(message) {
+      if (typeof message === 'string' && message.includes('Extracted content:')) {
+        const extractedContent = message.substring(message.indexOf('Extracted content:') + 'Extracted content:'.length).trim();
+        console.log = consoleLog; // Restore console.log
+        
+        try {
+          const lines = extractedContent.split('\n').filter(line => line.trim() !== '');
+          let fullResponse = '';
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const jsonStr = line.substring(6); // Remove 'data: ' prefix
+                const eventData = JSON.parse(jsonStr);
+                
+                if (eventData.type === 'chunk' && eventData.content) {
+                  fullResponse += eventData.content;
+                }
+              } catch (e) {
+                // Silent error for parsing
+              }
+            }
+          }
+          
+          if (fullResponse && updateAssistantMessage) {
+            updateAssistantMessage(assistantMessageId, fullResponse);
+            console.log("Extracted response from logs:", fullResponse.substring(0, 50) + "...");
+            setIsLoading(false);
+            setLastSentMessage(null);
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to parse extracted content from logs");
+        }
+      }
+      
+      consoleLog.apply(console, arguments);
+    };
     
-    console.log("Stream processing completed");
+    // Fallback message as last resort
+    if (updateAssistantMessage) {
+      updateAssistantMessage(assistantMessageId, 
+        "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?");
+      console.log("Using fallback message");
+    }
+    
   } catch (error: any) {
     console.error("Error in streaming message:", error);
     handleApiErrors(error, errorOptions);
@@ -266,7 +343,7 @@ export async function sendMessageStream(
     // Provide a fallback message to the user when streaming fails
     if (updateAssistantMessage && assistantMessageId) {
       updateAssistantMessage(assistantMessageId, 
-        "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?");
+        "I'm Kai, your EQ coach. I'm having trouble processing your message right now. Could you try again? If the issue persists, please try refreshing the page.");
     }
   } finally {
     setIsLoading(false);

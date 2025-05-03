@@ -1,180 +1,120 @@
-
-export interface StreamingOptions {
-  assistantMessageId: string;
-  updateAssistantMessage: (id: string, content: string) => void;
-  setLastSentMessage: (message: string | null) => void;
-  setUsageInfo: (usageInfo: UsageInfo | null) => void;
-}
-
 export interface UsageInfo {
   currentUsage: number;
   limit: number;
   percentage: number;
 }
 
-export const handleChatStream = async (
-  reader: ReadableStreamDefaultReader<Uint8Array>,
-  options: StreamingOptions
-) => {
-  const { 
-    assistantMessageId, 
-    updateAssistantMessage,
-    setLastSentMessage, 
-    setUsageInfo 
-  } = options;
+interface StreamOptions {
+  assistantMessageId: string;
+  updateAssistantMessage: (id: string, content: string) => void;
+  setLastSentMessage: (content: string | null) => void;
+  setUsageInfo: (info: UsageInfo | null) => void;
+}
+
+/**
+ * Process a stream of SSE events from the chat API
+ */
+export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8Array>, options: StreamOptions) {
+  const { assistantMessageId, updateAssistantMessage, setLastSentMessage, setUsageInfo } = options;
   
   const decoder = new TextDecoder();
+  let buffer = "";
+  let fullResponse = "";
   
-  // Initialize empty string for the assistant's response
-  let assistantResponse = "";
-  
-  // Process the stream
   try {
-    console.log("Starting to process stream chunks");
-    
-    // We need to ensure the chat bubble appears first
-    updateAssistantMessage(assistantMessageId, "...");
-    
     while (true) {
       const { done, value } = await reader.read();
-      if (done) {
-        console.log("Stream reading complete");
-        break;
-      }
+      if (done) break;
       
-      // Decode the chunk
-      const chunk = decoder.decode(value, { stream: true });
-      console.log("Received chunk of size:", chunk.length);
+      // Decode new chunk and add to buffer
+      const chunk = decoder.decode(value);
+      buffer += chunk;
       
-      // Process all lines in the chunk
-      const lines = chunk.split('\n');
+      console.log("Received stream chunk of length:", chunk.length);
+      
+      // Process any complete events in buffer
+      let lines = buffer.split("\n");
+      
+      // Keep last incomplete line in buffer
+      buffer = lines.pop() || "";
+      
       for (const line of lines) {
-        if (!line.trim()) continue;
+        if (!line.trim() || !line.startsWith("data: ")) continue;
+        if (line === "data: [DONE]") continue;
         
         try {
-          // Check if line starts with "data: "
-          if (line.startsWith('data: ')) {
-            // Extract and parse the JSON data
-            const jsonStr = line.substring(6); // Remove 'data: ' prefix
-            
-            // Skip [DONE] messages which aren't JSON
-            if (jsonStr.trim() === '[DONE]') {
-              console.log("Received [DONE] message");
-              continue;
-            }
-            
-            try {
-              const data = JSON.parse(jsonStr);
-              
-              // Handle different message types
-              if (data.type === 'init') {
-                // Initialize streaming, do nothing special
-                console.log("Stream initialized");
-              } 
-              else if (data.type === 'chunk') {
-                // Received a content chunk
-                if (data.content) {
-                  // Append to the existing assistant message
-                  assistantResponse += data.content;
-                  updateAssistantMessage(assistantMessageId, assistantResponse);
-                }
-              }
-              else if (data.type === 'complete') {
-                // Stream completed successfully
-                console.log("Streaming completed");
-                
-                // Update usage info
-                if (data.usage) {
-                  setUsageInfo({
-                    currentUsage: data.usage.currentUsage,
-                    limit: data.usage.limit,
-                    percentage: (data.usage.currentUsage / data.usage.limit) * 100
-                  });
-                }
-                
-                // If we didn't get any content through streaming, but have a response in the complete message
-                if (assistantResponse.length === 0 && data.response) {
-                  console.log("Using response from complete message:", data.response);
-                  updateAssistantMessage(assistantMessageId, data.response);
-                }
-                
-                // Clear last sent message since it was successful
-                setLastSentMessage(null);
-              }
-              else if (data.type === 'error') {
-                // Handle error in stream
-                console.error("Error in stream:", data.error, data.details);
-                throw { 
-                  message: data.error || "Error in stream", 
-                  details: data.details 
-                };
-              }
-              // If we get a direct response without a type (fallback case)
-              else if (data.choices && data.choices[0] && data.choices[0].message) {
-                // This is a direct OpenAI API response format
-                const content = data.choices[0].message.content;
-                console.log("Got direct OpenAI API response:", content);
-                assistantResponse = content;
-                updateAssistantMessage(assistantMessageId, content);
-              } else if (data.content || data.response) {
-                // Direct content in non-standard format
-                const content = data.content || data.response;
-                console.log("Got direct content:", content);
-                assistantResponse += content;
-                updateAssistantMessage(assistantMessageId, assistantResponse);
-              }
-            } catch (parseError) {
-              console.error("Error parsing JSON data:", parseError, "Raw data:", jsonStr);
-              
-              // If it's not valid JSON but has text content, try to use it anyway
-              if (jsonStr && typeof jsonStr === 'string' && !jsonStr.includes('[DONE]')) {
-                console.log("Using non-JSON data as content:", jsonStr);
-                assistantResponse += jsonStr;
-                updateAssistantMessage(assistantMessageId, assistantResponse);
-              }
-            }
-          } else if (line.includes('content') || line.includes('response')) {
-            // Try to handle non-standard formats that might contain content
-            console.log("Received possible content line:", line);
-            try {
-              const possibleData = JSON.parse(line);
-              if (possibleData.content || possibleData.response) {
-                const content = possibleData.content || possibleData.response;
-                assistantResponse += content;
-                updateAssistantMessage(assistantMessageId, assistantResponse);
-              }
-            } catch (e) {
-              // Not JSON, could be just text
-              if (!line.includes('{') && !line.includes('}')) {
-                assistantResponse += line;
-                updateAssistantMessage(assistantMessageId, assistantResponse);
-              }
-            }
-          } else {
-            console.log("Received non-data line:", line);
+          // Extract the JSON payload after "data: "
+          const jsonStr = line.substring(6); // length of "data: "
+          const data = JSON.parse(jsonStr);
+          
+          // Handle different types of events
+          if (data.type === "chunk" && data.content) {
+            fullResponse += data.content;
+            updateAssistantMessage(assistantMessageId, fullResponse);
+          } 
+          else if (data.type === "complete" && data.usage) {
+            // Update usage info when complete
+            setUsageInfo({
+              currentUsage: data.usage.currentUsage,
+              limit: data.usage.limit,
+              percentage: (data.usage.currentUsage / data.usage.limit) * 100
+            });
           }
-        } catch (e) {
-          console.error("Error processing stream line:", e, line);
+          else if (data.type === "error") {
+            console.error("Stream error:", data.error);
+          }
+          else if (data.content) {
+            // Direct content in some implementations
+            fullResponse += data.content;
+            updateAssistantMessage(assistantMessageId, fullResponse);
+          }
+        } catch (err) {
+          console.error("Error parsing stream data:", err, "Line:", line);
         }
       }
     }
     
-    // Final check - if we got no response at all, add a fallback message
-    if (assistantResponse.length === 0) {
-      console.warn("No content received from stream, adding fallback message");
-      const fallbackMessage = "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?";
-      updateAssistantMessage(assistantMessageId, fallbackMessage);
-    }
+    // Message completed successfully
+    setLastSentMessage(null);
+    
+    // Return the full response
+    return fullResponse;
   } catch (error) {
-    console.error("Error in chat stream processing:", error);
-    
-    // Add another fallback message
-    const fallbackMessage = "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?";
-    updateAssistantMessage(assistantMessageId, fallbackMessage);
-    
+    console.error("Error in stream handler:", error);
     throw error;
-  } finally {
-    reader.releaseLock();
-    console.log("Reader released");
   }
-};
+}
+
+/**
+ * Alternative function if we're getting direct SSE text content instead of a stream
+ */
+export function processSseText(text: string, options: StreamOptions) {
+  const { assistantMessageId, updateAssistantMessage, setUsageInfo } = options;
+  
+  let fullResponse = "";
+  const lines = text.split('\n').filter(line => line.trim() !== '');
+  
+  for (const line of lines) {
+    if (line.startsWith('data: ')) {
+      try {
+        const jsonStr = line.substring(6); // Remove 'data: ' prefix
+        const data = JSON.parse(jsonStr);
+        
+        if (data.type === 'chunk' && data.content) {
+          fullResponse += data.content;
+          updateAssistantMessage(assistantMessageId, fullResponse);
+        } else if (data.type === 'complete' && data.usage) {
+          setUsageInfo({
+            currentUsage: data.usage.currentUsage,
+            limit: data.usage.limit,
+            percentage: (data.usage.currentUsage / data.usage.limit) * 100
+          });
+        }
+      } catch (e) {
+        console.error("Error parsing SSE line:", e, "Line:", line);
+      }
+    }
+  }
+  
+  return fullResponse;
+}
