@@ -15,6 +15,11 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   const isEmpty = !message.content || message.content.trim() === "";
   const isLoading = isEmpty && !isUser;
   
+  // For debugging - log incomplete messages
+  if (isLoading) {
+    console.log("Rendering loading bubble for assistant message", message.id);
+  }
+  
   return (
     <div
       className={cn(
@@ -53,7 +58,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
           </div>
         ) : (
           <div className="prose prose-sm max-w-none">
-            <ReactMarkdown>{message.content}</ReactMarkdown>
+            <ReactMarkdown>{message.content || "..."}</ReactMarkdown>
           </div>
         )}
       </Card>

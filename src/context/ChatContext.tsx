@@ -120,24 +120,41 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw new Error(error?.message || "No response from assistant");
       }
 
-      // Check both response formats - direct response or nested in response property
+      // Extract assistant response from different possible formats
       let assistantResponse = "";
+      
       if (typeof data === 'string') {
+        // Direct string response
         assistantResponse = data;
-        console.log("Received string response:", assistantResponse.substring(0, 50) + "...");
-      } else if (data.content) {
-        assistantResponse = data.content;
-        console.log("Received content property:", assistantResponse.substring(0, 50) + "...");
-      } else if (data.response) {
-        assistantResponse = data.response;
-        console.log("Received response property:", assistantResponse.substring(0, 50) + "...");
-      } else if (data.extractedContent) {
-        assistantResponse = data.extractedContent;
-        console.log("Received extractedContent:", assistantResponse.substring(0, 50) + "...");
+        console.log("Extracted response from string:", assistantResponse.substring(0, 50) + "...");
       } else {
-        console.error("Unknown response structure:", data);
-        throw new Error("Unrecognized response format from assistant");
+        // Object response - check various properties where the response might be
+        if (data.content) {
+          assistantResponse = data.content;
+          console.log("Extracted from content property:", assistantResponse.substring(0, 50) + "...");
+        } else if (data.response) {
+          assistantResponse = data.response;
+          console.log("Extracted from response property:", assistantResponse.substring(0, 50) + "...");
+        } else if (data.extractedContent) {
+          assistantResponse = data.extractedContent;
+          console.log("Extracted from extractedContent property:", assistantResponse.substring(0, 50) + "...");
+        } else if (data.choices && data.choices[0] && data.choices[0].message) {
+          // Direct OpenAI API format
+          assistantResponse = data.choices[0].message.content;
+          console.log("Extracted from OpenAI format:", assistantResponse.substring(0, 50) + "...");
+        } else {
+          // Last resort - try to stringity the whole response for debugging
+          console.error("Unknown response structure:", JSON.stringify(data));
+          assistantResponse = "I apologize, but I couldn't process your request properly. Please try again.";
+        }
       }
+      
+      if (!assistantResponse) {
+        console.error("Failed to extract assistant response from data:", data);
+        assistantResponse = "I apologize, but there was an issue with my response. Please try again.";
+      }
+      
+      console.log("Final extracted assistant response:", assistantResponse.substring(0, 100) + "...");
       
       // Update the assistant message with the actual response
       updateAssistantMessage(assistantMessageId, assistantResponse);

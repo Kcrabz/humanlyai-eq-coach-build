@@ -79,7 +79,18 @@ export function EnhancedChatUI({
     
     // Send message to API
     console.log("Sending message to API:", message);
-    await sendChatMessage(updatedHistory);
+    try {
+      await sendChatMessage(updatedHistory);
+    } catch (error) {
+      console.error("Error sending chat message:", error);
+      
+      // If there's an error, update the loading message with an error notification
+      setChatHistory(prev => prev.map(msg => 
+        msg.id === assistantLoadingMessage.id 
+          ? {...msg, content: "Sorry, I couldn't process your request. Please try again."}
+          : msg
+      ));
+    }
   };
 
   const handleRetry = async () => {
@@ -98,7 +109,18 @@ export function EnhancedChatUI({
     
     setChatHistory(prev => [...prev, assistantLoadingMessage]);
     
-    await retry();
+    try {
+      await retry();
+    } catch (error) {
+      console.error("Error retrying message:", error);
+      
+      // If there's an error, update the loading message with an error notification
+      setChatHistory(prev => prev.map(msg => 
+        msg.id === assistantLoadingMessage.id 
+          ? {...msg, content: "Sorry, I couldn't process your request. Please try again."}
+          : msg
+      ));
+    }
   };
 
   return (
@@ -117,7 +139,10 @@ export function EnhancedChatUI({
             </p>
           </div>
         ) : (
-          chatHistory.map((msg) => <ChatBubble key={msg.id} message={msg} />)
+          chatHistory.map((message) => {
+            console.log(`Rendering message: ${message.id}, role: ${message.role}, content length: ${message.content?.length || 0}`);
+            return <ChatBubble key={message.id} message={message} />;
+          })
         )}
         
         <div ref={messagesEndRef} />
