@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { User } from "@/types";
@@ -16,25 +17,22 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
       // Check if we're on the chat page
       const isOnChatPage = window.location.pathname === "/chat";
       
-      if (user) {
-        // If user is authenticated and fully onboarded, redirect to chat from login/signup/onboarding pages
-        if (user.onboarded) {
-          if ((isOnAuthPage || isOnOnboardingPage) && !isOnChatPage) {
-            console.log("User is authenticated and onboarded, redirecting to chat");
-            navigate("/chat", { replace: true });
-          }
+      // Not authenticated -> redirect to login
+      if (!user) {
+        if (!isOnAuthPage && (isOnChatPage || isOnOnboardingPage)) {
+          console.log("User is not authenticated, redirecting to login");
+          navigate("/login", { replace: true });
         }
-        // If user is authenticated but not onboarded, keep them in onboarding flow
-        // Only redirect if we're not already on the onboarding page
-        else if (!user.onboarded && !isOnOnboardingPage) {
-          console.log("User is authenticated but not onboarded, redirecting to onboarding");
-          navigate("/onboarding", { replace: true });
-        }
+      } 
+      // Authenticated but not onboarded -> redirect to onboarding
+      else if (user && !user.onboarded && !isOnOnboardingPage) {
+        console.log("User is authenticated but not onboarded, redirecting to onboarding");
+        navigate("/onboarding", { replace: true });
       }
-      // If user is not authenticated and on protected pages, redirect to login
-      else if (!user && !isOnAuthPage && (isOnChatPage || isOnOnboardingPage)) {
-        console.log("User is not authenticated, redirecting to login");
-        navigate("/login", { replace: true });
+      // Authenticated and onboarded -> redirect to chat from login/signup/onboarding 
+      else if (user && user.onboarded && (isOnAuthPage || isOnOnboardingPage)) {
+        console.log("User is authenticated and onboarded, redirecting to chat");
+        navigate("/chat", { replace: true });
       }
     }
   }, [user, isLoading, navigate]);
