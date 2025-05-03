@@ -2,6 +2,7 @@
 import { ReactNode } from "react";
 import { Header } from "@/components/layout/Header";
 import { useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -25,6 +26,9 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
           <div className="fixed top-40 right-20 w-48 h-48 bg-humanly-pastel-mint blob-animation -z-10 opacity-20 blob" style={{ animationDelay: '3s' }}></div>
         </>
       )}
+      
+      {/* Sonner toast provider */}
+      <Toaster position="top-right" richColors />
       
       {showHeader && <Header />}
       <main className={`flex-1 ${fullWidth ? "" : "container py-8"}`}>
