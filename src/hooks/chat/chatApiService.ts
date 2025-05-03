@@ -128,17 +128,59 @@ export async function sendMessageStream(
 
     console.log("Got response from edge function:", response);
 
+    if (response.error) {
+      console.error("Edge function error:", response.error);
+      errorOptions.setError("Failed to connect to AI assistant. Please try again later.");
+      throw new Error(response.error.message || "Failed to send message");
+    }
+
     if (!response.data) {
-      console.error("Invalid streaming response:", response);
+      console.error("Invalid response from edge function:", response);
       errorOptions.setError("No response received from AI assistant");
       throw new Error("No response received from AI assistant");
     }
 
     // Convert the response to a ReadableStream
-    const responseBody = await response.data;
+    const responseBody = response.data;
+    
+    // Check if response is actually a ReadableStream
     if (!(responseBody instanceof ReadableStream)) {
-      console.error("Response is not a readable stream:", responseBody);
-      throw new Error("Response is not a readable stream");
+      // First try parsing it as a stream if it's not a ReadableStream directly
+      if (typeof responseBody === 'object' && responseBody !== null) {
+        // Handle response that might be an object with streaming data
+        if ('content' in responseBody) {
+          // Simple case: we got direct content
+          updateAssistantMessage(assistantMessageId, responseBody.content);
+          setIsLoading(false);
+          setLastSentMessage(null);
+          return;
+        } else {
+          // Handle non-stream response gracefully
+          console.warn("Response is not a readable stream, but got data:", responseBody);
+          let content = '';
+          
+          // Try to extract content from response (if it exists)
+          if (typeof responseBody === 'string') {
+            content = responseBody;
+          } else if (typeof responseBody.response === 'string') {
+            content = responseBody.response;
+          } else if (typeof responseBody.text === 'function') {
+            content = await responseBody.text();
+          }
+          
+          if (content) {
+            updateAssistantMessage(assistantMessageId, content);
+            setIsLoading(false);
+            setLastSentMessage(null);
+            return;
+          }
+          
+          throw new Error("Response is not in a usable format");
+        }
+      } else {
+        console.error("Response is not a readable stream:", responseBody);
+        throw new Error("Response is not a readable stream");
+      }
     }
 
     // Get the reader and process the stream

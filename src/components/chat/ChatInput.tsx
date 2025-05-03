@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useChat } from "@/context/ChatContext";
 import { Loading } from "@/components/ui/loading";
 import { AlertCircle, ExternalLink, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 
 export function ChatInput() {
   const [message, setMessage] = useState("");
@@ -27,6 +28,9 @@ export function ChatInput() {
       console.error("Failed to send message:", error);
       // Restore the message if sending fails
       setMessage(messageToSend);
+      toast.error("Failed to send message", {
+        description: "There was a problem sending your message. Please try again."
+      });
     }
   };
 
