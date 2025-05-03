@@ -57,4 +57,5 @@ export const useOnboarding = () => {
   return context;
 };
 
-export { OnboardingStep };
+// Fix the re-export with the 'export type' syntax
+export type { OnboardingStep };
