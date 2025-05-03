@@ -14,8 +14,14 @@ export function ChatInput() {
     e.preventDefault();
     if (!message.trim() || isLoading) return;
 
-    await sendMessage(message);
+    // Store message value before clearing
+    const messageToSend = message;
+    
+    // Clear input right away for better UX
     setMessage("");
+    
+    // Send the message
+    await sendMessage(messageToSend);
   };
 
   // Check for specific error types

@@ -51,7 +51,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userMessages = messages.filter(msg => msg.role === "user").length;
     
     // Check limits based on subscription tier
-    if (user.subscription_tier === 'free' && userMessages >= 25) {
+    if (user?.subscription_tier === 'free' && userMessages >= 25) {
       toast.warning("You've reached your monthly message limit", {
         description: "Upgrade to Basic or Premium for more messages.",
         action: {
@@ -59,7 +59,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           onClick: () => window.location.href = "/pricing"
         }
       });
-    } else if (user.subscription_tier === 'basic' && userMessages >= 150) {
+    } else if (user?.subscription_tier === 'basic' && userMessages >= 150) {
       toast.warning("You've reached your monthly message limit", {
         description: "Upgrade to Premium for unlimited messages.",
         action: {
@@ -90,7 +90,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     // Use streaming by default for better user experience
-    await sendMessageStream(content, addUserMessage, updateAssistantMessage);
+    const userMessageId = addUserMessage(content);
+    const assistantMessageId = crypto.randomUUID();
+    updateAssistantMessage(assistantMessageId, "");
+    
+    try {
+      await sendMessageStream(content, userMessageId, assistantMessageId);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   const retryLastMessage = async () => {

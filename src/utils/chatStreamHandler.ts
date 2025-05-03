@@ -27,16 +27,20 @@ export const handleChatStream = async (
   
   // Initialize empty string for the assistant's response
   let assistantResponse = "";
-  let isFirstChunk = true;
   
   // Process the stream
   try {
+    console.log("Starting to process stream chunks");
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        console.log("Stream reading complete");
+        break;
+      }
       
       // Decode the chunk
       const chunk = decoder.decode(value, { stream: true });
+      console.log("Received chunk:", chunk);
       
       // Process all lines in the chunk
       const lines = chunk.split('\n');
@@ -47,6 +51,7 @@ export const handleChatStream = async (
           // Extract and parse the JSON data
           const jsonStr = line.substring(6); // Remove 'data: ' prefix
           const data = JSON.parse(jsonStr);
+          console.log("Parsed data:", data);
           
           // Handle different message types
           if (data.type === 'init') {
@@ -55,13 +60,10 @@ export const handleChatStream = async (
           } 
           else if (data.type === 'chunk') {
             // Received a content chunk
-            if (isFirstChunk) {
-              // Create the assistant message with the first chunk
-              updateAssistantMessage(assistantMessageId, data.content);
-              isFirstChunk = false;
-            } else {
+            if (data.content) {
               // Append to the existing assistant message
               assistantResponse += data.content;
+              console.log("Updating assistant message with content:", assistantResponse);
               updateAssistantMessage(assistantMessageId, assistantResponse);
             }
           }
@@ -96,5 +98,6 @@ export const handleChatStream = async (
     }
   } finally {
     reader.releaseLock();
+    console.log("Reader released");
   }
 };

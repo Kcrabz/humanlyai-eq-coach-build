@@ -109,8 +109,9 @@ export const useChatApi = () => {
   // Streaming message send function
   const sendMessageStream = async (
     content: string, 
-    addUserMessage: (message: string) => string, 
-    updateAssistantMessage: (id: string, content: string) => void
+    userMessageId: string,
+    assistantMessageId: string,
+    updateAssistantMessage?: (id: string, content: string) => void
   ) => {
     if (!content.trim()) return;
 
@@ -120,11 +121,10 @@ export const useChatApi = () => {
     setIsLoading(true);
 
     try {
-      // Create a message ID for the streaming assistant response
-      const assistantMessageId = await addUserMessage(content);
-
       // Call the edge function with stream set to true and pass subscription tier
       const subscriptionTier = user?.subscription_tier || 'free';
+      
+      console.log("Sending message stream with content:", content);
       
       const response = await supabase.functions.invoke('chat-completion', {
         body: { 
@@ -136,6 +136,8 @@ export const useChatApi = () => {
           coachingMode: user?.coaching_mode || 'normal'
         }
       });
+
+      console.log("Got response from edge function:", response);
 
       if (!response.data) {
         console.error("Invalid streaming response:", response);
@@ -149,19 +151,23 @@ export const useChatApi = () => {
       // Convert the response to a ReadableStream
       const responseBody = await response.data;
       if (!(responseBody instanceof ReadableStream)) {
+        console.error("Response is not a readable stream:", responseBody);
         throw new Error("Response is not a readable stream");
       }
 
       // Get the reader and process the stream
       const reader = responseBody.getReader();
+      console.log("Starting to process stream with reader");
       
       // Handle the streaming process
       await handleChatStream(reader, {
         assistantMessageId,
-        updateAssistantMessage,
+        updateAssistantMessage: updateAssistantMessage || (() => {}),
         setLastSentMessage,
         setUsageInfo
       });
+      
+      console.log("Stream processing completed");
     } catch (error: any) {
       console.error("Error in streaming message:", error);
       handleApiErrors(error, errorOptions);
@@ -179,7 +185,9 @@ export const useChatApi = () => {
     
     setError(null);
     // Use streaming by default for retries
-    await sendMessageStream(lastSentMessage, addUserMessage, updateAssistantMessage);
+    const userMessageId = addUserMessage(lastSentMessage);
+    const assistantMessageId = crypto.randomUUID();
+    await sendMessageStream(lastSentMessage, userMessageId, assistantMessageId, updateAssistantMessage);
   };
 
   return {
