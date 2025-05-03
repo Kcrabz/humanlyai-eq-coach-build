@@ -35,7 +35,11 @@ export function OnboardingProgress() {
                     "absolute top-3 left-1/2 w-full h-[3px] transition-all duration-700",
                     isComplete ? 'bg-gradient-to-r from-humanly-teal to-humanly-teal/70' : 'bg-gray-200'
                   )}
-                  style={{ transform: 'translateX(50%)' }}
+                  style={{ 
+                    transform: 'translateX(50%)',
+                    backgroundSize: isComplete ? '200% 100%' : '100% 100%',
+                    animation: isComplete ? 'gradient-flow 3s ease infinite' : 'none'
+                  }}
                 />
               )}
               
@@ -43,7 +47,7 @@ export function OnboardingProgress() {
               <div 
                 className={cn(
                   "w-7 h-7 rounded-full z-10 flex items-center justify-center transition-all duration-500 progress-step",
-                  isActive && "ring-4 ring-humanly-teal/20",
+                  isActive && "ring-4 ring-humanly-teal/20 animate-pulse-soft",
                   isComplete 
                     ? "bg-gradient-to-r from-humanly-teal to-humanly-green text-white shadow-sm" 
                     : isActive
@@ -52,7 +56,7 @@ export function OnboardingProgress() {
                 )}
               >
                 {isComplete ? (
-                  <CheckIcon size={14} strokeWidth={3} />
+                  <CheckIcon size={14} strokeWidth={3} className="animate-scale-fade-in" />
                 ) : (
                   <span className="text-xs font-medium">{index + 1}</span>
                 )}

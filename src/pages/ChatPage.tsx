@@ -47,9 +47,9 @@ const ChatPage = () => {
     <PageLayout fullWidth>
       <div className="flex h-screen overflow-hidden">
         {/* Sidebar */}
-        <div className="hidden md:block w-64 bg-humanly-gray-lightest border-r p-4">
+        <div className="hidden md:block w-64 bg-gradient-to-b from-white to-humanly-gray-lightest border-r p-4 shadow-sm">
           <div className="mb-6">
-            <h2 className="font-semibold">Your EQ Coach</h2>
+            <h2 className="font-semibold bg-gradient-to-r from-humanly-teal to-humanly-green bg-clip-text text-transparent">Your EQ Coach</h2>
             <p className="text-xs text-muted-foreground">
               Start a conversation anytime
             </p>
@@ -58,7 +58,7 @@ const ChatPage = () => {
           {user.eq_archetype && archetype && (
             <div className="mb-6">
               <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Your Archetype</h3>
-              <div className="bg-white p-3 rounded-lg border">
+              <div className="enhanced-card p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xl">{archetype.icon}</span>
                   <span className="font-medium">{archetype.title}</span>
@@ -72,13 +72,14 @@ const ChatPage = () => {
 
           <div className="mb-6">
             <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Subscription</h3>
-            <div className="bg-white p-3 rounded-lg border">
+            <div className="enhanced-card p-3">
               <p className="font-medium">{user.subscription_tier === 'premium' ? 'Premium' : (user.subscription_tier === 'basic' ? 'Basic' : 'Free Trial')}</p>
               <div className="flex justify-between items-center mt-1">
                 <p className="text-xs text-muted-foreground">
                   {user.subscription_tier === 'free' ? 'Expires in 24h' : 'Monthly plan'}
                 </p>
-                <Button size="sm" variant="outline" onClick={() => navigate("/pricing")}>
+                <Button size="sm" variant="outline" onClick={() => navigate("/pricing")} 
+                  className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
                   {user.subscription_tier === 'premium' ? 'Manage' : 'Upgrade'}
                 </Button>
               </div>
@@ -89,7 +90,7 @@ const ChatPage = () => {
             <Button 
               variant="outline" 
               size="sm" 
-              className="w-full text-xs" 
+              className="w-full text-xs rounded-lg bg-white hover:bg-humanly-pastel-lavender/30 border-gray-200 transition-all duration-300" 
               onClick={() => window.open("https://humanlyai.me/support", "_blank")}
             >
               <ExternalLink className="h-3 w-3 mr-1" />
@@ -100,14 +101,15 @@ const ChatPage = () => {
 
         {/* Chat Area */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="border-b p-4 flex items-center justify-between">
+          <div className="border-b p-4 flex items-center justify-between bg-white/50 backdrop-blur-sm shadow-sm">
             <div>
-              <h1 className="font-bold">HumanlyAI Coach</h1>
+              <h1 className="font-bold bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent">HumanlyAI Coach</h1>
               <p className="text-xs text-muted-foreground">
                 Personalized for {user.eq_archetype || "you"}
               </p>
             </div>
-            <Button variant="outline" size="sm" onClick={() => navigate("/subscription")}>
+            <Button variant="outline" size="sm" onClick={() => navigate("/subscription")} 
+              className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
               {user.subscription_tier === "free" ? "Upgrade" : "Manage Plan"}
             </Button>
           </div>
