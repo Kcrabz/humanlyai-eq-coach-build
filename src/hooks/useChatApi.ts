@@ -84,6 +84,7 @@ export const useChatApi = () => {
     sendMessage,
     sendMessageStream,
     retryLastMessage,
-    setError
+    setError,
+    setUsageInfo  // Make sure to explicitly export this function
   };
 };
