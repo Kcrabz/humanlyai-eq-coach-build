@@ -26,11 +26,11 @@ export async function analyzeWithAI(
 
 Instructions:
 1. Determine the best-fit Archetype based on overall response pattern.
-2. Return the following format:
+2. Return the following format (use EXACTLY one of the 5 archetypes listed above, lowercase):
 
-Archetype: [One of the 5]
+Archetype: [reflector/activator/regulator/connector/observer]
 Bio: [2–3 sentence summary of their emotional tendencies]
-GrowthArea: [Mindset or belief that needs adjustment]
+GrowthArea: [Mindset or belief that needs adjustment, not a practical tip]
 Tip: [Simple practice they can begin with today]
 
 Here are the user's answers:
@@ -74,6 +74,8 @@ ${formattedAnswers}`;
     
     // Map the archetype to our system's types if needed
     const mappedArchetype = archetype ? (ARCHETYPE_MAPPING[archetype] || "reflector") : "reflector";
+    
+    console.log("Archetype detected:", archetype, "Mapped to:", mappedArchetype);
     
     return {
       archetype: mappedArchetype,

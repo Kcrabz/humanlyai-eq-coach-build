@@ -9,6 +9,7 @@ interface ArchetypeQuizProps {
 
 export const ArchetypeQuiz = ({ onSelect, onSkip }: ArchetypeQuizProps) => {
   const handleArchetypeSelected = (archetype: string) => {
+    console.log("Archetype selected in quiz:", archetype);
     onSelect(archetype as EQArchetype);
   };
   

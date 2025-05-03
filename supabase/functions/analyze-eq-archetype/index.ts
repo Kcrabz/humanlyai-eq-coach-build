@@ -47,12 +47,16 @@ serve(async (req) => {
     // Format user's answers for the prompt
     const formattedAnswers = formatAnswersForPrompt(answers);
     
+    console.log("Processing answers for user:", userId);
+    
     // Process with AI
     const analysis = await analyzeWithAI(formattedAnswers, openAiApiKey || "");
     
+    console.log("Analysis result:", analysis.archetype);
+    
     // Update user's profile with the determined archetype if valid
     if (analysis.archetype) {
-      await updateUserArchetype(userId, analysis.archetype, supabaseUrl, supabaseServiceKey);
+      await updateUserArchetype(userId, analysis.archetype, supabaseUrl || "", supabaseServiceKey || "");
     }
     
     // Return the analysis
@@ -63,6 +67,8 @@ serve(async (req) => {
       tip: analysis.tip || "",
       raw_response: analysis.rawResponse
     };
+
+    console.log("Sending response:", response.archetype);
 
     return new Response(
       JSON.stringify(response),

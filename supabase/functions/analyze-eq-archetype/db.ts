@@ -16,6 +16,8 @@ export async function updateUserArchetype(
   }
 
   try {
+    console.log(`Updating archetype for user ${userId} to ${archetype}`);
+    
     // Initialize Supabase client with service role key for admin privileges
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
     
@@ -30,6 +32,7 @@ export async function updateUserArchetype(
       return false;
     }
     
+    console.log(`Successfully updated archetype for user ${userId}`);
     return true;
   } catch (error) {
     console.error("Error in updateUserArchetype:", error);

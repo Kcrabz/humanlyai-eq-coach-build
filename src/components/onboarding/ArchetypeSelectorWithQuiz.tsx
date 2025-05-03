@@ -4,14 +4,31 @@ import { Button } from "@/components/ui/button";
 import { ArchetypeQuiz } from "./ArchetypeQuiz";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { EQArchetype } from "@/types";
+import { toast } from "sonner";
 
 export const ArchetypeSelectorWithQuiz = () => {
   const { state, setArchetype, completeStep } = useOnboarding();
   const [isStarted, setIsStarted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
-  const handleQuizResult = (archetype: EQArchetype) => {
-    setArchetype(archetype);
-    completeStep("archetype");
+  const handleQuizResult = async (archetype: EQArchetype) => {
+    console.log("Quiz completed, archetype received:", archetype);
+    setIsProcessing(true);
+    
+    try {
+      // Set the archetype in the onboarding context
+      setArchetype(archetype);
+      
+      // Complete the step after setting the archetype
+      await completeStep("archetype");
+      
+      toast.success("Profile analysis complete!");
+    } catch (error) {
+      console.error("Error processing quiz result:", error);
+      toast.error("There was a problem saving your results. Please try again.");
+    } finally {
+      setIsProcessing(false);
+    }
   };
   
   // Show initial instruction screen
@@ -43,7 +60,16 @@ export const ArchetypeSelectorWithQuiz = () => {
       <h1 className="text-2xl md:text-3xl font-bold text-center mb-8">
         EQ Assessment
       </h1>
-      <ArchetypeQuiz onSelect={handleQuizResult} />
+      {isProcessing ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="space-y-4 text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-humanly-teal mx-auto"></div>
+            <p className="text-muted-foreground">Processing your results...</p>
+          </div>
+        </div>
+      ) : (
+        <ArchetypeQuiz onSelect={handleQuizResult} />
+      )}
     </div>
   );
 };

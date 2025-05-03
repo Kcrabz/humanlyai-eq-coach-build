@@ -8,6 +8,8 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
   
   useEffect(() => {
     if (!isLoading) {
+      console.log("Auth navigation check:", {user, pathname: window.location.pathname});
+      
       // Don't navigate if we're already on the onboarding page
       const isOnOnboardingPage = window.location.pathname === "/onboarding";
       // Also check if we're on any of the auth pages
