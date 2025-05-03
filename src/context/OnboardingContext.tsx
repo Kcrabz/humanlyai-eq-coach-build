@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EQArchetype, CoachingMode } from "@/types";
@@ -41,7 +40,7 @@ const OnboardingContext = createContext<OnboardingContextType | undefined>(undef
 
 export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<OnboardingState>(initialState);
-  const { user, setArchetype: updateUserArchetype, setCoachingMode: updateUserCoachingMode, setOnboarded } = useAuth();
+  const { user, setArchetype: updateUserArchetype, setCoachingMode: updateUserCoachingMode, setOnboarded, setUser } = useAuth();
   const navigate = useNavigate();
 
   // Load saved progress from database on initial load
@@ -128,6 +127,9 @@ export const OnboardingProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         
         // Update the user's onboarded status in the auth context
         await setOnboarded(true);
+        
+        // Directly update the local user state as well for immediate UI feedback
+        setUser(prev => prev ? { ...prev, onboarded: true } : null);
         
         // Navigation is now handled here to ensure it happens after database updates
         toast.success("Onboarding completed!");
