@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { EQArchetype, CoachingMode } from "@/types";
 
 export function OnboardingComplete() {
   const { user, setUser } = useAuth();
@@ -71,13 +72,16 @@ export function OnboardingComplete() {
             }
           }
           
-          // Update local user state
-          setUser(prevUser => prevUser ? { 
-            ...prevUser, 
-            onboarded: true,
-            eq_archetype: state.archetype || 'Not set',
-            coaching_mode: state.coachingMode || 'normal'
-          } : null);
+          // Update local user state - Fixed TypeScript error by properly casting types
+          setUser(prevUser => {
+            if (!prevUser) return null;
+            return { 
+              ...prevUser, 
+              onboarded: true,
+              eq_archetype: (state.archetype || 'Not set') as EQArchetype,
+              coaching_mode: (state.coachingMode || 'normal') as CoachingMode
+            };
+          });
           
           toast.success("Onboarding completed!");
           console.log("Navigating to chat from OnboardingComplete useEffect");
