@@ -7,13 +7,15 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { EQArchetype, CoachingMode } from "@/types";
 
 export function GoalSelector() {
   const [goal, setGoal] = useState("");
   const [isSetting, setIsSetting] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
   const { state, setGoal: updateGoal, completeStep } = useOnboarding();
-  const { setOnboarded } = useAuth();
+  const { setOnboarded, user, setUser } = useAuth();
   const navigate = useNavigate();
 
   const handleNext = async () => {
@@ -33,6 +35,61 @@ export function GoalSelector() {
   const handleSkip = async () => {
     setIsSkipping(true);
     try {
+      // Create or update profile with default values
+      if (user?.id) {
+        // Check if profile already exists
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .single();
+          
+        if (!existingProfile) {
+          // Create profile if it doesn't exist yet
+          console.log("Creating default profile for user:", user.id);
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              subscription_tier: 'free',
+              eq_archetype: 'Not set' as EQArchetype,
+              coaching_mode: 'normal' as CoachingMode,
+              onboarded: true
+            });
+            
+          if (insertError) {
+            console.error("Error creating profile:", insertError.message);
+            throw insertError;
+          }
+        } else {
+          // Update existing profile
+          const { error } = await supabase
+            .from('profiles')
+            .update({ 
+              onboarded: true,
+              eq_archetype: 'Not set' as EQArchetype,
+              coaching_mode: 'normal' as CoachingMode,
+            })
+            .eq('id', user.id);
+            
+          if (error) {
+            console.error("Failed to update onboarding status:", error.message);
+            throw error;
+          }
+        }
+        
+        // Update local user state
+        setUser(prevUser => {
+          if (!prevUser) return null;
+          return { 
+            ...prevUser, 
+            onboarded: true,
+            eq_archetype: 'Not set' as EQArchetype,
+            coaching_mode: 'normal' as CoachingMode
+          };
+        });
+      }
+
       // Mark user as onboarded in both database and local state
       await setOnboarded(true);
       toast.success("Welcome to Humanly Chat");

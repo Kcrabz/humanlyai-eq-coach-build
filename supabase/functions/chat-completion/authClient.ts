@@ -87,7 +87,7 @@ export async function getUserProfileAndUsage(supabaseClient: any, userId: string
             eq_archetype: 'Not set',
             coaching_mode: 'normal',
             subscription_tier: 'free',
-            onboarded: false
+            onboarded: true
           });
       } catch (createError) {
         console.error(`Error creating default profile: ${createError.message || createError}`);

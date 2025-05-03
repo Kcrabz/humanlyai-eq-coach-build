@@ -9,7 +9,8 @@ import { ChatUsage } from "@/components/chat/ChatUsage";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ClipboardCheck } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const ChatPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -41,7 +42,8 @@ const ChatPage = () => {
     );
   }
   
-  const archetype = user.eq_archetype ? ARCHETYPES[user.eq_archetype] : null;
+  const archetype = user.eq_archetype && user.eq_archetype !== 'Not set' ? ARCHETYPES[user.eq_archetype] : null;
+  const hasCompletedAssessment = user.eq_archetype && user.eq_archetype !== 'Not set';
 
   return (
     <PageLayout fullWidth>
@@ -55,7 +57,7 @@ const ChatPage = () => {
             </p>
           </div>
 
-          {user.eq_archetype && archetype && (
+          {hasCompletedAssessment && archetype ? (
             <div className="mb-6">
               <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Your Archetype</h3>
               <div className="enhanced-card p-3">
@@ -66,6 +68,27 @@ const ChatPage = () => {
                 <p className="text-xs text-muted-foreground">
                   {archetype.description.substring(0, 100)}...
                 </p>
+              </div>
+            </div>
+          ) : (
+            <div className="mb-6">
+              <h3 className="text-xs uppercase font-semibold text-muted-foreground mb-2">Your Archetype</h3>
+              <div className="enhanced-card p-3 border border-dashed border-humanly-teal/30">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xl">⭐</span>
+                  <span className="font-medium">Complete Assessment</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Take the EQ assessment to get personalized coaching
+                </p>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="w-full mt-2 border-humanly-teal/20 text-humanly-teal hover:bg-humanly-teal/5"
+                  onClick={() => navigate("/onboarding")}
+                >
+                  Start Assessment
+                </Button>
               </div>
             </div>
           )}
@@ -105,7 +128,9 @@ const ChatPage = () => {
             <div>
               <h1 className="font-bold bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent">HumanlyAI Coach</h1>
               <p className="text-xs text-muted-foreground">
-                Personalized for {user.eq_archetype || "you"}
+                {hasCompletedAssessment 
+                  ? `Personalized for ${user.eq_archetype}` 
+                  : "General EQ coaching available"}
               </p>
             </div>
             <Button variant="outline" size="sm" onClick={() => navigate("/subscription")} 
@@ -116,6 +141,22 @@ const ChatPage = () => {
           
           <ChatProvider>
             <div className="flex-1 overflow-hidden flex flex-col">
+              {!hasCompletedAssessment && (
+                <Alert className="m-4 bg-humanly-pastel-peach/20 border-humanly-teal/30">
+                  <ClipboardCheck className="h-4 w-4 text-humanly-teal" />
+                  <AlertDescription className="text-sm">
+                    For more personalized coaching, consider{" "}
+                    <Button 
+                      variant="link" 
+                      size="sm" 
+                      className="p-0 h-auto text-humanly-teal underline"
+                      onClick={() => navigate("/onboarding")}
+                    >
+                      completing your EQ assessment
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
               <ChatUsage />
               <ChatList />
               <ChatInput />
