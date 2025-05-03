@@ -39,7 +39,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sendMessage: apiSendMessage,
     sendMessageStream,
     retryLastMessage: apiRetryLastMessage,
-    setError
+    setError,
+    setUsageInfo
   } = useChatApi();
 
   const { user } = useAuth();
