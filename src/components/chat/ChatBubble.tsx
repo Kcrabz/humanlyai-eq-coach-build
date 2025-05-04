@@ -72,7 +72,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
         ) : (
           <div className={cn(
             "prose prose-sm max-w-none",
-            isUser ? "prose-invert" : "prose-invert", // Changed from empty string to prose-invert for AI messages
+            isUser ? "prose-invert" : "",
             "prose-headings:mb-2 prose-headings:mt-3 prose-p:mb-3 prose-p:leading-relaxed",
             "prose-pre:bg-humanly-gray-lightest prose-pre:text-gray-800",
             "prose-code:bg-humanly-gray-lightest prose-code:text-humanly-teal-dark prose-code:rounded prose-code:px-1",

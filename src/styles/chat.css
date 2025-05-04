@@ -9,7 +9,7 @@
 }
 
 .enhanced-chat-ai {
-  @apply bg-gradient-to-br from-white to-humanly-gray-lightest/80 text-white;
+  @apply bg-gradient-to-br from-white to-humanly-gray-lightest/80 text-gray-800;
 }
 
 /* Chat markdown content styling */
