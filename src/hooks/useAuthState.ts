@@ -44,12 +44,14 @@ export const useAuthState = () => {
                     eq_archetype: profile.eq_archetype as EQArchetype || undefined,
                     coaching_mode: profile.coaching_mode as CoachingMode || undefined,
                     subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
-                    onboarded: profile.onboarded || false
+                    onboarded: profile.onboarded || false // Ensure onboarded is correctly read
                   };
                   
+                  console.log("Setting user with onboarded status:", userProfile.onboarded);
                   setUser(userProfile);
                 } else {
-                  // Basic user info if profile not found
+                  // Basic user info if profile not found - explicitly set onboarded to false
+                  console.log("No profile found, setting onboarded to false");
                   setUser({
                     id: newSession.user.id,
                     email: newSession.user.email!,
@@ -59,7 +61,8 @@ export const useAuthState = () => {
                 }
               } catch (error) {
                 console.error("Error fetching profile:", error);
-                // Still set basic user info even if profile fetch fails
+                // Still set basic user info even if profile fetch fails - explicitly set onboarded to false
+                console.log("Error fetching profile, setting onboarded to false");
                 setUser({
                   id: newSession.user.id,
                   email: newSession.user.email!,
@@ -107,12 +110,14 @@ export const useAuthState = () => {
                 eq_archetype: profile.eq_archetype as EQArchetype || undefined,
                 coaching_mode: profile.coaching_mode as CoachingMode || undefined,
                 subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
-                onboarded: profile.onboarded || false
+                onboarded: profile.onboarded || false // Ensure onboarded is correctly read
               };
               
+              console.log("Setting user with onboarded status:", userProfile.onboarded);
               setUser(userProfile);
             } else {
-              // Basic user info if profile not found
+              // Basic user info if profile not found - explicitly set onboarded to false
+              console.log("No profile found in existing session, setting onboarded to false");
               setUser({
                 id: existingSession.user.id,
                 email: existingSession.user.email!,
@@ -122,7 +127,8 @@ export const useAuthState = () => {
             }
           } catch (error) {
             console.error("Error fetching profile from existing session:", error);
-            // Still set basic user info even if profile fetch fails
+            // Still set basic user info even if profile fetch fails - explicitly set onboarded to false
+            console.log("Error fetching profile from existing session, setting onboarded to false");
             setUser({
               id: existingSession.user.id,
               email: existingSession.user.email!,
