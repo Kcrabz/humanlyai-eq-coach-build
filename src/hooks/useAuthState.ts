@@ -13,14 +13,28 @@ export const useAuthState = () => {
   // Helper to create a profile if it doesn't exist
   const createProfileIfNeeded = async (userId: string) => {
     try {
-      const { data: existingProfile } = await supabase
+      console.log("Checking if profile exists for user:", userId);
+      
+      const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', userId)
         .maybeSingle();
         
+      if (checkError) {
+        console.error("Error checking profile:", checkError);
+      }
+        
       if (!existingProfile) {
         console.log("Profile doesn't exist for user, creating a default one");
+        
+        // Verify we have a valid session before creating profile
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (!sessionData.session) {
+          console.error("No active session when creating profile");
+          return false;
+        }
+        
         const { error } = await supabase
           .from('profiles')
           .insert({
@@ -42,6 +56,7 @@ export const useAuthState = () => {
         return true;
       }
       
+      console.log("Profile already exists for user:", userId);
       return true;
     } catch (error) {
       console.error("Error in createProfileIfNeeded:", error);
@@ -65,14 +80,20 @@ export const useAuthState = () => {
             // Use setTimeout to prevent potential deadlocks with Supabase auth
             setTimeout(async () => {
               try {
+                // Make sure profile exists
                 await createProfileIfNeeded(newSession.user.id);
                 
                 // Get the user profile from Supabase
-                const { data: profile } = await supabase
+                const { data: profile, error: profileError } = await supabase
                   .from('profiles')
                   .select('*')
                   .eq('id', newSession.user.id)
                   .maybeSingle();
+                
+                if (profileError) {
+                  console.error("Error fetching profile:", profileError);
+                  throw profileError;
+                }
                 
                 console.log("Profile fetched:", profile);
                 
@@ -101,7 +122,7 @@ export const useAuthState = () => {
                     onboarded: false
                   });
                   
-                  // Try to create the profile
+                  // Try to create the profile again
                   await createProfileIfNeeded(newSession.user.id);
                 }
               } catch (error) {
@@ -139,34 +160,54 @@ export const useAuthState = () => {
           try {
             if (existingSession.user) {
               await createProfileIfNeeded(existingSession.user.id);
-            }
             
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('id', existingSession.user.id)
-              .maybeSingle();
-            
-            console.log("Profile loaded from existing session:", profile);
-            
-            if (profile) {
-              // Convert Supabase profile to our User type
-              const userProfile: User = {
-                id: existingSession.user.id,
-                email: existingSession.user.email!,
-                name: profile.name || undefined,
-                avatar_url: profile.avatar_url || undefined,
-                eq_archetype: profile.eq_archetype as EQArchetype || undefined,
-                coaching_mode: profile.coaching_mode as CoachingMode || undefined,
-                subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
-                onboarded: profile.onboarded || false // Ensure onboarded is correctly read
-              };
+              const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', existingSession.user.id)
+                .maybeSingle();
               
-              console.log("Setting user with onboarded status:", userProfile.onboarded);
-              setUser(userProfile);
-            } else {
-              // Basic user info if profile not found - explicitly set onboarded to false
-              console.log("No profile found in existing session, setting onboarded to false");
+              if (profileError) {
+                console.error("Error fetching profile from existing session:", profileError);
+                throw profileError;
+              }
+              
+              console.log("Profile loaded from existing session:", profile);
+              
+              if (profile) {
+                // Convert Supabase profile to our User type
+                const userProfile: User = {
+                  id: existingSession.user.id,
+                  email: existingSession.user.email!,
+                  name: profile.name || undefined,
+                  avatar_url: profile.avatar_url || undefined,
+                  eq_archetype: profile.eq_archetype as EQArchetype || undefined,
+                  coaching_mode: profile.coaching_mode as CoachingMode || undefined,
+                  subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
+                  onboarded: profile.onboarded || false // Ensure onboarded is correctly read
+                };
+                
+                console.log("Setting user with onboarded status:", userProfile.onboarded);
+                setUser(userProfile);
+              } else {
+                // Basic user info if profile not found - explicitly set onboarded to false
+                console.log("No profile found in existing session, setting onboarded to false");
+                setUser({
+                  id: existingSession.user.id,
+                  email: existingSession.user.email!,
+                  subscription_tier: 'free',
+                  onboarded: false
+                });
+                
+                // Try to create the profile again
+                await createProfileIfNeeded(existingSession.user.id);
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching profile from existing session:", error);
+            // Still set basic user info even if profile fetch fails - explicitly set onboarded to false
+            console.log("Error fetching profile from existing session, setting onboarded to false");
+            if (existingSession.user) {
               setUser({
                 id: existingSession.user.id,
                 email: existingSession.user.email!,
@@ -174,16 +215,6 @@ export const useAuthState = () => {
                 onboarded: false
               });
             }
-          } catch (error) {
-            console.error("Error fetching profile from existing session:", error);
-            // Still set basic user info even if profile fetch fails - explicitly set onboarded to false
-            console.log("Error fetching profile from existing session, setting onboarded to false");
-            setUser({
-              id: existingSession.user.id,
-              email: existingSession.user.email!,
-              subscription_tier: 'free',
-              onboarded: false
-            });
           } finally {
             setIsLoading(false);
           }

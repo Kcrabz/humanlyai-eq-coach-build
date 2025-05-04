@@ -4,105 +4,58 @@ import { useAuth } from "@/context/AuthContext";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { ARCHETYPES } from "@/lib/constants";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { EQArchetype, CoachingMode } from "@/types";
+import { useProfileActions } from "@/hooks/useProfileActions";
+import { supabase } from "@/integrations/supabase/client";
 
 export function OnboardingComplete() {
   const { user, setUser } = useAuth();
   const { completeStep, goToStep, state } = useOnboarding();
   const navigate = useNavigate();
+  const { forceUpdateProfile } = useProfileActions(setUser);
   
   const archetype = user?.eq_archetype ? ARCHETYPES[user.eq_archetype] : null;
   
   useEffect(() => {
     const markComplete = async () => {
-      if (user?.id) {
-        try {
-          console.log("Completing onboarding for user:", user.id);
-          
-          // Check if profile exists
-          const { data: existingProfile, error: checkError } = await supabase
-            .from("profiles")
-            .select("id, onboarded")
-            .eq("id", user.id)
-            .maybeSingle();
-          
-          if (checkError) {
-            console.error("Error checking profile:", checkError.message);
-          }
-          
-          if (!existingProfile) {
-            console.log("Creating new profile for user");
-            // Create profile if it doesn't exist
-            const { error: insertError } = await supabase
-              .from("profiles")
-              .insert({ 
-                id: user.id,
-                onboarded: true,
-                subscription_tier: 'free',
-                eq_archetype: state.archetype || 'Not set',
-                coaching_mode: state.coachingMode || 'normal',
-                name: state.name || 'Anonymous'
-              });
+      if (!user?.id) {
+        console.error("No user ID available for completing onboarding");
+        return;
+      }
 
-            if (insertError) {
-              console.error("Failed to create profile:", insertError.message);
-              
-              // Explicitly handle foreign key constraints issues
-              if (insertError.message.includes('violates foreign key constraint')) {
-                toast.error("Error: Your account needs to be set up first. Please log out and sign up again.");
-                return;
-              }
-              
-              toast.error("Error completing onboarding. Please try again.");
-              return;
-            } else {
-              console.log("Successfully created profile for user:", user.id);
-            }
-          } else {
-            console.log("Updating existing profile");
-            // Update existing profile
-            const { error } = await supabase
-              .from("profiles")
-              .update({ 
-                onboarded: true,
-                eq_archetype: state.archetype || 'Not set',
-                coaching_mode: state.coachingMode || 'normal',
-                name: state.name || 'Anonymous'
-              })
-              .eq("id", user.id);
-
-            if (error) {
-              console.error("Failed to update onboarding status:", error.message);
-              toast.error("Error completing onboarding. Please try again.");
-              return;
-            } else {
-              console.log("Successfully updated profile for user:", user.id);
-            }
-          }
-          
-          // Update local user state - Fixed TypeScript error by properly casting types
-          setUser(prevUser => {
-            if (!prevUser) return null;
-            return { 
-              ...prevUser, 
-              onboarded: true,
-              eq_archetype: (state.archetype || 'Not set') as EQArchetype,
-              coaching_mode: (state.coachingMode || 'normal') as CoachingMode,
-              name: state.name || 'Anonymous'
-            };
-          });
-          
-          toast.success("Onboarding completed!");
-          console.log("Navigating to chat from OnboardingComplete useEffect");
-          navigate("/chat", { replace: true });
-        } catch (error) {
-          console.error("Error in markComplete:", error);
-          toast.error("Error completing onboarding. Please try again.");
+      try {
+        console.log("Completing onboarding for user:", user.id);
+        
+        // Check if user is still authenticated
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !sessionData.session) {
+          console.error("No active session:", sessionError);
+          toast.error("Authentication expired", { description: "Please log in again to complete onboarding" });
+          navigate("/login", { replace: true });
+          return;
         }
+        
+        // Directly update or create the profile using our enhanced function
+        const success = await forceUpdateProfile({
+          onboarded: true,
+          eq_archetype: state.archetype || 'Not set',
+          coaching_mode: state.coachingMode || 'normal',
+          name: state.name || 'Anonymous'
+        });
+        
+        if (success) {
+          toast.success("Onboarding completed!");
+          console.log("Successfully completed onboarding, navigating to chat");
+          navigate("/chat", { replace: true });
+        } else {
+          toast.error("Error completing onboarding. Please try logging in again.");
+        }
+      } catch (error) {
+        console.error("Error in markComplete:", error);
+        toast.error("Error completing onboarding. Please try again.");
       }
     };
 
@@ -110,7 +63,7 @@ export function OnboardingComplete() {
     if (state.currentStep === "complete") {
       markComplete();
     }
-  }, [user?.id, navigate, state.currentStep, setUser, state.archetype, state.coachingMode, state.name]);
+  }, [user?.id, navigate, state.currentStep, setUser, state.archetype, state.coachingMode, state.name, forceUpdateProfile]);
   
   const handleComplete = async () => {
     try {
