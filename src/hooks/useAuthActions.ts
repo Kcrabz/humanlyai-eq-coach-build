@@ -68,12 +68,13 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
 
       console.log("Signup successful for:", email, "User ID:", data.user.id);
       
-      // Create profile with onboarded = false
+      // Explicitly create profile with onboarded = false
       if (data.user) {
         try {
+          console.log("Creating profile for new user:", data.user.id);
           const { error: profileError } = await supabase
             .from('profiles')
-            .upsert({
+            .insert({
               id: data.user.id,
               onboarded: false,
               subscription_tier: 'free'
@@ -81,9 +82,14 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
           
           if (profileError) {
             console.error("Error creating profile:", profileError);
+            // Continue despite profile error, we'll try to fix it later
+            toast.warning("Note: Your profile will be created during onboarding");
+          } else {
+            console.log("Profile created successfully for user:", data.user.id);
           }
         } catch (profileCreateError) {
           console.error("Error creating profile:", profileCreateError);
+          // Continue despite profile error
         }
       }
       
@@ -144,15 +150,45 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
         return false;
       }
 
-      const { error } = await supabase
+      // Check if profile exists
+      const { data: existingProfile, error: checkError } = await supabase
         .from('profiles')
-        .update(updates)
-        .eq('id', authUser.id);
-      
-      if (error) {
-        console.error("Profile update error:", error.message);
-        toast.error("Failed to update profile", { description: error.message });
-        return false;
+        .select('id')
+        .eq('id', authUser.id)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error("Error checking profile:", checkError);
+      }
+
+      if (!existingProfile) {
+        // Create profile if it doesn't exist
+        console.log("Profile doesn't exist, creating it now");
+        const { error: createError } = await supabase
+          .from('profiles')
+          .insert({ 
+            id: authUser.id,
+            ...updates,
+            subscription_tier: 'free'
+          });
+        
+        if (createError) {
+          console.error("Failed to create profile:", createError.message);
+          toast.error("Failed to create profile", { description: createError.message });
+          return false;
+        }
+      } else {
+        // Update existing profile
+        const { error } = await supabase
+          .from('profiles')
+          .update(updates)
+          .eq('id', authUser.id);
+        
+        if (error) {
+          console.error("Profile update error:", error.message);
+          toast.error("Failed to update profile", { description: error.message });
+          return false;
+        }
       }
       
       // Update local state

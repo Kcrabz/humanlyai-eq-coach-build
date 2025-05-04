@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -45,13 +44,23 @@ export function OnboardingComplete() {
                 onboarded: true,
                 subscription_tier: 'free',
                 eq_archetype: state.archetype || 'Not set',
-                coaching_mode: state.coachingMode || 'normal'
+                coaching_mode: state.coachingMode || 'normal',
+                name: state.name || 'Anonymous'
               });
 
             if (insertError) {
               console.error("Failed to create profile:", insertError.message);
+              
+              // Explicitly handle foreign key constraints issues
+              if (insertError.message.includes('violates foreign key constraint')) {
+                toast.error("Error: Your account needs to be set up first. Please log out and sign up again.");
+                return;
+              }
+              
               toast.error("Error completing onboarding. Please try again.");
               return;
+            } else {
+              console.log("Successfully created profile for user:", user.id);
             }
           } else {
             console.log("Updating existing profile");
@@ -62,6 +71,7 @@ export function OnboardingComplete() {
                 onboarded: true,
                 eq_archetype: state.archetype || 'Not set',
                 coaching_mode: state.coachingMode || 'normal',
+                name: state.name || 'Anonymous'
               })
               .eq("id", user.id);
 
@@ -69,6 +79,8 @@ export function OnboardingComplete() {
               console.error("Failed to update onboarding status:", error.message);
               toast.error("Error completing onboarding. Please try again.");
               return;
+            } else {
+              console.log("Successfully updated profile for user:", user.id);
             }
           }
           
@@ -79,7 +91,8 @@ export function OnboardingComplete() {
               ...prevUser, 
               onboarded: true,
               eq_archetype: (state.archetype || 'Not set') as EQArchetype,
-              coaching_mode: (state.coachingMode || 'normal') as CoachingMode
+              coaching_mode: (state.coachingMode || 'normal') as CoachingMode,
+              name: state.name || 'Anonymous'
             };
           });
           
@@ -97,7 +110,7 @@ export function OnboardingComplete() {
     if (state.currentStep === "complete") {
       markComplete();
     }
-  }, [user?.id, navigate, state.currentStep, setUser, state.archetype, state.coachingMode]);
+  }, [user?.id, navigate, state.currentStep, setUser, state.archetype, state.coachingMode, state.name]);
   
   const handleComplete = async () => {
     try {

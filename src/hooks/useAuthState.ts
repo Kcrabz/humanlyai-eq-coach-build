@@ -3,11 +3,51 @@ import { useState, useEffect } from 'react';
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from '@/types';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Helper to create a profile if it doesn't exist
+  const createProfileIfNeeded = async (userId: string) => {
+    try {
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (!existingProfile) {
+        console.log("Profile doesn't exist for user, creating a default one");
+        const { error } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            subscription_tier: 'free',
+            onboarded: false
+          });
+          
+        if (error) {
+          console.error("Error creating default profile:", error);
+          // Only show error if it's not a duplicate insert (which can happen during race conditions)
+          if (!error.message.includes('duplicate key')) {
+            toast.error("Failed to create your profile");
+          }
+          return false;
+        }
+        
+        console.log("Default profile created successfully");
+        return true;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error("Error in createProfileIfNeeded:", error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     console.log("Initializing auth state...");
@@ -25,6 +65,8 @@ export const useAuthState = () => {
             // Use setTimeout to prevent potential deadlocks with Supabase auth
             setTimeout(async () => {
               try {
+                await createProfileIfNeeded(newSession.user.id);
+                
                 // Get the user profile from Supabase
                 const { data: profile } = await supabase
                   .from('profiles')
@@ -58,6 +100,9 @@ export const useAuthState = () => {
                     subscription_tier: 'free',
                     onboarded: false
                   });
+                  
+                  // Try to create the profile
+                  await createProfileIfNeeded(newSession.user.id);
                 }
               } catch (error) {
                 console.error("Error fetching profile:", error);
@@ -92,6 +137,10 @@ export const useAuthState = () => {
         // Get the user profile - use setTimeout to prevent deadlocks
         setTimeout(async () => {
           try {
+            if (existingSession.user) {
+              await createProfileIfNeeded(existingSession.user.id);
+            }
+            
             const { data: profile } = await supabase
               .from('profiles')
               .select('*')
