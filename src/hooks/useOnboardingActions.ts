@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { OnboardingStep } from "@/types/onboarding";
 import { useAuth } from "@/context/AuthContext";
@@ -31,6 +30,9 @@ export const useOnboardingActions = (
           setProcessingStep(null);
           return;
         }
+      } else if (step === "goal") {
+        // There's no backend saving for the goal, just move to next step
+        toast.success("Goal saved successfully");
       } else if (step === "archetype" && state.archetype) {
         try {
           await updateUserArchetype(state.archetype as EQArchetype);
@@ -124,8 +126,8 @@ export const useOnboardingActions = (
 
       // Determine the next step
       let nextStep: OnboardingStep = step;
-      if (step === "goal") nextStep = "name";
-      else if (step === "name") nextStep = "archetype";
+      if (step === "name") nextStep = "goal"; // Changed from "goal" to "name" and "name" to "goal"
+      else if (step === "goal") nextStep = "archetype";
       else if (step === "archetype") nextStep = "coaching";
       else if (step === "coaching") nextStep = "complete";
       

@@ -1,4 +1,3 @@
-
 import { useOnboarding } from "@/context/OnboardingContext";
 import { OnboardingStep } from "@/context/OnboardingContext";
 import { CheckIcon } from "lucide-react";
@@ -9,8 +8,8 @@ export function OnboardingProgress() {
   const { currentStep } = state;
   
   const steps: {id: OnboardingStep; label: string}[] = [
-    { id: "goal", label: "Your Goal" },
     { id: "name", label: "Your Name" },
+    { id: "goal", label: "Your Goal" },
     { id: "archetype", label: "EQ Assessment" },
     { id: "coaching", label: "Coaching Style" },
     { id: "complete", label: "Results" }

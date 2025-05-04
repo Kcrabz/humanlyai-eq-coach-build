@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -55,12 +54,12 @@ const OnboardingContent = () => {
     <div className="max-w-5xl mx-auto p-4 py-12 relative">
       <OnboardingProgress />
       
-      {currentStep === "goal" && (
-        <GoalSelector />
-      )}
-      
       {currentStep === "name" && (
         <NameInput />
+      )}
+      
+      {currentStep === "goal" && (
+        <GoalSelector />
       )}
       
       {currentStep === "archetype" && (
