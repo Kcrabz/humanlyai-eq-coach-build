@@ -56,7 +56,7 @@ export const useChatApi = () => {
 
   const retryLastMessage = async (
     addUserMessage: (message: string) => string, 
-    addAssistantMessage: (message: string) => void, 
+    addAssistantMessage: (message: string) => string, 
     updateAssistantMessage: (id: string, content: string) => void
   ) => {
     const options: RetryOptions = {
@@ -85,6 +85,6 @@ export const useChatApi = () => {
     sendMessageStream,
     retryLastMessage,
     setError,
-    setUsageInfo  // Make sure to explicitly export this function
+    setUsageInfo
   };
 };

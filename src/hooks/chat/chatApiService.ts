@@ -368,7 +368,7 @@ export async function retryLastMessage(
   errorOptions.setError(null);
   // Use streaming for retries
   const userMessageId = options.addUserMessage(lastSentMessage);
-  const assistantMessageId = crypto.randomUUID();
+  const assistantMessageId = options.addAssistantMessage("");
   
   await sendMessageStream(
     {

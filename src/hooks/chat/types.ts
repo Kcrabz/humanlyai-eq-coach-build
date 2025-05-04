@@ -18,6 +18,6 @@ export interface SendMessageOptions {
 // Response for retry last message
 export interface RetryOptions {
   addUserMessage: (message: string) => string;
-  addAssistantMessage: (message: string) => void;
+  addAssistantMessage: (message: string) => string;
   updateAssistantMessage: (id: string, content: string) => void;
 }
