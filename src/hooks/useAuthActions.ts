@@ -48,7 +48,7 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
         password,
         options: {
           // Ensure we're redirecting to the right place
-          emailRedirectTo: window.location.origin + '/chat'
+          emailRedirectTo: window.location.origin + '/onboarding'
         }
       });
       
@@ -68,8 +68,34 @@ export const useAuthActions = (setUser: React.Dispatch<React.SetStateAction<User
 
       console.log("Signup successful for:", email, "User ID:", data.user.id);
       
+      // Create profile with onboarded = false
+      if (data.user) {
+        try {
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              onboarded: false,
+              subscription_tier: 'free'
+            });
+          
+          if (profileError) {
+            console.error("Error creating profile:", profileError);
+          }
+        } catch (profileCreateError) {
+          console.error("Error creating profile:", profileCreateError);
+        }
+      }
+      
       // With the latest Supabase version, we're already logged in after signup
-      toast.success("Account created and logged in successfully");
+      toast.success("Account created successfully");
+      
+      // Update user state to indicate not onboarded
+      setUser(prev => ({
+        ...prev as User,
+        onboarded: false
+      }));
+      
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";

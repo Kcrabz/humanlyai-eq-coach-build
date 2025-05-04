@@ -6,15 +6,20 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
 
 const SignupPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/chat");
+      console.log("User already authenticated, redirecting", { onboarded: user?.onboarded });
+      if (user?.onboarded === false) {
+        navigate("/onboarding");
+      } else {
+        navigate("/chat");
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, user]);
 
   return (
     <PageLayout>

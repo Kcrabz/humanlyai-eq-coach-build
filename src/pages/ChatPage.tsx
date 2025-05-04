@@ -32,6 +32,7 @@ const ChatPage = () => {
       if (!isAuthenticated) {
         navigate("/login");
       } else if (user && user.onboarded === false) {
+        console.log("User not onboarded, redirecting to onboarding");
         navigate("/onboarding");
       }
     }
