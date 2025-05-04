@@ -80,3 +80,28 @@
 .chat-md table th {
   @apply bg-humanly-gray-lightest;
 }
+
+/* User message specific styling */
+.prose-invert {
+  @apply text-white;
+}
+
+.prose-invert h1, 
+.prose-invert h2, 
+.prose-invert h3, 
+.prose-invert h4,
+.prose-invert h5,
+.prose-invert h6,
+.prose-invert p,
+.prose-invert ul,
+.prose-invert ol,
+.prose-invert li,
+.prose-invert strong,
+.prose-invert em {
+  @apply text-white;
+}
+
+/* Ensure links in user bubbles are properly styled */
+.prose-invert a {
+  @apply text-white underline hover:text-gray-200;
+}
