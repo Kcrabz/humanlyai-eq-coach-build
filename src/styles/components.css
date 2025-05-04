@@ -1,0 +1,59 @@
+
+@layer base {
+  .gradient-bg {
+    @apply bg-gradient-to-r from-primary to-secondary bg-size-200 animate-gradient-flow;
+  }
+
+  .blob {
+    @apply absolute blur-[100px] opacity-30 rounded-full;
+  }
+
+  .font-outline {
+    -webkit-text-stroke: 1px #0097b2;
+    color: transparent;
+  }
+  
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-soft-lg hover:-translate-y-1;
+  }
+  
+  .progress-step {
+    @apply transition-all duration-300;
+  }
+  
+  .progress-step.completed {
+    @apply scale-110;
+  }
+  
+  /* Enhanced card styles inspired by calmi.so and headspace */
+  .enhanced-card {
+    @apply bg-white rounded-xl border border-gray-100 shadow-soft transition-all duration-300 hover:shadow-soft-lg hover:-translate-y-1;
+  }
+  
+  .enhanced-card-selected {
+    @apply bg-gradient-to-br from-white to-humanly-gray-lightest border-humanly-teal;
+  }
+  
+  /* Soft button styles */
+  .soft-button {
+    @apply rounded-xl py-3 px-6 transition-all duration-300 hover:shadow-md hover:scale-[1.02] bg-gradient-to-r;
+  }
+  
+  .soft-button-primary {
+    @apply soft-button from-humanly-teal to-humanly-teal/90 text-white;
+  }
+  
+  .soft-button-secondary {
+    @apply soft-button from-white to-gray-50 border border-gray-200 text-gray-700;
+  }
+  
+  /* Animated section */
+  .animated-section {
+    @apply animate-scale-fade-in;
+  }
+  
+  /* Soft input fields */
+  .soft-input {
+    @apply rounded-xl border border-gray-200 py-3 px-4 shadow-sm bg-white transition-all duration-300 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:scale-[1.01] outline-none;
+  }
+}

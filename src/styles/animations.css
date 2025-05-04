@@ -1,0 +1,80 @@
+
+/* Blob animations */
+.blob-animation {
+  animation: blob-float 8s ease-in-out infinite;
+}
+
+.blob-animation-delayed {
+  animation: blob-float 8s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+@keyframes blob-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.05);
+  }
+}
+
+/* Input focus animation */
+.input-focus-animation:focus {
+  @apply ring-2 ring-primary/50 transition-all duration-300;
+  transform: scale(1.01);
+}
+
+/* Selection card animation */
+.selection-card {
+  @apply transition-all duration-300 relative overflow-hidden;
+}
+
+.selection-card::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-humanly-teal/10 to-humanly-green/10 opacity-0 transition-opacity duration-300;
+}
+
+.selection-card:hover::after {
+  @apply opacity-100;
+}
+
+.selection-card.selected {
+  @apply scale-[1.02] shadow-soft;
+}
+
+.selection-card.selected::after {
+  @apply opacity-100 bg-gradient-to-r from-humanly-teal/20 to-humanly-green/20;
+}
+
+/* Page transition animations */
+.page-transition-enter {
+  @apply opacity-0;
+}
+
+.page-transition-enter-active {
+  @apply opacity-100 transition-opacity duration-300;
+}
+
+.page-transition-exit {
+  @apply opacity-100;
+}
+
+.page-transition-exit-active {
+  @apply opacity-0 transition-opacity duration-300;
+}
+
+/* Animation for new messages */
+@keyframes slide-up {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}

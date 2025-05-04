@@ -1,0 +1,5 @@
+
+/* Enhanced header styling */
+.enhanced-header {
+  @apply border-b border-gray-100 bg-white/70 backdrop-blur-sm shadow-sm;
+}
