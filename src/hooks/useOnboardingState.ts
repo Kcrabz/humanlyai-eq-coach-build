@@ -27,8 +27,8 @@ export const useOnboardingState = () => {
         return;
       }
 
-      // If user is already onboarded, redirect to chat
-      if (user.onboarded) {
+      // Make sure we have a boolean value for onboarded before making decisions
+      if (typeof user.onboarded === "boolean" && user.onboarded) {
         console.log("User is already onboarded, navigate to chat from OnboardingContext");
         navigate("/chat", { replace: true });
         return;
@@ -58,6 +58,7 @@ export const useOnboardingState = () => {
           }
         }
 
+        console.log("Loaded onboarding progress:", newState);
         setState({ ...newState, isLoading: false });
       } catch (error) {
         console.error("Failed to load onboarding progress:", error);

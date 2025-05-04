@@ -31,8 +31,9 @@ const ChatPage = () => {
       });
       if (!isAuthenticated) {
         navigate("/login");
-      } else if (user && user.onboarded === false) {
-        console.log("User not onboarded, redirecting to onboarding");
+      } else if (typeof user?.onboarded !== "boolean" || user?.onboarded === false) {
+        // Explicitly check if onboarded is false or not a boolean (still loading)
+        console.log("User not onboarded or onboarded status unclear, redirecting to onboarding");
         navigate("/onboarding");
       }
     }
@@ -42,7 +43,7 @@ const ChatPage = () => {
     navigate("/onboarding");
   };
 
-  if (isLoading || !isAuthenticated || !user?.onboarded) {
+  if (isLoading || !isAuthenticated || typeof user?.onboarded !== "boolean" || !user?.onboarded) {
     return <PageLayout fullWidth>
         <div className="flex justify-center items-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-humanly-teal"></div>

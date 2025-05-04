@@ -21,6 +21,20 @@ const OnboardingContent = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // If user's profile data hasn't loaded yet, or user is not onboarded and we're not on the complete step,
+    // let them continue with onboarding
+    if (
+      typeof user?.onboarded !== "boolean" || 
+      (!user?.onboarded && !isLoading && currentStep !== "complete")
+    ) {
+      console.log("Continuing onboarding process", { 
+        userOnboarded: user?.onboarded, 
+        isLoading, 
+        currentStep 
+      });
+      return;
+    }
+
     // If user is already fully onboarded (coming back somehow), redirect to chat
     if (user?.onboarded && !isLoading && currentStep !== "complete") {
       console.log("User is already onboarded, redirecting to chat from OnboardingContent");
@@ -88,12 +102,18 @@ const OnboardingPage = () => {
   // Redirect already onboarded users to chat
   useEffect(() => {
     if (!isLoading) {
+      console.log("OnboardingPage auth check:", {
+        isAuthenticated,
+        userOnboarded: user?.onboarded,
+        isLoading
+      });
+
       // If not authenticated, redirect to login
       if (!isAuthenticated) {
         navigate("/login", { replace: true });
       }
       // If already onboarded, redirect to chat
-      else if (user?.onboarded) {
+      else if (user?.onboarded === true) {
         navigate("/chat", { replace: true });
       }
     }
