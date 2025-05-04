@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArchetypeQuiz } from "./ArchetypeQuiz";
@@ -15,7 +14,7 @@ export const ArchetypeSelectorWithQuiz = () => {
   const [isStarted, setIsStarted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
-  const { setOnboarded, user, setUser } = useAuth();
+  const { setOnboarded, user, setUser, forceUpdateProfile } = useAuth();
   const navigate = useNavigate();
   
   const handleQuizResult = async (archetype: EQArchetype) => {
@@ -41,87 +40,54 @@ export const ArchetypeSelectorWithQuiz = () => {
   const handleSkip = async () => {
     setIsSkipping(true);
     try {
-      // Create or update profile with default values
-      if (user?.id) {
-        try {
-          console.log("Checking for existing profile for user:", user.id);
-          // Check if profile already exists
-          const { data: existingProfile, error: fetchError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', user.id)
-            .maybeSingle();
-            
-          if (fetchError) {
-            console.error("Error checking for existing profile:", fetchError.message);
-            throw fetchError;
-          }
-          
-          if (!existingProfile) {
-            // Create profile if it doesn't exist yet
-            console.log("Creating default profile for user:", user.id);
-            const { error: insertError } = await supabase
-              .from('profiles')
-              .insert({
-                id: user.id,
-                subscription_tier: 'free',
-                name: state.name || 'Anonymous',
-                eq_archetype: 'Not set' as EQArchetype,
-                coaching_mode: 'normal' as CoachingMode,
-                onboarded: true
-              });
-              
-            if (insertError) {
-              console.error("Error creating profile:", insertError);
-              throw insertError;
-            }
-            
-            console.log("Successfully created default profile");
-          } else {
-            // Update existing profile
-            console.log("Updating existing profile for user:", user.id);
-            const { error: updateError } = await supabase
-              .from('profiles')
-              .update({ 
-                onboarded: true,
-                name: state.name || 'Anonymous',
-                eq_archetype: 'Not set' as EQArchetype,
-                coaching_mode: 'normal' as CoachingMode,
-              })
-              .eq('id', user.id);
-              
-            if (updateError) {
-              console.error("Failed to update onboarding status:", updateError);
-              throw updateError;
-            }
-            
-            console.log("Successfully updated profile");
-          }
-        } catch (error: any) {
-          console.error("Database operation failed:", error.message || error);
-          toast.error("Could not update your profile. Please try again.");
-          setIsSkipping(false);
-          return;
-        }
-        
-        // Update local user state
-        setUser(prevUser => {
-          if (!prevUser) return null;
-          return { 
-            ...prevUser, 
-            onboarded: true,
-            name: state.name || 'Anonymous',
-            eq_archetype: 'Not set' as EQArchetype,
-            coaching_mode: 'normal' as CoachingMode
-          };
-        });
-      } else {
-        console.error("No user ID available");
-        toast.error("User information not available. Please try again or log out and back in.");
+      // First verify that we have an authenticated session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        console.error("No active session found:", sessionError?.message || "No session data");
+        toast.error("Authentication error", { description: "Please try logging in again" });
         setIsSkipping(false);
         return;
       }
-
+      
+      // Use the userId from the session instead of relying on the user object
+      const userId = sessionData.session.user.id;
+      console.log("Using user ID from session:", userId);
+      
+      // Create or update profile with default values using forceUpdateProfile
+      const profileUpdates = {
+        subscription_tier: 'free',
+        name: state.name || 'Anonymous',
+        eq_archetype: 'Not set' as EQArchetype,
+        coaching_mode: 'normal' as CoachingMode,
+        onboarded: true
+      };
+      
+      // Use the more reliable forceUpdateProfile method
+      const updateSuccess = await forceUpdateProfile(profileUpdates);
+      
+      if (!updateSuccess) {
+        toast.error("Could not update your profile. Please try again.");
+        setIsSkipping(false);
+        return;
+      }
+        
+      // Update local user state
+      setUser(prevUser => {
+        if (!prevUser) {
+          // If there's no previous user object, create a new one
+          return {
+            id: userId,
+            email: sessionData.session?.user.email || '',
+            ...profileUpdates
+          };
+        }
+        return { 
+          ...prevUser, 
+          ...profileUpdates
+        };
+      });
+      
       // Mark user as onboarded in both database and local state
       await setOnboarded(true);
       toast.success("Welcome to Humanly Chat");

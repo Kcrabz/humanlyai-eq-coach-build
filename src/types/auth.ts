@@ -14,4 +14,5 @@ export interface AuthContextType {
   setCoachingMode: (mode: CoachingMode) => void;
   setOnboarded: (value: boolean) => void;
   setUser: (updater: ((prevUser: User | null) => User | null) | User | null) => void;
+  forceUpdateProfile: (updates: Record<string, any>) => Promise<boolean>;
 }
