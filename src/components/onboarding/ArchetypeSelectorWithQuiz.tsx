@@ -1,8 +1,9 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArchetypeQuiz } from "./ArchetypeQuiz";
 import { useOnboarding } from "@/context/OnboardingContext";
-import { EQArchetype, CoachingMode } from "@/types";
+import { EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -55,8 +56,9 @@ export const ArchetypeSelectorWithQuiz = () => {
       console.log("Using user ID from session:", userId);
       
       // Create or update profile with default values using forceUpdateProfile
+      // Explicitly type the subscription_tier as SubscriptionTier to avoid type error
       const profileUpdates = {
-        subscription_tier: 'free',
+        subscription_tier: 'free' as SubscriptionTier,
         name: state.name || 'Anonymous',
         eq_archetype: 'Not set' as EQArchetype,
         coaching_mode: 'normal' as CoachingMode,
@@ -79,7 +81,11 @@ export const ArchetypeSelectorWithQuiz = () => {
           return {
             id: userId,
             email: sessionData.session?.user.email || '',
-            ...profileUpdates
+            subscription_tier: 'free' as SubscriptionTier,
+            name: state.name || 'Anonymous',
+            eq_archetype: 'Not set' as EQArchetype,
+            coaching_mode: 'normal' as CoachingMode,
+            onboarded: true
           };
         }
         return { 
