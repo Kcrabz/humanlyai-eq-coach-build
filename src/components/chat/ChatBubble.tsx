@@ -36,7 +36,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   return (
     <div
       className={cn(
-        "flex gap-3 items-start",
+        "flex gap-3 items-start mb-6 animate-slide-up",
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
@@ -57,10 +57,10 @@ export function ChatBubble({ message }: ChatBubbleProps) {
 
       <Card
         className={cn(
-          "p-4 max-w-[85%] text-left",
+          "p-4 max-w-[85%] text-left shadow-md rounded-2xl",
           isUser
-            ? "bg-humanly-teal text-white"
-            : "bg-gray-100 text-gray-900"
+            ? "bg-humanly-teal text-white enhanced-chat-user"
+            : "enhanced-chat-ai"
         )}
       >
         {isLoading ? (
@@ -70,7 +70,15 @@ export function ChatBubble({ message }: ChatBubbleProps) {
             <div className="w-1.5 h-1.5 bg-current rounded-full"></div>
           </div>
         ) : (
-          <div className="prose prose-sm max-w-none">
+          <div className={cn(
+            "prose prose-sm max-w-none",
+            isUser ? "prose-invert" : "",
+            "prose-headings:mb-2 prose-headings:mt-3 prose-p:mb-3 prose-p:leading-relaxed",
+            "prose-pre:bg-humanly-gray-lightest prose-pre:text-gray-800",
+            "prose-code:bg-humanly-gray-lightest prose-code:text-humanly-teal-dark prose-code:rounded prose-code:px-1",
+            "prose-blockquote:bg-humanly-pastel-lavender/30 prose-blockquote:border-l-4 prose-blockquote:border-humanly-teal prose-blockquote:rounded-r prose-blockquote:pl-4 prose-blockquote:py-1",
+            "prose-li:mb-1"
+          )}>
             <ReactMarkdown>{message.content || "..."}</ReactMarkdown>
           </div>
         )}

@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -158,7 +157,66 @@ export default {
 				'soft': '0 4px 20px rgba(0, 0, 0, 0.05)',
 				'soft-lg': '0 8px 30px rgba(0, 0, 0, 0.07)'
 			},
+			typography: (theme) => ({
+				DEFAULT: {
+					css: {
+						color: theme('colors.gray.900'),
+						a: {
+							color: theme('colors.humanly.teal.DEFAULT'),
+							'&:hover': {
+								color: theme('colors.humanly.teal.dark'),
+							},
+						},
+						h1: {
+							color: theme('colors.gray.900'),
+							fontWeight: '600',
+						},
+						h2: {
+							color: theme('colors.gray.900'),
+							fontWeight: '600',
+						},
+						h3: {
+							color: theme('colors.gray.900'),
+							fontWeight: '600',
+						},
+						h4: {
+							color: theme('colors.gray.900'),
+							fontWeight: '600',
+						},
+						code: {
+							color: theme('colors.humanly.teal.dark'),
+							backgroundColor: theme('colors.humanly.gray.lightest'),
+							borderRadius: theme('borderRadius.sm'),
+							padding: '0.2em 0.4em',
+							fontWeight: '400',
+						},
+						'code::before': {
+							content: '""',
+						},
+						'code::after': {
+							content: '""',
+						},
+						pre: {
+							backgroundColor: theme('colors.humanly.gray.lightest'),
+							borderRadius: theme('borderRadius.md'),
+							padding: theme('spacing.4'),
+						},
+						blockquote: {
+							borderLeftColor: theme('colors.humanly.teal.light'),
+							backgroundColor: theme('colors.humanly.gray.lightest'),
+							fontStyle: 'normal',
+							padding: theme('spacing.4'),
+							borderRadius: theme('borderRadius.md'),
+							marginLeft: 0,
+							marginRight: 0,
+						}
+					},
+				},
+			}),
 		}
 	},
-	plugins: [require("tailwindcss-animate")],
+	plugins: [
+		require("tailwindcss-animate"),
+		require("@tailwindcss/typography")
+	],
 } satisfies Config;

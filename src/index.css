@@ -224,9 +224,94 @@
 }
 
 .enhanced-chat-user {
-  @apply bg-gradient-to-br from-humanly-pastel-mint to-humanly-pastel-blue/50 text-gray-800;
+  @apply bg-gradient-to-br from-humanly-teal to-humanly-teal-dark/90 text-white;
 }
 
 .enhanced-chat-ai {
-  @apply bg-gradient-to-br from-white to-humanly-gray-lightest text-gray-800;
+  @apply bg-gradient-to-br from-white to-humanly-gray-lightest/80 text-gray-800;
+}
+
+/* Chat markdown content styling */
+.chat-md p {
+  @apply mb-3 leading-relaxed;
+}
+
+.chat-md h1, .chat-md h2, .chat-md h3 {
+  @apply font-medium mb-2 mt-4;
+}
+
+.chat-md h1 {
+  @apply text-xl;
+}
+
+.chat-md h2 {
+  @apply text-lg;
+}
+
+.chat-md h3 {
+  @apply text-base;
+}
+
+.chat-md ul, .chat-md ol {
+  @apply my-3 ml-5;
+}
+
+.chat-md ul {
+  @apply list-disc;
+}
+
+.chat-md ol {
+  @apply list-decimal;
+}
+
+.chat-md li {
+  @apply mb-1;
+}
+
+.chat-md blockquote {
+  @apply border-l-4 border-humanly-teal bg-humanly-pastel-lavender/20 pl-4 py-2 my-3 rounded-r;
+}
+
+.chat-md code {
+  @apply bg-humanly-gray-lightest text-humanly-teal-dark px-1 rounded;
+}
+
+.chat-md pre {
+  @apply bg-humanly-gray-lightest p-3 rounded-md my-3 overflow-auto;
+}
+
+.chat-md pre code {
+  @apply bg-transparent p-0;
+}
+
+.chat-md a {
+  @apply text-humanly-teal underline hover:text-humanly-teal-dark;
+}
+
+.chat-md table {
+  @apply w-full my-3 border-collapse;
+}
+
+.chat-md table th, .chat-md table td {
+  @apply border border-gray-200 p-2;
+}
+
+.chat-md table th {
+  @apply bg-humanly-gray-lightest;
+}
+
+/* Animation for new messages */
+@keyframes slide-up {
+  0% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
 }
