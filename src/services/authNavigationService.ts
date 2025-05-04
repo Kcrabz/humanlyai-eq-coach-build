@@ -14,10 +14,12 @@ export const handleAuthNavigation = (
   pathname: string, 
   navigate: NavigateFunction
 ): void => {
-  console.log("Auth navigation check:", {
+  console.log("Auth navigation handler running:", {
     user, 
     pathname,
-    isOnboarded: user?.onboarded
+    isAuthenticated: !!user,
+    isOnboarded: user?.onboarded,
+    currentTime: new Date().toISOString()
   });
 
   // Not authenticated -> redirect to login

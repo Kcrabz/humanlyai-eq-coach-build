@@ -1,26 +1,8 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { useAuth } from "@/context/AuthContext";
 
 const LoginPage = () => {
-  const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      console.log("User already authenticated, redirecting", { onboarded: user?.onboarded });
-      if (user?.onboarded === false) {
-        navigate("/onboarding");
-      } else {
-        navigate("/chat");
-      }
-    }
-  }, [isAuthenticated, navigate, user]);
-
   return (
     <PageLayout>
       <div className="flex items-center justify-center py-12 animate-scale-fade-in">

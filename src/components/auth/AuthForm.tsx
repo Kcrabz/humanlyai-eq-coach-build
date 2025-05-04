@@ -1,6 +1,6 @@
 
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,17 +17,8 @@ export function AuthForm({ type }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { login, signup, isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const { login, signup, isLoading } = useAuth();
   
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated && !isLoading) {
-      console.log("User is authenticated, redirecting to chat page");
-      navigate("/chat");
-    }
-  }, [isAuthenticated, isLoading, navigate]);
-
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
     setErrorMessage(null);
@@ -85,8 +76,8 @@ export function AuthForm({ type }: AuthFormProps) {
       }
       
       if (success) {
-        console.log("Operation successful, navigating to chat page");
-        navigate("/chat");
+        console.log(`${type} successful`);
+        // Navigation will now be handled by useAuthNavigation in App.tsx
       } else {
         // Set a general error if no specific error was caught
         setErrorMessage(`Failed to ${type === "login" ? "sign in" : "create account"}. Please try again.`);

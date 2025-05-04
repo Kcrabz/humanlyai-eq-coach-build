@@ -3,8 +3,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
+import { useAuthNavigation } from "@/hooks/useAuthNavigation";
 
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
@@ -18,25 +20,38 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Create a component that uses the useAuthNavigation hook
+const AuthNavigationHandler = () => {
+  const { user, isLoading } = useAuth();
+  useAuthNavigation(user, isLoading);
+  return null; // This component doesn't render anything
+};
+
+// Main App component with routes
+const AppRoutes = () => (
+  <AuthProvider>
+    <AuthNavigationHandler />
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
+      <Route path="/onboarding" element={<OnboardingPage />} />
+      <Route path="/chat" element={<ChatPage />} />
+      <Route path="/pricing" element={<PricingPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/settings" element={<SettingsPage />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </AuthProvider>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/onboarding" element={<OnboardingPage />} />
-            <Route path="/chat" element={<ChatPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
+        <AppRoutes />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
