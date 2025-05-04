@@ -1,7 +1,7 @@
 
 import { handleApiErrors } from "@/utils/chatErrorHandler";
 import { toast } from "sonner";
-import { estimateTokenCount } from "@/utils/chatStreamHandler";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Send a message without streaming

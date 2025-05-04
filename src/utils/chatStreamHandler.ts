@@ -140,3 +140,12 @@ export function processSseText(text: string, options: StreamOptions) {
   
   return fullResponse;
 }
+
+/**
+ * Utility to estimate token count in a text string
+ * This is a simple approximation; actual token count depends on the tokenization algorithm used by the model
+ */
+export function estimateTokenCount(text: string): number {
+  // A simple approximation: roughly 4 characters per token for English text
+  return Math.ceil(text.length / 4);
+}
