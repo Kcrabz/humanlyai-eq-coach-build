@@ -31,7 +31,7 @@ const HeroSection = ({
           updated[index] = true;
           return updated;
         });
-      }, 400 + (index * 150)); // Start after logo animation with 150ms between words
+      }, 400 + (index * 100)); // Reduced delay from 150ms to 100ms between words
       
       return () => clearTimeout(wordTimer);
     });
@@ -54,9 +54,9 @@ const HeroSection = ({
               {subtitleWords.map((word, index) => (
                 <span 
                   key={index} 
-                  className={`inline-block transition-opacity duration-300 ease-out ${visibleWords[index] ? 'opacity-100' : 'opacity-0'}`}
+                  className={`inline-block transition-opacity duration-200 ease-out ${visibleWords[index] ? 'opacity-100' : 'opacity-0'}`}
                   style={{ 
-                    transitionDelay: `${index * 0.15}s`,
+                    transitionDelay: `${index * 0.1}s`,
                     marginRight: index < subtitleWords.length - 1 ? '0.15em' : '0' 
                   }}
                 >
