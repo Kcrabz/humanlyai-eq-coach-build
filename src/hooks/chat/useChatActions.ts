@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useChatApi } from "@/hooks/useChatApi";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { ChatMessage } from "@/types";
+import { useAuth } from "@/context/AuthContext";
 
 export const useChatActions = () => {
   const {
@@ -13,13 +15,16 @@ export const useChatActions = () => {
     setError,
     setUsageInfo
   } = useChatApi();
+  
+  const { user } = useAuth();
 
   // Send a message to the chat assistant
   const sendMessage = async (
     content: string, 
     addUserMessage: (content: string) => string,
     addAssistantMessage: (content: string) => string,
-    updateAssistantMessage: (id: string, content: string) => void
+    updateAssistantMessage: (id: string, content: string) => void,
+    currentMessages: ChatMessage[] = []
   ) => {
     if (!content.trim() || isLoading) return;
     
@@ -33,12 +38,18 @@ export const useChatActions = () => {
       // Create assistant message with empty content and get its ID
       const assistantMessageId = addAssistantMessage("");
       console.log("Created assistant message ID:", assistantMessageId);
+
+      // Prepare context messages for AI
+      const contextMessages = prepareContextMessages(content, currentMessages);
       
-      console.log("Sending message with direct invoke:", content);
+      console.log("Sending message with context:", contextMessages.length > 1 ? 
+        `${contextMessages.length} messages including history` : "single message");
+      
       const { data, error } = await supabase.functions.invoke("chat-completion", {
         body: { 
-          messages: [{ role: "user", content }],
-          stream: false 
+          messages: contextMessages,
+          stream: false,
+          subscriptionTier: user?.subscription_tier || 'free'
         },
       });
 
@@ -102,6 +113,25 @@ export const useChatActions = () => {
       });
       setError(error.message);
     }
+  };
+
+  // Helper function to prepare context messages for the AI
+  const prepareContextMessages = (content: string, currentMessages: ChatMessage[]): any[] => {
+    // Premium users get full history from database (handled on server)
+    if (user?.subscription_tier === 'premium') {
+      return [{ role: "user", content }];
+    }
+    
+    // For free/basic users, use local history with limited context
+    const maxHistoryMessages = user?.subscription_tier === 'basic' ? 4 : 2;
+    
+    // Get only the most recent messages as context
+    const recentMessages = currentMessages
+      .slice(-maxHistoryMessages * 2) // Get pairs of messages (user + assistant)
+      .map(msg => ({ role: msg.role, content: msg.content }));
+    
+    // Add the current message
+    return [...recentMessages, { role: "user", content }];
   };
 
   // Function to retry the last failed message

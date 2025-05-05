@@ -9,6 +9,20 @@ export const useChatMessages = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const { user } = useAuth();
+  
+  // Generate a session ID for free users
+  const getSessionId = () => {
+    // For free users, create a session ID if it doesn't exist
+    if (user?.subscription_tier !== 'premium') {
+      let sessionId = sessionStorage.getItem(`chat_session_${user?.id}`);
+      if (!sessionId) {
+        sessionId = `session_${Date.now()}`;
+        sessionStorage.setItem(`chat_session_${user?.id}`, sessionId);
+      }
+      return sessionId;
+    }
+    return null; // Premium users don't need a session ID
+  };
 
   // Load messages based on user's subscription tier
   useEffect(() => {
@@ -61,8 +75,11 @@ export const useChatMessages = () => {
           setIsLoadingHistory(false);
         }
       } else {
-        // For non-premium users, just use localStorage
-        const savedMessages = localStorage.getItem(`chat_messages_${user.id}`);
+        // For non-premium users, load from session-specific localStorage key
+        const sessionId = getSessionId();
+        const sessionKey = `chat_messages_${user.id}_${sessionId}`;
+        const savedMessages = localStorage.getItem(sessionKey);
+        
         if (savedMessages) {
           setMessages(JSON.parse(savedMessages));
         }
@@ -76,8 +93,13 @@ export const useChatMessages = () => {
   useEffect(() => {
     if (!user || isLoadingHistory || messages.length === 0) return;
     
+    // For non-premium users, use session-specific storage key
+    const storageKey = user.subscription_tier === 'premium' 
+      ? `chat_messages_${user.id}`
+      : `chat_messages_${user.id}_${getSessionId()}`;
+      
     // Always save to localStorage for all users
-    localStorage.setItem(`chat_messages_${user.id}`, JSON.stringify(messages));
+    localStorage.setItem(storageKey, JSON.stringify(messages));
     
     // For premium users, also sync the latest message to the database
     if (user.subscription_tier === 'premium' && messages.length > 0) {

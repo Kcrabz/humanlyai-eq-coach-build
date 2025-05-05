@@ -46,7 +46,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check if user has reached their message limit
     if (checkMessageLimits()) return;
     
-    await sendChatMessage(content, addUserMessage, addAssistantMessage, updateAssistantMessage);
+    await sendChatMessage(content, addUserMessage, addAssistantMessage, updateAssistantMessage, messages);
   };
 
   // Wrapper for retrying messages

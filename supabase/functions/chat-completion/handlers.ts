@@ -1,4 +1,3 @@
-
 import { createErrorResponse, corsHeaders, estimateTokenCount } from "./utils.ts";
 import { createSupabaseClient, getAuthenticatedUser, getOpenAIApiKey, getUserProfileAndUsage } from "./authClient.ts";
 import { checkUsageLimit, updateUsageTracking, logChatMessages } from "./usageTracking.ts";
@@ -18,6 +17,7 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
     // Extract user message and optional context from request body
     // Handle both formats: {message: string} or {messages: Array}
     let userMessage;
+    let clientProvidedHistory = [];
     const { 
       message, 
       messages,
@@ -31,10 +31,12 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
       userMessage = message;
       console.log("Using single message format:", userMessage.substring(0, 50) + "...");
     } else if (messages && Array.isArray(messages) && messages.length > 0) {
-      // If messages array provided, use the last user message
+      // If messages array provided, use it for history and extract the last user message
+      clientProvidedHistory = messages;
       const lastUserMsg = messages.filter(m => m.role === 'user').pop();
       userMessage = lastUserMsg?.content || '';
       console.log("Using messages array format, last user message:", userMessage.substring(0, 50) + "...");
+      console.log(`Client provided ${messages.length} messages as context`);
     } else {
       throw new Error("No valid message content found in request");
     }
@@ -65,10 +67,21 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
     // Check usage limits
     const tierLimit = checkUsageLimit(currentUsage, effectiveSubscriptionTier);
     
-    // Get chat history for premium users
-    const chatHistory = effectiveSubscriptionTier === 'premium' ? 
-      await retrieveChatHistory(supabaseClient, user.id, 5) : 
-      [];
+    // Get chat history based on subscription tier
+    let chatHistory = [];
+    
+    if (effectiveSubscriptionTier === 'premium') {
+      // For premium users, get history from database
+      chatHistory = await retrieveChatHistory(supabaseClient, user.id, 5);
+    } else if (clientProvidedHistory.length > 0) {
+      // For non-premium users, use the client-provided history
+      // Filter out system messages and keep only recent history
+      chatHistory = clientProvidedHistory
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+        .slice(0, effectiveSubscriptionTier === 'basic' ? 8 : 4); // Basic: 4 exchanges, Free: 2 exchanges
+      
+      console.log(`Using ${chatHistory.length} messages from client-provided history for ${effectiveSubscriptionTier} user`);
+    }
     
     // Prepare messages for OpenAI
     const preparedMessages = prepareMessages(userMessage, effectiveArchetype, effectiveCoachingMode, chatHistory);
@@ -105,6 +118,7 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
     // Extract user message and optional context from request
     // Handle both formats: {message: string} or {messages: Array}
     let userMessage;
+    let clientProvidedHistory = [];
     const { 
       message,
       messages,
@@ -118,10 +132,12 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
       userMessage = message;
       console.log("Using single message format:", userMessage.substring(0, 50) + "...");
     } else if (messages && Array.isArray(messages) && messages.length > 0) {
-      // If messages array provided, use the last user message
+      // If messages array provided, use it for history and the last user message
+      clientProvidedHistory = messages;
       const lastUserMsg = messages.filter(m => m.role === 'user').pop();
       userMessage = lastUserMsg?.content || '';
       console.log("Using messages array format, last user message:", userMessage.substring(0, 50) + "...");
+      console.log(`Client provided ${messages.length} messages as context`);
     } else {
       throw new Error("No valid message content found in request");
     }
@@ -152,10 +168,21 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
     // Check usage limits
     const tierLimit = checkUsageLimit(currentUsage, effectiveSubscriptionTier);
     
-    // Get chat history for premium users only
-    const chatHistory = effectiveSubscriptionTier === 'premium' ? 
-      await retrieveChatHistory(supabaseClient, user.id, 5) : 
-      [];
+    // Get chat history based on subscription tier
+    let chatHistory = [];
+    
+    if (effectiveSubscriptionTier === 'premium') {
+      // For premium users, get history from database
+      chatHistory = await retrieveChatHistory(supabaseClient, user.id, 5);
+    } else if (clientProvidedHistory.length > 0) {
+      // For non-premium users, use the client-provided history
+      // Filter out system messages and keep only recent history
+      chatHistory = clientProvidedHistory
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+        .slice(0, effectiveSubscriptionTier === 'basic' ? 8 : 4); // Basic: 4 exchanges, Free: 2 exchanges
+      
+      console.log(`Using ${chatHistory.length} messages from client-provided history for ${effectiveSubscriptionTier} user`);
+    }
     
     // Prepare messages for OpenAI
     const preparedMessages = prepareMessages(userMessage, effectiveArchetype, effectiveCoachingMode, chatHistory);
