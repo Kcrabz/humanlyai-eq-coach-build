@@ -17,7 +17,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("Auth state changed:", { 
       isAuthenticated: !!user, 
       isLoading,
-      userId: user?.id 
+      userId: user?.id,
+      onboarded: user?.onboarded
     });
   }, [user, isLoading]);
 

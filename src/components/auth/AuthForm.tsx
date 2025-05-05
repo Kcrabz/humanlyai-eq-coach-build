@@ -17,7 +17,7 @@ export function AuthForm({ type }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { login, signup, isLoading } = useAuth();
+  const { login, signup, isLoading, isAuthenticated } = useAuth();
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -65,6 +65,7 @@ export function AuthForm({ type }: AuthFormProps) {
     
     setIsSubmitting(true);
     console.log(`Starting ${type} process for: ${email}`);
+    console.log("Auth state before submission:", { isAuthenticated });
     
     try {
       let success = false;
@@ -75,8 +76,11 @@ export function AuthForm({ type }: AuthFormProps) {
         success = await signup(email, password);
       }
       
+      console.log(`${type} result:`, { success });
+      console.log("Auth state after submission:", { isAuthenticated: success });
+      
       if (success) {
-        console.log(`${type} successful`);
+        console.log(`${type} successful, navigation will be handled by useAuthNavigation`);
         // Navigation will now be handled by useAuthNavigation in App.tsx
       } else {
         // Set a general error if no specific error was caught

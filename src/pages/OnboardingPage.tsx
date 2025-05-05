@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -16,10 +17,17 @@ import { toast } from "sonner";
 const OnboardingContent = () => {
   const { state } = useOnboarding();
   const { currentStep, isLoading } = state;
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log("Onboarding auth check:", {
+      isAuthenticated,
+      userOnboarded: user?.onboarded,
+      isLoading,
+      currentStep
+    });
+    
     // If user's profile data hasn't loaded yet, or user is not onboarded and we're not on the complete step,
     // let them continue with onboarding
     if (
@@ -39,13 +47,35 @@ const OnboardingContent = () => {
       console.log("User is already onboarded, redirecting to chat from OnboardingContent");
       navigate("/chat", { replace: true });
     }
-  }, [user, navigate, isLoading, currentStep]);
+  }, [user, navigate, isLoading, currentStep, isAuthenticated]);
   
   // Show loading state
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-humanly-teal"></div>
+      </div>
+    );
+  }
+  
+  // If not authenticated, show a message and redirect after a delay
+  if (!isAuthenticated) {
+    useEffect(() => {
+      toast.error("You need to be logged in to access this page");
+      const timer = setTimeout(() => {
+        navigate("/login", { replace: true });
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }, [navigate]);
+    
+    return (
+      <div className="flex flex-col items-center justify-center py-12 space-y-4">
+        <h2 className="text-2xl font-bold">Authentication Required</h2>
+        <p className="text-muted-foreground">Please log in to access the onboarding process.</p>
+        <Button onClick={() => navigate("/login", { replace: true })}>
+          Go to Login
+        </Button>
       </div>
     );
   }
@@ -109,10 +139,12 @@ const OnboardingPage = () => {
 
       // If not authenticated, redirect to login
       if (!isAuthenticated) {
+        console.log("User is not authenticated, redirecting to login");
         navigate("/login", { replace: true });
       }
       // If already onboarded, redirect to chat
       else if (user?.onboarded === true) {
+        console.log("User is already onboarded, redirecting to chat");
         navigate("/chat", { replace: true });
       }
     }
