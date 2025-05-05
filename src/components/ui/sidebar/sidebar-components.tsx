@@ -1,4 +1,3 @@
-
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { PanelLeft } from "lucide-react";
@@ -37,7 +36,9 @@ export const Sidebar = React.forwardRef<
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+    // Use the sidebar context based on the side prop
+    const sidebarId = side === "left" ? "left" : side === "right" ? "right" : "default";
+    const { isMobile, state, openMobile, setOpenMobile } = useSidebar(sidebarId);
 
     if (collapsible === "none") {
       return (
@@ -123,9 +124,11 @@ Sidebar.displayName = "Sidebar";
 
 export const SidebarTrigger = React.forwardRef<
   React.ElementRef<typeof Button>,
-  React.ComponentProps<typeof Button>
->(({ className, onClick, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar();
+  React.ComponentProps<typeof Button> & {
+    sidebarId?: string;
+  }
+>(({ className, onClick, sidebarId = "default", ...props }, ref) => {
+  const { toggleSidebar } = useSidebar(sidebarId);
 
   return (
     <Button
@@ -149,9 +152,11 @@ SidebarTrigger.displayName = "SidebarTrigger";
 
 export const SidebarRail = React.forwardRef<
   HTMLButtonElement,
-  React.ComponentProps<"button">
->(({ className, ...props }, ref) => {
-  const { toggleSidebar } = useSidebar();
+  React.ComponentProps<"button"> & {
+    sidebarId?: string;
+  }
+>(({ className, sidebarId = "default", ...props }, ref) => {
+  const { toggleSidebar } = useSidebar(sidebarId);
 
   return (
     <button

@@ -19,7 +19,7 @@ import { DailyChallenge } from "./DailyChallenge";
 
 export function EnhancedChatSidebar() {
   const { user } = useAuth();
-  // Use the left sidebar context
+  // Use the left sidebar context specifically
   const { toggleSidebar } = useSidebar("left");
   
   if (!user) return null;
