@@ -1,36 +1,11 @@
 
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
 
 const LoginPage = () => {
-  const { isAuthenticated, user, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const { isLoading } = useAuth();
   
-  // Add direct navigation effect at page level
-  useEffect(() => {
-    if (!isLoading) {
-      console.log("LoginPage auth check:", {
-        isAuthenticated,
-        userExists: !!user,
-        isOnboarded: user?.onboarded,
-        currentPath: window.location.pathname
-      });
-      
-      if (isAuthenticated) {
-        if (user?.onboarded === true) {
-          console.log("User is authenticated and onboarded, navigating to chat from LoginPage");
-          navigate("/chat", { replace: true });
-        } else if (user?.onboarded === false) {
-          console.log("User is authenticated but not onboarded, navigating to onboarding from LoginPage");
-          navigate("/onboarding", { replace: true });
-        }
-      }
-    }
-  }, [isAuthenticated, user, isLoading, navigate]);
-
   return (
     <PageLayout>
       <div className="flex items-center justify-center py-12 animate-scale-fade-in">

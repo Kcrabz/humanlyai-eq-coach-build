@@ -20,16 +20,30 @@ export function AuthForm({ type }: AuthFormProps) {
   const { login, signup, isLoading, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   
+  console.log("Auth form rendered:", { 
+    type, 
+    isAuthenticated, 
+    isLoading, 
+    userStatus: user ? `User exists (onboarded: ${user.onboarded})` : "No user" 
+  });
+  
   // Add effect to handle authenticated state changes
   useEffect(() => {
-    if (isAuthenticated && user?.onboarded === true) {
-      console.log("AuthForm detected authenticated user, redirecting to chat");
-      navigate("/chat", { replace: true });
-    } else if (isAuthenticated && user?.onboarded === false) {
-      console.log("AuthForm detected authenticated but not onboarded user, redirecting to onboarding");
-      navigate("/onboarding", { replace: true });
+    if (!isLoading && isAuthenticated) {
+      console.log("AuthForm detected authenticated user:", { 
+        isOnboarded: user?.onboarded,
+        currentPath: window.location.pathname
+      });
+      
+      if (user?.onboarded === true) {
+        console.log("AuthForm redirecting to chat");
+        navigate("/chat", { replace: true });
+      } else if (user?.onboarded === false) {
+        console.log("AuthForm redirecting to onboarding");
+        navigate("/onboarding", { replace: true });
+      }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user, navigate, isLoading]);
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -77,7 +91,6 @@ export function AuthForm({ type }: AuthFormProps) {
     
     setIsSubmitting(true);
     console.log(`Starting ${type} process for: ${email}`);
-    console.log("Auth state before submission:", { isAuthenticated });
     
     try {
       let success = false;
@@ -89,16 +102,8 @@ export function AuthForm({ type }: AuthFormProps) {
       }
       
       console.log(`${type} result:`, { success });
-      console.log("Auth state after submission:", { isAuthenticated: success });
       
-      if (success) {
-        console.log(`${type} successful, attempting direct navigation to chat`);
-        // Try direct navigation in addition to the useEffect approach
-        navigate("/chat", { replace: true });
-      } else {
-        // Set a general error if no specific error was caught
-        setErrorMessage(`Failed to ${type === "login" ? "sign in" : "create account"}. Please try again.`);
-      }
+      // Let the useEffect handle the redirect
     } catch (error) {
       console.error(`Error during ${type}:`, error);
       const message = error instanceof Error ? error.message : `${type} failed`;

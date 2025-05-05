@@ -30,7 +30,14 @@ const AuthNavigationHandler = () => {
     console.log("Route changed to:", location.pathname, location.search);
   }, [location]);
   
-  useAuthNavigation(user, isLoading);
+  // Only apply auth navigation on non-auth pages
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
+  if (!isAuthPage) {
+    useAuthNavigation(user, isLoading);
+  } else {
+    console.log("Skipping auth navigation on auth page:", location.pathname);
+  }
+  
   return null; // This component doesn't render anything
 };
 

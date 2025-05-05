@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User } from "@/types";
 import { handleAuthNavigation } from "@/services/authNavigationService";
-import { isRetakingAssessment } from "@/utils/navigationUtils";
+import { isRetakingAssessment, isOnAuthPage } from "@/utils/navigationUtils";
 
 /**
  * Hook that handles authentication-based navigation
@@ -16,19 +16,29 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
   const location = useLocation();
   
   useEffect(() => {
-    if (!isLoading) {
-      const isRetaking = isRetakingAssessment(location.search);
-      
-      console.log("useAuthNavigation effect running with:", {
-        pathname: location.pathname,
-        search: location.search,
-        isRetakingAssessment: isRetaking,
-        user: user?.id,
-        isOnboarded: user?.onboarded
-      });
-      
-      handleAuthNavigation(user, location.pathname, navigate, location.search);
+    // Skip navigation while auth is loading to prevent premature redirects
+    if (isLoading) {
+      console.log("Auth is still loading, skipping navigation");
+      return;
     }
+    
+    // Skip navigation on auth pages to prevent redirect loops
+    if (isOnAuthPage(location.pathname)) {
+      console.log("On auth page, skipping navigation handling in hook");
+      return;
+    }
+    
+    const isRetaking = isRetakingAssessment(location.search);
+    
+    console.log("useAuthNavigation effect running with:", {
+      pathname: location.pathname,
+      search: location.search,
+      isRetakingAssessment: isRetaking,
+      user: user?.id,
+      isOnboarded: user?.onboarded
+    });
+    
+    handleAuthNavigation(user, location.pathname, navigate, location.search);
   }, [user, isLoading, navigate, location.pathname, location.search]);
 
   return navigate;
