@@ -5,6 +5,9 @@ import { handleApiErrors } from "@/utils/chatErrorHandler";
 import { RetryOptions } from "./types";
 import { sendMessageStream } from "./services/streamService";
 
+// Export the imported sendMessageStream function
+export { sendMessageStream };
+
 /**
  * Optimized service for sending messages to the chat API
  */

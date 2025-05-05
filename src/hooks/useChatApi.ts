@@ -25,8 +25,8 @@ export const useChatApi = () => {
   };
 
   // Non-streaming message send function
-  const sendMessage = async (content: string, addUserMessage: Function, addAssistantMessage: Function) => {
-    apiSendMessage(
+  const sendMessage = async (content: string, addUserMessage: (message: string) => string, addAssistantMessage: (message: string) => string) => {
+    await apiSendMessage(
       content, 
       addUserMessage, 
       addAssistantMessage, 
