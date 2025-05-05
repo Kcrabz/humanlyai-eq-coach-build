@@ -1,22 +1,21 @@
 
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ChatProvider } from "@/context/ChatContext";
-import { ChatList } from "@/components/chat/ChatList";
 import { ChatInput } from "@/components/chat/ChatInput";
-import { ChatUsage } from "@/components/chat/ChatUsage";
-import { EnhancedChatUI } from "@/components/chat/EnhancedChatUI";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
 import { ExternalLink, ClipboardCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EQArchetype } from "@/types";
-
-// Import our new sidebar component
-import { EnhancedChatSidebar } from "@/components/chat/sidebar/EnhancedChatSidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
+
+// Lazy load components that aren't immediately visible
+const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => ({ default: module.ChatList })));
+const ChatUsage = lazy(() => import("@/components/chat/ChatUsage").then(module => ({ default: module.ChatUsage })));
+const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
 
 const ChatPage = () => {
   const {
@@ -27,33 +26,23 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // Optimize auth check to use fewer rerenders
   useEffect(() => {
-    if (!isLoading) {
-      console.log("Chat page auth check:", {
-        isAuthenticated,
-        user,
-        isOnboarded: user?.onboarded
-      });
-      if (!isAuthenticated) {
-        navigate("/login");
-      } else if (typeof user?.onboarded !== "boolean" || user?.onboarded === false) {
-        // Explicitly check if onboarded is false or not a boolean (still loading)
-        console.log("User not onboarded or onboarded status unclear, redirecting to onboarding");
-        navigate("/onboarding");
-      }
+    if (!isLoading && !isAuthenticated) {
+      navigate("/login");
+    } else if (!isLoading && isAuthenticated && user && !user.onboarded) {
+      navigate("/onboarding");
     }
-  }, [isAuthenticated, navigate, user, isLoading]);
+  }, [isAuthenticated, navigate, user?.onboarded, isLoading]);
 
   const handleStartAssessment = () => {
-    console.log("Start assessment button clicked, navigating to /onboarding?step=archetype");
-    // Use navigate with state to maintain the information that we're intentionally going to onboarding
     navigate("/onboarding?step=archetype", { 
       replace: false,
       state: { retakingAssessment: true }
     });
   };
 
-  if (isLoading || !isAuthenticated || typeof user?.onboarded !== "boolean" || !user?.onboarded) {
+  if (isLoading || !isAuthenticated || !user?.onboarded) {
     return <PageLayout fullWidth>
         <div className="flex justify-center items-center h-96">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-humanly-teal"></div>
@@ -67,12 +56,14 @@ const ChatPage = () => {
   const hasCompletedAssessment = !!userArchetype && userArchetype !== undefined;
 
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={false}>
       <PageLayout fullWidth>
         <ChatProvider>
           <div className="flex h-screen overflow-hidden">
-            {/* Enhanced Sidebar - Added */}
-            <EnhancedChatSidebar />
+            {/* Lazy load sidebar with suspense fallback */}
+            <Suspense fallback={<div className="w-64 bg-gray-50"></div>}>
+              <EnhancedChatSidebar />
+            </Suspense>
             
             {/* Chat Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -98,8 +89,19 @@ const ChatPage = () => {
                       </Button>
                     </AlertDescription>
                   </Alert>}
-                <ChatUsage />
-                <ChatList />
+                  
+                <Suspense fallback={<div className="h-6 bg-gray-50 m-4"></div>}>
+                  <ChatUsage />
+                </Suspense>
+                
+                <Suspense fallback={
+                  <div className="flex-1 flex justify-center items-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-humanly-teal"></div>
+                  </div>
+                }>
+                  <ChatList />
+                </Suspense>
+                
                 <ChatInput />
               </div>
             </div>

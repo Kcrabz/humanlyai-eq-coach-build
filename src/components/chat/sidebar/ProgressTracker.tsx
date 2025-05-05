@@ -1,8 +1,7 @@
-
 import { Progress } from "@/components/ui/progress";
 import { TrendingUp, Award, Star } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 
 // This would ideally be fetched from an API based on user's interaction history
 const MOCK_PROGRESS_DATA = {
@@ -12,24 +11,20 @@ const MOCK_PROGRESS_DATA = {
   badges: ["active-listener", "emotion-master", "first-insight"]
 };
 
-export function ProgressTracker() {
+export const ProgressTracker = memo(function ProgressTracker() {
   const { user } = useAuth();
   const [progressData, setProgressData] = useState(MOCK_PROGRESS_DATA);
   
-  // We'd normally fetch this data from an API
+  // We've removed the artificial delay that was causing slowness
   useEffect(() => {
     // In a real implementation, we'd make an API call here
-    // For now, we'll just simulate the data
-    const timer = setTimeout(() => {
-      setProgressData({
-        ...MOCK_PROGRESS_DATA,
-        // Add a small random variation to make it feel dynamic
-        overallProgress: Math.min(100, MOCK_PROGRESS_DATA.overallProgress + Math.floor(Math.random() * 5))
-      });
-    }, 3000);
-    
-    return () => clearTimeout(timer);
-  }, [user]);
+    // But we won't add any artificial delays
+    setProgressData({
+      ...MOCK_PROGRESS_DATA,
+      // Add a small random variation to make it feel dynamic
+      overallProgress: Math.min(100, MOCK_PROGRESS_DATA.overallProgress + Math.floor(Math.random() * 5))
+    });
+  }, [user?.id]); // Only depend on user.id, not the entire user object
 
   const getBadgeIcon = (badgeId: string) => {
     switch(badgeId) {
@@ -99,4 +94,4 @@ export function ProgressTracker() {
       </div>
     </div>
   );
-}
+});

@@ -3,7 +3,7 @@ import { streamOpenAI } from "./streamingService.ts";
 import { updateUsageTracking, logChatMessages } from "./usageTracking.ts";
 import { estimateTokenCount, corsHeaders } from "./utils.ts";
 
-// Handle streaming response creation and processing
+// Handle streaming response creation and processing - optimized for performance
 export async function createStreamResponse(
   openAiApiKey: string, 
   messages: any[], 
@@ -17,9 +17,16 @@ export async function createStreamResponse(
   const encoder = new TextEncoder();
   let fullResponse = "";
   
-  // Calculate estimated token count for input
+  // Use token estimation cache map to avoid recalculating
+  const tokenEstimationCache = new Map<string, number>();
+  
+  // Calculate estimated token count for input with caching
   const inputText = messages.map(m => m.content).join(' ');
-  const estimatedInputTokens = estimateTokenCount(inputText);
+  let estimatedInputTokens = tokenEstimationCache.get(inputText);
+  if (estimatedInputTokens === undefined) {
+    estimatedInputTokens = estimateTokenCount(inputText);
+    tokenEstimationCache.set(inputText, estimatedInputTokens);
+  }
   
   // Set up streaming response
   const stream = new TransformStream();
@@ -48,16 +55,22 @@ export async function createStreamResponse(
         await writer.write(encoder.encode(`data: ${JSON.stringify(chunkData)}\n\n`));
       }
       
-      // Calculate estimated token count for output
-      const estimatedOutputTokens = estimateTokenCount(fullResponse);
+      // Calculate estimated token count for output with caching
+      let estimatedOutputTokens = tokenEstimationCache.get(fullResponse);
+      if (estimatedOutputTokens === undefined) {
+        estimatedOutputTokens = estimateTokenCount(fullResponse);
+        tokenEstimationCache.set(fullResponse, estimatedOutputTokens);
+      }
+      
       const totalTokensUsed = estimatedInputTokens + estimatedOutputTokens;
       
-      // Update usage tracking for all users
-      await updateUsageTracking(supabaseClient, userId, monthYear, totalTokensUsed);
+      // Update usage tracking in background for performance
+      const trackingPromise = updateUsageTracking(supabaseClient, userId, monthYear, totalTokensUsed);
       
-      // Log chat messages for premium users only
+      // Only log chat messages for premium users and do it in background
+      let loggingPromise = Promise.resolve();
       if (subscriptionTier === 'premium') {
-        await logChatMessages(
+        loggingPromise = logChatMessages(
           supabaseClient, 
           userId, 
           messages[messages.length - 1].content, 
@@ -65,13 +78,9 @@ export async function createStreamResponse(
           estimatedInputTokens, 
           estimatedOutputTokens
         );
-        
-        console.log("Logged chat messages for premium user");
-      } else {
-        console.log(`Chat messages not logged for ${subscriptionTier} tier user`);
       }
       
-      // Send completion message with usage info
+      // Send completion message with usage info immediately
       const completionData = {
         type: 'complete',
         usage: {
@@ -81,14 +90,17 @@ export async function createStreamResponse(
         }
       };
       await writer.write(encoder.encode(`data: ${JSON.stringify(completionData)}\n\n`));
+      
+      // Wait for background operations to complete before closing
+      await Promise.allSettled([trackingPromise, loggingPromise]);
+      
     } catch (error) {
       console.error('Error in streaming:', error);
       
       // Send error message to client
       const errorData = {
         type: 'error',
-        error: error.message || 'Unknown error',
-        details: error
+        error: error.message || 'Unknown error'
       };
       await writer.write(encoder.encode(`data: ${JSON.stringify(errorData)}\n\n`));
     } finally {

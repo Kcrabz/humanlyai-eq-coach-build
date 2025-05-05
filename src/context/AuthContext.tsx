@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
 import useAuthState from "@/hooks/useAuthState";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Auth state
   const { user, setUser, isLoading, setIsLoading } = useAuthState();
   
-  // Auth session
+  // Auth session - this is only needed during initialization
   const { session } = useAuthSession();
   
   // Auth core for login/logout
@@ -62,48 +62,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const profileCore = useProfileCore(setUser);
   const profileActions = useProfileActions(setUser);
   
-  // Derived state
-  const userHasArchetype = !!user?.eq_archetype;
-  const isAuthenticated = !!user;
+  // Memoize derived state to prevent unnecessary recalculations
+  const userHasArchetype = useMemo(() => !!user?.eq_archetype, [user?.eq_archetype]);
+  const isAuthenticated = useMemo(() => !!user, [user]);
   
-  // Get user subscription tier
-  const getUserSubscription = () => {
+  // Get user subscription tier - memoized to prevent unnecessary recalculations
+  const getUserSubscription = useCallback(() => {
     return user?.subscription_tier || 'free';
-  };
+  }, [user?.subscription_tier]);
   
-  // Reset password functionality stub
-  const resetPassword = async (email: string): Promise<void> => {
+  // Reset password functionality stub - wrapped in useCallback
+  const resetPassword = useCallback(async (email: string): Promise<void> => {
     // Implement reset password functionality
     console.log("Reset password for:", email);
-  };
+  }, []);
 
-  // Wrapper functions to ensure type compatibility
-  const updateProfile = async (data: any): Promise<void> => {
+  // Wrapper functions to ensure type compatibility and memoized to prevent unnecessary recreations
+  const updateProfile = useCallback(async (data: any): Promise<void> => {
     await profileCore.updateProfile(user?.id, data);
-  };
+  }, [profileCore, user?.id]);
 
-  const forceUpdateProfile = async (data: any): Promise<void> => {
+  const forceUpdateProfile = useCallback(async (data: any): Promise<void> => {
     await profileCore.forceUpdateProfile(data);
-  };
+  }, [profileCore]);
 
-  const setName = async (name: string): Promise<void> => {
+  const setName = useCallback(async (name: string): Promise<void> => {
     await profileActions.setName(name);
-  };
+  }, [profileActions]);
 
-  const setArchetype = async (archetype: string): Promise<void> => {
+  const setArchetype = useCallback(async (archetype: string): Promise<void> => {
     await profileActions.setArchetype(archetype as EQArchetype);
-  };
+  }, [profileActions]);
 
-  const setCoachingMode = async (mode: string): Promise<void> => {
+  const setCoachingMode = useCallback(async (mode: string): Promise<void> => {
     await profileActions.setCoachingMode(mode as CoachingMode);
-  };
+  }, [profileActions]);
 
-  const setOnboarded = async (value: boolean): Promise<void> => {
+  const setOnboarded = useCallback(async (value: boolean): Promise<void> => {
     await profileActions.setOnboarded(value);
-  };
+  }, [profileActions]);
   
-  // Combined context value
-  const contextValue: AuthContextType = {
+  // Memoize the context value to prevent unnecessary rerenders
+  const contextValue = useMemo(() => ({
     user,
     isLoading,
     error,
@@ -121,7 +121,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser,
     getUserSubscription,
     userHasArchetype
-  };
+  }), [
+    user, isLoading, error, isAuthenticated, authCore.login, authLogout, 
+    signup, resetPassword, updateProfile, forceUpdateProfile, setName, 
+    setArchetype, setCoachingMode, setOnboarded, setUser, getUserSubscription, 
+    userHasArchetype
+  ]);
 
   return (
     <AuthContext.Provider value={contextValue}>

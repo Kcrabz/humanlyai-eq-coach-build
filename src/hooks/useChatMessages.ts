@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ChatMessage } from "@/types";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +9,10 @@ export const useChatMessages = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const { user } = useAuth();
+  const savePendingRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Generate a session ID for free users
-  const getSessionId = () => {
+  // Generate a session ID for free users - memoized
+  const getSessionId = useCallback(() => {
     // For free users, create a session ID if it doesn't exist
     if (user?.subscription_tier !== 'premium') {
       let sessionId = sessionStorage.getItem(`chat_session_${user?.id}`);
@@ -22,7 +23,7 @@ export const useChatMessages = () => {
       return sessionId;
     }
     return null; // Premium users don't need a session ID
-  };
+  }, [user?.id, user?.subscription_tier]);
 
   // Load messages based on user's subscription tier
   useEffect(() => {
@@ -34,7 +35,6 @@ export const useChatMessages = () => {
         setIsLoadingHistory(true);
         try {
           // Use chat_logs table for now to maintain backward compatibility
-          // We'll fetch from chat_messages in the future once we have data there
           const { data, error } = await supabase
             .from('chat_logs')
             .select('*')
@@ -44,7 +44,6 @@ export const useChatMessages = () => {
             
           if (error) {
             console.error("Error loading chat history:", error);
-            toast.error("Failed to load chat history");
             
             // Fallback to local storage if database fetch fails
             const savedMessages = localStorage.getItem(`chat_messages_${user.id}`);
@@ -87,49 +86,63 @@ export const useChatMessages = () => {
     };
     
     loadChatHistory();
-  }, [user]);
+  }, [user, getSessionId]);
 
-  // Save messages to localStorage (all users) and database (premium only)
+  // Debounced save to localStorage to prevent excessive writes
   useEffect(() => {
     if (!user || isLoadingHistory || messages.length === 0) return;
     
-    // For non-premium users, use session-specific storage key
-    const storageKey = user.subscription_tier === 'premium' 
-      ? `chat_messages_${user.id}`
-      : `chat_messages_${user.id}_${getSessionId()}`;
-      
-    // Always save to localStorage for all users
-    localStorage.setItem(storageKey, JSON.stringify(messages));
-    
-    // For premium users, also sync the latest message to the database
-    if (user.subscription_tier === 'premium' && messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      
-      // Only insert if message doesn't already have a DB ID
-      // This prevents duplicate messages from being created
-      if (!lastMessage.id.includes('-')) return;
-      
-      supabase
-        .from('chat_messages')
-        .insert({
-          id: lastMessage.id,
-          content: lastMessage.content,
-          role: lastMessage.role,
-          user_id: user.id,
-          created_at: lastMessage.created_at
-        })
-        .then(({ error }) => {
-          if (error) {
-            console.error("Error saving chat message to database:", error);
-          }
-        });
+    // Clear any pending save operation
+    if (savePendingRef.current) {
+      clearTimeout(savePendingRef.current);
     }
-  }, [messages, user, isLoadingHistory]);
+    
+    // Set a timeout to save after 1 second of inactivity
+    savePendingRef.current = setTimeout(() => {
+      // For non-premium users, use session-specific storage key
+      const storageKey = user.subscription_tier === 'premium' 
+        ? `chat_messages_${user.id}`
+        : `chat_messages_${user.id}_${getSessionId()}`;
+        
+      // Always save to localStorage for all users
+      localStorage.setItem(storageKey, JSON.stringify(messages));
+      
+      // For premium users, also sync the latest message to the database
+      if (user.subscription_tier === 'premium' && messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        
+        // Only insert if message doesn't already have a DB ID
+        if (!lastMessage.id.includes('-')) return;
+        
+        supabase
+          .from('chat_messages')
+          .insert({
+            id: lastMessage.id,
+            content: lastMessage.content,
+            role: lastMessage.role,
+            user_id: user.id,
+            created_at: lastMessage.created_at
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error("Error saving chat message to database:", error);
+            }
+          });
+      }
+    }, 1000);
+    
+    return () => {
+      if (savePendingRef.current) {
+        clearTimeout(savePendingRef.current);
+      }
+    };
+  }, [messages, user, isLoadingHistory, getSessionId]);
 
-  // Helper function to create a unique ID
-  const createId = () => Math.random().toString(36).substring(2, 11);
+  // Helper function to create a unique ID - memoized
+  const createId = useCallback(() => Math.random().toString(36).substring(2, 11), []);
 
-  const addUserMessage = (content: string): string => {
+  // Memoized message operations
+  const addUserMessage = useCallback((content: string): string => {
     const userMessage: ChatMessage = {
       id: createId(),
       content,
@@ -139,9 +152,9 @@ export const useChatMessages = () => {
 
     setMessages((prev) => [...prev, userMessage]);
     return userMessage.id;
-  };
+  }, [createId]);
 
-  const addAssistantMessage = (content: string): string => {
+  const addAssistantMessage = useCallback((content: string): string => {
     const assistantMessage: ChatMessage = {
       id: createId(),
       content,
@@ -151,10 +164,10 @@ export const useChatMessages = () => {
 
     setMessages((prev) => [...prev, assistantMessage]);
     return assistantMessage.id;
-  };
+  }, [createId]);
 
-  // Function to update an existing message (for streaming)
-  const updateAssistantMessage = (id: string, content: string): void => {
+  // Function to update an existing message (for streaming) - memoized
+  const updateAssistantMessage = useCallback((id: string, content: string): void => {
     setMessages((prev) => 
       prev.map((message) => 
         message.id === id 
@@ -162,11 +175,11 @@ export const useChatMessages = () => {
           : message
       )
     );
-  };
+  }, []);
 
-  const clearMessages = () => {
+  const clearMessages = useCallback(() => {
     setMessages([]);
-  };
+  }, []);
 
   return {
     messages,

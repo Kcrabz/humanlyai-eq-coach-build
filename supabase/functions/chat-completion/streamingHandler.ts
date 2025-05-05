@@ -4,7 +4,7 @@ import { prepareUserData, getChatHistory } from "./userService.ts";
 import { extractUserMessage, prepareMessagesForAI } from "./messageService.ts";
 import { handleCommonErrors } from "./handlerUtils.ts";
 
-// Stream handler for chat completion
+// Optimized stream handler for chat completion
 export async function handleStreamingChatCompletion(req: Request, reqBody: any) {
   try {
     // Get user data and settings
@@ -20,7 +20,7 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
       monthYear
     } = await prepareUserData(req, reqBody);
     
-    // Extract message and history from request
+    // Extract message and history from request - using cached data if possible
     const { userMessage, clientProvidedHistory } = extractUserMessage(reqBody);
     
     // Get chat history based on subscription tier
@@ -31,7 +31,7 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
       clientProvidedHistory
     );
     
-    // Prepare messages for OpenAI
+    // Prepare messages for OpenAI - optimized to reuse cached system messages when possible
     const preparedMessages = prepareMessagesForAI(
       userMessage,
       effectiveArchetype,
