@@ -6,6 +6,7 @@ export interface User {
   email: string;
   name?: string;
   avatar_url?: string;
+  bio?: string;
   eq_archetype?: EQArchetype | "Not set";
   coaching_mode?: CoachingMode;
   subscription_tier: SubscriptionTier;
@@ -14,7 +15,7 @@ export interface User {
 
 export type EQArchetype = "reflector" | "activator" | "regulator" | "connector" | "observer";
 
-export type CoachingMode = "normal" | "tough love";
+export type CoachingMode = "normal" | "tough";
 
 export interface ChatMessage {
   id: string;

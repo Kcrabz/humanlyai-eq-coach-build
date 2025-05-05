@@ -53,8 +53,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Get the appropriate introduction message based on coaching mode
         const introMessage = getIntroductionMessage(user.coaching_mode);
         
+        // If user has a bio, append a personalized note
+        let finalIntroMessage = introMessage;
+        if (user.bio) {
+          finalIntroMessage = `${introMessage}\n\nI see from your bio that you mentioned: "${user.bio}". I'll keep this in mind as we work together.`;
+        }
+        
         // Add the assistant message with the introduction
-        addAssistantMessage(introMessage);
+        addAssistantMessage(finalIntroMessage);
         
         // Mark that we've shown the introduction to this user
         markIntroductionAsShown(user.id);
