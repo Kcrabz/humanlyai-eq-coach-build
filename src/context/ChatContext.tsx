@@ -1,8 +1,10 @@
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { ChatMessage } from "@/types";
 import { useChatContextMessages } from "@/hooks/chat/useChatContextMessages";
 import { useChatActions } from "@/hooks/chat/useChatActions";
+import { useAuth } from "@/context/AuthContext";
+import { getIntroductionMessage, shouldShowIntroduction, markIntroductionAsShown } from "@/lib/introductionMessages";
 
 interface ChatContextType {
   messages: ChatMessage[];
@@ -38,6 +40,29 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     retryLastMessage: retryChatMessage,
     startNewChat: startNewChatSession
   } = useChatActions();
+
+  const { user } = useAuth();
+
+  // Check if we should show the introduction message for first-time users
+  useEffect(() => {
+    if (!user || isLoading || messages.length > 0) return;
+    
+    const checkAndSendIntroduction = async () => {
+      // Only for first-time visitors to the chat
+      if (user.id && shouldShowIntroduction(user.id)) {
+        // Get the appropriate introduction message based on coaching mode
+        const introMessage = getIntroductionMessage(user.coaching_mode);
+        
+        // Add the assistant message with the introduction
+        addAssistantMessage(introMessage);
+        
+        // Mark that we've shown the introduction to this user
+        markIntroductionAsShown(user.id);
+      }
+    };
+    
+    checkAndSendIntroduction();
+  }, [user, isLoading, messages.length]);
 
   // Wrapper for sending messages
   const sendMessage = async (content: string) => {

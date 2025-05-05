@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { EQArchetype, CoachingMode } from "@/types";
+import { markIntroductionAsShown } from "@/lib/introductionMessages";
 
 export const useOnboardingActions = (
   state: any, 
@@ -109,6 +110,12 @@ export const useOnboardingActions = (
             eq_archetype: state.archetype || 'Not set',
             coaching_mode: state.coachingMode || 'normal'
           } : null);
+          
+          // Reset the introduction flag so it will show when the user enters the chat
+          if (user?.id) {
+            // Remove the intro flag so it will show again with the new coaching mode
+            localStorage.removeItem(`humanly_intro_shown_${user.id}`);
+          }
           
           // Navigation is now handled here to ensure it happens after database updates
           toast.success("Onboarding completed!");

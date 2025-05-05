@@ -1,5 +1,4 @@
-
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ChatProvider } from "@/context/ChatContext";
@@ -11,6 +10,7 @@ import { ExternalLink, ClipboardCheck, Menu } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EQArchetype } from "@/types";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
+import { markIntroductionAsShown } from "@/lib/introductionMessages";
 
 // Lazy load components that aren't immediately visible
 const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => ({ default: module.ChatList })));
@@ -69,6 +69,9 @@ const ChatPage = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
+  // Keep track of previous coaching mode to detect changes
+  const prevCoachingModeRef = useRef<string | undefined>(undefined);
 
   // Optimize auth check to use fewer rerenders
   useEffect(() => {
@@ -78,6 +81,21 @@ const ChatPage = () => {
       navigate("/onboarding");
     }
   }, [isAuthenticated, navigate, user?.onboarded, isLoading]);
+
+  // Reset introduction when coaching mode changes
+  useEffect(() => {
+    if (user && user.id) {
+      // If coaching mode has changed, reset the introduction flag
+      if (prevCoachingModeRef.current !== undefined && 
+          prevCoachingModeRef.current !== user.coaching_mode) {
+        console.log('Coaching mode changed, resetting introduction');
+        localStorage.removeItem(`humanly_intro_shown_${user.id}`);
+      }
+      
+      // Update the ref for next comparison
+      prevCoachingModeRef.current = user.coaching_mode;
+    }
+  }, [user?.coaching_mode, user?.id]);
 
   const handleStartAssessment = () => {
     navigate("/onboarding?step=archetype", { 
