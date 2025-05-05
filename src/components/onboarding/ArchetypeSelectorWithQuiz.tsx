@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArchetypeQuiz } from "./ArchetypeQuiz";
@@ -66,14 +65,8 @@ export const ArchetypeSelectorWithQuiz = () => {
       };
       
       // Use the more reliable forceUpdateProfile method
-      const updateSuccess = await forceUpdateProfile(profileUpdates);
+      await forceUpdateProfile(profileUpdates);
       
-      if (!updateSuccess) {
-        toast.error("Could not update your profile. Please try again.");
-        setIsSkipping(false);
-        return;
-      }
-        
       // Update local user state
       setUser(prevUser => {
         if (!prevUser) {
