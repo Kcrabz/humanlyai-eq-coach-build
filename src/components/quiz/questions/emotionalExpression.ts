@@ -1,8 +1,9 @@
 
 import { QuizQuestion } from '../types';
 
-// Questions focused on emotional expression and interpersonal boundaries
+// Questions focused on emotional expression, boundaries, and social connection
 export const emotionalExpressionQuestions: QuizQuestion[] = [
+  // Core emotional expression questions
   {
     id: 'q3',
     text: 'I find it difficult to express how I feel.',
@@ -75,6 +76,10 @@ export const emotionalExpressionQuestions: QuizQuestion[] = [
       }
     ]
   },
+];
+
+// Additional questions about emotional processing and interpersonal behavior
+export const interpersonalQuestions: QuizQuestion[] = [
   {
     id: 'q7',
     text: 'I keep emotional struggles to myself.',
@@ -183,6 +188,10 @@ export const emotionalExpressionQuestions: QuizQuestion[] = [
       }
     ]
   },
+];
+
+// Questions about connection and vulnerability
+export const connectionQuestions: QuizQuestion[] = [
   {
     id: 'q12',
     text: 'I value deep personal connections over tasks.',
@@ -255,4 +264,12 @@ export const emotionalExpressionQuestions: QuizQuestion[] = [
       }
     ]
   }
+];
+
+// Combine all emotional expression related questions into a single export
+// This maintains compatibility with existing imports while organizing the code better
+export const allEmotionalExpressionQuestions: QuizQuestion[] = [
+  ...emotionalExpressionQuestions,
+  ...interpersonalQuestions,
+  ...connectionQuestions
 ];
