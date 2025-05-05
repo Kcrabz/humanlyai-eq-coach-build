@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User } from "@/types";
 import { handleAuthNavigation } from "@/services/authNavigationService";
-import { isRetakingAssessment, isOnAuthPage } from "@/utils/navigationUtils";
+import { isOnAuthPage } from "@/utils/navigationUtils";
 
 /**
  * Hook that handles authentication-based navigation
@@ -28,12 +28,10 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
       return;
     }
     
-    const isRetaking = isRetakingAssessment(location.search);
-    
+    // Log the current navigation context
     console.log("useAuthNavigation effect running with:", {
       pathname: location.pathname,
       search: location.search,
-      isRetakingAssessment: isRetaking,
       user: user?.id,
       isOnboarded: user?.onboarded
     });

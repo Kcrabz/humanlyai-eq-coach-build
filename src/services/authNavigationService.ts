@@ -26,7 +26,6 @@ export const handleAuthNavigation = (
     isAuthenticated: !!user,
     isOnboarded: user?.onboarded,
     isRetaking,
-    currentUrl: typeof window !== 'undefined' ? window.location.href : 'SSR',
     currentTime: new Date().toISOString()
   });
 
