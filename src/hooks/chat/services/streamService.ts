@@ -65,8 +65,6 @@ export async function sendMessageStream(
 
     toast.dismiss("kai-connecting");
 
-    console.log("Got response from edge function:", { data, error });
-
     if (error) {
       console.error("Edge function error:", error);
       errorOptions.setError("Failed to connect to AI assistant. Please try again later.");
