@@ -1,21 +1,44 @@
+
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+
 interface HeroSectionProps {
   onGetStarted: () => void;
 }
+
 const HeroSection = ({
   onGetStarted
 }: HeroSectionProps) => {
   const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(false);
+  const [isLogoVisible, setIsLogoVisible] = useState(false);
+  
+  // Create an array of words for the subtitle
+  const subtitleWords = "Meet Kai, the AI Coach for the Human in You.".split(" ");
+  const [visibleWords, setVisibleWords] = useState<boolean[]>(Array(subtitleWords.length).fill(false));
+  
   useEffect(() => {
-    // Set a small delay before triggering the animation
-    const timer = setTimeout(() => {
-      setIsVisible(true);
+    // Set a small delay before triggering the animation for the logo
+    const logoTimer = setTimeout(() => {
+      setIsLogoVisible(true);
     }, 200);
-    return () => clearTimeout(timer);
+    
+    // Create staggered animations for each word
+    subtitleWords.forEach((_, index) => {
+      const wordTimer = setTimeout(() => {
+        setVisibleWords(prev => {
+          const updated = [...prev];
+          updated[index] = true;
+          return updated;
+        });
+      }, 400 + (index * 150)); // Start after logo animation with 150ms between words
+      
+      return () => clearTimeout(wordTimer);
+    });
+    
+    return () => clearTimeout(logoTimer);
   }, []);
+  
   return <section className="py-20 md:py-28 relative overflow-hidden">
       {/* Decorative blobs */}
       <div className="blob bg-humanly-purple/20 w-[300px] h-[300px] top-[-100px] left-[-100px]" />
@@ -23,11 +46,21 @@ const HeroSection = ({
       
       <div className="container px-4 mx-auto relative z-10">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 className={`text-4xl md:text-6xl font-bold mb-6 transition-opacity duration-1000 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
-            <span className="bg-gradient-to-r from-humanly-purple to-humanly-purple-light bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            <span className={`bg-gradient-to-r from-humanly-purple to-humanly-purple-light bg-clip-text text-transparent transition-opacity duration-1000 ease-in-out ${isLogoVisible ? 'opacity-100' : 'opacity-0'}`}>
               HumanlyAI
             </span>
-            <span className="block mt-2">Meet Kai, the AI Coach for the Human in You.</span>
+            <span className="block mt-2">
+              {subtitleWords.map((word, index) => (
+                <span 
+                  key={index} 
+                  className={`inline-block transition-opacity duration-300 ease-out ${visibleWords[index] ? 'opacity-100' : 'opacity-0'}`}
+                  style={{ transitionDelay: `${index * 0.15}s` }}
+                >
+                  {word}{' '}
+                </span>
+              ))}
+            </span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
             Being human's hard. Growth doesn't have to be.
@@ -81,4 +114,5 @@ const HeroSection = ({
       </div>
     </section>;
 };
+
 export default HeroSection;
