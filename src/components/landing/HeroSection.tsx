@@ -1,27 +1,21 @@
-
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-
 interface HeroSectionProps {
   onGetStarted: () => void;
 }
-
 const HeroSection = ({
   onGetStarted
 }: HeroSectionProps) => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
-  
   useEffect(() => {
     // Set a small delay before triggering the animation
     const timer = setTimeout(() => {
       setIsVisible(true);
     }, 200);
-    
     return () => clearTimeout(timer);
   }, []);
-
   return <section className="py-20 md:py-28 relative overflow-hidden">
       {/* Decorative blobs */}
       <div className="blob bg-humanly-purple/20 w-[300px] h-[300px] top-[-100px] left-[-100px]" />
@@ -29,11 +23,7 @@ const HeroSection = ({
       
       <div className="container px-4 mx-auto relative z-10">
         <div className="max-w-3xl mx-auto text-center">
-          <h1 
-            className={`text-4xl md:text-6xl font-bold mb-6 transition-opacity duration-1000 ease-in-out ${
-              isVisible ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
+          <h1 className={`text-4xl md:text-6xl font-bold mb-6 transition-opacity duration-1000 ease-in-out ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
             <span className="bg-gradient-to-r from-humanly-purple to-humanly-purple-light bg-clip-text text-transparent">
               HumanlyAI
             </span>
@@ -43,9 +33,7 @@ const HeroSection = ({
             Being human's hard. Growth doesn't have to be.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={onGetStarted}>
-              Start Coaching Now
-            </Button>
+            <Button size="lg" onClick={onGetStarted}>Start Chatting Now</Button>
             <Button size="lg" variant="outline" onClick={() => navigate("/pricing")}>
               View Plans
             </Button>
@@ -93,5 +81,4 @@ const HeroSection = ({
       </div>
     </section>;
 };
-
 export default HeroSection;
