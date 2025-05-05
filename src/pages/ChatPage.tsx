@@ -13,6 +13,7 @@ import { EQArchetype } from "@/types";
 import { SidebarProvider, LeftSidebarProvider, RightSidebarProvider } from "@/components/ui/sidebar";
 import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar, ChatRightSidebarTrigger } from "@/components/chat/sidebar/ChatRightSidebar";
+import { ChatLeftSidebarTrigger } from "@/components/chat/sidebar/ChatLeftSidebarTrigger";
 
 // Lazy load components that aren't immediately visible
 const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => ({ default: module.ChatList })));
@@ -27,6 +28,7 @@ const ChatHeader = ({ hasCompletedAssessment, userArchetype }: {
   return (
     <div className="enhanced-header p-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
+        <ChatLeftSidebarTrigger />
         <h1 className="font-medium text-lg bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
           Kai | EQ Coach
         </h1>

@@ -1,13 +1,12 @@
 
 import { useAuth } from "@/context/AuthContext";
-import { ExternalLink, Menu, PanelLeft } from "lucide-react";
+import { ExternalLink, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarTrigger,
   SidebarRail,
   useSidebar
 } from "@/components/ui/sidebar";
@@ -19,25 +18,11 @@ import { DailyChallenge } from "./DailyChallenge";
 
 export function EnhancedChatSidebar() {
   const { user } = useAuth();
-  // Use the left sidebar context specifically
-  const { toggleSidebar } = useSidebar("left");
   
   if (!user) return null;
   
   return (
     <>
-      {/* Mobile trigger button - only visible on small screens */}
-      <div className="md:hidden absolute left-4 top-4 z-10">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo"
-          onClick={() => toggleSidebar()}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
-      
       {/* The sidebar itself */}
       <Sidebar 
         side="left" 
