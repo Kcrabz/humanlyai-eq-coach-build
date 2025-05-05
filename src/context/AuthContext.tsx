@@ -76,6 +76,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Implement reset password functionality
     console.log("Reset password for:", email);
   };
+
+  // Wrapper functions to ensure type compatibility
+  const updateProfile = async (data: any): Promise<void> => {
+    await profileCore.updateProfile(user?.id, data);
+  };
+
+  const forceUpdateProfile = async (data: any): Promise<void> => {
+    await profileCore.forceUpdateProfile(data);
+  };
+
+  const setName = async (name: string): Promise<void> => {
+    await profileActions.setName(name);
+  };
+
+  const setArchetype = async (archetype: string): Promise<void> => {
+    await profileActions.setArchetype(archetype as EQArchetype);
+  };
+
+  const setCoachingMode = async (mode: string): Promise<void> => {
+    await profileActions.setCoachingMode(mode as CoachingMode);
+  };
+
+  const setOnboarded = async (value: boolean): Promise<void> => {
+    await profileActions.setOnboarded(value);
+  };
   
   // Combined context value
   const contextValue: AuthContextType = {
@@ -87,12 +112,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout: authLogout,
     signup,
     resetPassword,
-    updateProfile: profileCore.updateProfile,
-    forceUpdateProfile: profileCore.forceUpdateProfile,
-    setName: profileActions.setName,
-    setArchetype: profileActions.setArchetype,
-    setCoachingMode: profileActions.setCoachingMode,
-    setOnboarded: profileActions.setOnboarded,
+    updateProfile,
+    forceUpdateProfile,
+    setName,
+    setArchetype,
+    setCoachingMode,
+    setOnboarded,
     setUser,
     getUserSubscription,
     userHasArchetype
