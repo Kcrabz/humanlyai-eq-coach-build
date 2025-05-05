@@ -1,11 +1,8 @@
 
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { useAuth } from "@/context/AuthContext";
 
 const LoginPage = () => {
-  const { isLoading } = useAuth();
-  
   return (
     <PageLayout>
       <div className="flex items-center justify-center py-12 animate-scale-fade-in">
