@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 // Create a component that uses the useAuthNavigation hook
+// This fixes the "rendered fewer hooks than expected" error by ensuring we always call the same hooks
 const AuthNavigationHandler = () => {
   const { user, isLoading } = useAuth();
   const location = useLocation();
@@ -30,13 +31,8 @@ const AuthNavigationHandler = () => {
     console.log("Route changed to:", location.pathname, location.search);
   }, [location]);
   
-  // Only apply auth navigation on non-auth pages
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
-  if (!isAuthPage) {
-    useAuthNavigation(user, isLoading);
-  } else {
-    console.log("Skipping auth navigation on auth page:", location.pathname);
-  }
+  // Always call the hook, but let it determine internally if it should take action
+  useAuthNavigation(user, isLoading);
   
   return null; // This component doesn't render anything
 };
