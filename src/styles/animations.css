@@ -18,7 +18,7 @@
   }
 }
 
-/* Word-by-word animation */
+/* Word-by-word animation with smoother transitions */
 @keyframes fade-in-word {
   from {
     opacity: 0;
@@ -33,7 +33,7 @@
 .word-fade-in {
   display: inline-block;
   opacity: 0;
-  animation: fade-in-word 0.4s ease-out forwards;
+  animation: fade-in-word 0.4s ease-in-out forwards;
 }
 
 /* Input focus animation with easier transition */

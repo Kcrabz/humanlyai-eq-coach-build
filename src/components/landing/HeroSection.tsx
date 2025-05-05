@@ -25,13 +25,24 @@ const HeroSection = ({
     
     // Create staggered animations for each word
     subtitleWords.forEach((_, index) => {
+      let delay = 400;
+      
+      // Add extra pause after "Meet Kai"
+      if (index <= 1) {
+        delay += index * 100; // Normal timing for first two words
+      } else if (index === 2) {
+        delay += 200 + 400; // Add a 400ms pause after "Meet Kai"
+      } else {
+        delay += 200 + 400 + ((index - 2) * 100); // Continue normal timing after the pause
+      }
+      
       const wordTimer = setTimeout(() => {
         setVisibleWords(prev => {
           const updated = [...prev];
           updated[index] = true;
           return updated;
         });
-      }, 400 + (index * 100)); // Reduced delay from 150ms to 100ms between words
+      }, delay);
       
       return () => clearTimeout(wordTimer);
     });
@@ -54,7 +65,7 @@ const HeroSection = ({
               {subtitleWords.map((word, index) => (
                 <span 
                   key={index} 
-                  className={`inline-block transition-opacity duration-200 ease-out ${visibleWords[index] ? 'opacity-100' : 'opacity-0'}`}
+                  className={`inline-block transition-opacity duration-300 ease-in-out ${visibleWords[index] ? 'opacity-100' : 'opacity-0'}`}
                   style={{ 
                     transitionDelay: `${index * 0.1}s`,
                     marginRight: index < subtitleWords.length - 1 ? '0.15em' : '0' 
