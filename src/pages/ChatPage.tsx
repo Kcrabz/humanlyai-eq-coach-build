@@ -1,4 +1,3 @@
-
 import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -10,7 +9,7 @@ import { ARCHETYPES } from "@/lib/constants";
 import { ExternalLink, ClipboardCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EQArchetype } from "@/types";
-import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar, ChatRightSidebarTrigger } from "@/components/chat/sidebar/ChatRightSidebar";
 
@@ -100,8 +99,8 @@ const ChatPage = () => {
   const hasCompletedAssessment = !!userArchetype && userArchetype !== undefined;
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <PageLayout fullWidth>
+    <PageLayout fullWidth>
+      <SidebarProvider defaultOpen={true}>
         <ChatProvider>
           <div className="flex h-screen overflow-hidden">
             {/* Left Sidebar */}
@@ -146,15 +145,11 @@ const ChatPage = () => {
             </div>
             
             {/* Right Sidebar (User Profile & Settings) */}
-            <SidebarProvider defaultOpen={false}>
-              <Suspense fallback={<div className="hidden"></div>}>
-                <ChatRightSidebar />
-              </Suspense>
-            </SidebarProvider>
+            <ChatRightSidebar />
           </div>
         </ChatProvider>
-      </PageLayout>
-    </SidebarProvider>
+      </SidebarProvider>
+    </PageLayout>
   );
 };
 

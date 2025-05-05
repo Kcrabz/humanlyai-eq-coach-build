@@ -34,7 +34,7 @@ export function ChatRightSidebarTrigger() {
       size="icon" 
       className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300" 
       aria-label="Toggle User Menu"
-      onClick={toggleSidebar}
+      onClick={() => toggleSidebar()}
     >
       <Menu className="h-5 w-5" />
     </Button>
@@ -44,6 +44,7 @@ export function ChatRightSidebarTrigger() {
 export function ChatRightSidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { open, setOpen, isMobile } = useSidebar();
   
   if (!user) return null;
   
