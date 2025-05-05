@@ -16,7 +16,8 @@ export async function sendMessage(
   },
   setLastSentMessage: (content: string | null) => void,
   setIsLoading: (loading: boolean) => void,
-  setUsageInfo: (info: any) => void
+  setUsageInfo: (info: any) => void,
+  currentMessages: any[] = []
 ) {
   if (!content.trim()) return;
 
@@ -34,6 +35,7 @@ export async function sendMessage(
     const { data, error: apiError } = await supabase.functions.invoke('chat-completion', {
       body: {
         message: content,
+        messages: currentMessages,
         stream: false
       }
     });
