@@ -3,11 +3,12 @@ import { QuizOption } from '@/components/quiz/types';
 
 /**
  * Determines EQ potential category based on total score
+ * Adjusted thresholds for the 10-question quiz (max score 50)
  */
 export const determineEQPotentialCategory = (score: number): 'High EQ Potential' | 'Developing EQ' | 'Growth Opportunity' => {
-  if (score >= 60) {
+  if (score >= 40) {
     return 'High EQ Potential';
-  } else if (score >= 40) {
+  } else if (score >= 25) {
     return 'Developing EQ';
   } else {
     return 'Growth Opportunity';
@@ -106,7 +107,7 @@ export const calculateLocalResults = (
     }
   });
 
-  // Determine EQ potential category
+  // Determine EQ potential category - using updated thresholds
   const eqPotentialCategory = determineEQPotentialCategory(eqPotentialScore);
   
   // Determine strengths and growth areas based on highest and lowest scores

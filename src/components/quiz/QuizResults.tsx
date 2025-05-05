@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { ARCHETYPES } from "@/lib/constants";
@@ -114,7 +113,7 @@ export const QuizResults = ({
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="p-4 bg-humanly-teal/10 rounded-lg text-center">
-          <h3 className="font-medium mb-1">Your EQ Potential Score: {result.eqPotentialScore} / 75</h3>
+          <h3 className="font-medium mb-1">Your EQ Potential Score: {result.eqPotentialScore} / 50</h3>
           <p className="text-sm">{result.eqPotentialCategory}</p>
         </div>
         

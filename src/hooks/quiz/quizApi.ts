@@ -30,9 +30,9 @@ export const processQuizResults = async (
       }
     });
     
-    // Check we have all 15 answers
-    if (answersArray.length !== 15) {
-      console.error("Error preparing quiz answers: Expected 15 answers but got", answersArray.length);
+    // Check we have all 10 answers (updated from 15)
+    if (answersArray.length !== 10) {
+      console.error("Error preparing quiz answers: Expected 10 answers but got", answersArray.length);
       toast.error("Error analyzing your results. Using local calculation instead.");
       return calculateLocalResults(answers, answerScores, quizQuestions);
     }
