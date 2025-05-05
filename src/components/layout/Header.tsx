@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -15,6 +15,8 @@ import { generateAvatar } from "@/lib/utils";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
+  const location = useLocation();
+  const isOnChatPage = location.pathname === "/chat";
 
   return (
     <header className="enhanced-header py-4 px-4 sm:px-6 sticky top-0 z-30">
@@ -37,11 +39,15 @@ export function Header() {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
-              <Link to="/chat">
-                <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
-                  Chat with Coach
-                </Button>
-              </Link>
+              {/* Only show "Chat with Coach" button when not on the chat page */}
+              {!isOnChatPage && (
+                <Link to="/chat">
+                  <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
+                    Chat with Coach
+                  </Button>
+                </Link>
+              )}
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full transition-transform duration-300 hover:scale-110 hover:shadow-sm">

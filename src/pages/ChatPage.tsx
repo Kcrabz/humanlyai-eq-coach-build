@@ -6,57 +6,36 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
-import { ExternalLink, ClipboardCheck, Menu } from "lucide-react";
+import { ExternalLink, ClipboardCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EQArchetype } from "@/types";
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { markIntroductionAsShown } from "@/lib/introductionMessages";
+import { ChatRightSidebar, ChatRightSidebarTrigger } from "@/components/chat/sidebar/ChatRightSidebar";
 
 // Lazy load components that aren't immediately visible
 const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => ({ default: module.ChatList })));
 const ChatUsage = lazy(() => import("@/components/chat/ChatUsage").then(module => ({ default: module.ChatUsage })));
 const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
 
-// Create a HeaderWithSidebar component to use the useSidebar hook
-const HeaderWithSidebar = ({ user, hasCompletedAssessment, userArchetype }: { 
-  user: any, 
+// Simplified header component without the user menu
+const ChatHeader = ({ hasCompletedAssessment, userArchetype }: { 
   hasCompletedAssessment: boolean, 
   userArchetype: string | undefined 
 }) => {
-  const { toggleSidebar } = useSidebar();
-  const navigate = useNavigate();
-  
   return (
     <div className="enhanced-header p-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        {/* Desktop sidebar trigger */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300" 
-          aria-label="Toggle Sidebar"
-          onClick={toggleSidebar}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-        
-        <div>
-          <h1 className="font-medium text-lg bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
-            Kai | EQ Coach
-          </h1>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {hasCompletedAssessment ? `Personalized for ${userArchetype}` : "General EQ coaching available"}
-          </p>
-        </div>
+        <h1 className="font-medium text-lg bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
+          Kai | EQ Coach
+        </h1>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {hasCompletedAssessment ? `Personalized for ${userArchetype}` : "General EQ coaching available"}
+        </p>
       </div>
-      <Button 
-        variant="outline" 
-        size="sm" 
-        onClick={() => navigate("/subscription")} 
-        className="rounded-full border-humanly-indigo/20 hover:bg-humanly-indigo/5 text-humanly-indigo transition-all duration-300"
-      >
-        {user.subscription_tier === "free" ? "Upgrade" : "Manage Plan"}
-      </Button>
+      
+      {/* Right sidebar trigger button */}
+      <ChatRightSidebarTrigger />
     </div>
   );
 };
@@ -124,15 +103,14 @@ const ChatPage = () => {
       <PageLayout fullWidth>
         <ChatProvider>
           <div className="flex h-screen overflow-hidden">
-            {/* Lazy load sidebar with suspense fallback */}
+            {/* Left Sidebar */}
             <Suspense fallback={<div className="w-64 zen-sidebar animate-pulse"></div>}>
               <EnhancedChatSidebar />
             </Suspense>
             
             {/* Chat Area */}
             <div className="flex-1 flex flex-col overflow-hidden main-content">
-              <HeaderWithSidebar 
-                user={user} 
+              <ChatHeader 
                 hasCompletedAssessment={hasCompletedAssessment}
                 userArchetype={userArchetype}
               />
@@ -165,6 +143,13 @@ const ChatPage = () => {
                 <ChatInput />
               </div>
             </div>
+            
+            {/* Right Sidebar (User Profile & Settings) */}
+            <SidebarProvider defaultOpen={false}>
+              <Suspense fallback={<div className="hidden"></div>}>
+                <ChatRightSidebar />
+              </Suspense>
+            </SidebarProvider>
           </div>
         </ChatProvider>
       </PageLayout>

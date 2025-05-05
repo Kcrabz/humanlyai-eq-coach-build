@@ -34,6 +34,11 @@
   @apply bg-white/70 backdrop-blur-md border-r border-gray-100/70;
 }
 
+/* User sidebar styling */
+.user-sidebar {
+  @apply bg-white/70 backdrop-blur-md border-l border-gray-100/70;
+}
+
 /* Main content area */
 .main-content {
   @apply flex-1 overflow-auto bg-gradient-to-br from-white via-white to-humanly-pastel-lavender/20;
