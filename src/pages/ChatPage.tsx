@@ -69,25 +69,25 @@ const ChatPage = () => {
   return (
     <SidebarProvider defaultOpen={true}>
       <PageLayout fullWidth>
-        <div className="flex h-screen overflow-hidden">
-          {/* Enhanced Sidebar - Added */}
-          <EnhancedChatSidebar />
-          
-          {/* Chat Area */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <div className="border-b p-4 flex items-center justify-between bg-white/50 backdrop-blur-sm shadow-sm">
-              <div>
-                <h1 className="font-bold bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent">Kai | EQ Coach</h1>
-                <p className="text-xs text-muted-foreground">
-                  {hasCompletedAssessment ? `Personalized for ${userArchetype}` : "General EQ coaching available"}
-                </p>
-              </div>
-              <Button variant="outline" size="sm" onClick={() => navigate("/subscription")} className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
-                {user.subscription_tier === "free" ? "Upgrade" : "Manage Plan"}
-              </Button>
-            </div>
+        <ChatProvider>
+          <div className="flex h-screen overflow-hidden">
+            {/* Enhanced Sidebar - Added */}
+            <EnhancedChatSidebar />
             
-            <ChatProvider>
+            {/* Chat Area */}
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="border-b p-4 flex items-center justify-between bg-white/50 backdrop-blur-sm shadow-sm">
+                <div>
+                  <h1 className="font-bold bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent">Kai | EQ Coach</h1>
+                  <p className="text-xs text-muted-foreground">
+                    {hasCompletedAssessment ? `Personalized for ${userArchetype}` : "General EQ coaching available"}
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => navigate("/subscription")} className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
+                  {user.subscription_tier === "free" ? "Upgrade" : "Manage Plan"}
+                </Button>
+              </div>
+              
               <div className="flex-1 overflow-hidden flex flex-col">
                 {!hasCompletedAssessment && <Alert className="m-4 bg-humanly-pastel-peach/20 border-humanly-teal/30">
                     <ClipboardCheck className="h-4 w-4 text-humanly-teal" />
@@ -102,9 +102,9 @@ const ChatPage = () => {
                 <ChatList />
                 <ChatInput />
               </div>
-            </ChatProvider>
+            </div>
           </div>
-        </div>
+        </ChatProvider>
       </PageLayout>
     </SidebarProvider>
   );
