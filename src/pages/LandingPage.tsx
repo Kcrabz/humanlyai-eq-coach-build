@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -37,7 +36,7 @@ const LandingPage = () => {
               <span className="block mt-2">Your AI EQ Coach</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
-              Grow your emotional intelligence one daily conversation at a time.
+              Being human's hard. Growth doesn't have to be.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" onClick={handleGetStarted}>

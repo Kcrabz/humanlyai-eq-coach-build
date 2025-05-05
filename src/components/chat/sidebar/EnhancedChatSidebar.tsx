@@ -36,7 +36,7 @@ export function EnhancedChatSidebar() {
           <div className="mb-4 p-1">
             <h2 className="font-medium text-base bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent flex items-center gap-2">
               <PanelLeft className="h-4 w-4 text-humanly-indigo" />
-              Your EQ Coach
+              Emotion Buddy
             </h2>
             <p className="text-xs text-muted-foreground mt-1">
               Daily practice for emotional intelligence
