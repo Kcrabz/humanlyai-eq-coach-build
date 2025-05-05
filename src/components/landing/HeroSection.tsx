@@ -1,16 +1,13 @@
-
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-
 interface HeroSectionProps {
   onGetStarted: () => void;
 }
-
-const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
+const HeroSection = ({
+  onGetStarted
+}: HeroSectionProps) => {
   const navigate = useNavigate();
-  
-  return (
-    <section className="py-20 md:py-28 relative overflow-hidden">
+  return <section className="py-20 md:py-28 relative overflow-hidden">
       {/* Decorative blobs */}
       <div className="blob bg-humanly-purple/20 w-[300px] h-[300px] top-[-100px] left-[-100px]" />
       <div className="blob bg-humanly-purple-light/20 w-[400px] h-[400px] bottom-[-200px] right-[-200px]" />
@@ -21,7 +18,7 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
             <span className="bg-gradient-to-r from-humanly-purple to-humanly-purple-light bg-clip-text text-transparent">
               HumanlyAI
             </span>
-            <span className="block mt-2">Meet Kai, the AI Coach for the Human in You</span>
+            <span className="block mt-2">Meet Kai, the AI Coach for the Human in You.</span>
           </h1>
           <p className="text-xl text-muted-foreground mb-8">
             Being human's hard. Growth doesn't have to be.
@@ -75,8 +72,6 @@ const HeroSection = ({ onGetStarted }: HeroSectionProps) => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HeroSection;
