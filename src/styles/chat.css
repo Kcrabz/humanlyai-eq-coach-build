@@ -1,24 +1,24 @@
 
 /* Enhanced chat bubble */
 .enhanced-chat-bubble {
-  @apply rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md;
+  @apply rounded-2xl shadow-sm transition-all duration-300 hover:shadow-soft;
 }
 
 .enhanced-chat-user {
-  @apply bg-gradient-to-br from-humanly-teal to-humanly-teal-dark/90 text-white;
+  @apply bg-gradient-to-br from-humanly-indigo to-humanly-indigo-dark/90 text-white;
 }
 
 .enhanced-chat-ai {
-  @apply bg-gradient-to-br from-white to-humanly-gray-lightest/80 text-gray-800;
+  @apply bg-gradient-to-br from-white to-humanly-pastel-lavender/30 text-gray-800 border border-humanly-pastel-lavender/30;
 }
 
-/* Chat markdown content styling */
+/* Chat markdown content styling with improved readability */
 .chat-md p {
-  @apply mb-3 leading-relaxed;
+  @apply mb-4 leading-relaxed;
 }
 
 .chat-md h1, .chat-md h2, .chat-md h3 {
-  @apply font-medium mb-2 mt-4;
+  @apply font-medium mb-3 mt-4;
 }
 
 .chat-md h1 {
@@ -34,7 +34,7 @@
 }
 
 .chat-md ul, .chat-md ol {
-  @apply my-3 ml-5;
+  @apply my-4 ml-5 space-y-2;
 }
 
 .chat-md ul {
@@ -46,42 +46,42 @@
 }
 
 .chat-md li {
-  @apply mb-1;
+  @apply mb-1.5;
 }
 
 .chat-md blockquote {
-  @apply border-l-4 border-humanly-teal bg-humanly-pastel-lavender/20 pl-4 py-2 my-3 rounded-r;
+  @apply border-l-4 border-humanly-indigo bg-humanly-pastel-lavender/20 pl-4 py-3 my-4 rounded-r;
 }
 
 .chat-md code {
-  @apply bg-humanly-gray-lightest text-humanly-teal-dark px-1 rounded;
+  @apply bg-humanly-pastel-lavender/20 text-humanly-indigo-dark px-1.5 py-0.5 rounded;
 }
 
 .chat-md pre {
-  @apply bg-humanly-gray-lightest p-3 rounded-md my-3 overflow-auto;
+  @apply bg-humanly-gray-lightest p-4 rounded-lg my-4 overflow-auto shadow-inner-soft;
 }
 
 .chat-md pre code {
-  @apply bg-transparent p-0;
+  @apply bg-transparent p-0 shadow-none;
 }
 
 .chat-md a {
-  @apply text-humanly-teal underline hover:text-humanly-teal-dark;
+  @apply text-humanly-indigo underline hover-link;
 }
 
 .chat-md table {
-  @apply w-full my-3 border-collapse;
+  @apply w-full my-4 border-collapse rounded-lg overflow-hidden shadow-soft;
 }
 
 .chat-md table th, .chat-md table td {
-  @apply border border-gray-200 p-2;
+  @apply border border-gray-100 p-3;
 }
 
 .chat-md table th {
-  @apply bg-humanly-gray-lightest;
+  @apply bg-humanly-pastel-lavender/20 text-humanly-indigo-dark;
 }
 
-/* User message specific styling */
+/* User message specific styling with better contrast */
 .prose-invert {
   @apply text-white;
 }
@@ -103,5 +103,32 @@
 
 /* Ensure links in user bubbles are properly styled */
 .prose-invert a {
-  @apply text-white underline hover:text-gray-200;
+  @apply text-white underline decoration-white/70 hover:decoration-white;
+}
+
+/* Breathing dots for "typing" indicator */
+.typing-indicator {
+  @apply flex items-center space-x-1;
+}
+
+.typing-dot {
+  @apply w-2 h-2 rounded-full bg-humanly-indigo/70;
+  animation: typing-bounce 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing-bounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-4px);
+  }
 }

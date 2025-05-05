@@ -25,7 +25,15 @@ export function EnhancedChatSidebar() {
     <>
       {/* Mobile trigger button - only visible on small screens */}
       <div className="md:hidden absolute left-4 top-4 z-10">
-        <SidebarTrigger />
+        <SidebarTrigger asChild>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </SidebarTrigger>
       </div>
       
       {/* The sidebar itself */}
@@ -33,23 +41,23 @@ export function EnhancedChatSidebar() {
         side="left" 
         variant="sidebar" 
         collapsible="offcanvas"
-        className="border-r border-gray-100"
+        className="zen-sidebar"
       >
-        <SidebarRail className="hover:bg-gray-50" />
+        <SidebarRail className="hover:bg-humanly-pastel-lavender/20" />
         
         <SidebarHeader>
-          <div className="mb-2">
-            <h2 className="font-semibold bg-gradient-to-r from-humanly-teal to-humanly-green bg-clip-text text-transparent flex items-center gap-2">
-              <PanelLeft className="h-4 w-4 text-humanly-teal" />
+          <div className="mb-4 p-1">
+            <h2 className="font-medium text-base bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent flex items-center gap-2">
+              <PanelLeft className="h-4 w-4 text-humanly-indigo" />
               Your EQ Coach
             </h2>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground mt-1">
               Daily practice for emotional intelligence
             </p>
           </div>
         </SidebarHeader>
         
-        <SidebarContent className="space-y-6">
+        <SidebarContent className="space-y-8 px-1">
           {/* Progress tracker */}
           <ProgressTracker />
           
@@ -61,8 +69,13 @@ export function EnhancedChatSidebar() {
         </SidebarContent>
         
         <SidebarFooter>
-          <div className="mt-auto">
-            <Button variant="outline" size="sm" className="w-full text-xs rounded-lg bg-white hover:bg-humanly-pastel-lavender/30 border-gray-200 transition-all duration-300" onClick={() => window.open("https://humanlyai.me/support", "_blank")}>
+          <div className="mt-auto p-3">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full text-xs rounded-lg bg-white hover:bg-humanly-pastel-lavender/30 border-gray-200 text-humanly-indigo/80 transition-all duration-300" 
+              onClick={() => window.open("https://humanlyai.me/support", "_blank")}
+            >
               <ExternalLink className="h-3 w-3 mr-1" />
               Report an Issue
             </Button>

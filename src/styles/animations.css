@@ -1,12 +1,12 @@
 
-/* Blob animations */
+/* Blob animations with improved calmness */
 .blob-animation {
-  animation: blob-float 8s ease-in-out infinite;
+  animation: blob-float 12s ease-in-out infinite;
 }
 
 .blob-animation-delayed {
-  animation: blob-float 8s ease-in-out infinite;
-  animation-delay: 2s;
+  animation: blob-float 12s ease-in-out infinite;
+  animation-delay: 3s;
 }
 
 @keyframes blob-float {
@@ -14,24 +14,24 @@
     transform: translateY(0) scale(1);
   }
   50% {
-    transform: translateY(-20px) scale(1.05);
+    transform: translateY(-15px) scale(1.03);
   }
 }
 
-/* Input focus animation */
+/* Input focus animation with easier transition */
 .input-focus-animation:focus {
-  @apply ring-2 ring-primary/50 transition-all duration-300;
+  @apply ring-2 ring-primary/30 transition-all duration-500;
   transform: scale(1.01);
 }
 
-/* Selection card animation */
+/* Selection card animation with smoother effects */
 .selection-card {
-  @apply transition-all duration-300 relative overflow-hidden;
+  @apply transition-all duration-300 relative overflow-hidden shadow-soft;
 }
 
 .selection-card::after {
   content: '';
-  @apply absolute inset-0 bg-gradient-to-r from-humanly-teal/10 to-humanly-green/10 opacity-0 transition-opacity duration-300;
+  @apply absolute inset-0 bg-gradient-to-r from-humanly-indigo/5 to-humanly-teal/5 opacity-0 transition-opacity duration-300;
 }
 
 .selection-card:hover::after {
@@ -39,20 +39,20 @@
 }
 
 .selection-card.selected {
-  @apply scale-[1.02] shadow-soft;
+  @apply scale-[1.02] shadow-zen;
 }
 
 .selection-card.selected::after {
-  @apply opacity-100 bg-gradient-to-r from-humanly-teal/20 to-humanly-green/20;
+  @apply opacity-100 bg-gradient-to-r from-humanly-indigo/10 to-humanly-teal/10;
 }
 
-/* Page transition animations */
+/* Enhanced page transition animations */
 .page-transition-enter {
   @apply opacity-0;
 }
 
 .page-transition-enter-active {
-  @apply opacity-100 transition-opacity duration-300;
+  @apply opacity-100 transition-opacity duration-500;
 }
 
 .page-transition-exit {
@@ -63,7 +63,7 @@
   @apply opacity-0 transition-opacity duration-300;
 }
 
-/* Animation for new messages */
+/* Improved animation for new messages */
 @keyframes slide-up {
   0% {
     transform: translateY(10px);
@@ -76,5 +76,42 @@
 }
 
 .animate-slide-up {
-  animation: slide-up 0.3s ease-out;
+  animation: slide-up 0.5s cubic-bezier(0.26, 0.54, 0.32, 1) forwards;
+}
+
+/* New hover link animation */
+.hover-link {
+  @apply relative inline-block;
+}
+
+.hover-link:after {
+  content: '';
+  @apply absolute w-full h-0.5 bg-humanly-indigo/70 bottom-0 left-0 scale-x-0 transition-transform duration-300 origin-bottom-right;
+}
+
+.hover-link:hover:after {
+  @apply scale-x-100 origin-bottom-left;
+}
+
+/* Zen hover effect for cards */
+.zen-hover {
+  @apply transition-all duration-500;
+}
+
+.zen-hover:hover {
+  @apply -translate-y-1 shadow-zen;
+}
+
+/* Breathing animation for meditation elements */
+.breathe-animation {
+  animation: breathe 8s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }

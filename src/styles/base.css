@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lato:wght@300;400;700&family=Playfair+Display:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,7 +7,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 20% 98%;
     --foreground: 240 10% 3.9%;
 
     --card: 0 0% 100%;
@@ -16,16 +16,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    --primary: 188 100% 35%;
+    --primary: 240 72% 67%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 92 68% 60%;
+    --secondary: 188 100% 35%;
     --secondary-foreground: 240 5.9% 10%;
 
     --muted: 240 4.8% 95.9%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    --accent: 92 68% 60%;
+    --accent: 240 5% 96%;
     --accent-foreground: 240 5.9% 10%;
 
     --destructive: 0 84.2% 60.2%;
@@ -35,9 +35,9 @@
     --input: 240 5.9% 90%;
     --ring: 188 100% 35%;
 
-    --radius: 0.75rem;
+    --radius: 0.85rem;
 
-    --sidebar-background: 0 0% 98%;
+    --sidebar-background: 210 30% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 188 100% 35%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -48,25 +48,25 @@
   }
 
   .dark {
-    --background: 20 14.3% 4.1%;
-    --foreground: 0 0% 95%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
 
-    --card: 24 9.8% 10%;
-    --card-foreground: 0 0% 95%;
+    --card: 240 10% 7%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 95%;
+    --popover: 240 10% 5%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 188 100% 35%;
+    --primary: 240 72% 67%;
     --primary-foreground: 240 5.9% 10%;
 
-    --secondary: 92 68% 60%;
+    --secondary: 188 100% 35%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 15%;
+    --muted: 240 6% 17%;
     --muted-foreground: 240 5% 64.9%;
 
-    --accent: 92 68% 60%;
+    --accent: 240 6% 15%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -84,10 +84,13 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    letter-spacing: -0.01em;
+    line-height: 1.65;
   }
 
   h1, h2, h3, h4, h5 {
     @apply font-display font-medium tracking-tight;
+    line-height: 1.25;
   }
 }

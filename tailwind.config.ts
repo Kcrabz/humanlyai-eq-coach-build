@@ -79,14 +79,23 @@ export default {
 						DEFAULT: '#8E9196',
 						dark: '#403E43'
 					},
-					// New pastel colors inspired by calmi.so
+					// New colors for the Kai design
+					indigo: {
+						light: '#8B9CFF',
+						DEFAULT: '#6366F1',
+						dark: '#4F46E5',
+					},
+					// Adding new pastel colors inspired by the design spec
 					pastel: {
 						blue: '#D3E5F8',
 						lavender: '#E5DEFF',
 						mint: '#D6F5E6',
 						peach: '#FFE8D6',
 						pink: '#FFE0E6',
-						yellow: '#FFF7D6'
+						yellow: '#FFF7D6',
+						sage: '#E0E7E0',    // New sage color
+						rose: '#F5E0E5',    // New dusty rose color
+						warmGray: '#F0EAE6' // New warm gray
 					}
 				}
 			},
@@ -135,6 +144,14 @@ export default {
 				'slide-up': {
 					'0%': { transform: 'translateY(10px)', opacity: '0' },
 					'100%': { transform: 'translateY(0)', opacity: '1' }
+				},
+				'breathe': {
+					'0%, 100%': { transform: 'scale(1)' },
+					'50%': { transform: 'scale(1.03)' }
+				},
+				'subtle-bounce': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-3px)' }
 				}
 			},
 			animation: {
@@ -144,18 +161,22 @@ export default {
 				'gradient-flow': 'gradient-flow 6s ease infinite',
 				'float': 'float 6s ease-in-out infinite',
 				'scale-fade-in': 'scale-fade-in 0.4s ease-out',
-				'slide-up': 'slide-up 0.3s ease-out'
+				'slide-up': 'slide-up 0.3s ease-out',
+				'breathe': 'breathe 8s ease-in-out infinite',
+				'subtle-bounce': 'subtle-bounce 3s ease-in-out infinite'
 			},
 			fontFamily: {
-				sans: ['Inter', 'Lato', 'system-ui', 'sans-serif'],
-				display: ['Inter', 'Lato', 'system-ui', 'sans-serif']
+				sans: ['Manrope', 'Inter', 'system-ui', 'sans-serif'],
+				display: ['Manrope', 'Inter', 'system-ui', 'sans-serif']
 			},
 			backgroundSize: {
 				'size-200': '200% 200%',
 			},
 			boxShadow: {
 				'soft': '0 4px 20px rgba(0, 0, 0, 0.05)',
-				'soft-lg': '0 8px 30px rgba(0, 0, 0, 0.07)'
+				'soft-lg': '0 8px 30px rgba(0, 0, 0, 0.07)',
+				'inner-soft': 'inset 0 1px 3px rgba(0, 0, 0, 0.05)',
+				'zen': '0 2px 10px rgba(0, 0, 0, 0.03), 0 6px 20px rgba(0, 0, 0, 0.03)'
 			},
 			typography: (theme) => ({
 				DEFAULT: {

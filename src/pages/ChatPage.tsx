@@ -27,27 +27,34 @@ const HeaderWithSidebar = ({ user, hasCompletedAssessment, userArchetype }: {
   const navigate = useNavigate();
   
   return (
-    <div className="border-b p-4 flex items-center justify-between bg-white/50 backdrop-blur-sm shadow-sm">
-      <div className="flex items-center gap-2">
+    <div className="enhanced-header p-4 flex items-center justify-between">
+      <div className="flex items-center gap-3">
         {/* Desktop sidebar trigger */}
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-8 w-8 hidden md:flex" 
+          className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300" 
           aria-label="Toggle Sidebar"
           onClick={toggleSidebar}
         >
-          <Menu className="h-4 w-4" />
+          <Menu className="h-5 w-5" />
         </Button>
         
         <div>
-          <h1 className="font-bold bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent">Kai | EQ Coach</h1>
-          <p className="text-xs text-muted-foreground">
+          <h1 className="font-medium text-lg bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
+            Kai | EQ Coach
+          </h1>
+          <p className="text-xs text-muted-foreground mt-0.5">
             {hasCompletedAssessment ? `Personalized for ${userArchetype}` : "General EQ coaching available"}
           </p>
         </div>
       </div>
-      <Button variant="outline" size="sm" onClick={() => navigate("/subscription")} className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
+      <Button 
+        variant="outline" 
+        size="sm" 
+        onClick={() => navigate("/subscription")} 
+        className="rounded-full border-humanly-indigo/20 hover:bg-humanly-indigo/5 text-humanly-indigo transition-all duration-300"
+      >
         {user.subscription_tier === "free" ? "Upgrade" : "Manage Plan"}
       </Button>
     </div>
@@ -82,7 +89,9 @@ const ChatPage = () => {
   if (isLoading || !isAuthenticated || !user?.onboarded) {
     return <PageLayout fullWidth>
         <div className="flex justify-center items-center h-96">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-humanly-teal"></div>
+          <div className="animate-breathe rounded-full h-14 w-14 border-2 border-humanly-indigo/30 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-humanly-indigo"></div>
+          </div>
         </div>
       </PageLayout>;
   }
@@ -98,12 +107,12 @@ const ChatPage = () => {
         <ChatProvider>
           <div className="flex h-screen overflow-hidden">
             {/* Lazy load sidebar with suspense fallback */}
-            <Suspense fallback={<div className="w-64 bg-gray-50"></div>}>
+            <Suspense fallback={<div className="w-64 zen-sidebar animate-pulse"></div>}>
               <EnhancedChatSidebar />
             </Suspense>
             
             {/* Chat Area */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden main-content">
               <HeaderWithSidebar 
                 user={user} 
                 hasCompletedAssessment={hasCompletedAssessment}
@@ -111,23 +120,25 @@ const ChatPage = () => {
               />
               
               <div className="flex-1 overflow-hidden flex flex-col">
-                {!hasCompletedAssessment && <Alert className="m-4 bg-humanly-pastel-peach/20 border-humanly-teal/30">
-                    <ClipboardCheck className="h-4 w-4 text-humanly-teal" />
+                {!hasCompletedAssessment && <Alert className="m-4 bg-humanly-pastel-lavender/20 border-humanly-indigo/30 rounded-xl shadow-soft">
+                    <ClipboardCheck className="h-4 w-4 text-humanly-indigo" />
                     <AlertDescription className="text-sm">
                       For more personalized coaching, consider{" "}
-                      <Button variant="link" size="sm" className="p-0 h-auto text-humanly-teal underline" onClick={handleStartAssessment}>
+                      <Button variant="link" size="sm" className="p-0 h-auto text-humanly-indigo hover:text-humanly-indigo-dark underline decoration-humanly-indigo/30" onClick={handleStartAssessment}>
                         completing your EQ assessment
                       </Button>
                     </AlertDescription>
                   </Alert>}
                   
-                <Suspense fallback={<div className="h-6 bg-gray-50 m-4"></div>}>
+                <Suspense fallback={<div className="h-6 bg-humanly-pastel-lavender/10 animate-pulse m-4 rounded-md"></div>}>
                   <ChatUsage />
                 </Suspense>
                 
                 <Suspense fallback={
                   <div className="flex-1 flex justify-center items-center">
-                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-humanly-teal"></div>
+                    <div className="animate-breathe rounded-full h-14 w-14 border-2 border-humanly-indigo/30 flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-humanly-indigo"></div>
+                    </div>
                   </div>
                 }>
                   <ChatList />

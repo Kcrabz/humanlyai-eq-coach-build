@@ -1,5 +1,50 @@
 
 /* Enhanced header styling */
 .enhanced-header {
-  @apply border-b border-gray-100 bg-white/70 backdrop-blur-sm shadow-sm;
+  @apply border-b border-gray-100/70 bg-white/70 backdrop-blur-md shadow-sm;
+}
+
+/* Page container with improved spacing */
+.page-container {
+  @apply max-w-5xl mx-auto px-4 py-8 md:px-8 md:py-12;
+}
+
+/* Section container */
+.section-container {
+  @apply py-8 md:py-12;
+}
+
+/* Content container */
+.content-container {
+  @apply max-w-3xl mx-auto;
+}
+
+/* Zen card */
+.zen-card {
+  @apply bg-white/80 backdrop-blur-sm border border-gray-100/70 rounded-xl p-6 shadow-soft;
+}
+
+/* Meditation space */
+.meditation-space {
+  @apply bg-gradient-to-br from-humanly-pastel-lavender/30 to-humanly-pastel-blue/20 p-8 rounded-xl border border-humanly-pastel-lavender/20 shadow-inner-soft;
+}
+
+/* Sidebar styling */
+.zen-sidebar {
+  @apply bg-white/70 backdrop-blur-md border-r border-gray-100/70;
+}
+
+/* Main content area */
+.main-content {
+  @apply flex-1 overflow-auto bg-gradient-to-br from-white via-white to-humanly-pastel-lavender/20;
+}
+
+/* Footer styling */
+.zen-footer {
+  @apply border-t border-gray-100/70 py-4 px-4 text-xs text-gray-500 bg-white/70 backdrop-blur-sm;
+}
+
+/* Chat container with calming background */
+.chat-container {
+  @apply bg-white/50 backdrop-blur-sm rounded-xl shadow-soft border border-gray-100/70 overflow-hidden;
 }

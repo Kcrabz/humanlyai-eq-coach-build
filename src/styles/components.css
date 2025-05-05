@@ -1,20 +1,20 @@
 
 @layer base {
   .gradient-bg {
-    @apply bg-gradient-to-r from-primary to-secondary bg-size-200 animate-gradient-flow;
+    @apply bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-size-200 animate-gradient-flow;
   }
 
   .blob {
-    @apply absolute blur-[100px] opacity-30 rounded-full;
+    @apply absolute blur-[120px] opacity-20 rounded-full;
   }
 
   .font-outline {
-    -webkit-text-stroke: 1px #0097b2;
+    -webkit-text-stroke: 1px #6366F1;
     color: transparent;
   }
   
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-soft-lg hover:-translate-y-1;
+    @apply transition-all duration-500 hover:shadow-zen hover:-translate-y-1;
   }
   
   .progress-step {
@@ -25,13 +25,13 @@
     @apply scale-110;
   }
   
-  /* Enhanced card styles inspired by calmi.so and headspace */
+  /* Enhanced card styles inspired by zen-minimalist design */
   .enhanced-card {
-    @apply bg-white rounded-xl border border-gray-100 shadow-soft transition-all duration-300 hover:shadow-soft-lg hover:-translate-y-1;
+    @apply bg-white rounded-xl border border-gray-100/50 shadow-soft transition-all duration-500 hover:shadow-zen hover:-translate-y-1;
   }
   
   .enhanced-card-selected {
-    @apply bg-gradient-to-br from-white to-humanly-gray-lightest border-humanly-teal;
+    @apply bg-gradient-to-br from-white to-humanly-pastel-lavender/30 border-humanly-indigo/20;
   }
   
   /* Soft button styles */
@@ -40,39 +40,63 @@
   }
   
   .soft-button-primary {
-    @apply soft-button from-humanly-teal to-humanly-teal/90 text-white;
+    @apply soft-button from-humanly-indigo to-humanly-indigo/90 text-white;
   }
   
   .soft-button-secondary {
     @apply soft-button from-white to-gray-50 border border-gray-200 text-gray-700;
   }
   
-  /* Animated section */
+  /* Animated section with improved timing */
   .animated-section {
     @apply animate-scale-fade-in;
   }
   
-  /* Soft input fields */
-  .soft-input {
-    @apply rounded-xl border border-gray-200 py-3 px-4 shadow-sm bg-white transition-all duration-300 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:scale-[1.01] outline-none;
+  /* Zen input fields */
+  .zen-input {
+    @apply rounded-xl border border-gray-200 py-3 px-4 shadow-inner-soft bg-white/80 backdrop-blur-sm transition-all duration-300 focus:ring-2 focus:ring-humanly-indigo/20 focus:border-humanly-indigo focus:shadow-none outline-none;
   }
   
   /* EQ progression badges */
   .eq-badge {
-    @apply flex items-center gap-1 bg-humanly-teal/10 text-humanly-teal px-2 py-1 rounded-md text-xs font-medium;
+    @apply flex items-center gap-1 bg-humanly-indigo/10 text-humanly-indigo px-3 py-1.5 rounded-md text-xs font-medium;
   }
   
   /* Streak calendar */
   .streak-day {
-    @apply w-6 h-6 rounded-full flex items-center justify-center text-xs;
+    @apply w-7 h-7 rounded-full flex items-center justify-center text-xs shadow-inner-soft;
   }
   
   .streak-day-active {
-    @apply bg-humanly-teal text-white;
+    @apply bg-humanly-indigo text-white shadow-none;
   }
   
   .streak-day-inactive {
-    @apply bg-gray-100 text-gray-400;
+    @apply bg-gray-100/70 text-gray-400;
+  }
+
+  /* Card with soft gradient */
+  .gradient-card {
+    @apply bg-gradient-to-br from-white to-humanly-pastel-lavender/20 rounded-xl border border-humanly-pastel-lavender/30 shadow-soft;
+  }
+
+  /* Emotion tag */
+  .emotion-tag {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium transition-colors bg-humanly-pastel-lavender/30 text-humanly-indigo-dark hover:bg-humanly-pastel-lavender/50;
+  }
+
+  /* Reflection card */
+  .reflection-card {
+    @apply p-4 rounded-xl border border-humanly-pastel-mint/40 bg-white shadow-soft;
+  }
+
+  /* Achievement badge */
+  .achievement-badge {
+    @apply inline-flex items-center justify-center w-8 h-8 rounded-full bg-humanly-pastel-rose/30 text-humanly-indigo;
+  }
+
+  /* Meditation timer */
+  .meditation-timer {
+    @apply w-16 h-16 rounded-full flex items-center justify-center bg-gradient-to-r from-humanly-pastel-blue/30 to-humanly-pastel-lavender/30 text-humanly-indigo font-medium text-lg shadow-soft breathe-animation;
   }
 }
-
