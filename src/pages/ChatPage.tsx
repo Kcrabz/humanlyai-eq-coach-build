@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -39,6 +40,7 @@ const ChatPage = () => {
   }, [isAuthenticated, navigate, user, isLoading]);
 
   const handleStartAssessment = () => {
+    console.log("Start assessment button clicked, navigating to /onboarding?step=archetype");
     navigate("/onboarding?step=archetype");
   };
 

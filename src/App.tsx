@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthNavigation } from "@/hooks/useAuthNavigation";
@@ -23,6 +23,12 @@ const queryClient = new QueryClient();
 // Create a component that uses the useAuthNavigation hook
 const AuthNavigationHandler = () => {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
+  
+  useEffect(() => {
+    console.log("Route changed to:", location.pathname, location.search);
+  }, [location]);
+  
   useAuthNavigation(user, isLoading);
   return null; // This component doesn't render anything
 };

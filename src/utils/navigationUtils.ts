@@ -23,3 +23,25 @@ export const isOnAuthPage = (pathname: string): boolean => {
 export const isOnChatPage = (pathname: string): boolean => {
   return pathname === "/chat";
 };
+
+/**
+ * Determines if the current URL is for retaking the assessment
+ */
+export const isRetakingAssessment = (): boolean => {
+  const url = new URL(window.location.href);
+  return url.searchParams.has('step') && url.searchParams.get('step') === 'archetype';
+};
+
+/**
+ * Gets the current search params as an object
+ */
+export const getCurrentUrlParams = (): Record<string, string> => {
+  const url = new URL(window.location.href);
+  const params: Record<string, string> = {};
+  
+  url.searchParams.forEach((value, key) => {
+    params[key] = value;
+  });
+  
+  return params;
+};
