@@ -1,6 +1,14 @@
 
 import React, { createContext, useContext, useState } from "react";
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
+import useAuthState from "@/hooks/useAuthState";
+import { useAuthSession } from "@/hooks/useAuthSession";
+import useAuthActions from "@/hooks/useAuthActions";
+import useAuthCore from "@/hooks/useAuthCore";
+import { useAuthSignup } from "@/hooks/useAuthSignup";
+import { useProfileCore } from "@/hooks/useProfileCore";
+import { useProfileActions } from "@/hooks/useProfileActions";
+import { useProfileState } from "@/hooks/useProfileState";
 
 // Create the auth context with default values
 export interface AuthContextType {
@@ -35,25 +43,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // State for auth error handling
   const [error, setError] = useState<string | null>(null);
   
-  // Auth core hooks
-  const authCore = useAuthCore();
-  const authState = useAuthState();
-  const authSession = useAuthSession();
-  const authSignup = useAuthSignup();
-  const authActions = useAuthActions();
+  // Auth state
+  const { user, setUser, isLoading, setIsLoading } = useAuthState();
+  
+  // Auth session
+  const { session } = useAuthSession();
+  
+  // Auth core for login/logout
+  const authCore = useAuthCore(setUser);
+  
+  // Auth signup
+  const { signup } = useAuthSignup(setUser);
+  
+  // Auth actions
+  const { logout: authLogout } = useAuthActions();
   
   // Profile hooks
-  const profileCore = useProfileCore(authState.setUser);
-  const profileState = useProfileState();
-  const profileActions = useProfileActions(authState.setUser);
+  const profileCore = useProfileCore(setUser);
+  const profileActions = useProfileActions(setUser);
   
   // Derived state
-  const userHasArchetype = !!authState.user?.eq_archetype;
-  const isAuthenticated = !!authState.user;
+  const userHasArchetype = !!user?.eq_archetype;
+  const isAuthenticated = !!user;
   
   // Get user subscription tier
   const getUserSubscription = () => {
-    return authState.user?.subscription_tier || 'free';
+    return user?.subscription_tier || 'free';
   };
   
   // Reset password functionality stub
@@ -64,18 +79,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Combined context value
   const contextValue: AuthContextType = {
-    ...authState,
-    ...authSession,
-    ...authSignup,
-    ...authActions,
-    ...profileActions,
-    getUserSubscription,
-    userHasArchetype,
-    isAuthenticated,
-    resetPassword,
+    user,
+    isLoading,
     error,
-    updateProfile: profileCore.updateProfile,
+    isAuthenticated,
     login: authCore.login,
+    logout: authLogout,
+    signup,
+    resetPassword,
+    updateProfile: profileCore.updateProfile,
+    forceUpdateProfile: profileCore.forceUpdateProfile,
+    setName: profileActions.setName,
+    setArchetype: profileActions.setArchetype,
+    setCoachingMode: profileActions.setCoachingMode,
+    setOnboarded: profileActions.setOnboarded,
+    setUser,
+    getUserSubscription,
+    userHasArchetype
   };
 
   return (

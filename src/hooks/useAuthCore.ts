@@ -1,10 +1,11 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { updateUserProfileInDatabase } from "@/services/authService";
 
-export const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
+const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   const [error, setError] = useState<string | null>(null);
 
   /**
@@ -48,38 +49,6 @@ export const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | 
   };
 
   /**
-   * Handles user logout
-   */
-  const logout = async (): Promise<boolean> => {
-    console.log("Logout attempt started");
-    
-    try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error("Logout error:", error.message);
-        setError(error.message);
-        toast.error("Failed to log out", { description: error.message });
-        return false;
-      }
-      
-      console.log("Logout successful");
-      toast.success("Logged out successfully");
-      
-      // Explicitly clear user state
-      setUser(null);
-      
-      return true;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
-      console.error("Logout error:", errorMessage);
-      setError(errorMessage);
-      toast.error("Failed to log out", { description: errorMessage });
-      return false;
-    }
-  };
-
-  /**
    * Updates a user's profile
    */
   const updateProfile = async (updates: Partial<User>): Promise<boolean> => {
@@ -113,7 +82,6 @@ export const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | 
 
   return {
     login,
-    logout,
     updateProfile,
     error,
     setError
