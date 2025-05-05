@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArchetypeQuiz } from "./ArchetypeQuiz";
@@ -117,7 +118,7 @@ export const ArchetypeSelectorWithQuiz = () => {
           This quick assessment will help us understand your emotional intelligence profile and provide personalized coaching.
         </p>
         <p className="mb-10 text-muted-foreground">
-          Please answer 15 questions, taking your time to reflect on each one.
+          Please answer 10 questions, taking your time to reflect on each one.
         </p>
         
         <div className="relative group">
