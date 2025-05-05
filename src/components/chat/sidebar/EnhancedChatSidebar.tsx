@@ -25,7 +25,8 @@ export function EnhancedChatSidebar() {
     <>
       {/* Mobile trigger button - only visible on small screens */}
       <div className="md:hidden absolute left-4 top-4 z-10">
-        <SidebarTrigger asChild>
+        {/* The issue is likely here - SidebarTrigger with asChild expects exactly one child */}
+        <SidebarTrigger>
           <Button 
             variant="ghost" 
             size="icon" 
