@@ -8,7 +8,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarTrigger,
   useSidebar
 } from "@/components/ui/sidebar";
 import { 
@@ -26,7 +25,8 @@ import { Separator } from "@/components/ui/separator";
 
 // Sidebar trigger button for the right sidebar
 export function ChatRightSidebarTrigger() {
-  const { toggleSidebar } = useSidebar();
+  // Use the right sidebar context
+  const { toggleSidebar } = useSidebar("right");
   
   return (
     <Button 
@@ -44,7 +44,8 @@ export function ChatRightSidebarTrigger() {
 export function ChatRightSidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const { open, setOpen, isMobile } = useSidebar();
+  // Use the right sidebar context
+  const { open, setOpen, isMobile } = useSidebar("right");
   
   if (!user) return null;
   

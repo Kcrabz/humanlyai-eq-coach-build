@@ -8,7 +8,8 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarTrigger,
-  SidebarRail
+  SidebarRail,
+  useSidebar
 } from "@/components/ui/sidebar";
 
 // Import our sidebar components
@@ -18,6 +19,8 @@ import { DailyChallenge } from "./DailyChallenge";
 
 export function EnhancedChatSidebar() {
   const { user } = useAuth();
+  // Use the left sidebar context
+  const { toggleSidebar } = useSidebar("left");
   
   if (!user) return null;
   
@@ -25,16 +28,14 @@ export function EnhancedChatSidebar() {
     <>
       {/* Mobile trigger button - only visible on small screens */}
       <div className="md:hidden absolute left-4 top-4 z-10">
-        {/* The issue is likely here - SidebarTrigger with asChild expects exactly one child */}
-        <SidebarTrigger>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SidebarTrigger>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo"
+          onClick={() => toggleSidebar()}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
       </div>
       
       {/* The sidebar itself */}

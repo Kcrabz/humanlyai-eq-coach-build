@@ -14,14 +14,24 @@ type SidebarContext = {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  id: string | undefined;
 };
 
-const SidebarContext = React.createContext<SidebarContext | null>(null);
+// Create a context map to store multiple sidebar contexts
+const SidebarContexts: Record<string, React.Context<SidebarContext | null>> = {};
 
-export function useSidebar() {
-  const context = React.useContext(SidebarContext);
+// Get or create a context for a specific sidebar
+const getSidebarContext = (id: string = "default") => {
+  if (!SidebarContexts[id]) {
+    SidebarContexts[id] = React.createContext<SidebarContext | null>(null);
+  }
+  return SidebarContexts[id];
+};
+
+export function useSidebar(id: string = "default") {
+  const context = React.useContext(getSidebarContext(id));
   if (!context) {
-    throw new Error("useSidebar must be used within a SidebarProvider.");
+    throw new Error(`useSidebar must be used within a SidebarProvider with id ${id}.`);
   }
 
   return context;
@@ -33,6 +43,7 @@ export const SidebarProvider = React.forwardRef<
     defaultOpen?: boolean;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
+    id?: string;
   }
 >(
   (
@@ -43,6 +54,7 @@ export const SidebarProvider = React.forwardRef<
       className,
       style,
       children,
+      id = "default",
       ...props
     },
     ref
@@ -64,9 +76,9 @@ export const SidebarProvider = React.forwardRef<
         }
 
         // This sets the cookie to keep the sidebar state.
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+        document.cookie = `${SIDEBAR_COOKIE_NAME}:${id}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
       },
-      [setOpenProp, open]
+      [setOpenProp, open, id]
     );
 
     // Helper to toggle the sidebar.
@@ -78,6 +90,9 @@ export const SidebarProvider = React.forwardRef<
 
     // Adds a keyboard shortcut to toggle the sidebar.
     React.useEffect(() => {
+      // Only add keyboard shortcut for the default sidebar
+      if (id !== "default") return;
+      
       const handleKeyDown = (event: KeyboardEvent) => {
         if (
           event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
@@ -90,7 +105,7 @@ export const SidebarProvider = React.forwardRef<
 
       window.addEventListener("keydown", handleKeyDown);
       return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [toggleSidebar]);
+    }, [toggleSidebar, id]);
 
     // We add a state so that we can do data-state="expanded" or "collapsed".
     // This makes it easier to style the sidebar with Tailwind classes.
@@ -105,12 +120,15 @@ export const SidebarProvider = React.forwardRef<
         openMobile,
         setOpenMobile,
         toggleSidebar,
+        id,
       }),
-      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar]
+      [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar, id]
     );
 
+    const SidebarContextProvider = getSidebarContext(id);
+
     return (
-      <SidebarContext.Provider value={contextValue}>
+      <SidebarContextProvider.Provider value={contextValue}>
         <TooltipProvider delayDuration={0}>
           <div
             style={
@@ -130,11 +148,29 @@ export const SidebarProvider = React.forwardRef<
             {children}
           </div>
         </TooltipProvider>
-      </SidebarContext.Provider>
+      </SidebarContextProvider.Provider>
     );
   }
 );
 SidebarProvider.displayName = "SidebarProvider";
+
+// Create a convenience component for left sidebar
+export const LeftSidebarProvider = React.forwardRef<
+  HTMLDivElement,
+  Omit<React.ComponentPropsWithoutRef<typeof SidebarProvider>, "id">
+>((props, ref) => (
+  <SidebarProvider {...props} id="left" ref={ref} />
+));
+LeftSidebarProvider.displayName = "LeftSidebarProvider";
+
+// Create a convenience component for right sidebar
+export const RightSidebarProvider = React.forwardRef<
+  HTMLDivElement,
+  Omit<React.ComponentPropsWithoutRef<typeof SidebarProvider>, "id">
+>((props, ref) => (
+  <SidebarProvider {...props} id="right" ref={ref} />
+));
+RightSidebarProvider.displayName = "RightSidebarProvider";
 
 // Import util from outside this file
 import { cn } from "@/lib/utils";
