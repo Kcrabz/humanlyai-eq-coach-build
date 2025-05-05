@@ -13,8 +13,8 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
   const location = useLocation();
   const isLandingPage = location.pathname === "/";
   
-  // Don't show header on onboarding pages
-  const showHeader = !location.pathname.includes("/onboarding");
+  // Don't show header on onboarding pages and chat page
+  const showHeader = !location.pathname.includes("/onboarding") && location.pathname !== "/chat";
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">

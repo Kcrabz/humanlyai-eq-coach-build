@@ -1,3 +1,4 @@
+
 import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -18,7 +19,7 @@ const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => 
 const ChatUsage = lazy(() => import("@/components/chat/ChatUsage").then(module => ({ default: module.ChatUsage })));
 const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
 
-// Simplified header component without the user menu
+// Simplified header component specific for the chat page
 const ChatHeader = ({ hasCompletedAssessment, userArchetype }: { 
   hasCompletedAssessment: boolean, 
   userArchetype: string | undefined 

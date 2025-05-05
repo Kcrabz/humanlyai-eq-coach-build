@@ -17,7 +17,9 @@ import {
   CreditCard,
   LogOut,
   Menu,
-  ChevronRight
+  ChevronRight,
+  Info,
+  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -72,7 +74,35 @@ export function ChatRightSidebar() {
       </SidebarHeader>
       
       <SidebarContent className="p-3">
+        {/* Main Navigation Links */}
+        <div className="space-y-1 mb-4">
+          <h4 className="text-xs font-medium text-muted-foreground px-2 py-1">Main Navigation</h4>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 rounded-lg"
+            onClick={() => navigate("/about")}
+          >
+            <Info className="h-4 w-4" />
+            About
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start gap-2 rounded-lg"
+            onClick={() => navigate("/pricing")}
+          >
+            <DollarSign className="h-4 w-4" />
+            Pricing
+          </Button>
+        </div>
+        
+        <Separator className="my-3" />
+        
+        {/* User Profile Links */}
         <div className="space-y-1">
+          <h4 className="text-xs font-medium text-muted-foreground px-2 py-1">Your Account</h4>
           <Button
             variant="ghost"
             size="sm"
