@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -20,6 +19,9 @@ const OnboardingContent = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  
+  // Check if user is specifically retaking the assessment
+  const isRetakingAssessment = searchParams.get('step') === 'archetype';
 
   // Effect to handle step parameter in URL
   useEffect(() => {
@@ -35,8 +37,15 @@ const OnboardingContent = () => {
       isAuthenticated,
       userOnboarded: user?.onboarded,
       isLoading,
-      currentStep
+      currentStep,
+      isRetakingAssessment
     });
+    
+    // Allow users to retake the assessment even if they're already onboarded
+    if (isRetakingAssessment) {
+      console.log("User is retaking assessment, skipping onboarding check");
+      return;
+    }
     
     // If user's profile data hasn't loaded yet, or user is not onboarded and we're not on the complete step,
     // let them continue with onboarding
@@ -57,7 +66,7 @@ const OnboardingContent = () => {
       console.log("User is already onboarded, redirecting to chat from OnboardingContent");
       navigate("/chat", { replace: true });
     }
-  }, [user, navigate, isLoading, currentStep, isAuthenticated]);
+  }, [user, navigate, isLoading, currentStep, isAuthenticated, isRetakingAssessment]);
   
   // Show loading state
   if (isLoading) {
@@ -137,6 +146,10 @@ const OnboardingContent = () => {
 const OnboardingPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Check if user is specifically retaking the assessment
+  const isRetakingAssessment = searchParams.get('step') === 'archetype';
   
   // Redirect already onboarded users to chat
   useEffect(() => {
@@ -144,7 +157,8 @@ const OnboardingPage = () => {
       console.log("OnboardingPage auth check:", {
         isAuthenticated,
         userOnboarded: user?.onboarded,
-        isLoading
+        isLoading,
+        isRetakingAssessment
       });
 
       // If not authenticated, redirect to login
@@ -152,13 +166,13 @@ const OnboardingPage = () => {
         console.log("User is not authenticated, redirecting to login");
         navigate("/login", { replace: true });
       }
-      // If already onboarded, redirect to chat
-      else if (user?.onboarded === true) {
+      // If already onboarded and NOT retaking assessment, redirect to chat
+      else if (user?.onboarded === true && !isRetakingAssessment) {
         console.log("User is already onboarded, redirecting to chat");
         navigate("/chat", { replace: true });
       }
     }
-  }, [isAuthenticated, user, isLoading, navigate]);
+  }, [isAuthenticated, user, isLoading, navigate, isRetakingAssessment]);
   
   if (isLoading) {
     return (

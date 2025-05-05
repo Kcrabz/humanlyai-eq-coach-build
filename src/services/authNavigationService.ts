@@ -14,11 +14,16 @@ export const handleAuthNavigation = (
   pathname: string, 
   navigate: NavigateFunction
 ): void => {
+  // Get URL parameters to check for special cases
+  const url = new URL(window.location.href);
+  const isRetakingAssessment = url.searchParams.has('step') && url.searchParams.get('step') === 'archetype';
+  
   console.log("Auth navigation handler running:", {
     user, 
     pathname,
     isAuthenticated: !!user,
     isOnboarded: user?.onboarded,
+    isRetakingAssessment,
     currentTime: new Date().toISOString()
   });
 
@@ -35,7 +40,10 @@ export const handleAuthNavigation = (
     navigate("/onboarding", { replace: true });
   }
   // Authenticated and onboarded -> redirect to chat from login/signup/onboarding 
-  else if (user && user.onboarded === true && (isOnAuthPage(pathname) || isOnOnboardingPage(pathname))) {
+  // UNLESS they're specifically trying to retake an assessment
+  else if (user && user.onboarded === true && 
+          (isOnAuthPage(pathname) || 
+          (isOnOnboardingPage(pathname) && !isRetakingAssessment))) {
     console.log("User is authenticated and onboarded, redirecting to chat");
     navigate("/chat", { replace: true });
   }
