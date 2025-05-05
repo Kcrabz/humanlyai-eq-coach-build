@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +17,19 @@ export function AuthForm({ type }: AuthFormProps) {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const { login, signup, isLoading, isAuthenticated } = useAuth();
+  const { login, signup, isLoading, isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Add effect to handle authenticated state changes
+  useEffect(() => {
+    if (isAuthenticated && user?.onboarded === true) {
+      console.log("AuthForm detected authenticated user, redirecting to chat");
+      navigate("/chat", { replace: true });
+    } else if (isAuthenticated && user?.onboarded === false) {
+      console.log("AuthForm detected authenticated but not onboarded user, redirecting to onboarding");
+      navigate("/onboarding", { replace: true });
+    }
+  }, [isAuthenticated, user, navigate]);
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -80,8 +92,9 @@ export function AuthForm({ type }: AuthFormProps) {
       console.log("Auth state after submission:", { isAuthenticated: success });
       
       if (success) {
-        console.log(`${type} successful, navigation will be handled by useAuthNavigation`);
-        // Navigation will now be handled by useAuthNavigation in App.tsx
+        console.log(`${type} successful, attempting direct navigation to chat`);
+        // Try direct navigation in addition to the useEffect approach
+        navigate("/chat", { replace: true });
       } else {
         // Set a general error if no specific error was caught
         setErrorMessage(`Failed to ${type === "login" ? "sign in" : "create account"}. Please try again.`);

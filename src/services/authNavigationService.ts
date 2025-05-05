@@ -50,10 +50,16 @@ export const handleAuthNavigation = (
   }
   // Authenticated and onboarded -> redirect to chat from login/signup/onboarding 
   // UNLESS they're specifically trying to retake an assessment
-  else if (user && user.onboarded === true && 
-          (isOnAuthPage(pathname) || 
-          (isOnOnboardingPage(pathname) && !isRetaking))) {
-    console.log("User is authenticated and onboarded, redirecting to chat");
-    navigate("/chat", { replace: true });
+  else if (user && user.onboarded === true) {
+    // More aggressive redirect for auth pages
+    if (isOnAuthPage(pathname)) {
+      console.log("User is authenticated and onboarded on auth page, redirecting to chat");
+      navigate("/chat", { replace: true });
+    }
+    // Also redirect from onboarding unless retaking assessment
+    else if (isOnOnboardingPage(pathname) && !isRetaking) {
+      console.log("User is authenticated and onboarded on onboarding page, redirecting to chat");
+      navigate("/chat", { replace: true });
+    }
   }
 };
