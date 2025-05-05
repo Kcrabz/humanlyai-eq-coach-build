@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -40,7 +39,7 @@ const ChatPage = () => {
   }, [isAuthenticated, navigate, user, isLoading]);
 
   const handleStartAssessment = () => {
-    navigate("/onboarding");
+    navigate("/onboarding?step=archetype");
   };
 
   if (isLoading || !isAuthenticated || typeof user?.onboarded !== "boolean" || !user?.onboarded) {

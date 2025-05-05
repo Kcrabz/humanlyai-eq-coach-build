@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ArchetypeSelectorWithQuiz } from "@/components/onboarding/ArchetypeSelectorWithQuiz";
 import { GoalSelector } from "@/components/onboarding/GoalSelector";
@@ -15,10 +15,20 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const OnboardingContent = () => {
-  const { state } = useOnboarding();
+  const { state, goToStep } = useOnboarding();
   const { currentStep, isLoading } = state;
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Effect to handle step parameter in URL
+  useEffect(() => {
+    const targetStep = searchParams.get('step');
+    if (targetStep && ['name', 'goal', 'archetype', 'coaching', 'complete'].includes(targetStep)) {
+      console.log(`Directing user to the ${targetStep} step from URL parameter`);
+      goToStep(targetStep as any);
+    }
+  }, [searchParams, goToStep]);
 
   useEffect(() => {
     console.log("Onboarding auth check:", {
