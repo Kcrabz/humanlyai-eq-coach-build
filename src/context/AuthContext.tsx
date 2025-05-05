@@ -14,6 +14,7 @@ export interface AuthContextType {
   user: any;
   isLoading: boolean;
   error: string | null;
+  isAuthenticated?: boolean;
   
   // Re-exported from useAuthActions
   login: (email: string, password: string) => Promise<any>;
@@ -23,6 +24,9 @@ export interface AuthContextType {
   
   // Re-exported from useProfileActions
   setName: (name: string) => Promise<void>;
+  setArchetype?: (archetype: string) => Promise<void>;
+  setCoachingMode?: (mode: string) => Promise<void>;
+  setOnboarded?: (value: boolean) => Promise<void>;
   updateProfile: (data: any) => Promise<void>;
   forceUpdateProfile: (data: any) => Promise<void>;
   setUser: (data: any) => void;
@@ -49,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Derived state
   const userHasArchetype = !!authState.user?.eq_archetype;
+  const isAuthenticated = !!authState.user;
   
   // Get user subscription tier
   const getUserSubscription = () => {
@@ -63,7 +68,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ...authActions,
     ...profileActions,
     getUserSubscription,
-    userHasArchetype
+    userHasArchetype,
+    isAuthenticated
   };
 
   return (
