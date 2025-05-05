@@ -57,7 +57,7 @@ const HeroSection = ({
                   className={`inline-block transition-opacity duration-300 ease-out ${visibleWords[index] ? 'opacity-100' : 'opacity-0'}`}
                   style={{ 
                     transitionDelay: `${index * 0.15}s`,
-                    marginRight: index < subtitleWords.length - 1 ? '0.3em' : '0' 
+                    marginRight: index < subtitleWords.length - 1 ? '0.15em' : '0' 
                   }}
                 >
                   {word}
