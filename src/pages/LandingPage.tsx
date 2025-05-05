@@ -28,7 +28,7 @@ const LandingPage = () => {
       <HeroSection onGetStarted={handleGetStarted} />
       <ArchetypesSection onFindArchetype={handleGetStarted} />
       <HowItWorksSection onGetStarted={handleGetStarted} />
-      <TestimonialsSection />
+      <TestimonialsSection maxTestimonials={2} />
       <CtaSection onGetStarted={handleGetStarted} />
     </div>
   );
