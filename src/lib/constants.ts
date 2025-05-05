@@ -1,3 +1,4 @@
+
 import { ArchetypeInfo, CoachingModeInfo, SubscriptionPlan } from "@/types";
 
 export const ARCHETYPES = {
@@ -55,8 +56,8 @@ export const COACHING_MODES: Record<string, CoachingModeInfo> = {
     description: "Friendly, reflective, and encouraging guidance that helps you grow at your own pace.",
     example: "I notice you're facing this challenge. Let's explore some ways you might approach it that align with your values."
   },
-  "tough love": {
-    type: "tough love",
+  tough: {
+    type: "tough",
     title: "Tough Love Coach",
     description: "Direct, honest feedback that challenges you to push beyond your comfort zone.",
     example: "You've been avoiding this issue for weeks. It's time to face it head-on - what's one action you'll take today?"
