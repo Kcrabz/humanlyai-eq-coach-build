@@ -33,7 +33,7 @@ const LandingPage = () => {
               <span className="bg-gradient-to-r from-humanly-purple to-humanly-purple-light bg-clip-text text-transparent">
                 HumanlyAI
               </span>
-              <span className="block mt-2">Your AI EQ Coach</span>
+              <span className="block mt-2">Meet Kai, the AI Coach for the Human in You</span>
             </h1>
             <p className="text-xl text-muted-foreground mb-8">
               Being human's hard. Growth doesn't have to be.
