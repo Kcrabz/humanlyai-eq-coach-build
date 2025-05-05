@@ -1,17 +1,18 @@
 
-import { useAuthSession } from '@/hooks/useAuthSession';
-import { useProfileState } from '@/hooks/useProfileState';
+import { useState } from 'react';
+import { User } from '@/types';
 
 /**
  * Main hook for managing authentication and user state
  * This combines session management and profile state
  */
 export const useAuthState = () => {
-  // Handle authentication session
-  const { session, isLoading, setIsLoading } = useAuthSession();
-  
-  // Handle user profile state
-  const { user, setUser } = useProfileState(session, isLoading, setIsLoading);
+  // Basic state management
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [session, setSession] = useState<any>(null);
 
-  return { user, session, isLoading, setUser };
+  return { user, session, isLoading, setUser, setIsLoading, setSession };
 };
+
+export default useAuthState;

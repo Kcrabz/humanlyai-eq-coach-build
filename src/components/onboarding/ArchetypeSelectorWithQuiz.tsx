@@ -95,7 +95,9 @@ export const ArchetypeSelectorWithQuiz = () => {
       });
       
       // Mark user as onboarded in both database and local state
-      await setOnboarded(true);
+      if (setOnboarded) {
+        await setOnboarded(true);
+      }
       toast.success("Welcome to Humanly Chat");
       // Navigate to chat page
       navigate("/chat", { replace: true });

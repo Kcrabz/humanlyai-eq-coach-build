@@ -1,13 +1,6 @@
 
-import React, { createContext, useContext } from "react";
-import { useAuthCore } from "@/hooks/useAuthCore";
-import { useAuthState } from "@/hooks/useAuthState";
-import { useAuthSignup } from "@/hooks/useAuthSignup";
-import { useAuthSession } from "@/hooks/useAuthSession";
-import { useAuthActions } from "@/hooks/useAuthActions";
-import { useProfileState } from "@/hooks/useProfileState";
-import { useProfileCore } from "@/hooks/useProfileCore";
-import { useProfileActions } from "@/hooks/useProfileActions";
+import React, { createContext, useContext, useState } from "react";
+import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
 
 // Create the auth context with default values
 export interface AuthContextType {
@@ -39,17 +32,20 @@ export interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // State for auth error handling
+  const [error, setError] = useState<string | null>(null);
+  
   // Auth core hooks
   const authCore = useAuthCore();
-  const authState = useAuthState(authCore);
-  const authSession = useAuthSession(authCore);
-  const authSignup = useAuthSignup(authCore);
-  const authActions = useAuthActions(authCore, authState);
+  const authState = useAuthState();
+  const authSession = useAuthSession();
+  const authSignup = useAuthSignup();
+  const authActions = useAuthActions();
   
   // Profile hooks
-  const profileCore = useProfileCore(authState);
-  const profileState = useProfileState(profileCore);
-  const profileActions = useProfileActions(profileCore, profileState);
+  const profileCore = useProfileCore(authState.setUser);
+  const profileState = useProfileState();
+  const profileActions = useProfileActions(authState.setUser);
   
   // Derived state
   const userHasArchetype = !!authState.user?.eq_archetype;
@@ -58,6 +54,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Get user subscription tier
   const getUserSubscription = () => {
     return authState.user?.subscription_tier || 'free';
+  };
+  
+  // Reset password functionality stub
+  const resetPassword = async (email: string): Promise<void> => {
+    // Implement reset password functionality
+    console.log("Reset password for:", email);
   };
   
   // Combined context value
@@ -69,7 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ...profileActions,
     getUserSubscription,
     userHasArchetype,
-    isAuthenticated
+    isAuthenticated,
+    resetPassword,
+    error,
+    updateProfile: profileCore.updateProfile,
+    login: authCore.login,
   };
 
   return (

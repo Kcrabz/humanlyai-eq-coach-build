@@ -1,10 +1,12 @@
-
+import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { updateUserProfileInDatabase } from "@/services/authService";
 
 export const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
+  const [error, setError] = useState<string | null>(null);
+
   /**
    * Handles user login with email and password
    */
@@ -21,12 +23,14 @@ export const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | 
       
       if (error) {
         console.error("Login error:", error.message);
+        setError(error.message);
         toast.error("Login failed", { description: error.message });
         return false;
       }
       
       if (!data?.user) {
         console.error("Login failed: No user data returned");
+        setError("No user data returned");
         toast.error("Login failed", { description: "No user data returned" });
         return false;
       }
@@ -37,6 +41,7 @@ export const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       console.error("Unexpected login error:", errorMessage);
+      setError(errorMessage);
       toast.error("Login failed", { description: errorMessage });
       return false;
     }
@@ -53,6 +58,7 @@ export const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | 
       
       if (error) {
         console.error("Logout error:", error.message);
+        setError(error.message);
         toast.error("Failed to log out", { description: error.message });
         return false;
       }
@@ -67,6 +73,7 @@ export const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       console.error("Logout error:", errorMessage);
+      setError(errorMessage);
       toast.error("Failed to log out", { description: errorMessage });
       return false;
     }
@@ -107,6 +114,10 @@ export const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | 
   return {
     login,
     logout,
-    updateProfile
+    updateProfile,
+    error,
+    setError
   };
 };
+
+export default useAuthCore;
