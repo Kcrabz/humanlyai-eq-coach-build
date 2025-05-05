@@ -1,37 +1,48 @@
 
 import { useAuth } from "@/context/AuthContext";
-import { ExternalLink, Menu } from "lucide-react";
+import { ExternalLink, Menu, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarTrigger
+  SidebarTrigger,
+  SidebarRail
 } from "@/components/ui/sidebar";
 
-// Import our sidebar components (removing StreakTracker and SuggestedActivities)
+// Import our sidebar components
 import { ConversationStarters } from "./ConversationStarters";
 import { ProgressTracker } from "./ProgressTracker";
 import { DailyChallenge } from "./DailyChallenge";
-import { useNavigate } from "react-router-dom";
 
 export function EnhancedChatSidebar() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   
   if (!user) return null;
   
   return (
     <>
+      {/* Mobile trigger button - only visible on small screens */}
       <div className="md:hidden absolute left-4 top-4 z-10">
         <SidebarTrigger />
       </div>
       
-      <Sidebar side="left" variant="sidebar" collapsible="offcanvas">
+      {/* The sidebar itself */}
+      <Sidebar 
+        side="left" 
+        variant="sidebar" 
+        collapsible="offcanvas"
+        className="border-r border-gray-100"
+      >
+        <SidebarRail className="hover:bg-gray-50" />
+        
         <SidebarHeader>
           <div className="mb-2">
-            <h2 className="font-semibold bg-gradient-to-r from-humanly-teal to-humanly-green bg-clip-text text-transparent">Your EQ Coach</h2>
+            <h2 className="font-semibold bg-gradient-to-r from-humanly-teal to-humanly-green bg-clip-text text-transparent flex items-center gap-2">
+              <PanelLeft className="h-4 w-4 text-humanly-teal" />
+              Your EQ Coach
+            </h2>
             <p className="text-xs text-muted-foreground">
               Daily practice for emotional intelligence
             </p>
@@ -39,7 +50,7 @@ export function EnhancedChatSidebar() {
         </SidebarHeader>
         
         <SidebarContent className="space-y-6">
-          {/* Progress and streak tracking */}
+          {/* Progress tracker */}
           <ProgressTracker />
           
           {/* Daily challenges */}

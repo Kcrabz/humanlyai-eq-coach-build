@@ -7,7 +7,7 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
-import { ExternalLink, ClipboardCheck } from "lucide-react";
+import { ExternalLink, ClipboardCheck, Menu } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EQArchetype } from "@/types";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -56,7 +56,7 @@ const ChatPage = () => {
   const hasCompletedAssessment = !!userArchetype && userArchetype !== undefined;
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <PageLayout fullWidth>
         <ChatProvider>
           <div className="flex h-screen overflow-hidden">
@@ -68,11 +68,23 @@ const ChatPage = () => {
             {/* Chat Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="border-b p-4 flex items-center justify-between bg-white/50 backdrop-blur-sm shadow-sm">
-                <div>
-                  <h1 className="font-bold bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent">Kai | EQ Coach</h1>
-                  <p className="text-xs text-muted-foreground">
-                    {hasCompletedAssessment ? `Personalized for ${userArchetype}` : "General EQ coaching available"}
-                  </p>
+                <div className="flex items-center gap-2">
+                  {/* Desktop sidebar trigger */}
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 hidden md:flex" 
+                    aria-label="Toggle Sidebar"
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                  
+                  <div>
+                    <h1 className="font-bold bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent">Kai | EQ Coach</h1>
+                    <p className="text-xs text-muted-foreground">
+                      {hasCompletedAssessment ? `Personalized for ${userArchetype}` : "General EQ coaching available"}
+                    </p>
+                  </div>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => navigate("/subscription")} className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
                   {user.subscription_tier === "free" ? "Upgrade" : "Manage Plan"}
