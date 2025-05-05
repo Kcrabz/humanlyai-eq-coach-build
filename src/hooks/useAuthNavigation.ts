@@ -17,15 +17,17 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
   
   useEffect(() => {
     if (!isLoading) {
+      const isRetaking = isRetakingAssessment(location.search);
+      
       console.log("useAuthNavigation effect running with:", {
         pathname: location.pathname,
         search: location.search,
-        isRetakingAssessment: isRetakingAssessment(),
+        isRetakingAssessment: isRetaking,
         user: user?.id,
         isOnboarded: user?.onboarded
       });
       
-      handleAuthNavigation(user, location.pathname, navigate);
+      handleAuthNavigation(user, location.pathname, navigate, location.search);
     }
   }, [user, isLoading, navigate, location.pathname, location.search]);
 

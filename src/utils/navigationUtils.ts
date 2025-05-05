@@ -1,4 +1,3 @@
-
 /**
  * Navigation utility functions for auth-related routing
  */
@@ -26,16 +25,32 @@ export const isOnChatPage = (pathname: string): boolean => {
 
 /**
  * Determines if the current URL is for retaking the assessment
+ * Now supports both direct URL access and programmatic checking
  */
-export const isRetakingAssessment = (): boolean => {
-  const url = new URL(window.location.href);
-  return url.searchParams.has('step') && url.searchParams.get('step') === 'archetype';
+export const isRetakingAssessment = (searchParams?: string): boolean => {
+  // If search params are provided, parse them
+  if (searchParams) {
+    const urlSearchParams = new URLSearchParams(searchParams);
+    return urlSearchParams.get('step') === 'archetype';
+  }
+  
+  // Otherwise check current window location
+  if (typeof window !== 'undefined') {
+    const url = new URL(window.location.href);
+    return url.searchParams.get('step') === 'archetype';
+  }
+  
+  return false;
 };
 
 /**
  * Gets the current search params as an object
  */
 export const getCurrentUrlParams = (): Record<string, string> => {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+  
   const url = new URL(window.location.href);
   const params: Record<string, string> = {};
   

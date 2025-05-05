@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ArchetypeSelectorWithQuiz } from "@/components/onboarding/ArchetypeSelectorWithQuiz";
 import { GoalSelector } from "@/components/onboarding/GoalSelector";
@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { isRetakingAssessment } from "@/utils/navigationUtils";
 
 const OnboardingContent = () => {
   const { state, goToStep } = useOnboarding();
@@ -19,9 +20,10 @@ const OnboardingContent = () => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   
   // Check if user is specifically retaking the assessment
-  const isRetakingAssessment = searchParams.get('step') === 'archetype';
+  const isRetaking = isRetakingAssessment(location.search);
 
   // Effect to handle step parameter in URL
   useEffect(() => {
@@ -38,11 +40,13 @@ const OnboardingContent = () => {
       userOnboarded: user?.onboarded,
       isLoading,
       currentStep,
-      isRetakingAssessment
+      isRetaking,
+      search: location.search,
+      state: location.state
     });
     
     // Allow users to retake the assessment even if they're already onboarded
-    if (isRetakingAssessment) {
+    if (isRetaking) {
       console.log("User is retaking assessment, skipping onboarding check");
       return;
     }
@@ -66,7 +70,7 @@ const OnboardingContent = () => {
       console.log("User is already onboarded, redirecting to chat from OnboardingContent");
       navigate("/chat", { replace: true });
     }
-  }, [user, navigate, isLoading, currentStep, isAuthenticated, isRetakingAssessment]);
+  }, [user, navigate, isLoading, currentStep, isAuthenticated, isRetaking, location]);
   
   // Show loading state
   if (isLoading) {
@@ -147,9 +151,10 @@ const OnboardingPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   
   // Check if user is specifically retaking the assessment
-  const isRetakingAssessment = searchParams.get('step') === 'archetype';
+  const isRetaking = isRetakingAssessment(location.search);
   
   // Redirect already onboarded users to chat
   useEffect(() => {
@@ -158,7 +163,9 @@ const OnboardingPage = () => {
         isAuthenticated,
         userOnboarded: user?.onboarded,
         isLoading,
-        isRetakingAssessment
+        isRetaking,
+        search: location.search,
+        state: location.state
       });
 
       // If not authenticated, redirect to login
@@ -167,12 +174,12 @@ const OnboardingPage = () => {
         navigate("/login", { replace: true });
       }
       // If already onboarded and NOT retaking assessment, redirect to chat
-      else if (user?.onboarded === true && !isRetakingAssessment) {
+      else if (user?.onboarded === true && !isRetaking) {
         console.log("User is already onboarded, redirecting to chat");
         navigate("/chat", { replace: true });
       }
     }
-  }, [isAuthenticated, user, isLoading, navigate, isRetakingAssessment]);
+  }, [isAuthenticated, user, isLoading, navigate, isRetaking, location]);
   
   if (isLoading) {
     return (

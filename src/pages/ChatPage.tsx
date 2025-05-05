@@ -1,6 +1,6 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ChatProvider } from "@/context/ChatContext";
 import { ChatList } from "@/components/chat/ChatList";
@@ -21,6 +21,7 @@ const ChatPage = () => {
     isLoading
   } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     if (!isLoading) {
@@ -41,7 +42,11 @@ const ChatPage = () => {
 
   const handleStartAssessment = () => {
     console.log("Start assessment button clicked, navigating to /onboarding?step=archetype");
-    navigate("/onboarding?step=archetype");
+    // Use navigate with state to maintain the information that we're intentionally going to onboarding
+    navigate("/onboarding?step=archetype", { 
+      replace: false,
+      state: { retakingAssessment: true }
+    });
   };
 
   if (isLoading || !isAuthenticated || typeof user?.onboarded !== "boolean" || !user?.onboarded) {
