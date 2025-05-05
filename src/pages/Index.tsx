@@ -17,10 +17,13 @@ const Index = () => {
         currentUrl: window.location.href 
       });
       
-      // If user is authenticated and onboarded, they should be on chat page
-      if (isAuthenticated && user?.onboarded === true) {
-        console.log("User is authenticated and onboarded, navigating to chat from Index");
-        navigate("/chat", { replace: true });
+      // We're removing the automatic redirection to chat for authenticated users
+      // This allows them to view the landing page even when logged in
+      
+      // Only redirect if the user is not onboarded yet
+      if (isAuthenticated && user?.onboarded === false) {
+        console.log("User is authenticated but not onboarded, redirecting to onboarding from Index");
+        navigate("/onboarding", { replace: true });
       }
     }
   }, [isAuthenticated, user, isLoading, navigate]);

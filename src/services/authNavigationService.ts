@@ -19,6 +19,12 @@ export const handleAuthNavigation = (
   // Check if user is retaking assessment using the search parameter
   const isRetaking = isRetakingAssessment(search);
   
+  // Don't redirect from the homepage
+  if (pathname === "/") {
+    console.log("On homepage, skipping auth navigation checks");
+    return;
+  }
+  
   console.log("Auth navigation handler running:", {
     userId: user?.id,
     pathname,

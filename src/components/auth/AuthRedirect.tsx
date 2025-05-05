@@ -1,15 +1,17 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
 
 export function AuthRedirect() {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (!isLoading && user) {
+    // Don't redirect if on the home page
+    if (!isLoading && user && location.pathname !== "/") {
       console.log("AuthRedirect: User already authenticated, redirecting");
       
       // Use a short timeout to prevent potential race conditions
@@ -23,7 +25,7 @@ export function AuthRedirect() {
         }
       }, 10);
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, navigate, location.pathname]);
 
   if (isLoading) {
     return (

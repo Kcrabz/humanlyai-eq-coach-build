@@ -14,6 +14,12 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
       console.log("Auth is still loading, skipping navigation");
       return;
     }
+    
+    // Skip navigation for homepage ("/")
+    if (location.pathname === "/") {
+      console.log("On homepage, allowing access regardless of auth state");
+      return;
+    }
 
     console.log("useAuthNavigation effect running:", {
       pathname: location.pathname,
