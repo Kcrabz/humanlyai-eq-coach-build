@@ -13,6 +13,8 @@ import { CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { isRetakingAssessment } from "@/utils/navigationUtils";
+import { OnboardingLoader } from "./OnboardingLoader";
+import { AuthenticationRequired } from "./AuthenticationRequired";
 
 export const OnboardingContainer = () => {
   const { state, goToStep } = useOnboarding();

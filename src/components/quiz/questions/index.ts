@@ -2,7 +2,8 @@
 import { QuizQuestion } from '../types';
 import { selfAwarenessQuestions } from './selfAwareness';
 import { actionTendencyQuestions } from './actionTendency';
-import { emotionalExpressionQuestions, interpersonalQuestions } from './emotionalExpression';
+import { coreExpressionQuestions } from './core-expression';
+import { interpersonalQuestions } from './interpersonal';
 
 // Select specific questions from each category to create a balanced 10-question quiz
 const selectedSelfAwarenessQuestions = [
@@ -17,12 +18,12 @@ const selectedActionTendencyQuestions = [
   actionTendencyQuestions[2]  // q9: I prefer thinking over feeling in tough situations
 ];
 
-// Using the core emotional expression questions and one interpersonal question
+// Using the core emotional expression questions and interpersonal questions
 const selectedEmotionalExpressionQuestions = [
-  emotionalExpressionQuestions[0], // q3: I find it difficult to express how I feel
-  emotionalExpressionQuestions[1], // q4: I prioritize the needs of others over my own
-  interpersonalQuestions[1],       // q8: I avoid conflict to maintain harmony
-  interpersonalQuestions[2]        // q10: I struggle to say "no" even when I need to
+  coreExpressionQuestions[0], // q3: I find it difficult to express how I feel
+  coreExpressionQuestions[1], // q4: I prioritize the needs of others over my own
+  interpersonalQuestions[1],  // q8: I avoid conflict to maintain harmony
+  interpersonalQuestions[2]   // q10: I struggle to say "no" even when I need to
 ];
 
 // Combine all selected question sets into the complete quiz with 10 questions total
