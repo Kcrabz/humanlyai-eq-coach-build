@@ -10,12 +10,10 @@ import {
   SidebarTrigger
 } from "@/components/ui/sidebar";
 
-// Import our new sidebar components
+// Import our sidebar components (removing StreakTracker and SuggestedActivities)
 import { ConversationStarters } from "./ConversationStarters";
 import { ProgressTracker } from "./ProgressTracker";
 import { DailyChallenge } from "./DailyChallenge";
-import { StreakTracker } from "./StreakTracker";
-import { SuggestedActivities } from "./SuggestedActivities";
 import { useNavigate } from "react-router-dom";
 
 export function EnhancedChatSidebar() {
@@ -49,12 +47,6 @@ export function EnhancedChatSidebar() {
           
           {/* Conversation starters */}
           <ConversationStarters />
-          
-          {/* Activity calendar/streak */}
-          <StreakTracker />
-          
-          {/* Suggested activities/next steps */}
-          <SuggestedActivities />
         </SidebarContent>
         
         <SidebarFooter>
