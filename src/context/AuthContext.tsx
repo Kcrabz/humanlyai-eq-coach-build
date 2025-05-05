@@ -1,7 +1,6 @@
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from "react";
+import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
-import useAuthState from "@/hooks/useAuthState";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import useAuthActions from "@/hooks/useAuthActions";
 import useAuthCore from "@/hooks/useAuthCore";
@@ -43,11 +42,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // State for auth error handling
   const [error, setError] = useState<string | null>(null);
   
-  // Auth state
-  const { user, setUser, isLoading, setIsLoading } = useAuthState();
+  // Auth session
+  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading } = useAuthSession();
   
-  // Auth session - this is only needed during initialization
-  const { session } = useAuthSession();
+  // Profile state with unified loading
+  const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading);
+  
+  // Consolidated loading state
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Update loading state when both session and profile are ready
+  useEffect(() => {
+    console.log("AuthContext loading state updated:", { 
+      isSessionLoading, 
+      user: user?.id,
+      hasSession: !!session
+    });
+    
+    // Only mark as loaded when session loading is complete
+    if (!isSessionLoading) {
+      console.log("Auth state fully loaded, setting isLoading to false");
+      setIsLoading(false);
+    }
+  }, [isSessionLoading, user, session]);
   
   // Auth core for login/logout
   const authCore = useAuthCore(setUser);

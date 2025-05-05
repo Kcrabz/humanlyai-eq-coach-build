@@ -17,12 +17,21 @@ export const useProfileState = (
   // Effect for loading and setting user profile when session changes
   useEffect(() => {
     // If there's no session or we're already done loading, do nothing more
-    if (!session || !isLoading) return;
+    if (!session) {
+      console.log("No session available, clearing user profile");
+      setUser(null);
+      return;
+    }
 
-    // Use setTimeout to prevent potential deadlocks with Supabase auth
-    setTimeout(async () => {
+    if (!isLoading) return;
+
+    console.log("Loading user profile for session:", session.user.id);
+    
+    const loadUserProfile = async () => {
       try {
         if (session.user) {
+          console.log("Creating or fetching profile for:", session.user.id);
+          
           // Make sure profile exists
           await createProfileIfNeeded(session.user.id);
           
@@ -30,7 +39,7 @@ export const useProfileState = (
           const profile = await fetchUserProfile(session.user.id);
           
           if (profile) {
-            console.log("Setting user with onboarded status:", profile.onboarded);
+            console.log("Profile found with onboarded status:", profile.onboarded);
             setUser(profile);
           } else {
             // Basic user info if profile not found
@@ -50,7 +59,9 @@ export const useProfileState = (
       } finally {
         setIsLoading(false);
       }
-    }, 0);
+    };
+    
+    loadUserProfile();
   }, [session, isLoading, setIsLoading]);
 
   // Effect to clear user when session is null

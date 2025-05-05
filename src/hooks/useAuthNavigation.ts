@@ -24,13 +24,16 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
     
     // If on auth page and user is authenticated, redirect appropriately
     if (isOnAuthPage(location.pathname) && user) {
-      if (!user.onboarded) {
-        console.log("Authenticated but not onboarded, redirecting to onboarding");
-        navigate("/onboarding", { replace: true });
-      } else {
-        console.log("Authenticated and onboarded, redirecting to chat");
-        navigate("/chat", { replace: true });
-      }
+      // Use a small timeout to prevent potential race conditions
+      setTimeout(() => {
+        if (!user.onboarded) {
+          console.log("Authenticated but not onboarded, redirecting to onboarding");
+          navigate("/onboarding", { replace: true });
+        } else {
+          console.log("Authenticated and onboarded, redirecting to chat");
+          navigate("/chat", { replace: true });
+        }
+      }, 10);
     }
   }, [user, isLoading, navigate, location.pathname]);
 

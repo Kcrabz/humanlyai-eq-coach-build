@@ -11,11 +11,17 @@ export function AuthRedirect() {
   useEffect(() => {
     if (!isLoading && user) {
       console.log("AuthRedirect: User already authenticated, redirecting");
-      if (!user.onboarded) {
-        navigate("/onboarding", { replace: true });
-      } else {
-        navigate("/chat", { replace: true });
-      }
+      
+      // Use a short timeout to prevent potential race conditions
+      setTimeout(() => {
+        if (!user.onboarded) {
+          console.log("Redirecting to onboarding");
+          navigate("/onboarding", { replace: true });
+        } else {
+          console.log("Redirecting to chat");
+          navigate("/chat", { replace: true });
+        }
+      }, 10);
     }
   }, [user, isLoading, navigate]);
 

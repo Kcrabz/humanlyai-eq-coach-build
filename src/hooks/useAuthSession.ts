@@ -13,26 +13,35 @@ export const useAuthSession = () => {
   useEffect(() => {
     console.log("Setting up auth session listener");
     
-    // Set up the auth state listener
+    let isMounted = true;
+    
+    // Set up the auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.id);
-        setSession(newSession);
+        if (isMounted) {
+          setSession(newSession);
+        }
       }
     );
 
-    // Check for an existing session
+    // THEN check for an existing session
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       console.log("Existing session check:", existingSession?.user?.id);
-      setSession(existingSession);
+      if (isMounted) {
+        setSession(existingSession);
+        setIsLoading(false);
+      }
     }).catch(error => {
       console.error("Error getting session:", error);
-    }).finally(() => {
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     });
 
     return () => {
       console.log("Cleaning up auth session listener");
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
