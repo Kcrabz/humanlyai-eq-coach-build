@@ -2,42 +2,37 @@
 import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { User } from "@/types";
-import { handleAuthNavigation } from "@/services/authNavigationService";
 import { isOnAuthPage } from "@/utils/navigationUtils";
 
-/**
- * Hook that handles authentication-based navigation
- * @param user Current user object
- * @param isLoading Auth loading state
- * @returns The navigate function from react-router
- */
 export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
   const navigate = useNavigate();
   const location = useLocation();
   
   useEffect(() => {
-    // Skip navigation while auth is loading to prevent premature redirects
+    // Skip navigation while auth is loading
     if (isLoading) {
       console.log("Auth is still loading, skipping navigation");
       return;
     }
-    
-    // Skip navigation on auth pages to prevent redirect loops
-    if (isOnAuthPage(location.pathname)) {
-      console.log("On auth page, skipping navigation handling in hook");
-      return;
-    }
-    
-    // Log the current navigation context
-    console.log("useAuthNavigation effect running with:", {
+
+    console.log("useAuthNavigation effect running:", {
       pathname: location.pathname,
-      search: location.search,
+      isAuthPage: isOnAuthPage(location.pathname),
       user: user?.id,
       isOnboarded: user?.onboarded
     });
     
-    handleAuthNavigation(user, location.pathname, navigate, location.search);
-  }, [user, isLoading, navigate, location.pathname, location.search]);
+    // If on auth page and user is authenticated, redirect appropriately
+    if (isOnAuthPage(location.pathname) && user) {
+      if (!user.onboarded) {
+        console.log("Authenticated but not onboarded, redirecting to onboarding");
+        navigate("/onboarding", { replace: true });
+      } else {
+        console.log("Authenticated and onboarded, redirecting to chat");
+        navigate("/chat", { replace: true });
+      }
+    }
+  }, [user, isLoading, navigate, location.pathname]);
 
   return navigate;
 };
