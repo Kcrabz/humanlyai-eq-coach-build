@@ -12,11 +12,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
+import { TrendingUp } from "lucide-react";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
   const location = useLocation();
   const isOnChatPage = location.pathname === "/chat";
+  const isOnProgressPage = location.pathname === "/progress";
 
   return (
     <header className="enhanced-header py-4 px-4 sm:px-6 sticky top-0 z-30">
@@ -34,6 +36,12 @@ export function Header() {
           <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300">
             Pricing
           </Link>
+          {isAuthenticated && (
+            <Link to="/progress" className="text-sm font-medium flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300">
+              <TrendingUp className="h-4 w-4" />
+              Progress
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-4">
@@ -44,6 +52,16 @@ export function Header() {
                 <Link to="/chat">
                   <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
                     Chat with Coach
+                  </Button>
+                </Link>
+              )}
+              
+              {/* Only show "View Progress" button when not on the progress page */}
+              {!isOnProgressPage && !isOnChatPage && (
+                <Link to="/progress">
+                  <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
+                    <TrendingUp className="mr-1 h-4 w-4" />
+                    View Progress
                   </Button>
                 </Link>
               )}

@@ -39,7 +39,7 @@ export function MainNavigationLinks() {
       
       <Button
         variant={isActive("/progress") ? "default" : "ghost"}
-        className="w-full justify-start"
+        className="w-full justify-start bg-humanly-teal/10"
         size="sm"
         asChild
       >
