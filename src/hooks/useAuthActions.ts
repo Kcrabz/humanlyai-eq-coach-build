@@ -9,7 +9,16 @@ import { logSecurityEvent } from "@/services/securityLoggingService";
 export const useAuthActions = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { user } = useAuthState();
-  const navigate = useNavigate();
+  
+  // Get navigate function safely with a try/catch to prevent errors
+  let navigate: ((path: string, options?: any) => void) | undefined;
+  try {
+    navigate = useNavigate();
+  } catch (error) {
+    console.warn("Router not available, navigation will be disabled");
+    // Provide a no-op function if navigate is unavailable
+    navigate = undefined;
+  }
 
   const logout = async () => {
     try {
@@ -43,8 +52,13 @@ export const useAuthActions = () => {
       
       console.log("Successfully logged out");
       
-      // Navigate to the home page
-      navigate("/");
+      // Navigate to the home page if navigation is available
+      if (navigate) {
+        navigate("/");
+      } else {
+        // Fallback for when navigate is not available
+        window.location.href = "/";
+      }
       
       toast.success("Logged out successfully");
     } catch (error) {

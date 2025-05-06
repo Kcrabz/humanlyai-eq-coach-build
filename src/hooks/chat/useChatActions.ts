@@ -52,7 +52,7 @@ export const useChatActions = () => {
         addUserMessage,
         addAssistantMessage,
         {
-          navigate: undefined,
+          navigate: undefined, // No navigation needed in this context
           setError
         },
         () => {},
