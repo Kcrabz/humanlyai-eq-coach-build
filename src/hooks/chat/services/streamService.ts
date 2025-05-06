@@ -43,7 +43,8 @@ export async function sendMessageStream(
     console.log("User context:", {
       subscriptionTier: subscriptionTier,
       archetype: user?.eq_archetype || 'unknown',
-      coachingMode: user?.coaching_mode || 'normal'
+      coachingMode: user?.coaching_mode || 'normal',
+      userId: user?.id
     });
     
     // Initialize assistant message with empty content immediately
@@ -60,7 +61,6 @@ export async function sendMessageStream(
         subscriptionTier: subscriptionTier,
         archetype: user?.eq_archetype || 'Not set',
         coachingMode: user?.coaching_mode || 'normal',
-        // Make sure userId is included if available
         userId: user?.id
       }
     });

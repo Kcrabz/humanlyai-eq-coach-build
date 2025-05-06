@@ -1,12 +1,25 @@
 
 import { supabaseClient } from "./authClient.ts";
-import { corsHeaders } from "./utils.ts";
+import { corsHeaders, TIER_LIMITS } from "./utils.ts";
 
-// Define tier limits locally if they're not available in utils.ts
-const TIER_LIMITS = {
-  free: 500,
-  premium: 10000
-};
+// Check if user has exceeded usage limits
+export function checkUsageLimit(currentUsage: number, subscriptionTier: string): number {
+  // Get tier limit based on subscription tier
+  const tierLimit = TIER_LIMITS[subscriptionTier.toLowerCase()] || TIER_LIMITS.free;
+  
+  // If usage exceeds limit, throw an error
+  if (currentUsage >= tierLimit) {
+    throw {
+      type: 'usage_limit',
+      message: "You've reached your monthly message limit. Please upgrade your subscription.",
+      currentUsage,
+      tierLimit
+    };
+  }
+  
+  // Return the tier limit for usage tracking
+  return tierLimit;
+}
 
 // Update usage tracking
 export async function updateUsageTracking(

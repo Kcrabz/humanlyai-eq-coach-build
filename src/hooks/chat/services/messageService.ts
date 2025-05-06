@@ -17,8 +17,8 @@ export async function sendMessage(
   setLastSentMessage: (content: string | null) => void,
   setIsLoading: (loading: boolean) => void,
   setUsageInfo: (info: any) => void,
-  currentMessages: any[] = [],
-  user: any = null // Add user parameter
+  contextMessages: any[] = [],
+  user: any = null // User parameter
 ) {
   if (!content.trim()) return;
 
@@ -32,16 +32,24 @@ export async function sendMessage(
     
     console.log("Sending message to Edge Function:", content);
     
+    // Prepare user context for personalization
+    const userContext = {
+      subscriptionTier: user?.subscription_tier || 'free',
+      archetype: user?.eq_archetype || 'Not set',
+      coachingMode: user?.coaching_mode || 'normal',
+      userId: user?.id // Make sure userId is included
+    };
+    
+    console.log("Including user context:", userContext);
+    
     // Call the edge function to get a response from OpenAI
     const { data, error: apiError } = await supabase.functions.invoke('chat-completion', {
       body: {
         message: content,
-        messages: currentMessages,
+        messages: contextMessages,
         stream: false,
         // Include user context for personalization
-        subscriptionTier: user?.subscription_tier || 'free',
-        archetype: user?.eq_archetype || 'Not set',
-        coachingMode: user?.coaching_mode || 'normal'
+        ...userContext
       }
     });
 

@@ -1,3 +1,4 @@
+
 import { createSupabaseClient, getAuthenticatedUser, getUserProfileAndUsage, getOpenAIApiKey } from "./authClient.ts";
 import { checkUsageLimit } from "./usageTracking.ts";
 import { retrieveChatHistory } from "./handlerUtils.ts";
@@ -14,7 +15,8 @@ export async function prepareUserData(req: Request, reqBody: any) {
   const { 
     subscriptionTier: clientSubscriptionTier,
     archetype: clientArchetype,
-    coachingMode: clientCoachingMode 
+    coachingMode: clientCoachingMode,
+    userId: clientUserId
   } = reqBody;
   
   // Get OpenAI API key
@@ -36,7 +38,7 @@ export async function prepareUserData(req: Request, reqBody: any) {
   
   console.log(`User settings: archetype=${effectiveArchetype}, coachingMode=${effectiveCoachingMode}, tier=${effectiveSubscriptionTier}`);
   
-  // Check usage limits
+  // Check usage limits - import from usageTracking.ts
   const tierLimit = checkUsageLimit(currentUsage, effectiveSubscriptionTier);
   
   return {

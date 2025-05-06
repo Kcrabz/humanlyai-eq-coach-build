@@ -59,7 +59,7 @@ export const useChatActions = () => {
         (loading: boolean) => {}, // setIsLoading not needed here
         setUsageInfo,
         contextMessages,
-        user // Pass the user object from auth context
+        user // Pass the complete user object
       );
       
       console.log("Message sent and processed successfully");
