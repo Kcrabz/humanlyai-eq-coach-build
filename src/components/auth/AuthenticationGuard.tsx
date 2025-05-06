@@ -35,7 +35,7 @@ export const AuthenticationGuard = () => {
       return;
     }
     
-    // Wait for profile to load after sign-in before redirecting
+    // Critical: Wait for profile to load after sign-in before redirecting
     if (authEvent === 'SIGN_IN_COMPLETE' && !profileLoaded) {
       console.log("AuthGuard: Auth complete but waiting for profile to load");
       return;
@@ -56,19 +56,19 @@ export const AuthenticationGuard = () => {
     });
 
     // Handle successful login with direct redirect
-    if (user && (authEvent === "SIGN_IN_COMPLETE") && profileLoaded) {
-      console.log("AuthGuard: Auth event detected, handling login redirect");
+    if (user && (authEvent === "SIGN_IN_COMPLETE" || authEvent === "RESTORED_SESSION") && profileLoaded) {
+      console.log("AuthGuard: Auth event detected, handling login redirect", { authEvent });
       
       if (!user.onboarded) {
-        // Use direct navigation to break out of any potential loops
+        // Redirect to onboarding if not already there
         if (pathname !== "/onboarding") {
           console.log("AuthGuard: User not onboarded, redirecting to onboarding");
           navigate("/onboarding", { replace: true });
           toast.success("Welcome! Please complete onboarding to continue.");
         }
       } else {
-        // Use direct navigation to break out of any potential loops
-        if (pathname !== "/dashboard") {
+        // Redirect to dashboard if not already there and on auth page
+        if (isCurrentlyOnAuth) {
           console.log("AuthGuard: User onboarded, redirecting to dashboard");
           navigate("/dashboard", { replace: true });
           toast.success(`Welcome back, ${user.name || 'Friend'}!`);

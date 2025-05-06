@@ -13,5 +13,6 @@ export function AuthRedirect() {
     );
   }
 
+  // Simply render nothing - all redirects now handled by AuthenticationGuard
   return null;
 }

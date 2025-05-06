@@ -23,7 +23,7 @@ export function LoginForm() {
   
   const { authEvent } = useAuth();
   
-  // Debug authentication process without redirection
+  // Debug authentication process
   useEffect(() => {
     console.log("LoginForm: Auth state updated", { 
       authEvent,
