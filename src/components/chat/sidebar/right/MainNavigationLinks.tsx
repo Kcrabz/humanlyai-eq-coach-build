@@ -2,7 +2,6 @@
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutGrid } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 export function MainNavigationLinks() {
@@ -90,7 +89,7 @@ export function MainNavigationLinks() {
         </Link>
       </Button>
       
-      {/* Admin link - only shown to admin users */}
+      {/* Admin link - only shown to admin users, removed icon */}
       {isAdmin && (
         <Button
           variant={isActive("/admin") ? "default" : "ghost"}
@@ -99,7 +98,6 @@ export function MainNavigationLinks() {
           asChild
         >
           <Link to="/admin">
-            <LayoutGrid className="mr-2 h-4 w-4" />
             Admin
           </Link>
         </Button>
