@@ -1,12 +1,13 @@
 
-import { useEffect, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { isOnAuthPage, isOnOnboardingPage } from "@/utils/navigationUtils";
+import { isOnAuthPage } from "@/utils/navigationUtils";
 import { toast } from "sonner";
 
 /**
  * Global authentication guard component that handles all redirects based on auth state
+ * With improved protection against redirect loops
  */
 export const AuthenticationGuard = () => {
   const { user, isLoading, authEvent, profileLoaded } = useAuth();
@@ -26,9 +27,9 @@ export const AuthenticationGuard = () => {
     });
   }, [user, pathname, authEvent, profileLoaded]);
 
-  // Handle redirects based on authentication status
+  // Handle redirects based on authentication status - with loop protection
   useEffect(() => {
-    // Only proceed when auth is fully ready and profile is loaded if needed
+    // Only proceed when auth is fully ready
     if (isLoading) {
       console.log("AuthGuard: Auth state is still loading, waiting...");
       return;
@@ -40,56 +41,54 @@ export const AuthenticationGuard = () => {
       return;
     }
 
-    console.log("AuthGuard: Running redirection check", { 
-      isAuthenticated: !!user, 
-      pathname,
-      userOnboarded: user?.onboarded,
-      authEvent,
-      profileLoaded,
-      timestamp: new Date().toISOString()
+    // Skip any redirects if we're already on the right page to prevent loops
+    const isCurrentlyOnAuth = isOnAuthPage(pathname);
+    const shouldGoToOnboarding = user && !user.onboarded && pathname !== "/onboarding";
+    const shouldGoToDashboard = user && user.onboarded && (isCurrentlyOnAuth || pathname === "/onboarding");
+    const shouldGoToLogin = !user && pathname !== "/" && !isCurrentlyOnAuth;
+    
+    console.log("AuthGuard: Navigation logic check", {
+      isCurrentlyOnAuth,
+      shouldGoToOnboarding,
+      shouldGoToDashboard,
+      shouldGoToLogin,
+      pathname
     });
 
     // Handle successful login with direct redirect
-    if (user && (authEvent === "SIGNED_IN" || authEvent === "SIGN_IN_COMPLETE") && profileLoaded) {
-      console.log("AuthGuard: Auth event detected, redirecting after login");
+    if (user && (authEvent === "SIGN_IN_COMPLETE") && profileLoaded) {
+      console.log("AuthGuard: Auth event detected, handling login redirect");
       
       if (!user.onboarded) {
-        console.log("AuthGuard: User not onboarded, redirecting to onboarding");
-        window.location.href = "/onboarding";
-        toast.success("Welcome! Please complete onboarding to continue.");
-        return;
-      } else {
-        console.log("AuthGuard: User onboarded, redirecting to dashboard");
-        window.location.href = "/dashboard";
-        toast.success(`Welcome back, ${user.name || 'Friend'}!`);
-        return;
-      }
-    }
-
-    // Standard auth checks
-    if (user) {
-      // If user is on an auth page (login/signup), redirect to appropriate page
-      if (isOnAuthPage(pathname)) {
-        console.log("AuthGuard: User is authenticated on auth page, redirecting");
-        
-        if (!user.onboarded) {
-          console.log("AuthGuard: Redirecting to onboarding");
+        // Use direct navigation to break out of any potential loops
+        if (pathname !== "/onboarding") {
+          console.log("AuthGuard: User not onboarded, redirecting to onboarding");
           navigate("/onboarding", { replace: true });
-        } else {
-          console.log("AuthGuard: Redirecting to dashboard");
+          toast.success("Welcome! Please complete onboarding to continue.");
+        }
+      } else {
+        // Use direct navigation to break out of any potential loops
+        if (pathname !== "/dashboard") {
+          console.log("AuthGuard: User onboarded, redirecting to dashboard");
           navigate("/dashboard", { replace: true });
+          toast.success(`Welcome back, ${user.name || 'Friend'}!`);
         }
       }
-      // If user is not onboarded but trying to access pages other than onboarding
-      else if (!user.onboarded && !isOnOnboardingPage(pathname) && pathname !== "/") {
-        console.log("AuthGuard: User is not onboarded, redirecting to onboarding");
-        navigate("/onboarding", { replace: true });
-      }
+      return;
     }
-    // User is not authenticated but trying to access protected routes
-    else if (!user && pathname !== "/" && !isOnAuthPage(pathname)) {
-      console.log("AuthGuard: User is not authenticated on protected route, redirecting to login");
+
+    // Non-login redirects - carefully managed to prevent loops
+    if (shouldGoToLogin) {
+      console.log("AuthGuard: Redirecting unauthenticated user to login");
       navigate("/login", { replace: true });
+    }
+    else if (shouldGoToOnboarding) {
+      console.log("AuthGuard: Redirecting to onboarding");
+      navigate("/onboarding", { replace: true });
+    }
+    else if (shouldGoToDashboard) {
+      console.log("AuthGuard: Redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }, [user, isLoading, pathname, navigate, authEvent, profileLoaded]);
 

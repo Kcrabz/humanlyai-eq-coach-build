@@ -11,6 +11,7 @@ export const useAuthSession = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [authEvent, setAuthEvent] = useState<string | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
   // Handle session updates after authentication events
   const updateSessionAfterEvent = useCallback(async (event: string) => {
@@ -45,7 +46,9 @@ export const useAuthSession = () => {
         
         if (isMounted) {
           // Update the session state
-          setSession(newSession);
+          if (event !== 'INITIAL_SESSION') {
+            setSession(newSession);
+          }
           setAuthEvent(event);
           
           // For critical events, force an immediate session check and state update
@@ -70,11 +73,13 @@ export const useAuthSession = () => {
         
         // Make sure to set isLoading to false once session is checked
         setIsLoading(false);
+        setInitialized(true);
       }
     }).catch(error => {
       console.error("Error getting session:", error);
       if (isMounted) {
         setIsLoading(false);
+        setInitialized(true);
       }
     });
 
@@ -91,6 +96,7 @@ export const useAuthSession = () => {
     setIsLoading, 
     authEvent, 
     profileLoaded, 
-    setProfileLoaded 
+    setProfileLoaded,
+    initialized
   };
 };

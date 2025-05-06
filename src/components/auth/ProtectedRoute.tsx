@@ -1,5 +1,5 @@
 
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
 
@@ -8,17 +8,7 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  useEffect(() => {
-    // Only logging, no navigation logic to avoid conflicts with AuthenticationGuard
-    console.log("ProtectedRoute auth check:", {
-      isAuthenticated,
-      isLoading,
-      userOnboarded: user?.onboarded,
-      pathname: window.location.pathname
-    });
-  }, [isAuthenticated, isLoading, user]);
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -28,7 +18,6 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  // Simply render children if authenticated, otherwise render nothing
-  // All actual redirections are handled by AuthenticationGuard
+  // Simply render children if authenticated - all redirects handled by AuthenticationGuard
   return isAuthenticated ? <>{children}</> : null;
 };

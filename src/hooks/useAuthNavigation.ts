@@ -1,21 +1,17 @@
 
-import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { User } from "@/types";
 
-export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
+/**
+ * This hook has been deprecated and disabled to prevent navigation conflicts.
+ * All authentication navigation is now handled by AuthenticationGuard.
+ */
+export const useAuthNavigation = () => {
   const location = useLocation();
   
-  // Only log auth state, don't perform navigation
-  useEffect(() => {
-    if (!isLoading) {
-      console.log("useAuthNavigation (DISABLED): No longer handling navigation", {
-        pathname: location.pathname,
-        user: user?.id,
-        isOnboarded: user?.onboarded
-      });
-    }
-  }, [user, isLoading, location.pathname]);
+  console.log("useAuthNavigation: This hook is disabled and should not be used", {
+    pathname: location.pathname,
+    timestamp: new Date().toISOString()
+  });
 
   return null;
 };

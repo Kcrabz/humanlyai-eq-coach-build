@@ -1,22 +1,8 @@
 
-import { useEffect } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { useAuth } from "@/context/AuthContext";
 
 const LoginPage = () => {
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  useEffect(() => {
-    if (!isLoading) {
-      console.log("LoginPage auth check:", { 
-        isAuthenticated, 
-        isLoading,
-        pathname: window.location.pathname 
-      });
-    }
-  }, [isAuthenticated, isLoading]);
-
   return (
     <PageLayout>
       <div className="flex min-h-screen items-center justify-center py-12 animate-scale-fade-in">
