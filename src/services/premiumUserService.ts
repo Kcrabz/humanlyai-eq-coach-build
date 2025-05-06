@@ -51,15 +51,20 @@ export const fetchUserAchievements = async (userId: string): Promise<UserAchieve
     if (error) throw error;
     
     if (data && Array.isArray(data)) {
-      return data.map(item => ({
-        id: item.id,
-        title: item.achievements.title,
-        description: item.achievements.description,
-        achieved: item.achieved,
-        achievedAt: item.achieved_at,
-        type: item.achievements.type,
-        icon: item.achievements.icon
-      }));
+      return data.map(item => {
+        // Make sure type is cast to the expected union type
+        const achievementType = item.achievements.type as "streak" | "breakthrough" | "milestone" | "challenge";
+        
+        return {
+          id: item.id,
+          title: item.achievements.title,
+          description: item.achievements.description,
+          achieved: item.achieved,
+          achievedAt: item.achieved_at,
+          type: achievementType,
+          icon: item.achievements.icon
+        };
+      });
     }
     
     return [];

@@ -38,25 +38,27 @@ export const useEQProgress = () => {
         
       if (breakthroughsError) throw breakthroughsError;
       
-      // Get category counts with a direct query
-      const { data: categoryCountsData, error: countError } = await supabase
+      // Get category counts with a different approach - fetch all first, then count client-side
+      const { data: allBreakthroughs, error: categoryError } = await supabase
         .from('eq_breakthroughs')
-        .select('category, count(*)', { count: 'exact' })
-        .eq('user_id', user.id)
-        .group_by('category');
+        .select('category')
+        .eq('user_id', user.id);
         
-      if (countError) throw countError;
+      if (categoryError) throw categoryError;
       
       // Format data
       const breakthroughsByCategory: Record<string, number> = {};
       let totalBreakthroughs = 0;
       
       // If we got data back and it's an array as expected
-      if (Array.isArray(categoryCountsData)) {
-        categoryCountsData.forEach(item => {
-          const count = parseInt(item.count);
-          breakthroughsByCategory[item.category] = count;
-          totalBreakthroughs += count;
+      if (Array.isArray(allBreakthroughs)) {
+        // Count categories
+        allBreakthroughs.forEach(item => {
+          if (!breakthroughsByCategory[item.category]) {
+            breakthroughsByCategory[item.category] = 0;
+          }
+          breakthroughsByCategory[item.category]++;
+          totalBreakthroughs++;
         });
       }
       
