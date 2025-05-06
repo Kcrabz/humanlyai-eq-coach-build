@@ -24,7 +24,7 @@ export interface SecurityEvent {
   eventType: SecurityEventType;
   ip?: string;
   userAgent?: string;
-  details?: any;
+  details?: Record<string, any>; // Using Record instead of 'any' to be more specific but avoid recursion
   riskLevel?: RiskLevel;
 }
 
@@ -54,6 +54,7 @@ export const logSecurityEvent = async (event: SecurityEvent): Promise<boolean> =
     
     // To enable database logging, uncomment once the security_events table is created
     /*
+    // Important: This is commented out because the table doesn't exist yet
     const { error } = await supabase
       .from('security_events')
       .insert({
@@ -129,6 +130,7 @@ export const checkSuspiciousPattern = async (
       const from = new Date();
       from.setHours(from.getHours() - 1);
       
+      // Important: This is commented out because the table doesn't exist yet
       const { data, error } = await supabase
         .from('security_events')
         .select('*')

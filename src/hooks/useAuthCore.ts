@@ -28,13 +28,13 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         setError(error.message);
         toast.error("Login failed", { description: error.message });
         
-        // Log failed login attempt - simplified to avoid infinite type recursion
+        // Log failed login attempt - avoiding type recursion by using basic event details
         if (data?.user?.id) {
           try {
             await logSecurityEvent({
               userId: data.user.id,
               eventType: 'login_failure',
-              details: { error: error.message }
+              details: { errorMessage: error.message }
             });
           } catch (logError) {
             console.error("Failed to log security event:", logError);
@@ -51,11 +51,12 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         return false;
       }
       
-      // Log successful login - simplified to avoid infinite type recursion
+      // Log successful login - avoiding type recursion by using basic event details
       try {
         await logSecurityEvent({
           userId: data.user.id,
-          eventType: 'login_success'
+          eventType: 'login_success',
+          details: { timestamp: new Date().toISOString() }
         });
       } catch (logError) {
         console.error("Failed to log security event:", logError);
@@ -103,7 +104,7 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
           await logSecurityEvent({
             userId: data.id,
             eventType: 'password_reset_requested',
-            details: { email }
+            details: { email, timestamp: new Date().toISOString() }
           });
         }
       } catch (logError) {
@@ -142,12 +143,15 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         // Update local state
         setUser((prevUser) => prevUser ? { ...prevUser, ...updates } : null);
         
-        // Log profile update
+        // Log profile update with simplified details to avoid recursion
         try {
           await logSecurityEvent({
             userId: authUser.id,
             eventType: 'profile_updated',
-            details: { fields: Object.keys(updates) }
+            details: { 
+              updatedFields: Object.keys(updates),
+              timestamp: new Date().toISOString()
+            }
           });
         } catch (logError) {
           console.error("Failed to log security event:", logError);
