@@ -44,7 +44,7 @@ export const AuthenticationGuard = () => {
     // Skip any redirects if we're already on the right page to prevent loops
     const isCurrentlyOnAuth = isOnAuthPage(pathname);
     const shouldGoToOnboarding = user && !user.onboarded && pathname !== "/onboarding";
-    const shouldGoToDashboard = user && user.onboarded && (isCurrentlyOnAuth || pathname === "/onboarding");
+    const shouldGoToDashboard = user && user.onboarded && isCurrentlyOnAuth;
     const shouldGoToLogin = !user && pathname !== "/" && !isCurrentlyOnAuth;
     
     console.log("AuthGuard: Navigation logic check", {
@@ -55,7 +55,7 @@ export const AuthenticationGuard = () => {
       pathname
     });
 
-    // Handle successful login with direct redirect - no longer restrict this to auth pages
+    // Handle successful login with direct redirect - but only from auth pages
     if (user && (authEvent === "SIGN_IN_COMPLETE" || authEvent === "RESTORED_SESSION") && profileLoaded) {
       console.log("AuthGuard: Auth event detected, handling login redirect", { authEvent });
       
@@ -69,10 +69,11 @@ export const AuthenticationGuard = () => {
             toast.success("Welcome! Please complete onboarding to continue.");
           }, 50);
         }
-      } else {
-        // Always redirect to dashboard after successful login
+      } else if (isCurrentlyOnAuth) {
+        // Only redirect to dashboard after successful login if we're on an auth page
+        // This prevents interrupting normal navigation on the dashboard and other pages
         if (pathname !== "/dashboard") {
-          console.log("AuthGuard: User onboarded, redirecting to dashboard");
+          console.log("AuthGuard: User onboarded and on auth page, redirecting to dashboard");
           // Use a timeout to ensure state updates have completed
           setTimeout(() => {
             navigate("/dashboard", { replace: true });
