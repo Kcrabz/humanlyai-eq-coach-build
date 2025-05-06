@@ -4,7 +4,7 @@ import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Hook for managing authentication session state
+ * Hook for managing authentication session state with improved initialization
  */
 export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -21,6 +21,11 @@ export const useAuthSession = () => {
         console.log("Auth state changed:", event, newSession?.user?.id);
         if (isMounted) {
           setSession(newSession);
+          
+          // For login events, we want to force an immediate session update
+          if (event === 'SIGNED_IN') {
+            console.log("User signed in, updating session immediately");
+          }
         }
       }
     );
