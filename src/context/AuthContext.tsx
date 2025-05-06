@@ -18,7 +18,7 @@ export interface AuthContextType {
   
   // Re-exported from useAuthActions
   login: (email: string, password: string) => Promise<any>;
-  signup: (email: string, password: string) => Promise<any>;
+  signup: (email: string, password: string, recaptchaToken?: string) => Promise<any>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   
