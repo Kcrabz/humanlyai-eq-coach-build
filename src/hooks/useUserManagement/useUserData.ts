@@ -11,6 +11,34 @@ export const useUserData = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { fetchUsersWithChatActivity } = useChatUserIds();
   
+  // Fetch user emails from the admin edge function
+  const fetchUserEmails = async (userIds: string[]) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-get-user-emails', {
+        body: { userIds },
+      });
+
+      if (error) {
+        console.error("Error fetching user emails:", error);
+        throw error;
+      }
+
+      // Create a map of user IDs to emails
+      const emailMap = new Map();
+      data.data.forEach((item: { id: string; email: string }) => {
+        if (item.email) {
+          emailMap.set(item.id, item.email);
+        }
+      });
+
+      return emailMap;
+    } catch (error) {
+      console.error("Failed to fetch user emails:", error);
+      toast.error("Failed to fetch user emails");
+      return new Map();
+    }
+  };
+  
   // Fetch all users
   const fetchUsers = async (onboardedFilter: string = "all", chatFilter: string = "all") => {
     setIsLoading(true);
@@ -45,18 +73,18 @@ export const useUserData = () => {
       if (chatFilter === "true" && chatUserIds.length > 0) {
         data = data.filter(profile => chatUserIds.includes(profile.id));
       }
-
-      // Add auth emails to the profiles data
-      const usersWithEmails = await Promise.all(
-        (data || []).map(async (profile) => {
-          // For each profile, fetch the user email from auth
-          const { data: authData } = await supabase.auth.admin.getUserById(profile.id);
-          return {
-            ...profile,
-            email: authData?.user?.email || 'Unknown',
-          } as UserTableData;
-        })
-      );
+      
+      // Collect all user IDs to fetch emails
+      const userIds = data.map(profile => profile.id);
+      
+      // Fetch emails from the admin edge function
+      const emailMap = await fetchUserEmails(userIds);
+      
+      // Add emails to the profiles data
+      const usersWithEmails = data.map(profile => ({
+        ...profile,
+        email: emailMap.get(profile.id) || 'Unknown',
+      })) as UserTableData[];
 
       setUsers(usersWithEmails);
     } catch (error) {
