@@ -18,17 +18,25 @@ export function PageLayout({ children, fullWidth = false, delayHeaderAnimation =
   const shouldShowHeader = !location.pathname.includes("/onboarding") && location.pathname !== "/chat";
 
   useEffect(() => {
+    console.log("PageLayout effect triggered", { 
+      delayHeaderAnimation, 
+      shouldShowHeader 
+    });
+    
     if (!delayHeaderAnimation || !shouldShowHeader) {
+      console.log("Setting showHeader immediately:", shouldShowHeader);
       setShowHeader(shouldShowHeader);
       return;
     }
     
     // If we're delaying header animation, start with it hidden
+    console.log("Delaying header animation, starting with hidden header");
     setShowHeader(false);
   }, [delayHeaderAnimation, shouldShowHeader]);
 
   // Function to show header - will be called by HeroSection
   const displayHeader = () => {
+    console.log("displayHeader function called, setting showHeader to true");
     setShowHeader(true);
   };
 

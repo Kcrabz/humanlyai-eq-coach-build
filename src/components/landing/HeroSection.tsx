@@ -47,7 +47,9 @@ const HeroSection = ({
         
         // After the last word is displayed, wait a bit and then show the header
         if (index === subtitleWords.length - 1 && displayHeader) {
+          console.log("Last word displayed, will show header in 600ms");
           setTimeout(() => {
+            console.log("Calling displayHeader function");
             displayHeader();
           }, 600); // Wait 600ms after the last word appears before showing the header
         }
