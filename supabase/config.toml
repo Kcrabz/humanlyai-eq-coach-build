@@ -1,8 +1,9 @@
 
 project_id = "acboajrjgqqnfrtozssb"
 
+[functions.admin-export-users-csv]
+verify_jwt = true
+
 [functions.admin-get-user-emails]
 verify_jwt = true
 
-[functions.admin-export-users-csv]
-verify_jwt = true

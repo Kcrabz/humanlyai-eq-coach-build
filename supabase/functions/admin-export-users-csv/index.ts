@@ -4,12 +4,20 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.8";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders, status: 204 });
+  }
+  
+  if (req.method !== 'POST') {
+    return new Response(
+      JSON.stringify({ error: 'Method not allowed. Please use POST.' }),
+      { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
   
   try {
@@ -17,15 +25,21 @@ Deno.serve(async (req) => {
     
     // Parse request body if available
     let filters = {};
+    let debug = false;
     try {
-      const requestBody = await req.text();
-      if (requestBody) {
-        const jsonBody = JSON.parse(requestBody);
-        filters = jsonBody.filters || {};
-        console.log("Received filters:", filters);
+      const requestBody = await req.json();
+      filters = requestBody.filters || {};
+      debug = Boolean(requestBody.debug);
+      console.log("Received filters:", filters);
+      if (debug) {
+        console.log("Debug mode enabled, will provide detailed logs");
       }
     } catch (e) {
-      console.log("No request body or invalid JSON:", e);
+      console.log("Error parsing request body:", e);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request body. Expected JSON.' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
     
     // Create Supabase client with admin privileges
@@ -57,7 +71,9 @@ Deno.serve(async (req) => {
         persistSession: false
       },
       global: {
-        headers: { Authorization: authHeader },
+        headers: { 
+          Authorization: authHeader 
+        },
       },
     });
     
@@ -68,10 +84,18 @@ Deno.serve(async (req) => {
       error: authError,
     } = await supabaseAdmin.auth.getUser();
     
-    if (authError || !user) {
+    if (authError) {
       console.error("Authentication error:", authError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized access', details: authError?.message }),
+        JSON.stringify({ error: 'Authentication failed', details: authError.message }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!user) {
+      console.error("No user found in session");
+      return new Response(
+        JSON.stringify({ error: 'User not authenticated' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -100,6 +124,8 @@ Deno.serve(async (req) => {
     
     try {
       // Get all users from auth.users - this requires admin privileges
+      console.log("Attempting to fetch users with admin client");
+      
       const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers();
       
       if (authUsersError) {
@@ -207,7 +233,7 @@ Deno.serve(async (req) => {
       
       console.log("CSV generated successfully, returning response");
       
-      // Return the CSV file
+      // Return the CSV file with proper headers
       return new Response(csv, {
         status: 200,
         headers: {
@@ -216,21 +242,21 @@ Deno.serve(async (req) => {
           'Content-Disposition': 'attachment; filename="users_export.csv"'
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in data processing:", error);
       return new Response(
         JSON.stringify({ error: 'Error processing data', details: error.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Unexpected error:", error);
     
     return new Response(
       JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 
         status: 500, 
-        headers: { "Content-Type": "application/json", ...corsHeaders } 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
       }
     );
   }

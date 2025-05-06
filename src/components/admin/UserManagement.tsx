@@ -63,34 +63,53 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
       
       console.log("Got authenticated session, calling export function...");
       
-      // Call the edge function with proper authentication and error handling
-      const { data, error } = await supabase.functions.invoke('admin-export-users-csv', {
+      // Call the edge function with proper authentication and detailed error handling
+      const response = await supabase.functions.invoke('admin-export-users-csv', {
         headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`
+          Authorization: `Bearer ${sessionData.session.access_token}`,
+          'Content-Type': 'application/json'
         },
-        body: { filters: { searchTerm, tierFilter, archetypeFilter } }
+        method: 'POST',
+        body: { 
+          filters: { searchTerm, tierFilter, archetypeFilter },
+          debug: true // Add debug flag to get more information
+        }
       });
       
-      if (error) {
-        console.error("Error exporting users:", error);
+      console.log("Edge function response:", response);
+      
+      if (response.error) {
+        console.error("Error from edge function:", response.error);
         toast.error("Failed to export users", { 
-          description: error.message || "An unknown error occurred" 
+          description: response.error.message || "An unexpected error occurred" 
         });
         return;
       }
       
-      if (!data || data.error) {
-        console.error("Error in edge function response:", data?.error || "No data returned");
+      if (!response.data) {
+        console.error("No data returned from edge function");
+        toast.error("Failed to export users", { description: "No data returned from server" });
+        return;
+      }
+      
+      // Check if the response is an error message from our server
+      if (typeof response.data === 'object' && response.data.error) {
+        console.error("Error in edge function response:", response.data.error);
         toast.error("Failed to export users", { 
-          description: data?.error || "No data returned from server" 
+          description: response.data.error || "Server returned an error" 
         });
         return;
       }
       
-      console.log("Export data received successfully, size:", data.length);
+      // Handle CSV data (should be a string)
+      const csvData = typeof response.data === 'string' 
+        ? response.data 
+        : JSON.stringify(response.data);
+      
+      console.log("Export data received successfully, size:", csvData.length);
       
       // Create a blob from the CSV data
-      const blob = new Blob([data], { type: 'text/csv' });
+      const blob = new Blob([csvData], { type: 'text/csv' });
       
       // Create a download link and trigger the download
       const url = window.URL.createObjectURL(blob);
@@ -103,9 +122,11 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
       document.body.removeChild(a);
       
       toast.success("User data exported successfully");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to export users:", err);
-      toast.error("An unexpected error occurred while exporting users");
+      toast.error("Export failed", { 
+        description: err?.message || "An unexpected error occurred while exporting users"
+      });
     } finally {
       setExportLoading(false);
     }
