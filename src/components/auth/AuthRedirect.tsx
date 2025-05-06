@@ -14,16 +14,14 @@ export function AuthRedirect() {
     if (!isLoading && user && location.pathname !== "/") {
       console.log("AuthRedirect: User already authenticated, redirecting");
       
-      // Use a short timeout to prevent potential race conditions
-      setTimeout(() => {
-        if (!user.onboarded) {
-          console.log("Redirecting to onboarding");
-          navigate("/onboarding", { replace: true });
-        } else {
-          console.log("Redirecting to dashboard");
-          navigate("/dashboard", { replace: true });
-        }
-      }, 10);
+      // Execute redirect immediately
+      if (!user.onboarded) {
+        console.log("Redirecting to onboarding");
+        navigate("/onboarding", { replace: true });
+      } else {
+        console.log("Redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
+      }
     }
   }, [user, isLoading, navigate, location.pathname]);
 

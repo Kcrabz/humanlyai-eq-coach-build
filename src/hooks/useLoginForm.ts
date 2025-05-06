@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
+import { useNavigate } from "react-router-dom";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -15,7 +16,8 @@ export function useLoginForm() {
   } | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
   
   // Timer for rate limit countdown
   useEffect(() => {
@@ -36,6 +38,18 @@ export function useLoginForm() {
     
     return () => clearInterval(interval);
   }, [rateLimitInfo]);
+  
+  // Effect to redirect after successful login
+  useEffect(() => {
+    if (user) {
+      console.log("User authenticated in useLoginForm, redirecting to appropriate page");
+      if (!user.onboarded) {
+        navigate("/onboarding", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [user, navigate]);
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);

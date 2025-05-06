@@ -2,8 +2,26 @@
 import { AuthForm } from "@/components/auth/AuthForm";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
 import { PageLayout } from "@/components/layout/PageLayout";
+import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Immediate redirect effect if user is already authenticated
+  useEffect(() => {
+    if (!isLoading && user) {
+      console.log("LoginPage: User already authenticated, redirecting");
+      if (!user.onboarded) {
+        navigate("/onboarding", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [user, isLoading, navigate]);
+  
   return (
     <PageLayout>
       <AuthRedirect />
