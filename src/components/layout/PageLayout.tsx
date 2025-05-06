@@ -25,8 +25,8 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
         <div className="fixed top-40 right-20 w-48 h-48 bg-humanly-pastel-mint blob-animation -z-10 opacity-20 blob" style={{ animationDelay: '3s' }}></div>
       </>
       
-      {/* Sonner toast provider */}
-      <Toaster position="top-right" richColors />
+      {/* Sonner toast provider - positioned at bottom only */}
+      <Toaster position="bottom-right" richColors />
       
       {/* Collapsible menu in the top right corner, only shown outside of onboarding/chat */}
       {shouldShowMenu && (
