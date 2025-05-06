@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { updateUserProfileInDatabase } from "@/services/authService";
-import { logSecurityEvent } from "@/services/securityLoggingService";
 
 const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   const [error, setError] = useState<string | null>(null);
@@ -27,20 +26,6 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         console.error("Login error:", error.message);
         setError(error.message);
         toast.error("Login failed", { description: error.message });
-        
-        // Log failed login attempt with simple string values only
-        if (data?.user?.id) {
-          try {
-            await logSecurityEvent({
-              userId: data.user.id,
-              eventType: 'login_failure',
-              details: { errorMsg: String(error.message) }
-            });
-          } catch (logError) {
-            console.error("Failed to log security event:", logError);
-          }
-        }
-        
         return false;
       }
       
@@ -51,16 +36,7 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         return false;
       }
       
-      // Log successful login with simple string value
-      try {
-        await logSecurityEvent({
-          userId: data.user.id,
-          eventType: 'login_success',
-          details: { timestamp: String(new Date().toISOString()) }
-        });
-      } catch (logError) {
-        console.error("Failed to log security event:", logError);
-      }
+      // Removed security event logging for successful login
       
       console.log("Login successful for:", email, "User data:", data.user.id);
       toast.success("Logged in successfully");
@@ -92,27 +68,7 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         return false;
       }
       
-      // Log password reset request with simple string values
-      try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('email', email)
-          .maybeSingle();
-          
-        if (data?.id) {
-          await logSecurityEvent({
-            userId: data.id,
-            eventType: 'password_reset_requested',
-            details: { 
-              emailAddr: String(email), 
-              timestamp: String(new Date().toISOString()) 
-            }
-          });
-        }
-      } catch (logError) {
-        console.error("Error logging password reset:", logError);
-      }
+      // Removed security event logging for password reset
       
       console.log("Password reset email sent successfully to:", email);
       return true;
@@ -146,19 +102,7 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         // Update local state
         setUser((prevUser) => prevUser ? { ...prevUser, ...updates } : null);
         
-        // Log profile update with simple string values
-        try {
-          await logSecurityEvent({
-            userId: authUser.id,
-            eventType: 'profile_updated',
-            details: { 
-              updatedFields: String(Object.keys(updates).join(',')),
-              time: String(new Date().toISOString())
-            }
-          });
-        } catch (logError) {
-          console.error("Failed to log security event:", logError);
-        }
+        // Removed security event logging for profile update
         
         toast.success("Profile updated successfully");
       }
