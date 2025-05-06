@@ -2,7 +2,7 @@
 import { SubscriptionTier } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { UserOperations } from "./UserOperations";
+import { UserOperations } from "./user-operations";
 import { UserTableData } from "@/hooks/useUserManagement/types";
 
 interface UserTableProps {
