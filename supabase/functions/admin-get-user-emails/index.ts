@@ -14,15 +14,22 @@ Deno.serve(async (req) => {
   
   try {
     // Create Supabase client with admin privileges
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') || '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization') || '' },
-        },
-      }
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("Missing required environment variables");
+      return new Response(
+        JSON.stringify({ error: 'Server misconfiguration' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      global: {
+        headers: { Authorization: req.headers.get('Authorization') || '' },
+      },
+    });
     
     // Verify the request is from an admin user
     const {
@@ -38,7 +45,7 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Check if the user has admin access
+    // Check if the user has admin access using the is_admin function
     const { data: isAdmin, error: adminCheckError } = await supabaseAdmin.rpc('is_admin');
     
     if (adminCheckError || !isAdmin) {
@@ -59,20 +66,25 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Fetch user details for the provided IDs
+    // Fetch user details for the provided IDs using admin API
     const userEmails = await Promise.all(
       userIds.map(async (userId) => {
-        const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
-        
-        if (error) {
-          console.error(`Error fetching user ${userId}:`, error);
-          return { id: userId, email: null, error: error.message };
+        try {
+          const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+          
+          if (error) {
+            console.error(`Error fetching user ${userId}:`, error);
+            return { id: userId, email: null, error: error.message };
+          }
+          
+          return { 
+            id: userId, 
+            email: data.user?.email || null 
+          };
+        } catch (error) {
+          console.error(`Unexpected error for user ${userId}:`, error);
+          return { id: userId, email: null, error: 'Internal error' };
         }
-        
-        return { 
-          id: userId, 
-          email: data.user?.email || null 
-        };
       })
     );
     
