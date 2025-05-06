@@ -18,7 +18,7 @@ export type SecurityEventType =
 // Risk levels
 export type RiskLevel = 'low' | 'medium' | 'high';
 
-// Simple primitive type for details to prevent recursion issues
+// Explicitly define primitive types to avoid recursion
 export type EventDetailValue = string | number | boolean | null;
 
 // Security event interface - using only primitive types to avoid recursion issues

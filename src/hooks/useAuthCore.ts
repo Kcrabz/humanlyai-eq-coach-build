@@ -56,7 +56,7 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         await logSecurityEvent({
           userId: data.user.id,
           eventType: 'login_success',
-          details: { timestamp: String(new Date().toISOString()) }
+          details: { timestamp: new Date().toISOString() }
         });
       } catch (logError) {
         console.error("Failed to log security event:", logError);
@@ -105,8 +105,8 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
             userId: data.id,
             eventType: 'password_reset_requested',
             details: { 
-              emailAddr: String(email), 
-              timestamp: String(new Date().toISOString()) 
+              emailAddr: email, 
+              timestamp: new Date().toISOString() 
             }
           });
         }
@@ -152,8 +152,8 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
             userId: authUser.id,
             eventType: 'profile_updated',
             details: { 
-              updatedFields: String(Object.keys(updates).join(',')),
-              time: String(new Date().toISOString())
+              updatedFields: Object.keys(updates).join(','),
+              time: new Date().toISOString()
             }
           });
         } catch (logError) {
