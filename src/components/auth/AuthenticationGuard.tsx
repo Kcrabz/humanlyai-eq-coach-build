@@ -15,7 +15,7 @@ export const AuthenticationGuard = () => {
   const pathname = location.pathname;
 
   // Force navigation with location reload if needed
-  const forceNavigate = useCallback((to: string, options = {}) => {
+  const forceNavigate = useCallback((to: string, options: Record<string, any> = {}) => {
     console.log(`AuthGuard: Force navigating to ${to}`);
     
     // Try React Router navigation first
@@ -23,7 +23,7 @@ export const AuthenticationGuard = () => {
       replace: true, 
       state: { 
         forceRefresh: Date.now(),
-        ...options?.state
+        ...(options.state || {})
       },
       ...options 
     });
