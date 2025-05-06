@@ -1,43 +1,68 @@
 
-import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Home, Info, DollarSign } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Home, MessageCircle, Settings, LayoutGrid } from "lucide-react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 export function MainNavigationLinks() {
-  const navigate = useNavigate();
+  const location = useLocation();
+  const { isAdmin } = useAdminCheck();
+  
+  const isActive = (path: string) => location.pathname === path;
   
   return (
-    <div className="space-y-1 mb-4">
-      <h4 className="text-xs font-medium text-muted-foreground px-2 py-1">Main Navigation</h4>
+    <div className="space-y-1">
       <Button
-        variant="ghost"
+        variant={isActive("/") ? "default" : "ghost"}
+        className="w-full justify-start"
         size="sm"
-        className="w-full justify-start gap-2 rounded-lg"
-        onClick={() => navigate("/")}
+        asChild
       >
-        <Home className="h-4 w-4" />
-        Home
+        <Link to="/">
+          <Home className="mr-2 h-4 w-4" />
+          Home
+        </Link>
+      </Button>
+
+      <Button
+        variant={isActive("/chat") ? "default" : "ghost"}
+        className="w-full justify-start"
+        size="sm"
+        asChild
+      >
+        <Link to="/chat">
+          <MessageCircle className="mr-2 h-4 w-4" />
+          Chat
+        </Link>
+      </Button>
+
+      <Button
+        variant={isActive("/settings") ? "default" : "ghost"}
+        className="w-full justify-start"
+        size="sm"
+        asChild
+      >
+        <Link to="/settings">
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </Link>
       </Button>
       
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-full justify-start gap-2 rounded-lg"
-        onClick={() => navigate("/about")}
-      >
-        <Info className="h-4 w-4" />
-        About
-      </Button>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-full justify-start gap-2 rounded-lg"
-        onClick={() => navigate("/pricing")}
-      >
-        <DollarSign className="h-4 w-4" />
-        Pricing
-      </Button>
+      {/* Admin link - only shown to admin users */}
+      {isAdmin && (
+        <Button
+          variant={isActive("/admin") ? "default" : "ghost"}
+          className="w-full justify-start"
+          size="sm"
+          asChild
+        >
+          <Link to="/admin">
+            <LayoutGrid className="mr-2 h-4 w-4" />
+            Admin
+          </Link>
+        </Button>
+      )}
     </div>
   );
 }

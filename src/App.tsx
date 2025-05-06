@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +9,7 @@ import { AuthProvider } from "@/context/AuthContext";
 import { useAuth } from "@/context/AuthContext";
 import { useAuthNavigation } from "@/hooks/useAuthNavigation";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AdminRoute } from "@/components/admin/AdminRoute";
 
 import Index from "./pages/Index";
 import LoginPage from "./pages/LoginPage";
@@ -17,6 +19,7 @@ import ChatPage from "./pages/ChatPage";
 import PricingPage from "./pages/PricingPage";
 import AboutPage from "./pages/AboutPage";
 import SettingsPage from "./pages/SettingsPage";
+import AdminPage from "./pages/AdminPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +67,14 @@ const AppRoutes = () => (
           <SettingsPage />
         </ProtectedRoute>
       } />
+      
+      {/* Admin route */}
+      <Route path="/admin" element={
+        <AdminRoute>
+          <AdminPage />
+        </AdminRoute>
+      } />
+      
       <Route path="*" element={<NotFound />} />
     </Routes>
   </AuthProvider>
