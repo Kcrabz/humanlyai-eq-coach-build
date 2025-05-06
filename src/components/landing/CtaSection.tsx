@@ -16,7 +16,7 @@ const CtaSection = ({ onGetStarted }: CtaSectionProps) => {
       
       <div className="container px-4 mx-auto text-center relative z-10">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to Grow Your EQ?</h2>
+          <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to Grow Your Human Skills?</h2>
           <p className="text-xl opacity-90 mb-8 max-w-xl mx-auto">
             Start your personalized coaching journey today with a free trial.
             No credit card required.
@@ -37,7 +37,7 @@ const CtaSection = ({ onGetStarted }: CtaSectionProps) => {
               variant="outline"
               className="border-white text-white hover:bg-white/10 transition-all duration-300"
             >
-              View Pricing
+              Get Started Now
             </Button>
           </div>
           
