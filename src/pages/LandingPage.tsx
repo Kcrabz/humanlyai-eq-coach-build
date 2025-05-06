@@ -25,7 +25,7 @@ const LandingPage = () => {
   };
 
   return (
-    <PageLayout fullWidth>
+    <PageLayout fullWidth delayHeaderAnimation>
       <HeroSection onGetStarted={handleGetStarted} />
       <ArchetypesSection onFindArchetype={handleGetStarted} />
       <HowItWorksSection onGetStarted={handleGetStarted} />

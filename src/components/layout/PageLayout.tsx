@@ -1,5 +1,5 @@
 
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
@@ -7,13 +7,30 @@ import { Toaster } from "sonner";
 interface PageLayoutProps {
   children: ReactNode;
   fullWidth?: boolean;
+  delayHeaderAnimation?: boolean;
 }
 
-export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
+export function PageLayout({ children, fullWidth = false, delayHeaderAnimation = false }: PageLayoutProps) {
   const location = useLocation();
+  const [showHeader, setShowHeader] = useState(false);
   
   // Don't show header only on onboarding pages and chat page
-  const showHeader = !location.pathname.includes("/onboarding") && location.pathname !== "/chat";
+  const shouldShowHeader = !location.pathname.includes("/onboarding") && location.pathname !== "/chat";
+
+  useEffect(() => {
+    if (!delayHeaderAnimation || !shouldShowHeader) {
+      setShowHeader(shouldShowHeader);
+      return;
+    }
+    
+    // If we're delaying header animation, start with it hidden
+    setShowHeader(false);
+  }, [delayHeaderAnimation, shouldShowHeader]);
+
+  // Function to show header - will be called by HeroSection
+  const displayHeader = () => {
+    setShowHeader(true);
+  };
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
@@ -27,9 +44,14 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
       {/* Sonner toast provider */}
       <Toaster position="top-right" richColors />
       
-      {showHeader && <Header />}
+      {shouldShowHeader && (
+        <div className={`transition-opacity duration-700 ease-in-out ${showHeader ? 'opacity-100' : 'opacity-0'}`}>
+          <Header />
+        </div>
+      )}
+      
       <main className={`flex-1 ${fullWidth ? "" : "container py-8"}`}>
-        {children}
+        {React.cloneElement(children as React.ReactElement, { displayHeader })}
       </main>
     </div>
   );

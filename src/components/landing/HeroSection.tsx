@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 
 interface HeroSectionProps {
   onGetStarted: () => void;
+  displayHeader?: () => void;
 }
 
 const HeroSection = ({
-  onGetStarted
+  onGetStarted,
+  displayHeader
 }: HeroSectionProps) => {
   const navigate = useNavigate();
   const [isLogoVisible, setIsLogoVisible] = useState(false);
@@ -42,13 +44,20 @@ const HeroSection = ({
           updated[index] = true;
           return updated;
         });
+        
+        // After the last word is displayed, wait a bit and then show the header
+        if (index === subtitleWords.length - 1 && displayHeader) {
+          setTimeout(() => {
+            displayHeader();
+          }, 600); // Wait 600ms after the last word appears before showing the header
+        }
       }, delay);
       
       return () => clearTimeout(wordTimer);
     });
     
     return () => clearTimeout(logoTimer);
-  }, []);
+  }, [subtitleWords, displayHeader]);
   
   return <section className="py-20 md:py-28 relative overflow-hidden">
       {/* Decorative blobs */}
