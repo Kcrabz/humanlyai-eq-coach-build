@@ -1,6 +1,7 @@
 
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { generateAvatarUrl } from "./avatar-options";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -16,9 +17,7 @@ export function formatDate(date: Date | string): string {
 }
 
 export function generateAvatar(name: string): string {
-  // Using DiceBear API with lorelei style for more cartoonish avatars
-  const seed = encodeURIComponent(name);
-  return `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}`;
+  return generateAvatarUrl(name);
 }
 
 export function truncate(text: string, length: number): string {
