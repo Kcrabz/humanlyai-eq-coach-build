@@ -53,6 +53,21 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
     onFilterChange({ type: filterType, value: filterValue });
   };
 
+  // Handle click on a pie or chart element - fixed version
+  const handlePieElementClick = (data: any) => {
+    if (data && data.name) {
+      handleStatClick("tier", data.name.toLowerCase());
+    }
+  };
+
+  // Handle click on bar chart element
+  const handleBarChartClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const name = data.activePayload[0].payload.name;
+      handleStatClick("archetype", name === "Not Set" ? "not-set" : name.toLowerCase());
+    }
+  };
+
   if (isLoading) {
     return <div className="text-center py-12">Loading statistics...</div>;
   }
@@ -97,7 +112,7 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
                   fill="#8884d8"
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  onClick={(data) => handleStatClick("tier", data.name.toLowerCase())}
+                  onClick={(data) => handlePieElementClick(data)}
                   cursor="pointer"
                 >
                   {pieData.map((entry, index) => (
@@ -108,7 +123,7 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
                   ))}
                 </Pie>
                 <Legend 
-                  onClick={(e) => handleStatClick("tier", e.value.toLowerCase())}
+                  onClick={(entry) => handlePieElementClick(entry)}
                   cursor="pointer"
                 />
                 <Tooltip />
@@ -142,15 +157,12 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
                 data={barData}
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
-                onClick={(data) => {
-                  if (data && data.activePayload && data.activePayload[0]) {
-                    const name = data.activePayload[0].payload.name;
-                    handleStatClick("archetype", name === "Not Set" ? "not-set" : name.toLowerCase());
-                  }
-                }}
+                onClick={(data) => handleBarChartClick(data)}
               >
                 <XAxis type="number" />
-                <YAxis type="category" dataKey="name" 
+                <YAxis 
+                  type="category" 
+                  dataKey="name" 
                   onClick={(data) => {
                     const name = data as string;
                     handleStatClick("archetype", name === "Not Set" ? "not-set" : name.toLowerCase());
