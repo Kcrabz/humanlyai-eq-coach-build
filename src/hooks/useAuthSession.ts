@@ -10,6 +10,7 @@ export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authEvent, setAuthEvent] = useState<string | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   // Handle explicit session updates after authentication events
   const updateSessionAfterEvent = useCallback(async (event: string) => {
@@ -19,6 +20,8 @@ export const useAuthSession = () => {
         const { data } = await supabase.auth.getSession();
         setSession(data.session);
         setAuthEvent('SIGN_IN_COMPLETE');
+        // Mark that we need to wait for profile to load
+        setProfileLoaded(false);
       } catch (error) {
         console.error("Error updating session after sign in:", error);
       }
@@ -26,6 +29,7 @@ export const useAuthSession = () => {
       console.log("User signed out, clearing session");
       setSession(null);
       setAuthEvent('SIGN_OUT_COMPLETE');
+      setProfileLoaded(false);
     }
   }, []);
 
@@ -62,6 +66,7 @@ export const useAuthSession = () => {
         // If we have an existing session, set a "RESTORED_SESSION" event
         if (existingSession) {
           setAuthEvent('RESTORED_SESSION');
+          setProfileLoaded(true); // Assume profile is loaded for existing sessions
         }
       }
     }).catch(error => {
@@ -78,5 +83,12 @@ export const useAuthSession = () => {
     };
   }, [updateSessionAfterEvent]);
 
-  return { session, isLoading, setIsLoading, authEvent };
+  return { 
+    session, 
+    isLoading, 
+    setIsLoading, 
+    authEvent, 
+    profileLoaded, 
+    setProfileLoaded 
+  };
 };

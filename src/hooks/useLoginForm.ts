@@ -17,7 +17,7 @@ export function useLoginForm() {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [loginSuccess, setLoginSuccess] = useState(false);
   
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   
   // Timer for rate limit countdown
   useEffect(() => {

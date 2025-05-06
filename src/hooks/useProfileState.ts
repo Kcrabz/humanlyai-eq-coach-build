@@ -10,7 +10,8 @@ import { createProfileIfNeeded, fetchUserProfile, createBasicUserProfile } from 
 export const useProfileState = (
   session: Session | null, 
   isLoading: boolean, 
-  setIsLoading: (value: boolean) => void
+  setIsLoading: (value: boolean) => void,
+  setProfileLoaded: (value: boolean) => void
 ) => {
   const [user, setUser] = useState<User | null>(null);
 
@@ -20,6 +21,7 @@ export const useProfileState = (
     if (!session) {
       console.log("No session available, clearing user profile");
       setUser(null);
+      setProfileLoaded(false);
       return;
     }
 
@@ -41,6 +43,7 @@ export const useProfileState = (
           if (profile) {
             console.log("Profile found with onboarded status:", profile.onboarded);
             setUser(profile);
+            setProfileLoaded(true);
           } else {
             // Basic user info if profile not found
             console.log("No profile found, setting basic user info");
@@ -48,6 +51,7 @@ export const useProfileState = (
             
             // Try to create the profile again
             await createProfileIfNeeded(session.user.id);
+            setProfileLoaded(true);
           }
         }
       } catch (error) {
@@ -55,6 +59,7 @@ export const useProfileState = (
         // Set basic user info even if there's an error
         if (session.user) {
           setUser(createBasicUserProfile(session.user.id, session.user.email!));
+          setProfileLoaded(true);
         }
       } finally {
         setIsLoading(false);
@@ -62,14 +67,15 @@ export const useProfileState = (
     };
     
     loadUserProfile();
-  }, [session, isLoading, setIsLoading]);
+  }, [session, isLoading, setIsLoading, setProfileLoaded]);
 
   // Effect to clear user when session is null
   useEffect(() => {
     if (session === null && !isLoading) {
       setUser(null);
+      setProfileLoaded(false);
     }
-  }, [session, isLoading]);
+  }, [session, isLoading, setProfileLoaded]);
 
   return { user, setUser };
 };

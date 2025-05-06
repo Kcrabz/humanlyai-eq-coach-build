@@ -16,6 +16,7 @@ export interface AuthContextType {
   error: string | null;
   isAuthenticated?: boolean;
   authEvent?: string | null;
+  profileLoaded: boolean;
   
   // Re-exported from useAuthActions
   login: (email: string, password: string) => Promise<any>;
@@ -44,10 +45,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
   
   // Auth session
-  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading, authEvent } = useAuthSession();
+  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading, authEvent, profileLoaded, setProfileLoaded } = useAuthSession();
   
   // Profile state with unified loading
-  const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading);
+  const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
   
   // Consolidated loading state
   const [isLoading, setIsLoading] = useState(true);
@@ -58,7 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       isSessionLoading, 
       user: user?.id,
       hasSession: !!session,
-      authEvent
+      authEvent,
+      profileLoaded
     });
     
     // Only mark as loaded when session loading is complete
@@ -66,7 +68,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Auth state fully loaded, setting isLoading to false");
       setIsLoading(false);
     }
-  }, [isSessionLoading, user, session, authEvent]);
+  }, [isSessionLoading, user, session, authEvent, profileLoaded]);
   
   // Auth core for login/logout
   const authCore = useAuthCore(setUser);
@@ -122,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     error,
     isAuthenticated,
     authEvent,
+    profileLoaded,
     login: authCore.login,
     logout: authLogout,
     signup,
@@ -139,7 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user, isLoading, error, isAuthenticated, authCore.login, authLogout, 
     signup, authCore.resetPassword, updateProfile, forceUpdateProfile, setName, 
     setArchetype, setCoachingMode, setOnboarded, setUser, getUserSubscription, 
-    userHasArchetype, authEvent
+    userHasArchetype, authEvent, profileLoaded
   ]);
 
   return (
