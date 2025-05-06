@@ -36,12 +36,6 @@ export function Header() {
           <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300">
             Pricing
           </Link>
-          {isAuthenticated && (
-            <Link to="/progress" className="text-sm font-medium flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300">
-              <TrendingUp className="h-4 w-4" />
-              Progress
-            </Link>
-          )}
         </nav>
 
         <div className="flex items-center gap-4">
