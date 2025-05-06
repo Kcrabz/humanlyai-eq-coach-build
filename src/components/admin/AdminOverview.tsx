@@ -5,8 +5,13 @@ import { useUserStats } from "@/hooks/useUserStats";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
 import { SubscriptionTier } from "@/types";
+import { Button } from "@/components/ui/button";
 
-export const AdminOverview = () => {
+interface AdminOverviewProps {
+  onFilterChange: (filter: { type: string; value: string }) => void;
+}
+
+export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
   const { stats, isLoading } = useUserStats();
   const [pieData, setPieData] = useState<any[]>([]);
   const [barData, setBarData] = useState<any[]>([]);
@@ -43,6 +48,11 @@ export const AdminOverview = () => {
     }
   }, [stats]);
 
+  // Handle click on a stat card
+  const handleStatClick = (filterType: string, filterValue: string) => {
+    onFilterChange({ type: filterType, value: filterValue });
+  };
+
   if (isLoading) {
     return <div className="text-center py-12">Loading statistics...</div>;
   }
@@ -50,9 +60,24 @@ export const AdminOverview = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard title="Total Users" value={stats?.totalUsers || 0} description="All registered users" />
-        <StatCard title="Onboarded Users" value={stats?.onboardedUsers || 0} description="Users who completed onboarding" />
-        <StatCard title="Active Chats" value={stats?.chatUsers || 0} description="Users with chat activity" />
+        <StatCard 
+          title="Total Users" 
+          value={stats?.totalUsers || 0} 
+          description="All registered users" 
+          onClick={() => handleStatClick("all", "")}
+        />
+        <StatCard 
+          title="Onboarded Users" 
+          value={stats?.onboardedUsers || 0} 
+          description="Users who completed onboarding" 
+          onClick={() => handleStatClick("onboarded", "true")}
+        />
+        <StatCard 
+          title="Active Chats" 
+          value={stats?.chatUsers || 0} 
+          description="Users with chat activity" 
+          onClick={() => handleStatClick("chat", "true")}
+        />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -72,6 +97,8 @@ export const AdminOverview = () => {
                   fill="#8884d8"
                   dataKey="value"
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  onClick={(data) => handleStatClick("tier", data.name.toLowerCase())}
+                  cursor="pointer"
                 >
                   {pieData.map((entry, index) => (
                     <Cell 
@@ -80,10 +107,27 @@ export const AdminOverview = () => {
                     />
                   ))}
                 </Pie>
-                <Legend />
+                <Legend 
+                  onClick={(e) => handleStatClick("tier", e.value.toLowerCase())}
+                  cursor="pointer"
+                />
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            <div className="flex justify-center mt-4 gap-2">
+              {Object.entries(COLORS).map(([tier, color]) => (
+                <Button 
+                  key={tier}
+                  variant="outline"
+                  className="text-xs"
+                  style={{ borderColor: color }}
+                  onClick={() => handleStatClick("tier", tier)}
+                >
+                  <div className="w-3 h-3 mr-1 rounded-sm" style={{ backgroundColor: color }}></div>
+                  {tier.charAt(0).toUpperCase() + tier.slice(1)} Users
+                </Button>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -98,13 +142,41 @@ export const AdminOverview = () => {
                 data={barData}
                 layout="vertical"
                 margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+                onClick={(data) => {
+                  if (data && data.activePayload && data.activePayload[0]) {
+                    const name = data.activePayload[0].payload.name;
+                    handleStatClick("archetype", name === "Not Set" ? "not-set" : name.toLowerCase());
+                  }
+                }}
               >
                 <XAxis type="number" />
-                <YAxis type="category" dataKey="name" />
+                <YAxis type="category" dataKey="name" 
+                  onClick={(data) => {
+                    const name = data as string;
+                    handleStatClick("archetype", name === "Not Set" ? "not-set" : name.toLowerCase());
+                  }}
+                  cursor="pointer"
+                />
                 <Tooltip />
-                <Bar dataKey="value" fill="#8884d8" />
+                <Bar 
+                  dataKey="value" 
+                  fill="#8884d8" 
+                  cursor="pointer"
+                />
               </BarChart>
             </ResponsiveContainer>
+            <div className="flex flex-wrap justify-center mt-4 gap-2">
+              {barData.map(item => (
+                <Button 
+                  key={item.name}
+                  variant="outline"
+                  className="text-xs"
+                  onClick={() => handleStatClick("archetype", item.name === "Not Set" ? "not-set" : item.name.toLowerCase())}
+                >
+                  {item.name}
+                </Button>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -112,9 +184,14 @@ export const AdminOverview = () => {
   );
 };
 
-const StatCard = ({ title, value, description }: { title: string; value: number; description: string }) => {
+const StatCard = ({ title, value, description, onClick }: { 
+  title: string; 
+  value: number; 
+  description: string;
+  onClick: () => void;
+}) => {
   return (
-    <Card>
+    <Card className="hover:shadow-md transition-all cursor-pointer" onClick={onClick}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>

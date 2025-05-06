@@ -10,12 +10,18 @@ import { AdminOverview } from "@/components/admin/AdminOverview";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { Loading } from "@/components/ui/loading";
 
+interface FilterState {
+  type: string;
+  value: string;
+}
+
 const AdminPage = () => {
   const { isAdmin, isLoading: isAdminCheckLoading } = useAdminCheck();
   const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
+  const [currentFilter, setCurrentFilter] = useState<FilterState>({ type: "", value: "" });
 
   // Check if user is an admin and redirect if not
   useEffect(() => {
@@ -28,6 +34,17 @@ const AdminPage = () => {
       navigate("/", { replace: true });
     }
   }, [isAdmin, isAuthLoading, isAdminCheckLoading, navigate, toast]);
+
+  // Handle filter changes from the overview components
+  const handleFilterChange = (filter: FilterState) => {
+    setCurrentFilter(filter);
+    setActiveTab("users"); // Switch to users tab when a filter is applied
+  };
+
+  // Reset filter
+  const handleResetFilter = () => {
+    setCurrentFilter({ type: "", value: "" });
+  };
 
   if (isAuthLoading || isAdminCheckLoading) {
     return (
@@ -54,11 +71,14 @@ const AdminPage = () => {
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
-            <AdminOverview />
+            <AdminOverview onFilterChange={handleFilterChange} />
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-            <UserManagement />
+            <UserManagement 
+              initialFilter={currentFilter} 
+              onResetFilter={handleResetFilter}
+            />
           </TabsContent>
         </Tabs>
       </div>

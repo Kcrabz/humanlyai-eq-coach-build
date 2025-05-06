@@ -9,31 +9,123 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { UserOperations } from "./UserOperations";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, X } from "lucide-react";
 
 interface UserTableData extends User {
   created_at?: string;
   updated_at?: string;
 }
 
-export const UserManagement = () => {
+interface UserManagementProps {
+  initialFilter?: { type: string; value: string };
+  onResetFilter?: () => void;
+}
+
+export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementProps) => {
   const [users, setUsers] = useState<UserTableData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [tierFilter, setTierFilter] = useState<string>("all");
   const [archetypeFilter, setArchetypeFilter] = useState<string>("all");
+  const [onboardedFilter, setOnboardedFilter] = useState<string>("all");
+  const [chatFilter, setChatFilter] = useState<string>("all");
   const [filteredUsers, setFilteredUsers] = useState<UserTableData[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+  // Set initial filters based on props
+  useEffect(() => {
+    if (initialFilter && initialFilter.type && initialFilter.value) {
+      switch (initialFilter.type) {
+        case "tier":
+          setTierFilter(initialFilter.value);
+          setActiveFilter(`Subscription: ${initialFilter.value.charAt(0).toUpperCase() + initialFilter.value.slice(1)}`);
+          break;
+        case "archetype":
+          setArchetypeFilter(initialFilter.value);
+          setActiveFilter(`Archetype: ${initialFilter.value === "not-set" ? "Not Set" : initialFilter.value.charAt(0).toUpperCase() + initialFilter.value.slice(1)}`);
+          break;
+        case "onboarded":
+          setOnboardedFilter(initialFilter.value);
+          setActiveFilter("Onboarded Users");
+          break;
+        case "chat":
+          setChatFilter(initialFilter.value);
+          setActiveFilter("Users with Chat Activity");
+          break;
+        case "all":
+          resetFilters();
+          setActiveFilter("All Users");
+          break;
+      }
+    }
+  }, [initialFilter]);
+
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchTerm("");
+    setTierFilter("all");
+    setArchetypeFilter("all");
+    setOnboardedFilter("all");
+    setChatFilter("all");
+    setActiveFilter(null);
+    if (onResetFilter) {
+      onResetFilter();
+    }
+  };
+
+  // Helper function to fetch users with chat activity
+  const fetchUsersWithChatActivity = async () => {
+    try {
+      const { data: chatData, error: chatError } = await supabase
+        .from('chat_messages')
+        .select('user_id')
+        .not('user_id', 'is', null);
+
+      if (chatError) throw chatError;
+
+      // Get unique user IDs
+      const userIds = [...new Set(chatData.map(item => item.user_id))];
+      return userIds;
+    } catch (error) {
+      console.error("Error fetching chat activity:", error);
+      return [];
+    }
+  };
 
   // Fetch all users
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Only fetch users with chat activity if chat filter is active
+      let chatUserIds: string[] = [];
+      if (chatFilter === "true") {
+        chatUserIds = await fetchUsersWithChatActivity();
+        if (chatUserIds.length === 0) {
+          setUsers([]);
+          setIsLoading(false);
+          return;
+        }
+      }
+
+      // Build query based on filters
+      let query = supabase.from('profiles').select('*');
+
+      // Apply onboarded filter directly in the query
+      if (onboardedFilter === "true") {
+        query = query.eq('onboarded', true);
+      } else if (onboardedFilter === "false") {
+        query = query.eq('onboarded', false);
+      }
+
+      // Get the data
+      let { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
+
+      // Filter by chat activity if needed
+      if (chatFilter === "true" && chatUserIds.length > 0) {
+        data = data.filter(profile => chatUserIds.includes(profile.id));
+      }
 
       // Add auth emails to the profiles data
       const usersWithEmails = await Promise.all(
@@ -88,10 +180,10 @@ export const UserManagement = () => {
     setFilteredUsers(filtered);
   }, [users, searchTerm, tierFilter, archetypeFilter]);
 
-  // Load users on component mount
+  // Load users on component mount or when filters change
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [onboardedFilter, chatFilter]);
 
   // Handler for updating user subscription tier
   const handleUpdateTier = async (userId: string, newTier: SubscriptionTier) => {
@@ -121,6 +213,19 @@ export const UserManagement = () => {
 
   return (
     <div className="space-y-6">
+      {/* Active filter indicator */}
+      {activeFilter && (
+        <div className="bg-muted p-3 rounded-md flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            <span>Viewing: <strong>{activeFilter}</strong></span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={resetFilters} className="h-8 px-2">
+            <X className="h-4 w-4 mr-1" /> Clear Filter
+          </Button>
+        </div>
+      )}
+      
       {/* Filters and search */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="relative">
