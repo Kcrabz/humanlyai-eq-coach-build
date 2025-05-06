@@ -44,10 +44,11 @@ export const useUserStats = () => {
         if (onboardedError) throw onboardedError;
 
         // Get chat users count (users with chat messages)
+        // Fix: Use "not.is" filter instead of "is" with a string value
         const { count: chatUsers, error: chatError } = await supabase
           .from('chat_messages')
           .select('user_id', { count: 'exact', head: true })
-          .is('user_id', 'not.null');
+          .not('user_id', 'is', null);
 
         if (chatError) throw chatError;
 
