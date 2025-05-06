@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 export const useAdminCheck = () => {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isChecked, setIsChecked] = useState<boolean>(false);
   const { user, isAuthenticated } = useAuth();
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export const useAdminCheck = () => {
         console.log("useAdminCheck - User not authenticated or missing");
         setIsAdmin(false);
         setIsLoading(false);
+        setIsChecked(true);
         return;
       }
 
@@ -40,15 +42,17 @@ export const useAdminCheck = () => {
         setIsAdmin(false);
       } finally {
         setIsLoading(false);
+        setIsChecked(true);
       }
     };
 
-    if (isAuthenticated) {
+    if (isAuthenticated && !isChecked) {
       checkIsAdmin();
-    } else {
+    } else if (!isAuthenticated) {
       setIsLoading(false);
+      setIsChecked(false);
     }
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, isChecked]);
 
   return { isAdmin, isLoading };
 };

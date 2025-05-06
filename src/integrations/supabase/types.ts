@@ -88,7 +88,9 @@ export type Database = {
           coaching_mode: string | null
           created_at: string | null
           eq_archetype: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           name: string | null
           onboarded: boolean | null
           security_answer: string | null
@@ -102,7 +104,9 @@ export type Database = {
           coaching_mode?: string | null
           created_at?: string | null
           eq_archetype?: string | null
+          first_name?: string | null
           id: string
+          last_name?: string | null
           name?: string | null
           onboarded?: boolean | null
           security_answer?: string | null
@@ -116,7 +120,9 @@ export type Database = {
           coaching_mode?: string | null
           created_at?: string | null
           eq_archetype?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           name?: string | null
           onboarded?: boolean | null
           security_answer?: string | null

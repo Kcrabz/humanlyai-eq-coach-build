@@ -10,7 +10,7 @@ interface OnboardingContextType {
   goToStep: (step: OnboardingStep) => void;
   completeStep: (step: OnboardingStep, data?: any) => Promise<void>;
   setGoal: (goal: string) => void;
-  setName: (name: string) => void;
+  setName: (firstName: string, lastName: string) => void;
   setArchetype: (archetype: EQArchetype) => void;
   setCoachingMode: (mode: CoachingMode) => void;
   resetOnboarding: () => void;

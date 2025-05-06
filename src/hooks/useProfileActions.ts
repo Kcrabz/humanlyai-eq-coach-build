@@ -7,6 +7,46 @@ import { useProfileCore } from "./useProfileCore";
 export const useProfileActions = (setUser: React.Dispatch<React.SetStateAction<any>>) => {
   const { updateProfile: updateUserProfile, forceUpdateProfile } = useProfileCore(setUser);
 
+  const setFirstName = async (firstName: string): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error("Cannot set first name: No authenticated user");
+        toast.error("Not authenticated", { description: "Please log in again" });
+        return false;
+      }
+      
+      const success = await updateUserProfile(user.id, { first_name: firstName });
+      if (success) {
+        toast.success("First name updated successfully");
+      }
+      return success;
+    } catch (error) {
+      console.error("Error in setFirstName:", error);
+      return false;
+    }
+  };
+
+  const setLastName = async (lastName: string): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error("Cannot set last name: No authenticated user");
+        toast.error("Not authenticated", { description: "Please log in again" });
+        return false;
+      }
+      
+      const success = await updateUserProfile(user.id, { last_name: lastName });
+      if (success) {
+        toast.success("Last name updated successfully");
+      }
+      return success;
+    } catch (error) {
+      console.error("Error in setLastName:", error);
+      return false;
+    }
+  };
+
   const setName = async (name: string): Promise<boolean> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -88,6 +128,8 @@ export const useProfileActions = (setUser: React.Dispatch<React.SetStateAction<a
   };
 
   return {
+    setFirstName,
+    setLastName,
     setName,
     setArchetype,
     setCoachingMode,

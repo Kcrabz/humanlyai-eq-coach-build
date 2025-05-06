@@ -13,7 +13,15 @@ export const useOnboardingActions = (
   goToStep: (step: OnboardingStep) => void
 ) => {
   const [processingStep, setProcessingStep] = useState<string | null>(null);
-  const { user, setName: updateUserName, setArchetype: updateUserArchetype, setCoachingMode: updateUserCoachingMode, setOnboarded, setUser } = useAuth();
+  const { 
+    user, 
+    setFirstName, 
+    setLastName,
+    setArchetype: updateUserArchetype, 
+    setCoachingMode: updateUserCoachingMode, 
+    setOnboarded, 
+    setUser 
+  } = useAuth();
   const navigate = useNavigate();
 
   const completeStep = async (step: OnboardingStep, data?: any) => {
@@ -22,9 +30,10 @@ export const useOnboardingActions = (
     
     try {
       // Save the step data based on which step it is
-      if (step === "name" && state.name) {
+      if (step === "name" && state.firstName) {
         try {
-          await updateUserName(state.name);
+          await setFirstName(state.firstName);
+          await setLastName(state.lastName || '');
           toast.success("Name saved successfully");
         } catch (error) {
           toast.error("Failed to save your name");
@@ -72,7 +81,8 @@ export const useOnboardingActions = (
               .insert({
                 id: user?.id,
                 subscription_tier: 'free',
-                name: state.name || 'Anonymous',
+                first_name: state.firstName || '',
+                last_name: state.lastName || '',
                 eq_archetype: state.archetype || 'Not set',
                 coaching_mode: state.coachingMode || 'normal',
                 onboarded: true
@@ -88,7 +98,8 @@ export const useOnboardingActions = (
               .from('profiles')
               .update({ 
                 onboarded: true,
-                name: state.name || 'Anonymous',
+                first_name: state.firstName || '',
+                last_name: state.lastName || '',
                 eq_archetype: state.archetype || 'Not set',
                 coaching_mode: state.coachingMode || 'normal',
               })
@@ -107,7 +118,8 @@ export const useOnboardingActions = (
           setUser(prev => prev ? { 
             ...prev, 
             onboarded: true,
-            name: state.name || 'Anonymous',
+            first_name: state.firstName || '',
+            last_name: state.lastName || '',
             eq_archetype: state.archetype || 'Not set',
             coaching_mode: state.coachingMode || 'normal'
           } : null);
@@ -134,7 +146,7 @@ export const useOnboardingActions = (
 
       // Determine the next step
       let nextStep: OnboardingStep = step;
-      if (step === "name") nextStep = "goal"; // Changed from "goal" to "name" and "name" to "goal"
+      if (step === "name") nextStep = "goal";
       else if (step === "goal") nextStep = "archetype";
       else if (step === "archetype") nextStep = "coaching";
       else if (step === "coaching") nextStep = "complete";

@@ -4,23 +4,25 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 
 export function NameInput() {
   const { state, setName, completeStep } = useOnboarding();
-  const { name } = state;
-  const [inputName, setInputName] = useState(name || "");
+  const { firstName, lastName } = state;
+  const [inputFirstName, setInputFirstName] = useState(firstName || "");
+  const [inputLastName, setInputLastName] = useState(lastName || "");
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleContinue = async () => {
-    if (!inputName.trim()) {
-      toast.error("Please enter your name");
+    if (!inputFirstName.trim()) {
+      toast.error("Please enter your first name");
       return;
     }
 
     setIsProcessing(true);
     try {
       // Update the name in the onboarding context
-      setName(inputName.trim());
+      setName(inputFirstName.trim(), inputLastName.trim());
       await completeStep("name");
       toast.success("Name saved successfully");
     } catch (error) {
@@ -44,21 +46,37 @@ export function NameInput() {
         We'll use this to personalize your coaching experience.
       </p>
       
-      <div className="mb-8">
-        <Input
-          type="text"
-          placeholder="Enter your name"
-          value={inputName}
-          onChange={(e) => setInputName(e.target.value)}
-          className="text-center text-lg py-6 max-w-xs mx-auto"
-          autoFocus
-        />
+      <div className="mb-8 space-y-4 max-w-xs mx-auto">
+        <div>
+          <Label htmlFor="firstName" className="text-left block mb-2">First Name</Label>
+          <Input
+            id="firstName"
+            type="text"
+            placeholder="Enter your first name"
+            value={inputFirstName}
+            onChange={(e) => setInputFirstName(e.target.value)}
+            className="text-lg py-6"
+            autoFocus
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="lastName" className="text-left block mb-2">Last Name</Label>
+          <Input
+            id="lastName"
+            type="text"
+            placeholder="Enter your last name"
+            value={inputLastName}
+            onChange={(e) => setInputLastName(e.target.value)}
+            className="text-lg py-6"
+          />
+        </div>
       </div>
       
       <div className="relative group">
         <Button 
           onClick={handleContinue} 
-          disabled={isProcessing || !inputName.trim()}
+          disabled={isProcessing || !inputFirstName.trim()}
           className="py-6 px-8 text-base rounded-xl shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02] bg-gradient-to-r from-humanly-teal to-humanly-teal/90"
         >
           {isProcessing ? "Saving..." : "Continue"}

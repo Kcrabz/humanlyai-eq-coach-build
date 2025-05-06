@@ -5,7 +5,8 @@ export interface OnboardingState {
   currentStep: OnboardingStep;
   completedSteps: OnboardingStep[];
   goal: string | null;
-  name: string | null; 
+  firstName: string | null;
+  lastName: string | null;
   archetype: string | null;
   coachingMode: string | null;
   isLoading: boolean;

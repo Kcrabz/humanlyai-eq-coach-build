@@ -5,6 +5,8 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  first_name?: string;
+  last_name?: string;
   avatar_url?: string;
   bio?: string;
   eq_archetype?: EQArchetype | "Not set";

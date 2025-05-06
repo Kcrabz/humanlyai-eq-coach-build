@@ -5,10 +5,11 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const initialState: OnboardingState = {
-  currentStep: "name",  // Changed from "goal" to "name"
+  currentStep: "name",
   completedSteps: [],
   goal: null,
-  name: null,
+  firstName: null,
+  lastName: null,
   archetype: null,
   coachingMode: null,
   isLoading: true,
@@ -38,22 +39,23 @@ export const useOnboardingState = () => {
         // Try to load any saved progress
         const newState = { ...initialState };
         
-        if (user.name) {
-          newState.name = user.name;
+        if (user.first_name || user.last_name) {
+          newState.firstName = user.first_name || '';
+          newState.lastName = user.last_name || '';
           newState.completedSteps = ["name"];
-          newState.currentStep = "goal"; // Changed from "archetype" to "goal"
+          newState.currentStep = "goal";
         }
         
         if (user.eq_archetype) {
           newState.archetype = user.eq_archetype;
-          newState.completedSteps = ["name", "goal", "archetype"]; // Changed order
+          newState.completedSteps = ["name", "goal", "archetype"];
           newState.currentStep = "coaching";
         }
 
         if (user.coaching_mode) {
           newState.coachingMode = user.coaching_mode;
           if (newState.completedSteps.includes("archetype")) {
-            newState.completedSteps = ["name", "goal", "archetype", "coaching"]; // Changed order
+            newState.completedSteps = ["name", "goal", "archetype", "coaching"];
             newState.currentStep = "complete";
           }
         }
@@ -73,8 +75,8 @@ export const useOnboardingState = () => {
     setState((prev) => ({ ...prev, goal }));
   };
 
-  const setName = (name: string) => {
-    setState((prev) => ({ ...prev, name }));
+  const setName = (firstName: string, lastName: string) => {
+    setState((prev) => ({ ...prev, firstName, lastName }));
   };
 
   const setArchetype = (archetype: string) => {
