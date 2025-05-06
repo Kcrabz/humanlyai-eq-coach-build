@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
 
