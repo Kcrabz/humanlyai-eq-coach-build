@@ -27,7 +27,7 @@ export interface SecurityEvent {
   eventType: SecurityEventType;
   ip?: string;
   userAgent?: string;
-  // Using Record with EventDetailValue to ensure only primitive types are used
+  // Using a simple record with primitive values to prevent recursion
   details?: Record<string, EventDetailValue>;
   riskLevel?: RiskLevel;
 }
