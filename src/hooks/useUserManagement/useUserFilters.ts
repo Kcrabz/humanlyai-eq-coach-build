@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { UserTableData } from "./types";
 
-export const useUserFilters = (users: UserTableData[] | undefined) => {
+export const useUserFilters = (users: UserTableData[] = []) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [tierFilter, setTierFilter] = useState<string>("all");
   const [archetypeFilter, setArchetypeFilter] = useState<string>("all");
@@ -10,7 +10,10 @@ export const useUserFilters = (users: UserTableData[] | undefined) => {
   
   // Apply filters and search
   useEffect(() => {
-    if (!users) return;
+    if (!users || !Array.isArray(users)) {
+      setFilteredUsers([]);
+      return;
+    }
 
     let filtered = [...users];
 

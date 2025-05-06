@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useUserFilters } from "./useUserFilters";
 import { useUserData } from "./useUserData";
+import { FilterState } from "./types";
 
 export const useUserManagement = (initialFilter?: { type: string; value: string }) => {
   const { 
@@ -19,41 +20,20 @@ export const useUserManagement = (initialFilter?: { type: string; value: string 
     setTierFilter,
     archetypeFilter,
     setArchetypeFilter,
-    activeFilter,
+    filteredUsers,
     resetFilters
-  } = useUserFilters(initialFilter);
+  } = useUserFilters(users);
+
+  const [activeFilter, setActiveFilter] = useState<FilterState | null>(
+    initialFilter ? { type: initialFilter.type, value: initialFilter.value } : null
+  );
 
   // Apply filters when they change
   useEffect(() => {
-    const onboardedFilter = activeFilter.type === "onboarded" ? activeFilter.value : "all";
-    const chatFilter = activeFilter.type === "chat" ? activeFilter.value : "all";
+    const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
+    const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
     fetchUsers(onboardedFilter, chatFilter);
   }, [activeFilter, fetchUsers]);
-
-  const filteredUsers = users.filter((user) => {
-    // Apply text search if any
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      const nameMatch = user.name?.toLowerCase().includes(searchLower) || false;
-      const emailMatch = user.email?.toLowerCase().includes(searchLower) || false;
-      
-      if (!nameMatch && !emailMatch) {
-        return false;
-      }
-    }
-    
-    // Apply tier filter if any
-    if (tierFilter !== "all" && user.subscription_tier !== tierFilter) {
-      return false;
-    }
-    
-    // Apply archetype filter if any
-    if (archetypeFilter !== "all" && user.eq_archetype !== archetypeFilter) {
-      return false;
-    }
-    
-    return true;
-  });
 
   return {
     users: filteredUsers,
@@ -65,7 +45,10 @@ export const useUserManagement = (initialFilter?: { type: string; value: string 
     archetypeFilter,
     setArchetypeFilter,
     activeFilter,
-    resetFilters,
+    resetFilters: () => {
+      resetFilters();
+      setActiveFilter(null);
+    },
     fetchUsers,
     handleUpdateTier,
     handleUserDeleted
