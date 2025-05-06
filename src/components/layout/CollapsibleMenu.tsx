@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
-import { Menu } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 export function CollapsibleMenu() {
@@ -26,16 +26,19 @@ export function CollapsibleMenu() {
   return (
     <div className="fixed top-0 right-0 z-50 w-full">
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-        <CollapsibleTrigger asChild className="absolute top-4 right-4">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:bg-humanly-teal/10"
-          >
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
-        </CollapsibleTrigger>
+        {/* Always visible toggle button - uses 'X' icon when menu is open */}
+        <div className="absolute top-4 right-4 z-50">
+          <CollapsibleTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-full bg-white/90 backdrop-blur-sm shadow-md hover:bg-humanly-teal/10"
+            >
+              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </CollapsibleTrigger>
+        </div>
         
         <CollapsibleContent className="mt-2 enhanced-header animate-slide-up">
           <div className="container mx-auto py-4 px-4 sm:px-6">

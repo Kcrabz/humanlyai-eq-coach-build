@@ -101,7 +101,7 @@
 /* Improved animation for new messages */
 @keyframes slide-up {
   0% {
-    transform: translateY(-20px);
+    transform: translateY(20px);
     opacity: 0;
   }
   100% {
@@ -112,6 +112,22 @@
 
 .animate-slide-up {
   animation: slide-up 0.3s cubic-bezier(0.26, 0.54, 0.32, 1) forwards;
+}
+
+/* Define scale-fade-in animation for dropdown menus */
+@keyframes scale-fade-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-fade-in {
+  animation: scale-fade-in 0.2s ease-out forwards;
 }
 
 /* New hover link animation */
