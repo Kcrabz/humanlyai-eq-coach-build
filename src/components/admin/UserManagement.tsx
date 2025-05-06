@@ -63,11 +63,12 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
       
       console.log("Got authenticated session, calling export function...");
       
-      // Call the edge function with proper authentication
+      // Call the edge function with proper authentication and error handling
       const { data, error } = await supabase.functions.invoke('admin-export-users-csv', {
         headers: {
           Authorization: `Bearer ${sessionData.session.access_token}`
-        }
+        },
+        body: { filters: { searchTerm, tierFilter, archetypeFilter } }
       });
       
       if (error) {
@@ -78,10 +79,10 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
         return;
       }
       
-      if (!data) {
-        console.error("No data returned from export function");
+      if (!data || data.error) {
+        console.error("Error in edge function response:", data?.error || "No data returned");
         toast.error("Failed to export users", { 
-          description: "No data returned from server" 
+          description: data?.error || "No data returned from server" 
         });
         return;
       }
