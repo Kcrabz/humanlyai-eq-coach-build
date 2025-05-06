@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 
 interface HowItWorksSectionProps {
   onGetStarted: () => void;
@@ -61,7 +60,6 @@ const HowItWorksSection = ({ onGetStarted }: HowItWorksSectionProps) => {
             size="lg"
           >
             Start Your Free Trial
-            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
           <p className="text-muted-foreground mt-4 text-sm">
             No credit card required • 7-day free trial

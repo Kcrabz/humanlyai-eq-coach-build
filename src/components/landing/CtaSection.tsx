@@ -29,14 +29,6 @@ const CtaSection = ({ onGetStarted }: CtaSectionProps) => {
             >
               Get Started Now
             </Button>
-            
-            <Button 
-              size="lg" 
-              variant="outline"
-              className="border-white text-white hover:bg-white/10 transition-all duration-300"
-            >
-              Get Started Now
-            </Button>
           </div>
           
           <p className="mt-8 text-sm opacity-75 flex items-center justify-center gap-1">

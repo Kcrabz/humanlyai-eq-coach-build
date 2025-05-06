@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight } from "lucide-react";
 
 interface ArchetypesSectionProps {
   onFindArchetype: () => void;
@@ -63,7 +62,6 @@ const ArchetypesSection = ({ onFindArchetype }: ArchetypesSectionProps) => {
             size="lg"
           >
             Find Your Archetype
-            <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
           <p className="text-muted-foreground mt-4 text-sm">
             Takes only 3 minutes • Personalized to your unique style
