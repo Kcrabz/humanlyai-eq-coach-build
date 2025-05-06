@@ -10,19 +10,42 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { MoreHorizontal, Star, UserIcon } from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter 
+} from "@/components/ui/dialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { MoreHorizontal, Star, UserIcon, Key, Trash2, AlertCircle } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { generateAvatar } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface UserOperationsProps {
   user: User;
   onUpdateTier: (userId: string, tier: SubscriptionTier) => Promise<void>;
+  onUserDeleted?: (userId: string) => void;
 }
 
-export const UserOperations = ({ user, onUpdateTier }: UserOperationsProps) => {
+export const UserOperations = ({ user, onUpdateTier, onUserDeleted }: UserOperationsProps) => {
   const [showUserDetails, setShowUserDetails] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleUpdateTier = async (tier: SubscriptionTier) => {
     if (tier === user.subscription_tier) return;
@@ -31,6 +54,64 @@ export const UserOperations = ({ user, onUpdateTier }: UserOperationsProps) => {
       await onUpdateTier(user.id, tier);
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!user.email) {
+      toast.error("Cannot reset password", { description: "User email is unknown" });
+      return;
+    }
+    
+    setIsProcessing(true);
+    try {
+      const response = await supabase.functions.invoke('admin-reset-password', {
+        body: { userId: user.id, email: user.email }
+      });
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      toast.success("Password reset email sent", { 
+        description: `A password reset link has been sent to ${user.email}` 
+      });
+      setIsResetDialogOpen(false);
+    } catch (error) {
+      console.error("Failed to reset password:", error);
+      toast.error("Failed to reset password", { 
+        description: error instanceof Error ? error.message : "An unexpected error occurred" 
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    setIsProcessing(true);
+    try {
+      const response = await supabase.functions.invoke('admin-delete-user', {
+        body: { userId: user.id }
+      });
+
+      if (response.error) {
+        throw new Error(response.error);
+      }
+
+      toast.success("User deleted successfully");
+      setIsDeleteDialogOpen(false);
+      
+      // Update parent component state
+      if (onUserDeleted) {
+        onUserDeleted(user.id);
+      }
+    } catch (error) {
+      console.error("Failed to delete user:", error);
+      toast.error("Failed to delete user", { 
+        description: error instanceof Error ? error.message : "An unexpected error occurred" 
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -48,6 +129,19 @@ export const UserOperations = ({ user, onUpdateTier }: UserOperationsProps) => {
           <DropdownMenuItem onClick={() => setShowUserDetails(true)}>
             <UserIcon className="mr-2 h-4 w-4" />
             View details
+          </DropdownMenuItem>
+          
+          <DropdownMenuItem onClick={() => setIsResetDialogOpen(true)}>
+            <Key className="mr-2 h-4 w-4" />
+            Reset password
+          </DropdownMenuItem>
+          
+          <DropdownMenuItem 
+            onClick={() => setIsDeleteDialogOpen(true)}
+            className="text-destructive"
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Delete user
           </DropdownMenuItem>
           
           <DropdownMenuSeparator />
@@ -132,6 +226,72 @@ export const UserOperations = ({ user, onUpdateTier }: UserOperationsProps) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Password reset confirmation dialog */}
+      <Dialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset User Password</DialogTitle>
+            <DialogDescription>
+              This will send a password reset email to the user.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p>Are you sure you want to send a password reset email to:</p>
+            <p className="font-medium mt-2">{user.email || "Unknown email"}</p>
+          </div>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsResetDialogOpen(false)}
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleResetPassword} 
+              disabled={isProcessing || !user.email}
+            >
+              {isProcessing ? "Sending..." : "Send Reset Email"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete user confirmation dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Delete User Account
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This action is permanent and cannot be undone. This will delete the user's account and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-4">
+            <p>Are you sure you want to permanently delete this user?</p>
+            <div className="mt-2 p-3 bg-muted rounded-md">
+              <p className="font-medium">{user.name || "Unnamed user"}</p>
+              <p className="text-sm text-muted-foreground">{user.email || "Unknown email"}</p>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isProcessing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteUser();
+              }}
+              disabled={isProcessing}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isProcessing ? "Deleting..." : "Delete User"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

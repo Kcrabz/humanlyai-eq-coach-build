@@ -9,9 +9,10 @@ interface UserTableProps {
   users: UserTableData[];
   isLoading: boolean;
   onUpdateTier: (userId: string, tier: SubscriptionTier) => Promise<void>;
+  onUserDeleted?: (userId: string) => void;
 }
 
-export const UserTable = ({ users, isLoading, onUpdateTier }: UserTableProps) => {
+export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: UserTableProps) => {
   return (
     <div className="rounded-md border">
       <Table>
@@ -56,7 +57,8 @@ export const UserTable = ({ users, isLoading, onUpdateTier }: UserTableProps) =>
                 <TableCell>
                   <UserOperations 
                     user={user} 
-                    onUpdateTier={onUpdateTier} 
+                    onUpdateTier={onUpdateTier}
+                    onUserDeleted={onUserDeleted}
                   />
                 </TableCell>
               </TableRow>

@@ -27,7 +27,8 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
     activeFilter,
     resetFilters,
     fetchUsers,
-    handleUpdateTier
+    handleUpdateTier,
+    handleUserDeleted
   } = useUserManagement(initialFilter);
 
   const [exportLoading, setExportLoading] = useState(false);
@@ -167,6 +168,7 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
         users={users}
         isLoading={isLoading}
         onUpdateTier={handleUpdateTier}
+        onUserDeleted={handleUserDeleted}
       />
     </div>
   );

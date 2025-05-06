@@ -13,7 +13,6 @@ Deno.serve(async (req) => {
   }
   
   try {
-    // Create Supabase client with admin privileges
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
@@ -53,7 +52,7 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Check if the user has admin access using the is_admin function
+    // Check if the user has admin access
     const { data: isAdmin, error: adminCheckError } = await authClient.rpc('is_admin');
     
     if (adminCheckError || !isAdmin) {
@@ -64,64 +63,38 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Get the user IDs from the request
-    const { userIds } = await req.json();
+    // Get the user ID from the request
+    const { userId, email } = await req.json();
     
-    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+    if (!userId || !email) {
       return new Response(
-        JSON.stringify({ error: 'Invalid request: userIds array required' }),
+        JSON.stringify({ error: 'User ID and email are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    console.log(`Fetching email addresses for ${userIds.length} users`);
+    console.log(`Admin user ${user.email} initiating password reset for user ${userId}`);
     
-    // Fetch user emails directly from auth.users using the service role key
-    const userEmails = await Promise.all(
-      userIds.map(async (userId) => {
-        try {
-          const { data, error } = await supabaseAdmin
-            .from('auth.users')
-            .select('email')
-            .eq('id', userId)
-            .single();
-          
-          if (error) {
-            console.error(`Error fetching user ${userId}:`, error);
-            
-            // Fallback to admin API if direct query fails
-            try {
-              const { data: userData, error: adminError } = await supabaseAdmin.auth.admin.getUserById(userId);
-              
-              if (adminError) {
-                console.error(`Admin API error for user ${userId}:`, adminError);
-                return { id: userId, email: null, error: adminError.message };
-              }
-              
-              return { 
-                id: userId, 
-                email: userData.user?.email || null 
-              };
-            } catch (adminError) {
-              console.error(`Unexpected admin API error for user ${userId}:`, adminError);
-              return { id: userId, email: null, error: 'Admin API error' };
-            }
-          }
-          
-          return { 
-            id: userId, 
-            email: data?.email || null 
-          };
-        } catch (error) {
-          console.error(`Unexpected error for user ${userId}:`, error);
-          return { id: userId, email: null, error: 'Internal error' };
-        }
-      })
-    );
+    // Send password recovery email
+    const { data, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'recovery',
+      email: email,
+    });
     
-    // Return the emails to the client
+    if (error) {
+      console.error("Error sending password reset email:", error);
+      return new Response(
+        JSON.stringify({ error: error.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
     return new Response(
-      JSON.stringify({ data: userEmails }),
+      JSON.stringify({ 
+        success: true, 
+        message: 'Password reset email sent',
+        data: { userId, email }
+      }),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

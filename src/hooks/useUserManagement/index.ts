@@ -1,11 +1,17 @@
 
 import { useState, useEffect } from "react";
-import { useUserData } from "./useUserData";
 import { useUserFilters } from "./useUserFilters";
-import { FilterState } from "./types";
+import { useUserData } from "./useUserData";
 
 export const useUserManagement = (initialFilter?: { type: string; value: string }) => {
-  const { users, isLoading, fetchUsers, handleUpdateTier } = useUserData();
+  const { 
+    users, 
+    isLoading, 
+    fetchUsers, 
+    handleUpdateTier,
+    handleUserDeleted 
+  } = useUserData();
+  
   const {
     searchTerm,
     setSearchTerm,
@@ -13,54 +19,41 @@ export const useUserManagement = (initialFilter?: { type: string; value: string 
     setTierFilter,
     archetypeFilter,
     setArchetypeFilter,
-    filteredUsers,
-    resetFilters: resetFilterState
-  } = useUserFilters(users);
-  
-  const [onboardedFilter, setOnboardedFilter] = useState<string>("all");
-  const [chatFilter, setChatFilter] = useState<string>("all");
-  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+    activeFilter,
+    resetFilters
+  } = useUserFilters(initialFilter);
 
-  // Set initial filters based on props
+  // Apply filters when they change
   useEffect(() => {
-    if (initialFilter && initialFilter.type && initialFilter.value) {
-      switch (initialFilter.type) {
-        case "tier":
-          setTierFilter(initialFilter.value);
-          setActiveFilter(`Subscription: ${initialFilter.value.charAt(0).toUpperCase() + initialFilter.value.slice(1)}`);
-          break;
-        case "archetype":
-          setArchetypeFilter(initialFilter.value);
-          setActiveFilter(`Archetype: ${initialFilter.value === "not-set" ? "Not Set" : initialFilter.value.charAt(0).toUpperCase() + initialFilter.value.slice(1)}`);
-          break;
-        case "onboarded":
-          setOnboardedFilter(initialFilter.value);
-          setActiveFilter("Onboarded Users");
-          break;
-        case "chat":
-          setChatFilter(initialFilter.value);
-          setActiveFilter("Users with Chat Activity");
-          break;
-        case "all":
-          resetFilters();
-          setActiveFilter("All Users");
-          break;
+    const onboardedFilter = activeFilter.type === "onboarded" ? activeFilter.value : "all";
+    const chatFilter = activeFilter.type === "chat" ? activeFilter.value : "all";
+    fetchUsers(onboardedFilter, chatFilter);
+  }, [activeFilter, fetchUsers]);
+
+  const filteredUsers = users.filter((user) => {
+    // Apply text search if any
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const nameMatch = user.name?.toLowerCase().includes(searchLower) || false;
+      const emailMatch = user.email?.toLowerCase().includes(searchLower) || false;
+      
+      if (!nameMatch && !emailMatch) {
+        return false;
       }
     }
-  }, [initialFilter]);
-
-  // Reset all filters
-  const resetFilters = () => {
-    resetFilterState();
-    setOnboardedFilter("all");
-    setChatFilter("all");
-    setActiveFilter(null);
-  };
-
-  // Load users on component mount or when filters change
-  useEffect(() => {
-    fetchUsers(onboardedFilter, chatFilter);
-  }, [onboardedFilter, chatFilter]);
+    
+    // Apply tier filter if any
+    if (tierFilter !== "all" && user.subscription_tier !== tierFilter) {
+      return false;
+    }
+    
+    // Apply archetype filter if any
+    if (archetypeFilter !== "all" && user.eq_archetype !== archetypeFilter) {
+      return false;
+    }
+    
+    return true;
+  });
 
   return {
     users: filteredUsers,
@@ -73,7 +66,8 @@ export const useUserManagement = (initialFilter?: { type: string; value: string 
     setArchetypeFilter,
     activeFilter,
     resetFilters,
-    fetchUsers: () => fetchUsers(onboardedFilter, chatFilter),
+    fetchUsers,
     handleUpdateTier,
+    handleUserDeleted
   };
 };

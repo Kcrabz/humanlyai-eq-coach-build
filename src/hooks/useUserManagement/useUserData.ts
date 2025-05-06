@@ -121,5 +121,17 @@ export const useUserData = () => {
     }
   };
 
-  return { users, isLoading, fetchUsers, handleUpdateTier };
+  // Handler for user deletion
+  const handleUserDeleted = (userId: string) => {
+    // Update local state to remove the deleted user
+    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
+  };
+
+  return { 
+    users, 
+    isLoading, 
+    fetchUsers, 
+    handleUpdateTier,
+    handleUserDeleted 
+  };
 };
