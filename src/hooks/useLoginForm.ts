@@ -39,15 +39,21 @@ export function useLoginForm() {
     return () => clearInterval(interval);
   }, [rateLimitInfo]);
   
-  // Effect to redirect after successful login
+  // Effect to redirect after successful login - improved logic
   useEffect(() => {
     if (user) {
-      console.log("User authenticated in useLoginForm, redirecting to appropriate page");
-      if (!user.onboarded) {
-        navigate("/onboarding", { replace: true });
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
+      console.log("User authenticated in useLoginForm, redirecting to appropriate page", user);
+      
+      // Add slight delay to ensure state is properly updated
+      setTimeout(() => {
+        if (!user.onboarded) {
+          console.log("Redirecting to onboarding");
+          navigate("/onboarding", { replace: true });
+        } else {
+          console.log("Redirecting to dashboard");
+          navigate("/dashboard", { replace: true });
+        }
+      }, 100);
     }
   }, [user, navigate]);
   

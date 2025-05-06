@@ -13,7 +13,11 @@ const LoginPage = () => {
   // Immediate redirect effect if user is already authenticated
   useEffect(() => {
     if (!isLoading && user) {
-      console.log("LoginPage: User already authenticated, redirecting");
+      console.log("LoginPage: User already authenticated, redirecting", { 
+        userId: user.id, 
+        onboarded: user.onboarded 
+      });
+      
       if (!user.onboarded) {
         navigate("/onboarding", { replace: true });
       } else {
