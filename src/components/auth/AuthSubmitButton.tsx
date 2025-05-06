@@ -6,14 +6,15 @@ interface AuthSubmitButtonProps {
   isSubmitting: boolean;
   text: string;
   loadingText: string;
+  disabled?: boolean; // Added disabled prop
 }
 
-export function AuthSubmitButton({ isSubmitting, text, loadingText }: AuthSubmitButtonProps) {
+export function AuthSubmitButton({ isSubmitting, text, loadingText, disabled }: AuthSubmitButtonProps) {
   return (
     <Button 
       type="submit" 
       className="w-full" 
-      disabled={isSubmitting}
+      disabled={isSubmitting || disabled}
     >
       {isSubmitting ? (
         <div className="flex items-center gap-2">

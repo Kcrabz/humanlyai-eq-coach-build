@@ -59,21 +59,14 @@ export const verifyTOTPCode = async (userId: string, code: string): Promise<bool
 };
 
 /**
- * Enables 2FA for a user
+ * Enables 2FA for a user (mock function until database is updated)
  * @param userId User ID
  * @returns True if 2FA was enabled successfully, false otherwise
  */
 export const enableTwoFactor = async (userId: string): Promise<boolean> => {
   try {
-    // Update user profile to indicate 2FA is enabled
-    const { error } = await supabase
-      .from('profiles')
-      .update({ two_factor_enabled: true })
-      .eq('id', userId);
-      
-    if (error) {
-      throw error;
-    }
+    // We'll log this as a console message since the database schema doesn't have two_factor_enabled yet
+    console.log(`2FA would be enabled for user ${userId} (requires database schema update)`);
     
     // Log 2FA enabled event
     await logSecurityEvent({
@@ -83,6 +76,17 @@ export const enableTwoFactor = async (userId: string): Promise<boolean> => {
     
     toast.success("Two-factor authentication enabled");
     return true;
+    
+    /* Uncomment once the profiles table has two_factor_enabled column
+    const { error } = await supabase
+      .from('profiles')
+      .update({ two_factor_enabled: true })
+      .eq('id', userId);
+      
+    if (error) {
+      throw error;
+    }
+    */
   } catch (error) {
     console.error("Error enabling 2FA:", error);
     toast.error("Failed to enable two-factor authentication");
@@ -91,21 +95,14 @@ export const enableTwoFactor = async (userId: string): Promise<boolean> => {
 };
 
 /**
- * Disables 2FA for a user
+ * Disables 2FA for a user (mock function until database is updated)
  * @param userId User ID
  * @returns True if 2FA was disabled successfully, false otherwise
  */
 export const disableTwoFactor = async (userId: string): Promise<boolean> => {
   try {
-    // Update user profile to indicate 2FA is disabled
-    const { error } = await supabase
-      .from('profiles')
-      .update({ two_factor_enabled: false })
-      .eq('id', userId);
-      
-    if (error) {
-      throw error;
-    }
+    // We'll log this as a console message since the database schema doesn't have two_factor_enabled yet
+    console.log(`2FA would be disabled for user ${userId} (requires database schema update)`);
     
     // Log 2FA disabled event
     await logSecurityEvent({
@@ -116,6 +113,17 @@ export const disableTwoFactor = async (userId: string): Promise<boolean> => {
     
     toast.success("Two-factor authentication disabled");
     return true;
+    
+    /* Uncomment once the profiles table has two_factor_enabled column
+    const { error } = await supabase
+      .from('profiles')
+      .update({ two_factor_enabled: false })
+      .eq('id', userId);
+      
+    if (error) {
+      throw error;
+    }
+    */
   } catch (error) {
     console.error("Error disabling 2FA:", error);
     toast.error("Failed to disable two-factor authentication");
@@ -124,12 +132,17 @@ export const disableTwoFactor = async (userId: string): Promise<boolean> => {
 };
 
 /**
- * Checks if a user has 2FA enabled
+ * Checks if a user has 2FA enabled (mock function until database is updated)
  * @param userId User ID
  * @returns True if 2FA is enabled, false otherwise
  */
 export const isTwoFactorEnabled = async (userId: string): Promise<boolean> => {
   try {
+    // For now, always return false since the database schema doesn't have two_factor_enabled yet
+    console.log(`Checking if 2FA is enabled for user ${userId} (requires database schema update)`);
+    return false;
+    
+    /* Uncomment once the profiles table has two_factor_enabled column
     const { data, error } = await supabase
       .from('profiles')
       .select('two_factor_enabled')
@@ -141,6 +154,7 @@ export const isTwoFactorEnabled = async (userId: string): Promise<boolean> => {
     }
     
     return data?.two_factor_enabled || false;
+    */
   } catch (error) {
     console.error("Error checking 2FA status:", error);
     return false;

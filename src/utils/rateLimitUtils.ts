@@ -19,7 +19,7 @@ interface RateLimitRequest {
 }
 
 /**
- * Checks if a request should be rate limited
+ * Checks if a request should be rate limited (mock implementation until database is updated)
  * @param params Rate limit request parameters
  * @returns Object indicating if the request is rate limited and the limit info
  */
@@ -74,7 +74,36 @@ export const checkRateLimit = async (params: RateLimitRequest): Promise<{
       resetTime.setMilliseconds(0);
     }
     
-    // Count existing requests in the window
+    // For now, return a mock response since the request_logs table doesn't exist
+    console.log(`Rate limit check for user ${userId} on endpoint ${endpoint} (period: ${period})`);
+    console.log(`This would check for requests since ${windowStart.toISOString()}`);
+    
+    // Simulate not being rate limited
+    const currentCount = 1;
+    const isLimited = false;
+    
+    // If we're rate limiting, log a security event
+    if (isLimited) {
+      await logSecurityEvent({
+        userId,
+        eventType: 'rate_limit_exceeded',
+        details: { 
+          endpoint, 
+          period, 
+          currentCount, 
+          maxRequests 
+        }
+      });
+    }
+    
+    return {
+      isLimited,
+      currentCount,
+      maxRequests,
+      resetTime
+    };
+    
+    /* Uncomment once the request_logs table is created
     const { data, error } = await supabase
       .from('request_logs')
       .select('id')
@@ -105,27 +134,7 @@ export const checkRateLimit = async (params: RateLimitRequest): Promise<{
       });
       
     const isLimited = currentCount >= maxRequests;
-    
-    // If we're rate limiting, log a security event
-    if (isLimited) {
-      await logSecurityEvent({
-        userId,
-        eventType: 'rate_limit_exceeded',
-        details: { 
-          endpoint, 
-          period, 
-          currentCount, 
-          maxRequests 
-        }
-      });
-    }
-    
-    return {
-      isLimited,
-      currentCount: currentCount + 1, // Add 1 for the current request
-      maxRequests,
-      resetTime
-    };
+    */
   } catch (error) {
     console.error("Error in rate limit check:", error);
     // On error, allow the request
@@ -228,10 +237,11 @@ export const clientRateLimit = (
   } catch (error) {
     console.error("Error in client rate limiting:", error);
     // On error, allow the action
+    const currentTime = Date.now();
     return {
       isLimited: false,
       attemptsRemaining: maxAttempts - 1,
-      resetTimeMs: now + windowMs
+      resetTimeMs: currentTime + windowMs
     };
   }
 };

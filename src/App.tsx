@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from 'react-query';
-import { ReactQueryDevtools } from 'react-query/devtools';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from '@/context/AuthContext';
 import { Toaster } from "@/components/ui/sonner"
 
@@ -25,7 +26,7 @@ import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 
 // Import components
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { AdminRoute } from '@/components/auth/AdminRoute';
+import { AdminRoute } from '@/components/admin/AdminRoute';
 
 const queryClient = new QueryClient();
 

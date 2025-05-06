@@ -8,6 +8,7 @@ import TwoFactorSetup from "@/components/settings/TwoFactorSetup";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, User, Bell, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button"; // Added button import
 
 const SettingsPage = () => {
   const { user } = useAuth();

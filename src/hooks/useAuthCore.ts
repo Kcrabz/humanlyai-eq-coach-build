@@ -28,13 +28,17 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         setError(error.message);
         toast.error("Login failed", { description: error.message });
         
-        // Log failed login attempt
+        // Log failed login attempt - simplified to avoid infinite type recursion
         if (data?.user?.id) {
-          await logSecurityEvent({
-            userId: data.user.id,
-            eventType: 'login_failure',
-            details: { error: error.message }
-          });
+          try {
+            await logSecurityEvent({
+              userId: data.user.id,
+              eventType: 'login_failure',
+              details: { error: error.message }
+            });
+          } catch (logError) {
+            console.error("Failed to log security event:", logError);
+          }
         }
         
         return false;
@@ -47,11 +51,15 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         return false;
       }
       
-      // Log successful login
-      await logSecurityEvent({
-        userId: data.user.id,
-        eventType: 'login_success'
-      });
+      // Log successful login - simplified to avoid infinite type recursion
+      try {
+        await logSecurityEvent({
+          userId: data.user.id,
+          eventType: 'login_success'
+        });
+      } catch (logError) {
+        console.error("Failed to log security event:", logError);
+      }
       
       console.log("Login successful for:", email, "User data:", data.user.id);
       toast.success("Logged in successfully");
@@ -135,11 +143,15 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         setUser((prevUser) => prevUser ? { ...prevUser, ...updates } : null);
         
         // Log profile update
-        await logSecurityEvent({
-          userId: authUser.id,
-          eventType: 'profile_updated',
-          details: { fields: Object.keys(updates) }
-        });
+        try {
+          await logSecurityEvent({
+            userId: authUser.id,
+            eventType: 'profile_updated',
+            details: { fields: Object.keys(updates) }
+          });
+        } catch (logError) {
+          console.error("Failed to log security event:", logError);
+        }
         
         toast.success("Profile updated successfully");
       }

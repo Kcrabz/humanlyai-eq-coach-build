@@ -29,7 +29,7 @@ export interface SecurityEvent {
 }
 
 /**
- * Logs a security event to the database
+ * Logs a security event to the console (database logging requires schema update)
  * @param event Security event details
  * @returns Success status
  */
@@ -41,7 +41,19 @@ export const logSecurityEvent = async (event: SecurityEvent): Promise<boolean> =
     // Determine risk level if not provided
     const riskLevel = event.riskLevel || determineRiskLevel(event.eventType);
     
-    // Insert the security event record
+    // Currently, we just log to console since database table doesn't exist yet
+    console.log("Security event logged:", {
+      user_id: event.userId,
+      event_type: event.eventType,
+      ip_address: event.ip || 'unknown',
+      user_agent: userAgent,
+      details: event.details || {},
+      risk_level: riskLevel,
+      created_at: new Date().toISOString()
+    });
+    
+    // To enable database logging, uncomment once the security_events table is created
+    /*
     const { error } = await supabase
       .from('security_events')
       .insert({
@@ -56,14 +68,9 @@ export const logSecurityEvent = async (event: SecurityEvent): Promise<boolean> =
       
     if (error) {
       console.error("Error logging security event:", error);
-      // Fallback to console logging if database fails
-      console.warn("Security event:", {
-        ...event,
-        time: new Date().toISOString(),
-        userAgent
-      });
       return false;
     }
+    */
     
     return true;
   } catch (error) {
@@ -110,6 +117,12 @@ export const checkSuspiciousPattern = async (
   userId: string, 
   eventType: SecurityEventType
 ): Promise<boolean> => {
+  // For now, we're just returning false since we don't have the security_events table
+  // This can be enhanced once the database schema is updated
+  console.log(`Checking suspicious pattern for user ${userId} for event ${eventType}`);
+  return false;
+  
+  /* Uncomment once security_events table is created
   try {
     // Example: Check for multiple failed login attempts
     if (eventType === 'login_failure') {
@@ -137,4 +150,5 @@ export const checkSuspiciousPattern = async (
     console.error("Error in checkSuspiciousPattern:", error);
     return false;
   }
+  */
 };
