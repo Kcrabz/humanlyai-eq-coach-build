@@ -1,6 +1,5 @@
-
 import { useEffect } from "react";
-import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { OnboardingProgress } from "./OnboardingProgress";
 import { NameInput } from "./NameInput";
 import { GoalSelector } from "./GoalSelector";
@@ -20,7 +19,6 @@ export const OnboardingContainer = () => {
   const { state, goToStep } = useOnboarding();
   const { currentStep, isLoading } = state;
   const { user, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
   
@@ -37,7 +35,7 @@ export const OnboardingContainer = () => {
   }, [searchParams, goToStep]);
 
   useEffect(() => {
-    console.log("Onboarding auth check:", {
+    console.log("Onboarding container auth check:", {
       isAuthenticated,
       userOnboarded: user?.onboarded,
       isLoading,
@@ -46,33 +44,7 @@ export const OnboardingContainer = () => {
       search: location.search,
       state: location.state
     });
-    
-    // Allow users to retake the assessment even if they're already onboarded
-    if (isRetaking) {
-      console.log("User is retaking assessment, skipping onboarding check");
-      return;
-    }
-    
-    // If user's profile data hasn't loaded yet, or user is not onboarded and we're not on the complete step,
-    // let them continue with onboarding
-    if (
-      typeof user?.onboarded !== "boolean" || 
-      (!user?.onboarded && !isLoading && currentStep !== "complete")
-    ) {
-      console.log("Continuing onboarding process", { 
-        userOnboarded: user?.onboarded, 
-        isLoading, 
-        currentStep 
-      });
-      return;
-    }
-
-    // If user is already fully onboarded (coming back somehow), redirect to dashboard
-    if (user?.onboarded && !isLoading && currentStep !== "complete") {
-      console.log("User is already onboarded, redirecting to dashboard from OnboardingContent");
-      navigate("/dashboard", { replace: true });
-    }
-  }, [user, navigate, isLoading, currentStep, isAuthenticated, isRetaking, location]);
+  }, [user, isLoading, currentStep, isAuthenticated, isRetaking, location]);
   
   if (isLoading) {
     return <OnboardingLoader />;

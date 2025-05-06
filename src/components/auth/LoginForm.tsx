@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { useEffect } from "react";
 import { useLoginForm } from "@/hooks/useLoginForm";
@@ -23,7 +22,7 @@ export function LoginForm() {
   
   const { authEvent } = useAuth();
   
-  // Debug authentication process
+  // Debug authentication process without redirection
   useEffect(() => {
     console.log("LoginForm: Auth state updated", { 
       authEvent,

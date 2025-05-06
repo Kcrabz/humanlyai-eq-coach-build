@@ -1,42 +1,20 @@
 
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
 
 export function AuthRedirect() {
-  const { user, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const { isLoading } = useAuth();
   const location = useLocation();
 
   useEffect(() => {
-    // Don't redirect if still loading or on the home page
-    if (isLoading || location.pathname === "/") {
-      return;
-    }
-    
-    console.log("AuthRedirect: Checking authentication state", {
+    // Log only - no redirection logic to avoid conflicts with AuthenticationGuard
+    console.log("AuthRedirect: Component mounted", {
       isLoading,
-      userExists: !!user,
-      userOnboarded: user?.onboarded,
       pathname: location.pathname
     });
-    
-    if (user) {
-      console.log("AuthRedirect: User authenticated, handling redirection");
-      
-      // Execute redirect immediately
-      if (!user.onboarded && location.pathname !== "/onboarding") {
-        console.log("Redirecting to onboarding");
-        navigate("/onboarding", { replace: true });
-      } else if (user.onboarded && 
-                (location.pathname === "/login" || 
-                 location.pathname === "/signup")) {
-        console.log("Redirecting authenticated user to dashboard");
-        navigate("/dashboard", { replace: true });
-      }
-    }
-  }, [user, isLoading, navigate, location.pathname]);
+  }, [isLoading, location.pathname]);
 
   if (isLoading) {
     return (

@@ -12,7 +12,7 @@ export const useAuthSession = () => {
   const [authEvent, setAuthEvent] = useState<string | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
-  // Handle explicit session updates after authentication events
+  // Handle session updates after authentication events
   const updateSessionAfterEvent = useCallback(async (event: string) => {
     if (event === 'SIGNED_IN') {
       console.log("User signed in, updating session and state immediately");
@@ -61,13 +61,15 @@ export const useAuthSession = () => {
       console.log("Existing session check:", existingSession?.user?.id);
       if (isMounted) {
         setSession(existingSession);
-        setIsLoading(false);
         
         // If we have an existing session, set a "RESTORED_SESSION" event
         if (existingSession) {
           setAuthEvent('RESTORED_SESSION');
           setProfileLoaded(true); // Assume profile is loaded for existing sessions
         }
+        
+        // Make sure to set isLoading to false once session is checked
+        setIsLoading(false);
       }
     }).catch(error => {
       console.error("Error getting session:", error);
