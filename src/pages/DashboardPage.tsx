@@ -44,9 +44,9 @@ const DashboardPage = () => {
                 <div className="w-16 h-16 rounded-full bg-humanly-indigo/10 flex items-center justify-center">
                   <MessageCircle className="w-8 h-8 text-humanly-indigo" />
                 </div>
-                <div className="text-center">
+                <div className="text-center w-full">
                   <h2 className="text-xl font-semibold">Chat with Kai</h2>
-                  <p className="text-sm text-muted-foreground mt-2 px-2 line-clamp-2 h-10">
+                  <p className="text-sm text-muted-foreground mt-1 px-1 leading-snug min-h-[2.5rem] flex items-center justify-center">
                     Get personalized EQ coaching tailored to your needs
                   </p>
                 </div>
@@ -65,9 +65,9 @@ const DashboardPage = () => {
                 <div className="w-16 h-16 rounded-full bg-humanly-teal/10 flex items-center justify-center">
                   <TrendingUp className="w-8 h-8 text-humanly-teal" />
                 </div>
-                <div className="text-center">
+                <div className="text-center w-full">
                   <h2 className="text-xl font-semibold">Track Your Growth</h2>
-                  <p className="text-sm text-muted-foreground mt-2 px-2 line-clamp-2 h-10">
+                  <p className="text-sm text-muted-foreground mt-1 px-1 leading-snug min-h-[2.5rem] flex items-center justify-center">
                     Monitor your emotional intelligence progress over time
                   </p>
                 </div>
@@ -86,9 +86,9 @@ const DashboardPage = () => {
                 <div className="w-16 h-16 rounded-full bg-humanly-pastel-rose/20 flex items-center justify-center">
                   <Users className="w-8 h-8 text-humanly-indigo" />
                 </div>
-                <div className="text-center">
+                <div className="text-center w-full">
                   <h2 className="text-xl font-semibold">Refer a Fellow Human</h2>
-                  <p className="text-sm text-muted-foreground mt-2 px-2 line-clamp-2 h-10">
+                  <p className="text-sm text-muted-foreground mt-1 px-1 leading-snug min-h-[2.5rem] flex items-center justify-center">
                     Invite friends to improve their emotional intelligence
                   </p>
                 </div>
