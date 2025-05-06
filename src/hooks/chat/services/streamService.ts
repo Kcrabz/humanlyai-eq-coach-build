@@ -59,7 +59,9 @@ export async function sendMessageStream(
         // Include important user context
         subscriptionTier: subscriptionTier,
         archetype: user?.eq_archetype || 'Not set',
-        coachingMode: user?.coaching_mode || 'normal'
+        coachingMode: user?.coaching_mode || 'normal',
+        // Make sure userId is included if available
+        userId: user?.id
       }
     });
 

@@ -55,10 +55,11 @@ export const useChatActions = () => {
           navigate: undefined, // No navigation needed in this context
           setError
         },
-        () => {},
-        (loading) => {},
+        () => {}, // setLastSentMessage not needed here
+        (loading: boolean) => {}, // setIsLoading not needed here
         setUsageInfo,
-        contextMessages
+        contextMessages,
+        user // Pass the user object from auth context
       );
       
       console.log("Message sent and processed successfully");

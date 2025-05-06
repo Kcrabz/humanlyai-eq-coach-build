@@ -1,7 +1,7 @@
 
 import { streamOpenAI } from "./streamingService.ts";
 import { updateUsageTracking, logChatMessages } from "./usageTracking.ts";
-import { estimateTokenCount, corsHeaders } from "./utils.ts";
+import { estimateTokenCount, corsHeaders, TIER_LIMITS } from "./utils.ts";
 
 // Handle streaming response creation and processing - optimized for performance
 export async function createStreamResponse(

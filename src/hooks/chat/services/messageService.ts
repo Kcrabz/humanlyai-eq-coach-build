@@ -17,7 +17,8 @@ export async function sendMessage(
   setLastSentMessage: (content: string | null) => void,
   setIsLoading: (loading: boolean) => void,
   setUsageInfo: (info: any) => void,
-  currentMessages: any[] = []
+  currentMessages: any[] = [],
+  user: any = null // Add user parameter
 ) {
   if (!content.trim()) return;
 
@@ -36,7 +37,11 @@ export async function sendMessage(
       body: {
         message: content,
         messages: currentMessages,
-        stream: false
+        stream: false,
+        // Include user context for personalization
+        subscriptionTier: user?.subscription_tier || 'free',
+        archetype: user?.eq_archetype || 'Not set',
+        coachingMode: user?.coaching_mode || 'normal'
       }
     });
 
