@@ -46,7 +46,7 @@ const DashboardPage = () => {
                 </div>
                 <div className="text-center w-full">
                   <h2 className="text-xl font-semibold">Chat with Kai</h2>
-                  <p className="text-sm text-muted-foreground mt-1 px-3 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mt-1 px-3 whitespace-normal break-words">
                     Get personalized EQ coaching tailored to your needs
                   </p>
                 </div>
@@ -67,7 +67,7 @@ const DashboardPage = () => {
                 </div>
                 <div className="text-center w-full">
                   <h2 className="text-xl font-semibold">Track Your Growth</h2>
-                  <p className="text-sm text-muted-foreground mt-1 px-3 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mt-1 px-3 whitespace-normal break-words">
                     Monitor your emotional intelligence progress over time
                   </p>
                 </div>
@@ -88,7 +88,7 @@ const DashboardPage = () => {
                 </div>
                 <div className="text-center w-full">
                   <h2 className="text-xl font-semibold">Refer a Fellow Human</h2>
-                  <p className="text-sm text-muted-foreground mt-1 px-3 line-clamp-2">
+                  <p className="text-sm text-muted-foreground mt-1 px-3 whitespace-normal break-words">
                     Invite friends to improve their emotional intelligence
                   </p>
                 </div>
