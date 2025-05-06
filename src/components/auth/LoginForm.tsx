@@ -27,9 +27,17 @@ export function LoginForm() {
   useEffect(() => {
     console.log("LoginForm: Auth state updated", { 
       authEvent,
+      loginSuccess,
       timestamp: new Date().toISOString()
     });
-  }, [authEvent]);
+    
+    // When login is successful according to the form hook
+    if (loginSuccess) {
+      // Store login success in localStorage as a fallback
+      localStorage.setItem('login_form_success', 'true');
+      console.log("LoginForm: Login success detected, set fallback flag");
+    }
+  }, [authEvent, loginSuccess]);
   
   return (
     <div className="w-full max-w-md space-y-6">

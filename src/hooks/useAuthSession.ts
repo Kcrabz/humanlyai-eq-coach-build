@@ -12,17 +12,26 @@ export const useAuthSession = () => {
   const [authEvent, setAuthEvent] = useState<string | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
 
   // Handle session updates after authentication events
   const updateSessionAfterEvent = useCallback(async (event: string) => {
     if (event === 'SIGNED_IN') {
       console.log("User signed in, updating session and state immediately");
       try {
+        // Record the login timestamp
+        const timestamp = Date.now();
+        setLoginTimestamp(timestamp);
+        
         const { data } = await supabase.auth.getSession();
         setSession(data.session);
         setAuthEvent('SIGN_IN_COMPLETE');
+        
         // Mark that we need to wait for profile to load
         setProfileLoaded(false);
+        
+        // Store login success in localStorage as a fallback mechanism
+        localStorage.setItem('login_success_timestamp', timestamp.toString());
       } catch (error) {
         console.error("Error updating session after sign in:", error);
       }
@@ -31,8 +40,25 @@ export const useAuthSession = () => {
       setSession(null);
       setAuthEvent('SIGN_OUT_COMPLETE');
       setProfileLoaded(false);
+      localStorage.removeItem('login_success_timestamp');
     }
   }, []);
+
+  // Check for login success via localStorage as a fallback
+  useEffect(() => {
+    const storedTimestamp = localStorage.getItem('login_success_timestamp');
+    if (storedTimestamp && !loginTimestamp) {
+      const timestamp = parseInt(storedTimestamp);
+      // Only use stored timestamp if it's recent (last 5 minutes)
+      if (Date.now() - timestamp < 5 * 60 * 1000) {
+        setLoginTimestamp(timestamp);
+        console.log("Restored login success state from localStorage", { timestamp });
+      } else {
+        // Clear expired login timestamp
+        localStorage.removeItem('login_success_timestamp');
+      }
+    }
+  }, [loginTimestamp]);
 
   useEffect(() => {
     console.log("Setting up auth session listener");
@@ -97,6 +123,7 @@ export const useAuthSession = () => {
     authEvent, 
     profileLoaded, 
     setProfileLoaded,
-    initialized
+    initialized,
+    loginTimestamp
   };
 };
