@@ -13,12 +13,9 @@ const HeroSection = ({
   const navigate = useNavigate();
   const [isLogoVisible, setIsLogoVisible] = useState(false);
   
-  // Subtitle text with special pause markers
-  const subtitleText = "Meet Kai, the AI Coach ^ for the Human in You.";
-  
-  // Split the text into characters with pause markers for timing
-  const subtitleChars = subtitleText.split('');
-  const [visibleChars, setVisibleChars] = useState<boolean[]>(Array(subtitleChars.length).fill(false));
+  // Create an array of words for the subtitle
+  const subtitleWords = "Meet Kai, the AI Coach for the Human in You.".split(" ");
+  const [visibleWords, setVisibleWords] = useState<boolean[]>(Array(subtitleWords.length).fill(false));
   
   useEffect(() => {
     // Set a small delay before triggering the animation for the logo
@@ -26,38 +23,32 @@ const HeroSection = ({
       setIsLogoVisible(true);
     }, 200);
     
-    // Create staggered animations for each character
-    let totalDelay = 400; // Starting delay
-    let charIndex = 0;
-    
-    subtitleChars.forEach((char, index) => {
-      // Add pauses at specific points
-      if (char === ',') {
-        totalDelay += 400; // Pause after "Kai"
-      } else if (char === '^') {
-        totalDelay += 400; // Pause after "Coach" (using the marker)
-        return; // Skip this character as it's just a marker
+    // Create staggered animations for each word
+    subtitleWords.forEach((_, index) => {
+      let delay = 400;
+      
+      // Add extra pause after "Meet Kai"
+      if (index <= 1) {
+        delay += index * 100; // Normal timing for first two words
+      } else if (index === 2) {
+        delay += 200 + 400; // Add a 400ms pause after "Meet Kai"
+      } else {
+        delay += 200 + 400 + ((index - 2) * 100); // Continue normal timing after the pause
       }
       
-      const charTimer = setTimeout(() => {
-        setVisibleChars(prev => {
+      const wordTimer = setTimeout(() => {
+        setVisibleWords(prev => {
           const updated = [...prev];
           updated[index] = true;
           return updated;
         });
-      }, totalDelay);
+      }, delay);
       
-      totalDelay += (char === ' ' ? 40 : 30); // Slightly faster for spaces
-      
-      return () => clearTimeout(charTimer);
+      return () => clearTimeout(wordTimer);
     });
     
     return () => clearTimeout(logoTimer);
-  }, [subtitleChars.length]);
-  
-  // Filter out the pause marker for rendering
-  const displayChars = subtitleChars.filter(char => char !== '^');
-  const displayCharStates = visibleChars.filter((_, index) => subtitleChars[index] !== '^');
+  }, []);
   
   return <section className="py-20 md:py-28 relative overflow-hidden">
       {/* Decorative blobs */}
@@ -71,17 +62,16 @@ const HeroSection = ({
               HumanlyAI
             </span>
             <span className="block mt-2">
-              {displayChars.map((char, index) => (
+              {subtitleWords.map((word, index) => (
                 <span 
                   key={index} 
-                  className={`inline-block transition-opacity duration-300 ease-in-out ${displayCharStates[index] ? 'opacity-100' : 'opacity-0'}`}
+                  className={`inline-block transition-opacity duration-300 ease-in-out ${visibleWords[index] ? 'opacity-100' : 'opacity-0'}`}
                   style={{ 
-                    transitionDelay: `${index * 0.03}s`,
-                    animation: displayCharStates[index] ? 'fade-in-char 0.3s ease-in-out forwards' : 'none',
-                    animationDelay: `${index * 0.03}s`
+                    transitionDelay: `${index * 0.1}s`,
+                    marginRight: index < subtitleWords.length - 1 ? '0.15em' : '0' 
                   }}
                 >
-                  {char}
+                  {word}
                 </span>
               ))}
             </span>
