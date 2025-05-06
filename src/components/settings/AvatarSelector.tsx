@@ -8,14 +8,14 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-// Pre-defined avatar options
+// Pre-defined avatar options with lorelei style
 const AVATAR_OPTIONS = [
-  "https://api.dicebear.com/7.x/bottts/svg?seed=Felix",
-  "https://api.dicebear.com/7.x/bottts/svg?seed=Aneka",
-  "https://api.dicebear.com/7.x/bottts/svg?seed=Milo",
-  "https://api.dicebear.com/7.x/bottts/svg?seed=Zoe",
-  "https://api.dicebear.com/7.x/bottts/svg?seed=Bailey",
-  "https://api.dicebear.com/7.x/bottts/svg?seed=Charlie"
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Felix",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Aneka",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Milo",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Zoe",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Bailey",
+  "https://api.dicebear.com/7.x/lorelei/svg?seed=Charlie"
 ];
 
 const AvatarSelector = () => {

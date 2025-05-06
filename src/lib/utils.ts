@@ -16,9 +16,9 @@ export function formatDate(date: Date | string): string {
 }
 
 export function generateAvatar(name: string): string {
-  // Using DiceBear API for avatars
+  // Using DiceBear API with lorelei style for more cartoonish avatars
   const seed = encodeURIComponent(name);
-  return `https://api.dicebear.com/7.x/micah/svg?seed=${seed}`;
+  return `https://api.dicebear.com/7.x/lorelei/svg?seed=${seed}`;
 }
 
 export function truncate(text: string, length: number): string {
