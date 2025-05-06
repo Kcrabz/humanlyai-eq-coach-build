@@ -18,14 +18,17 @@ export type SecurityEventType =
 // Risk levels
 export type RiskLevel = 'low' | 'medium' | 'high';
 
-// Security event interface - using primitive types to avoid recursion issues
+// Simple primitive type for details to prevent recursion issues
+export type EventDetailValue = string | number | boolean | null;
+
+// Security event interface - using only primitive types to avoid recursion issues
 export interface SecurityEvent {
   userId: string;
   eventType: SecurityEventType;
   ip?: string;
   userAgent?: string;
-  // Using a simple Record with primitive types to avoid recursive type issues
-  details?: Record<string, string | number | boolean | null>;
+  // Using flat structure with primitive types only
+  details?: Record<string, EventDetailValue>;
   riskLevel?: RiskLevel;
 }
 
