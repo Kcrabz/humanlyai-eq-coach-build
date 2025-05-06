@@ -104,16 +104,19 @@ export const getUserSecurityQuestion = async (email: string): Promise<SecurityQu
       }
     });
     
+    // Fix: Add proper type checking and safety
     if (userError || !userData?.user) {
       console.error("Error getting user from email:", userError);
       return null;
     }
     
+    const userId = userData.user.id;
+    
     // Then get their security question
     const { data, error } = await supabase
       .from('profiles')
       .select('security_question_id')
-      .eq('id', userData.user.id)
+      .eq('id', userId)
       .maybeSingle();
       
     if (error || !data?.security_question_id) {
