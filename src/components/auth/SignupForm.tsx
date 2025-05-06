@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,7 @@ import { AuthSubmitButton } from "./AuthSubmitButton";
 import { AlertCircle, Check, Clock, X } from "lucide-react";
 import { isValidEmail, validatePassword } from "@/utils/validationUtils";
 import { SecurityQuestionSelect } from "./SecurityQuestionSelect";
-import { clientRateLimit, checkRateLimit } from "@/utils/rateLimitUtils";
+import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
 
 export function SignupForm() {
   const [email, setEmail] = useState("");

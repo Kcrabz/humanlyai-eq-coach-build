@@ -1,32 +1,16 @@
+
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from "sonner";
-
-// Constants for rate limiting
-const MAX_REQUESTS_PER_MINUTE = 5; // More strict limits for authentication
-const MAX_REQUESTS_PER_HOUR = 20;
-const RATE_LIMIT_WINDOW_MINUTES = 1;
-const RATE_LIMIT_WINDOW_HOURS = 1;
-
-// Rate limit types
-export type RateLimitPeriod = 'minute' | 'hour' | 'day';
-
-interface RateLimitRequest {
-  userId?: string;
-  email?: string;
-  endpoint: string;
-  period?: RateLimitPeriod;
-  maxRequests?: number;
-}
+import { RateLimitRequest, RateLimitResult } from './types';
+import { 
+  MAX_REQUESTS_PER_MINUTE, 
+  RATE_LIMIT_WINDOW_MINUTES, 
+  RATE_LIMIT_WINDOW_HOURS 
+} from './constants';
 
 /**
  * Checks if a request should be rate limited using the database
  */
-export const checkRateLimit = async (params: RateLimitRequest): Promise<{
-  isLimited: boolean;
-  currentCount: number;
-  maxRequests: number;
-  resetTime: Date;
-}> => {
+export const checkRateLimit = async (params: RateLimitRequest): Promise<RateLimitResult> => {
   const { 
     userId, 
     email,
@@ -135,101 +119,6 @@ export const checkRateLimit = async (params: RateLimitRequest): Promise<{
       currentCount: 0, 
       maxRequests, 
       resetTime: new Date(Date.now() + 60000) // 1 minute from now
-    };
-  }
-};
-
-/**
- * Client-side rate limiting function for sensitive actions
- * Uses localStorage to track requests
- */
-export const clientRateLimit = (
-  action: string,
-  maxAttempts: number = 5,
-  windowMs: number = 60000 // 1 minute
-): { 
-  isLimited: boolean;
-  attemptsRemaining: number;
-  resetTimeMs: number;
-} => {
-  const storageKey = `rate_limit_${action}`;
-  
-  try {
-    // Get current attempts from localStorage
-    const storedData = localStorage.getItem(storageKey);
-    const now = Date.now();
-    
-    if (!storedData) {
-      // First attempt
-      const newData = {
-        attempts: 1,
-        firstAttempt: now,
-        lastAttempt: now
-      };
-      
-      localStorage.setItem(storageKey, JSON.stringify(newData));
-      
-      return {
-        isLimited: false,
-        attemptsRemaining: maxAttempts - 1,
-        resetTimeMs: now + windowMs
-      };
-    }
-    
-    const data = JSON.parse(storedData);
-    
-    // Check if window has expired
-    if (now - data.firstAttempt > windowMs) {
-      // Reset window
-      const newData = {
-        attempts: 1,
-        firstAttempt: now,
-        lastAttempt: now
-      };
-      
-      localStorage.setItem(storageKey, JSON.stringify(newData));
-      
-      return {
-        isLimited: false,
-        attemptsRemaining: maxAttempts - 1,
-        resetTimeMs: now + windowMs
-      };
-    }
-    
-    // Within window, check attempts
-    if (data.attempts >= maxAttempts) {
-      // Rate limited
-      const resetTimeMs = data.firstAttempt + windowMs;
-      
-      return {
-        isLimited: true,
-        attemptsRemaining: 0,
-        resetTimeMs
-      };
-    }
-    
-    // Increment attempts
-    const newData = {
-      attempts: data.attempts + 1,
-      firstAttempt: data.firstAttempt,
-      lastAttempt: now
-    };
-    
-    localStorage.setItem(storageKey, JSON.stringify(newData));
-    
-    return {
-      isLimited: false,
-      attemptsRemaining: maxAttempts - newData.attempts,
-      resetTimeMs: data.firstAttempt + windowMs
-    };
-  } catch (error) {
-    console.error("Error in client rate limiting:", error);
-    // On error, allow the action
-    const currentTime = Date.now();
-    return {
-      isLimited: false,
-      attemptsRemaining: maxAttempts - 1,
-      resetTimeMs: currentTime + windowMs
     };
   }
 };
