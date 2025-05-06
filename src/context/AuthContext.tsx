@@ -135,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     error,
     isAuthenticated: !!user,
-    authEvent,
+    authEvent, // This needs to match the type in AuthContextType
     profileLoaded,
     login: authCore.login,
     logout: authLogout,

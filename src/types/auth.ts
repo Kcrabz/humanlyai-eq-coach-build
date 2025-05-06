@@ -18,6 +18,8 @@ export interface AuthContextType {
   setOnboarded: (value: boolean) => Promise<void>;
   setUser: (updater: ((prevUser: User | null) => User | null) | User | null) => void;
   forceUpdateProfile: (updates: Record<string, any>) => Promise<boolean>;
+  getUserSubscription: () => SubscriptionTier;
+  userHasArchetype: boolean;
   
   // Premium features
   isPremiumMember: boolean;

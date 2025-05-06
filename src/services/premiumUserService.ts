@@ -4,13 +4,16 @@ import { UserStreakData, UserAchievement } from "@/types/auth";
 
 export const fetchUserStreakData = async (userId: string): Promise<UserStreakData | null> => {
   try {
+    // Using a direct query instead of RPC since RPC is not working correctly
     const { data, error } = await supabase
-      .rpc('get_user_streak', { user_id_param: userId });
+      .from('user_streaks')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
     
     if (error) throw error;
     
     if (data) {
-      // Handle data as a single object since that's what our RPC returns
       return {
         currentStreak: data.current_streak || 0,
         longestStreak: data.longest_streak || 0,
@@ -28,20 +31,34 @@ export const fetchUserStreakData = async (userId: string): Promise<UserStreakDat
 
 export const fetchUserAchievements = async (userId: string): Promise<UserAchievement[] | null> => {
   try {
+    // Using a direct join query instead of RPC
     const { data, error } = await supabase
-      .rpc('get_user_achievements', { user_id_param: userId });
+      .from('user_achievements')
+      .select(`
+        id,
+        achieved,
+        achieved_at,
+        achievements (
+          id,
+          title,
+          description,
+          type,
+          icon
+        )
+      `)
+      .eq('user_id', userId);
     
     if (error) throw error;
     
     if (data && Array.isArray(data)) {
       return data.map(item => ({
-        id: item.achievement_id,
-        title: item.title,
-        description: item.description,
+        id: item.id,
+        title: item.achievements.title,
+        description: item.achievements.description,
         achieved: item.achieved,
         achievedAt: item.achieved_at,
-        type: item.type,
-        icon: item.icon
+        type: item.achievements.type,
+        icon: item.achievements.icon
       }));
     }
     

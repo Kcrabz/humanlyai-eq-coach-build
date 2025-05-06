@@ -28,15 +28,22 @@ export const useEQProgress = () => {
     setStats(prev => ({ ...prev, loading: true }));
     
     try {
-      // Call RPC functions using function invocation instead of direct table access
+      // Direct query instead of RPC for breakthroughs
       const { data: breakthroughs, error: breakthroughsError } = await supabase
-        .rpc('get_user_breakthroughs', { user_id_param: user.id, limit_param: 10 });
+        .from('eq_breakthroughs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('detected_at', { ascending: false })
+        .limit(10);
         
       if (breakthroughsError) throw breakthroughsError;
       
-      // Get category counts
-      const { data: categoryCounts, error: countError } = await supabase
-        .rpc('get_breakthrough_category_counts', { user_id_param: user.id });
+      // Get category counts with a direct query
+      const { data: categoryCountsData, error: countError } = await supabase
+        .from('eq_breakthroughs')
+        .select('category, count(*)', { count: 'exact' })
+        .eq('user_id', user.id)
+        .group_by('category');
         
       if (countError) throw countError;
       
@@ -45,8 +52,8 @@ export const useEQProgress = () => {
       let totalBreakthroughs = 0;
       
       // If we got data back and it's an array as expected
-      if (Array.isArray(categoryCounts)) {
-        categoryCounts.forEach(item => {
+      if (Array.isArray(categoryCountsData)) {
+        categoryCountsData.forEach(item => {
           const count = parseInt(item.count);
           breakthroughsByCategory[item.category] = count;
           totalBreakthroughs += count;
