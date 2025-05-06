@@ -1,3 +1,4 @@
+
 /**
  * Navigation utility functions for auth-related routing
  */
@@ -21,6 +22,13 @@ export const isOnAuthPage = (pathname: string): boolean => {
  */
 export const isOnChatPage = (pathname: string): boolean => {
   return pathname === "/chat";
+};
+
+/**
+ * Determines if the current path is the dashboard page
+ */
+export const isOnDashboardPage = (pathname: string): boolean => {
+  return pathname === "/dashboard";
 };
 
 /**

@@ -11,6 +11,7 @@ import Index from './pages/Index';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import ChatPage from './pages/ChatPage';
+import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
 import UserProgressPage from './pages/UserProgressPage';
 import OnboardingPage from './pages/OnboardingPage';
@@ -61,6 +62,14 @@ function App() {
           <Route path="/forgot-password" element={<ResetPasswordPage />} />
           
           {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/chat"
             element={

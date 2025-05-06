@@ -20,8 +20,8 @@ export function AuthRedirect() {
           console.log("Redirecting to onboarding");
           navigate("/onboarding", { replace: true });
         } else {
-          console.log("Redirecting to chat");
-          navigate("/chat", { replace: true });
+          console.log("Redirecting to dashboard");
+          navigate("/dashboard", { replace: true });
         }
       }, 10);
     }

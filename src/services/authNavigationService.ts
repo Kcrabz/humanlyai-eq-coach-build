@@ -1,7 +1,7 @@
 
 import { NavigateFunction } from "react-router-dom";
 import { User } from "@/types";
-import { isOnAuthPage, isOnChatPage, isOnOnboardingPage, isRetakingAssessment } from "@/utils/navigationUtils";
+import { isOnAuthPage, isOnChatPage, isOnOnboardingPage, isOnDashboardPage, isRetakingAssessment } from "@/utils/navigationUtils";
 
 /**
  * Handles authentication-based navigation decisions
@@ -49,7 +49,7 @@ export const handleAuthNavigation = (
 
   // Not authenticated -> redirect to login (but only for protected pages)
   if (!user) {
-    if (isOnChatPage(pathname) || isOnOnboardingPage(pathname)) {
+    if (isOnChatPage(pathname) || isOnOnboardingPage(pathname) || isOnDashboardPage(pathname)) {
       console.log("User is not authenticated on protected page, redirecting to login");
       navigate("/login", { replace: true });
     }
@@ -64,8 +64,8 @@ export const handleAuthNavigation = (
   else if (user && user.onboarded === true) {
     // Only redirect from onboarding unless retaking assessment
     if (isOnOnboardingPage(pathname) && !isRetaking) {
-      console.log("User is authenticated and onboarded on onboarding page, redirecting to chat");
-      navigate("/chat", { replace: true });
+      console.log("User is authenticated and onboarded on onboarding page, redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }
 };

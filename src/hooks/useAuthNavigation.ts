@@ -36,8 +36,8 @@ export const useAuthNavigation = (user: User | null, isLoading: boolean) => {
           console.log("Authenticated but not onboarded, redirecting to onboarding");
           navigate("/onboarding", { replace: true });
         } else {
-          console.log("Authenticated and onboarded, redirecting to chat");
-          navigate("/chat", { replace: true });
+          console.log("Authenticated and onboarded, redirecting to dashboard");
+          navigate("/dashboard", { replace: true });
         }
       }, 10);
     }
