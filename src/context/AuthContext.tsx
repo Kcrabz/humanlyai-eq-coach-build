@@ -130,7 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [profileActions]);
   
   // Memoize the context value to prevent unnecessary rerenders
-  const contextValue = useMemo(() => ({
+  const contextValue: AuthContextType = useMemo(() => ({
     user,
     isLoading,
     error,
