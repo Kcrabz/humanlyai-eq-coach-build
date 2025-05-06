@@ -27,7 +27,7 @@ export function CollapsibleMenu() {
     <div className="fixed top-0 right-0 z-50 w-full">
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
         {/* Always visible toggle button - uses 'X' icon when menu is open */}
-        <div className="absolute top-4 right-4 z-50">
+        <div className="absolute top-4 right-4 z-[100]">
           <CollapsibleTrigger asChild>
             <Button 
               variant="outline" 
@@ -135,9 +135,7 @@ export function CollapsibleMenu() {
                           </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
-                          <Link to="/progress" onClick={() => setIsOpen(false)}>Your Progress</Link>
-                        </DropdownMenuItem>
+                        {/* Removed "Your Progress" item */}
                         <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
                           <Link to="/settings" onClick={() => setIsOpen(false)}>Settings</Link>
                         </DropdownMenuItem>
