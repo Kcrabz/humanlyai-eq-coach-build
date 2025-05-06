@@ -36,6 +36,29 @@
   animation: fade-in-word 0.4s ease-in-out forwards;
 }
 
+/* Character-by-character animation for text reveal */
+@keyframes fade-in-char {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.char-reveal {
+  display: inline-block;
+  opacity: 0;
+  animation: fade-in-char 0.3s ease-in-out forwards;
+}
+
+/* Utility class for creating pauses in text animations */
+.text-pause {
+  margin-right: 0.4em; /* Creates visual space */
+}
+
 /* Input focus animation with easier transition */
 .input-focus-animation:focus {
   @apply ring-2 ring-primary/30 transition-all duration-500;
