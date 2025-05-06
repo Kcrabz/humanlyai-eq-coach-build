@@ -105,8 +105,14 @@ export const getUserSecurityQuestion = async (email: string): Promise<SecurityQu
     });
     
     // Fix: Add proper type checking and safety
-    if (userError || !userData?.user) {
+    if (userError) {
       console.error("Error getting user from email:", userError);
+      return null;
+    }
+    
+    // Make sure user exists and has an id before proceeding
+    if (!userData || !userData.user || !userData.user.id) {
+      console.error("No user found with this email address");
       return null;
     }
     
