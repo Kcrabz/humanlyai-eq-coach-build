@@ -22,6 +22,9 @@ import SettingsPage from "./pages/SettingsPage";
 import AdminPage from "./pages/AdminPage";
 import UserProgressPage from "./pages/UserProgressPage";
 import NotFound from "./pages/NotFound";
+import BlogPage from "./pages/BlogPage";
+import HelpPage from "./pages/HelpPage";
+import CommunityPage from "./pages/CommunityPage";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +54,9 @@ const AppRoutes = () => (
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/pricing" element={<PricingPage />} />
       <Route path="/about" element={<AboutPage />} />
+      <Route path="/blog" element={<BlogPage />} />
+      <Route path="/help" element={<HelpPage />} />
+      <Route path="/community" element={<CommunityPage />} />
       
       {/* Protected routes */}
       <Route path="/onboarding" element={
