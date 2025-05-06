@@ -46,9 +46,6 @@ const DashboardPage = () => {
                 </div>
                 <div className="text-center w-full">
                   <h2 className="text-xl font-semibold">Chat with Kai</h2>
-                  <p className="text-sm text-muted-foreground mt-1 px-1 leading-snug min-h-[2.5rem] flex items-center justify-center">
-                    Get personalized EQ coaching tailored to your needs
-                  </p>
                 </div>
               </Button>
             </CardContent>
@@ -67,15 +64,12 @@ const DashboardPage = () => {
                 </div>
                 <div className="text-center w-full">
                   <h2 className="text-xl font-semibold">Track Your Growth</h2>
-                  <p className="text-sm text-muted-foreground mt-1 px-1 leading-snug min-h-[2.5rem] flex items-center justify-center">
-                    Monitor your emotional intelligence progress over time
-                  </p>
                 </div>
               </Button>
             </CardContent>
           </Card>
           
-          {/* Refer a Fellow Human */}
+          {/* Help a Friend (formerly "Refer a Fellow Human") */}
           <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-rose/20">
             <CardContent className="p-0">
               <Button 
@@ -87,10 +81,7 @@ const DashboardPage = () => {
                   <Users className="w-8 h-8 text-humanly-indigo" />
                 </div>
                 <div className="text-center w-full">
-                  <h2 className="text-xl font-semibold">Refer a Fellow Human</h2>
-                  <p className="text-sm text-muted-foreground mt-1 px-1 leading-snug min-h-[2.5rem] flex items-center justify-center">
-                    Invite friends to improve their emotional intelligence
-                  </p>
+                  <h2 className="text-xl font-semibold">Help a Friend</h2>
                 </div>
               </Button>
             </CardContent>
