@@ -104,7 +104,7 @@ export const getUserSecurityQuestion = async (email: string): Promise<SecurityQu
       }
     });
     
-    if (userError || !userData.user) {
+    if (userError || !userData?.user) {
       console.error("Error getting user from email:", userError);
       return null;
     }
