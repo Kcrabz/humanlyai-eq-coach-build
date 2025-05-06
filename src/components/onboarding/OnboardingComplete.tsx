@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -48,8 +49,8 @@ export function OnboardingComplete() {
         
         if (success) {
           toast.success("Onboarding completed!");
-          console.log("Successfully completed onboarding, navigating to chat");
-          navigate("/chat", { replace: true });
+          console.log("Successfully completed onboarding, navigating to dashboard");
+          navigate("/dashboard", { replace: true });
         } else {
           toast.error("Error completing onboarding. Please try logging in again.");
         }
@@ -70,7 +71,7 @@ export function OnboardingComplete() {
       // Complete the step and let OnboardingContext handle the navigation
       await completeStep("complete");
       // Force navigation as a fallback in case context navigation fails
-      navigate("/chat", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       console.error("Error completing onboarding:", error);
       toast.error("Error completing onboarding. Please try again.");

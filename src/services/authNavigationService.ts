@@ -59,7 +59,7 @@ export const handleAuthNavigation = (
     console.log("User is authenticated but not onboarded, redirecting to onboarding");
     navigate("/onboarding", { replace: true });
   }
-  // Authenticated and onboarded -> redirect to chat from onboarding 
+  // Authenticated and onboarded -> redirect to dashboard from onboarding 
   // UNLESS they're specifically trying to retake an assessment
   else if (user && user.onboarded === true) {
     // Only redirect from onboarding unless retaking assessment

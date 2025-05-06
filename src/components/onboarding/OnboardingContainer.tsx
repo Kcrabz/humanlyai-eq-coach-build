@@ -67,10 +67,10 @@ export const OnboardingContainer = () => {
       return;
     }
 
-    // If user is already fully onboarded (coming back somehow), redirect to chat
+    // If user is already fully onboarded (coming back somehow), redirect to dashboard
     if (user?.onboarded && !isLoading && currentStep !== "complete") {
-      console.log("User is already onboarded, redirecting to chat from OnboardingContent");
-      navigate("/chat", { replace: true });
+      console.log("User is already onboarded, redirecting to dashboard from OnboardingContent");
+      navigate("/dashboard", { replace: true });
     }
   }, [user, navigate, isLoading, currentStep, isAuthenticated, isRetaking, location]);
   

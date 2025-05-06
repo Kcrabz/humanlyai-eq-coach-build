@@ -17,7 +17,7 @@ const OnboardingPage = () => {
   // Check if user is specifically retaking the assessment
   const isRetaking = isRetakingAssessment(location.search);
   
-  // Redirect already onboarded users to chat
+  // Redirect already onboarded users to dashboard
   useEffect(() => {
     if (!isLoading) {
       console.log("OnboardingPage auth check:", {
@@ -34,10 +34,10 @@ const OnboardingPage = () => {
         console.log("User is not authenticated, redirecting to login");
         navigate("/login", { replace: true });
       }
-      // If already onboarded and NOT retaking assessment, redirect to chat
+      // If already onboarded and NOT retaking assessment, redirect to dashboard
       else if (user?.onboarded === true && !isRetaking) {
-        console.log("User is already onboarded, redirecting to chat");
-        navigate("/chat", { replace: true });
+        console.log("User is already onboarded, redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
       }
     }
   }, [isAuthenticated, user, isLoading, navigate, isRetaking, location]);

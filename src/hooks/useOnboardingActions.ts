@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { OnboardingStep } from "@/types/onboarding";
 import { useAuth } from "@/context/AuthContext";
@@ -119,8 +120,8 @@ export const useOnboardingActions = (
           
           // Navigation is now handled here to ensure it happens after database updates
           toast.success("Onboarding completed!");
-          console.log("Navigating to chat from completeStep in OnboardingContext");
-          navigate("/chat", { replace: true });
+          console.log("Navigating to dashboard from completeStep in OnboardingContext");
+          navigate("/dashboard", { replace: true });
           setProcessingStep(null);
           return; // Exit early as we've navigated away
         } catch (error) {
