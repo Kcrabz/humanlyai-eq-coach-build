@@ -105,8 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user?.subscription_tier]);
 
   // Wrapper functions to ensure type compatibility and memoized to prevent unnecessary recreations
-  const updateProfile = useCallback(async (data: any): Promise<void> => {
-    await profileCore.updateProfile(user?.id, data);
+  const updateProfile = useCallback(async (data: Partial<User>): Promise<void> => {
+    await profileCore.updateProfile(user?.id || "", data);
   }, [profileCore, user?.id]);
 
   const forceUpdateProfile = useCallback(async (data: any): Promise<boolean> => {
@@ -148,8 +148,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     logout: authLogout,
     signup,
     resetPassword: resetPasswordWrapper,
-    updateProfile: profileCore.updateProfile,
-    forceUpdateProfile: profileCore.forceUpdateProfile,
+    updateProfile,
+    forceUpdateProfile,
     setName: profileActions.setName,
     setArchetype: profileActions.setArchetype,
     setCoachingMode: profileActions.setCoachingMode,
@@ -163,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userAchievements
   }), [
     user, isLoading, error, authCore.login, authLogout, 
-    signup, resetPasswordWrapper, profileCore.updateProfile, profileCore.forceUpdateProfile,
+    signup, resetPasswordWrapper, updateProfile, forceUpdateProfile,
     profileActions.setName, profileActions.setArchetype, profileActions.setCoachingMode, 
     profileActions.setOnboarded, setUser, authEvent, profileLoaded, 
     isPremiumMember, userStreakData, userAchievements
