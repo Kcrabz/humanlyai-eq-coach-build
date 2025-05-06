@@ -35,7 +35,12 @@ export const ArchetypeBarChart = ({ barData, onBarElementClick }: ArchetypeBarCh
             <YAxis 
               type="category" 
               dataKey="name" 
-              onClick={(name) => onBarElementClick(name as string)}
+              onClick={(value) => {
+                // Fix: Cast the value to string explicitly
+                if (typeof value === 'string') {
+                  onBarElementClick(value);
+                }
+              }}
               cursor="pointer"
             />
             <Tooltip />

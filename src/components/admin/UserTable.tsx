@@ -1,15 +1,9 @@
 
-import { User, SubscriptionTier } from "@/types";
+import { SubscriptionTier } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { UserOperations } from "./UserOperations";
-
-// Fixed TypeScript error by making email required in UserTableData
-interface UserTableData extends Omit<User, 'email'> {
-  email: string;
-  created_at?: string;
-  updated_at?: string;
-}
+import { UserTableData } from "@/hooks/useUserManagement/types";
 
 interface UserTableProps {
   users: UserTableData[];
