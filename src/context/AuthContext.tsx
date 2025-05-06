@@ -113,19 +113,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await profileCore.forceUpdateProfile(data);
   }, [profileCore]);
 
-  const setName = useCallback(async (name: string): Promise<void> => {
+  // Create wrapper for setName to adapt the return type
+  const setNameWrapper = useCallback(async (name: string): Promise<void> => {
+    // Call the original function but discard the boolean return value to match the AuthContextType
     await profileActions.setName(name);
+    // No return value needed since the type expects Promise<void>
   }, [profileActions]);
 
-  const setArchetype = useCallback(async (archetype: string): Promise<void> => {
-    await profileActions.setArchetype(archetype as EQArchetype);
+  // Create wrapper for setArchetype to adapt the return type
+  const setArchetypeWrapper = useCallback(async (archetype: EQArchetype): Promise<void> => {
+    // Call the original function but discard the boolean return value
+    await profileActions.setArchetype(archetype);
   }, [profileActions]);
 
-  const setCoachingMode = useCallback(async (mode: string): Promise<void> => {
-    await profileActions.setCoachingMode(mode as CoachingMode);
+  // Create wrapper for setCoachingMode to adapt the return type
+  const setCoachingModeWrapper = useCallback(async (mode: CoachingMode): Promise<void> => {
+    // Call the original function but discard the boolean return value
+    await profileActions.setCoachingMode(mode);
   }, [profileActions]);
 
-  const setOnboarded = useCallback(async (value: boolean): Promise<void> => {
+  // Create wrapper for setOnboarded to adapt the return type
+  const setOnboardedWrapper = useCallback(async (value: boolean): Promise<void> => {
+    // Call the original function but discard the boolean return value
     await profileActions.setOnboarded(value);
   }, [profileActions]);
   
@@ -150,10 +159,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPassword: resetPasswordWrapper,
     updateProfile,
     forceUpdateProfile,
-    setName: profileActions.setName,
-    setArchetype: profileActions.setArchetype,
-    setCoachingMode: profileActions.setCoachingMode,
-    setOnboarded: profileActions.setOnboarded,
+    setName: setNameWrapper,
+    setArchetype: setArchetypeWrapper,
+    setCoachingMode: setCoachingModeWrapper,
+    setOnboarded: setOnboardedWrapper,
     setUser,
     getUserSubscription: () => user?.subscription_tier || 'free',
     userHasArchetype: !!user?.eq_archetype,
@@ -164,8 +173,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }), [
     user, isLoading, error, authCore.login, authLogout, 
     signup, resetPasswordWrapper, updateProfile, forceUpdateProfile,
-    profileActions.setName, profileActions.setArchetype, profileActions.setCoachingMode, 
-    profileActions.setOnboarded, setUser, authEvent, profileLoaded, 
+    setNameWrapper, setArchetypeWrapper, setCoachingModeWrapper, 
+    setOnboardedWrapper, setUser, authEvent, profileLoaded, 
     isPremiumMember, userStreakData, userAchievements
   ]);
 
