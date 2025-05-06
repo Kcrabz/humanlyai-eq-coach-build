@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageCircle, Settings, LayoutGrid } from "lucide-react";
+import { Home, MessageCircle, Settings, LayoutGrid, TrendingUp } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 export function MainNavigationLinks() {
@@ -34,6 +34,18 @@ export function MainNavigationLinks() {
         <Link to="/chat">
           <MessageCircle className="mr-2 h-4 w-4" />
           Chat
+        </Link>
+      </Button>
+      
+      <Button
+        variant={isActive("/progress") ? "default" : "ghost"}
+        className="w-full justify-start"
+        size="sm"
+        asChild
+      >
+        <Link to="/progress">
+          <TrendingUp className="mr-2 h-4 w-4" />
+          Progress
         </Link>
       </Button>
 
