@@ -8,36 +8,10 @@ import { useAuthSignup } from "@/hooks/useAuthSignup";
 import { useProfileCore } from "@/hooks/useProfileCore";
 import { useProfileActions } from "@/hooks/useProfileActions";
 import { useProfileState } from "@/hooks/useProfileState";
+import { UserStreakData, UserAchievement, AuthContextType } from "@/types/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 // Create the auth context with default values
-export interface AuthContextType {
-  user: any;
-  isLoading: boolean;
-  error: string | null;
-  isAuthenticated?: boolean;
-  authEvent?: string | null;
-  profileLoaded: boolean;
-  
-  // Re-exported from useAuthActions
-  login: (email: string, password: string) => Promise<any>;
-  signup: (email: string, password: string, recaptchaToken?: string) => Promise<any>;
-  logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<boolean>;
-  
-  // Re-exported from useProfileActions
-  setName: (name: string) => Promise<void>;
-  setArchetype?: (archetype: string) => Promise<void>;
-  setCoachingMode?: (mode: string) => Promise<void>;
-  setOnboarded?: (value: boolean) => Promise<void>;
-  updateProfile: (data: any) => Promise<void>;
-  forceUpdateProfile: (data: any) => Promise<void>;
-  setUser: (data: any) => void;
-  
-  // Additional functionality
-  getUserSubscription: () => string;
-  userHasArchetype: boolean;
-}
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -49,6 +23,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Profile state with unified loading
   const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
+  
+  // Premium feature states
+  const [userStreakData, setUserStreakData] = useState<UserStreakData | null>(null);
+  const [userAchievements, setUserAchievements] = useState<UserAchievement[] | null>(null);
   
   // Consolidated loading state
   const [isLoading, setIsLoading] = useState(true);
@@ -83,6 +61,79 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const profileCore = useProfileCore(setUser);
   const profileActions = useProfileActions(setUser);
   
+  // Determine if user is a premium member
+  const isPremiumMember = useMemo(() => 
+    user?.subscription_tier === 'premium', 
+  [user?.subscription_tier]);
+
+  // Fetch premium user data when user logs in and is premium
+  useEffect(() => {
+    const fetchPremiumUserData = async () => {
+      if (user?.id && isPremiumMember) {
+        try {
+          // Fetch user streak data
+          const { data: streakData, error: streakError } = await supabase
+            .from('user_streaks')
+            .select('*')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (streakError) throw streakError;
+          
+          if (streakData) {
+            setUserStreakData({
+              currentStreak: streakData.current_streak,
+              longestStreak: streakData.longest_streak,
+              lastActiveDate: streakData.last_active_date,
+              totalActiveDays: streakData.total_active_days
+            });
+          }
+          
+          // Fetch user achievements
+          const { data: achievementData, error: achievementError } = await supabase
+            .from('user_achievements')
+            .select(`
+              id,
+              achievement_id,
+              achieved,
+              achieved_at,
+              achievements (
+                title,
+                description,
+                type,
+                icon
+              )
+            `)
+            .eq('user_id', user.id);
+          
+          if (achievementError) throw achievementError;
+          
+          if (achievementData && achievementData.length > 0) {
+            const formattedAchievements = achievementData.map(item => ({
+              id: item.achievement_id,
+              title: item.achievements.title,
+              description: item.achievements.description,
+              achieved: item.achieved,
+              achievedAt: item.achieved_at,
+              type: item.achievements.type,
+              icon: item.achievements.icon
+            }));
+            
+            setUserAchievements(formattedAchievements);
+          }
+        } catch (error) {
+          console.error("Error fetching premium user data:", error);
+        }
+      } else {
+        // Reset premium data if user is not premium or logged out
+        setUserStreakData(null);
+        setUserAchievements(null);
+      }
+    };
+    
+    fetchPremiumUserData();
+  }, [user?.id, isPremiumMember]);
+  
   // Memoize derived state to prevent unnecessary recalculations
   const userHasArchetype = useMemo(() => !!user?.eq_archetype, [user?.eq_archetype]);
   const isAuthenticated = useMemo(() => !!user, [user]);
@@ -97,8 +148,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await profileCore.updateProfile(user?.id, data);
   }, [profileCore, user?.id]);
 
-  const forceUpdateProfile = useCallback(async (data: any): Promise<void> => {
-    await profileCore.forceUpdateProfile(data);
+  const forceUpdateProfile = useCallback(async (data: any): Promise<boolean> => {
+    return await profileCore.forceUpdateProfile(data);
   }, [profileCore]);
 
   const setName = useCallback(async (name: string): Promise<void> => {
@@ -137,12 +188,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOnboarded,
     setUser,
     getUserSubscription,
-    userHasArchetype
+    userHasArchetype,
+    // Premium member features
+    isPremiumMember,
+    userStreakData,
+    userAchievements
   }), [
     user, isLoading, error, isAuthenticated, authCore.login, authLogout, 
     signup, authCore.resetPassword, updateProfile, forceUpdateProfile, setName, 
     setArchetype, setCoachingMode, setOnboarded, setUser, getUserSubscription, 
-    userHasArchetype, authEvent, profileLoaded
+    userHasArchetype, authEvent, profileLoaded, isPremiumMember, userStreakData, userAchievements
   ]);
 
   return (

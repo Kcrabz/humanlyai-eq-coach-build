@@ -3,11 +3,14 @@ import { useState, FormEvent, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loading } from "@/components/ui/loading";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Sparkle } from "lucide-react";
 import { ChatMessage } from "@/types";
 import { ChatBubble } from "@/components/chat/ChatBubble";
 import { ChatErrorBanner } from "@/components/chat/ChatErrorBanner";
 import { useChatCompletion } from "@/hooks/useChatCompletion";
+import { useAuth } from "@/context/AuthContext";
+import { useEQProgress } from "@/hooks/useEQProgress";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface EnhancedChatUIProps {
   initialMessages?: ChatMessage[];
@@ -23,6 +26,10 @@ export function EnhancedChatUI({
   const [message, setMessage] = useState("");
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>(initialMessages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [breakThroughDetected, setBreakThroughDetected] = useState<boolean>(false);
+  
+  const { isPremiumMember } = useAuth();
+  const { checkForBreakthrough } = useEQProgress();
 
   const { 
     sendChatMessage, 
@@ -32,7 +39,7 @@ export function EnhancedChatUI({
     isQuotaError, 
     isInvalidKeyError 
   } = useChatCompletion({
-    onSuccess: (response) => {
+    onSuccess: async (response, userMessageId) => {
       console.log("Received successful response:", response.substring(0, 50) + "...");
       const newAssistantMessage: ChatMessage = {
         id: crypto.randomUUID(),
@@ -41,6 +48,16 @@ export function EnhancedChatUI({
         created_at: new Date().toISOString()
       };
       setChatHistory(prev => [...prev, newAssistantMessage]);
+      
+      // For premium users, check if the user's message contains an EQ breakthrough
+      if (isPremiumMember) {
+        // Find the user message that triggered this response
+        const userMessage = chatHistory.find(msg => msg.id === userMessageId);
+        if (userMessage) {
+          const hasBreakthrough = await checkForBreakthrough(userMessage.content, userMessage.id);
+          setBreakThroughDetected(hasBreakthrough);
+        }
+      }
     }
   });
 
@@ -48,6 +65,17 @@ export function EnhancedChatUI({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [chatHistory, isLoading]);
+
+  // Reset breakthrough notification after a delay
+  useEffect(() => {
+    if (breakThroughDetected) {
+      const timer = setTimeout(() => {
+        setBreakThroughDetected(false);
+      }, 5000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [breakThroughDetected]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -80,7 +108,7 @@ export function EnhancedChatUI({
     // Send message to API
     console.log("Sending message to API:", message);
     try {
-      await sendChatMessage(updatedHistory);
+      await sendChatMessage(updatedHistory, userMessage.id);
     } catch (error) {
       console.error("Error sending chat message:", error);
       
@@ -145,6 +173,15 @@ export function EnhancedChatUI({
           })
         )}
         
+        {breakThroughDetected && isPremiumMember && (
+          <Alert className="bg-humanly-teal-light/20 border-humanly-teal animate-pulse">
+            <Sparkle className="h-4 w-4 text-humanly-teal" />
+            <AlertDescription className="text-sm">
+              <span className="font-medium">EQ Breakthrough Detected!</span> You're making great progress.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
       
@@ -190,6 +227,14 @@ export function EnhancedChatUI({
           <p className="text-xs text-muted-foreground mt-2 animate-pulse">
             AI assistant is thinking...
           </p>
+        )}
+        
+        {!isPremiumMember && (
+          <div className="mt-2 text-xs text-muted-foreground">
+            <p>
+              <a href="/pricing" className="text-humanly-teal hover:underline">Upgrade to Premium</a> to unlock EQ tracking, streak records, and breakthrough detection.
+            </p>
+          </div>
         )}
       </div>
     </div>

@@ -15,4 +15,35 @@ export interface AuthContextType {
   setOnboarded: (value: boolean) => Promise<void>;
   setUser: (updater: ((prevUser: User | null) => User | null) | User | null) => void;
   forceUpdateProfile: (updates: Record<string, any>) => Promise<boolean>;
+  
+  // New premium features
+  isPremiumMember: boolean;
+  userStreakData: UserStreakData | null;
+  userAchievements: UserAchievement[] | null;
+}
+
+export interface UserStreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastActiveDate: string | null;
+  totalActiveDays: number;
+}
+
+export interface UserAchievement {
+  id: string;
+  title: string;
+  description: string;
+  achieved: boolean;
+  achievedAt: string | null;
+  type: 'streak' | 'breakthrough' | 'milestone' | 'challenge';
+  icon: string;
+}
+
+export interface EQBreakthrough {
+  id: string;
+  userId: string;
+  message: string;
+  insight: string;
+  detectedAt: string;
+  category: string;
 }

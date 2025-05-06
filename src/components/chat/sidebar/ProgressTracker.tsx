@@ -1,85 +1,110 @@
 
-import { TrendingUp, Award, Star } from "lucide-react";
+import React from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect, memo } from "react";
+import { useEQProgress } from "@/hooks/useEQProgress";
+import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { Sparkle } from "lucide-react";
 
-// This would ideally be fetched from an API based on user's interaction history
-const MOCK_PROGRESS_DATA = {
-  sessionsCompleted: 12,
-  streakDays: 5,
-  badges: ["active-listener", "emotion-master", "first-insight"]
-};
-
-export const ProgressTracker = memo(function ProgressTracker() {
-  const { user } = useAuth();
-  const [progressData, setProgressData] = useState(MOCK_PROGRESS_DATA);
+export function ProgressTracker() {
+  const { isPremiumMember, userStreakData } = useAuth();
+  const { totalBreakthroughs, breakthroughsByCategory } = useEQProgress();
   
-  // We've removed the artificial delay that was causing slowness
-  useEffect(() => {
-    // In a real implementation, we'd make an API call here
-    setProgressData({
-      ...MOCK_PROGRESS_DATA,
-      // Add a small random variation to make it feel dynamic
-      streakDays: Math.max(1, MOCK_PROGRESS_DATA.streakDays + (Math.random() > 0.7 ? 1 : 0))
-    });
-  }, [user?.id]); // Only depend on user.id, not the entire user object
-
-  const getBadgeIcon = (badgeId: string) => {
-    switch(badgeId) {
-      case "active-listener":
-        return <Star className="h-3 w-3" />;
-      case "emotion-master": 
-        return <Award className="h-3 w-3" />;
-      case "first-insight":
-        return <TrendingUp className="h-3 w-3" />;
-      default:
-        return <Star className="h-3 w-3" />;
-    }
-  };
-
-  const getBadgeName = (badgeId: string) => {
-    switch(badgeId) {
-      case "active-listener": return "Active Listener";
-      case "emotion-master": return "Emotion Master";
-      case "first-insight": return "First Insight";
-      default: return badgeId;
-    }
-  };
-  
-  return (
-    <div className="space-y-3">
-      <h3 className="text-xs uppercase font-semibold text-muted-foreground">Your EQ Journey</h3>
-      
-      <div className="bg-white rounded-lg p-3 border border-gray-100 shadow-sm">
-        <div className="flex justify-between text-xs text-gray-600 mb-3">
-          <div className="flex items-center gap-1">
-            <TrendingUp className="h-3 w-3 text-humanly-teal" />
-            <span>{progressData.sessionsCompleted} sessions</span>
+  // If not a premium member, show upgrade prompt
+  if (!isPremiumMember) {
+    return (
+      <Card className="border-dashed border-gray-300 bg-gray-50">
+        <CardContent className="p-4">
+          <div className="flex flex-col items-center text-center gap-2">
+            <Sparkle className="h-8 w-8 text-humanly-teal opacity-60" />
+            <h3 className="font-medium text-sm">Premium Feature</h3>
+            <p className="text-xs text-muted-foreground">
+              Upgrade to track EQ progress, record streaks, and unlock achievements
+            </p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-2 text-xs bg-humanly-teal text-white hover:bg-humanly-teal-dark"
+              onClick={() => window.location.href = "/pricing"}
+            >
+              Upgrade
+            </Button>
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // For premium members, show real streak data if available
+  if (userStreakData) {
+    return (
+      <Card className="bg-white">
+        <CardContent className="p-4">
+          <h3 className="font-medium text-sm mb-3">Your Progress</h3>
           
-          <div className="flex items-center gap-1">
-            <Award className="h-3 w-3 text-humanly-teal" />
-            <span>{progressData.streakDays} day streak</span>
-          </div>
-        </div>
-        
-        {/* Badges section */}
-        <div className="pt-2 border-t border-gray-100">
-          <p className="text-xs font-medium mb-2">Recent achievements</p>
-          <div className="flex gap-1 flex-wrap">
-            {progressData.badges.slice(0, 3).map((badge) => (
-              <div 
-                key={badge} 
-                className="bg-humanly-teal/10 text-humanly-teal p-1 rounded-md flex items-center gap-1"
-                title={getBadgeName(badge)}
-              >
-                {getBadgeIcon(badge)}
-                <span className="text-xs font-medium">{getBadgeName(badge)}</span>
+          <div className="space-y-4">
+            {/* Current streak */}
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-xs">Current streak</span>
+                <span className="text-xs font-medium">{userStreakData.currentStreak} days</span>
               </div>
-            ))}
+              <Progress value={(userStreakData.currentStreak / Math.max(userStreakData.longestStreak, 7)) * 100} className="h-1.5" />
+            </div>
+            
+            {/* Longest streak */}
+            <div className="flex justify-between items-center text-xs">
+              <span>Longest streak</span>
+              <span className="font-medium">{userStreakData.longestStreak} days</span>
+            </div>
+            
+            {/* Total practice days */}
+            <div className="flex justify-between items-center text-xs">
+              <span>Total practice days</span>
+              <span className="font-medium">{userStreakData.totalActiveDays} days</span>
+            </div>
+            
+            {/* EQ Breakthroughs */}
+            <div className="flex justify-between items-center text-xs">
+              <span>EQ Breakthroughs</span>
+              <span className="font-medium">{totalBreakthroughs || 0}</span>
+            </div>
+            
+            {/* Breakthrough categories */}
+            {Object.keys(breakthroughsByCategory || {}).length > 0 && (
+              <div className="mt-2">
+                <p className="text-xs mb-1">Top EQ Areas:</p>
+                <div className="flex flex-wrap gap-1">
+                  {Object.entries(breakthroughsByCategory)
+                    .sort(([, countA], [, countB]) => countB - countA)
+                    .slice(0, 3)
+                    .map(([category, count]) => (
+                      <span
+                        key={category}
+                        className="text-[10px] px-1.5 py-0.5 bg-humanly-teal/10 text-humanly-teal rounded-full"
+                      >
+                        {category} ({count})
+                      </span>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    );
+  }
+  
+  // For premium users without streak data yet
+  return (
+    <Card className="bg-white">
+      <CardContent className="p-4">
+        <h3 className="font-medium text-sm mb-3">Your Progress</h3>
+        <p className="text-xs text-muted-foreground">
+          Start chatting to track your EQ progress and streak!
+        </p>
+      </CardContent>
+    </Card>
   );
-});
+}
