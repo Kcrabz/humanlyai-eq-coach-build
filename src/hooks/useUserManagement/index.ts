@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useUserFilters } from "./useUserFilters";
 import { useUserData } from "./useUserData";
 import { FilterState } from "./types";
@@ -8,7 +8,7 @@ export const useUserManagement = (initialFilter?: { type: string; value: string 
   const { 
     users, 
     isLoading, 
-    fetchUsers, 
+    fetchUsers: originalFetchUsers, 
     handleUpdateTier,
     handleUserDeleted 
   } = useUserData();
@@ -27,12 +27,32 @@ export const useUserManagement = (initialFilter?: { type: string; value: string 
   const [activeFilter, setActiveFilter] = useState<FilterState | null>(
     initialFilter ? { type: initialFilter.type, value: initialFilter.value } : null
   );
+  
+  // Use a ref to track if we've done the initial fetch
+  const initialFetchDone = useRef(false);
 
-  // Apply filters when they change
+  // Wrap fetchUsers in useCallback to ensure its reference is stable
+  const fetchUsers = useCallback((onboardedFilter: string = "all", chatFilter: string = "all") => {
+    originalFetchUsers(onboardedFilter, chatFilter);
+  }, [originalFetchUsers]);
+
+  // Apply filters only when activeFilter changes
   useEffect(() => {
-    const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
-    const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
-    fetchUsers(onboardedFilter, chatFilter);
+    // Skip the first render if no initialFilter
+    if (!initialFilter && !initialFetchDone.current) {
+      initialFetchDone.current = true;
+      const onboardedFilter = "all";
+      const chatFilter = "all";
+      fetchUsers(onboardedFilter, chatFilter);
+      return;
+    }
+
+    // Only re-fetch if activeFilter changes
+    if (activeFilter || initialFetchDone.current) {
+      const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
+      const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
+      fetchUsers(onboardedFilter, chatFilter);
+    }
   }, [activeFilter, fetchUsers]);
 
   return {

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserTableData } from "./types";
 import { toast } from "sonner";
@@ -40,9 +40,11 @@ export const useUserData = () => {
   };
   
   // Fetch all users
-  const fetchUsers = async (onboardedFilter: string = "all", chatFilter: string = "all") => {
+  const fetchUsers = useCallback(async (onboardedFilter: string = "all", chatFilter: string = "all") => {
     setIsLoading(true);
     try {
+      console.log(`Fetching users with filters - onboarded: ${onboardedFilter}, chat: ${chatFilter}`);
+      
       // Only fetch users with chat activity if chat filter is active
       let chatUserIds: string[] = [];
       if (chatFilter === "true") {
@@ -93,7 +95,7 @@ export const useUserData = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [fetchUsersWithChatActivity]);
 
   // Handler for updating user subscription tier
   const handleUpdateTier = async (userId: string, newTier: SubscriptionTier) => {

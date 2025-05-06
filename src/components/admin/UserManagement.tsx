@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { ActiveFilter } from "./ActiveFilter";
 import { UserFilters } from "./UserFilters";
 import { UserTable } from "./UserTable";
@@ -34,12 +34,12 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
   const [exportLoading, setExportLoading] = useState(false);
 
   // Handle reset filter including parent component notification
-  const handleResetFilters = () => {
+  const handleResetFilters = useCallback(() => {
     resetFilters();
     if (onResetFilter) {
       onResetFilter();
     }
-  };
+  }, [resetFilters, onResetFilter]);
 
   // Export users to CSV
   const handleExportCsv = async () => {
@@ -148,7 +148,7 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
             setTierFilter={setTierFilter}
             archetypeFilter={archetypeFilter}
             setArchetypeFilter={setArchetypeFilter}
-            onRefresh={fetchUsers}
+            onRefresh={() => fetchUsers()}
           />
         </div>
         
