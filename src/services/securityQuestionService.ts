@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AuthResponse, User } from "@supabase/supabase-js";
 
 export interface SecurityQuestion {
   id: string;
@@ -97,12 +98,12 @@ export const verifySecurityQuestionAnswer = async (
 export const getUserSecurityQuestion = async (email: string): Promise<SecurityQuestion | null> => {
   try {
     // First get the user ID from the email
-    const { data: userData, error: userError } = await supabase.auth.signInWithOtp({
+    const { data: authData, error: userError } = await supabase.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: false // Don't create a new user if they don't exist
       }
-    });
+    }) as AuthResponse;
     
     // Fix: Add proper type checking and safety
     if (userError) {
@@ -111,12 +112,12 @@ export const getUserSecurityQuestion = async (email: string): Promise<SecurityQu
     }
     
     // Make sure user exists and has an id before proceeding
-    if (!userData || !userData.user || !userData.user.id) {
+    if (!authData || !authData.user) {
       console.error("No user found with this email address");
       return null;
     }
     
-    const userId = userData.user.id;
+    const userId = authData.user.id;
     
     // Then get their security question
     const { data, error } = await supabase
