@@ -53,7 +53,10 @@ export function PageLayout({ children, fullWidth = false, delayHeaderAnimation =
       <Toaster position="top-right" richColors />
       
       {shouldShowHeader && (
-        <div className={`transition-opacity duration-700 ease-in-out ${showHeader ? 'opacity-100' : 'opacity-0'}`}>
+        <div 
+          className={`transition-opacity duration-700 ease-in-out ${showHeader ? 'opacity-100' : 'opacity-0'}`}
+          style={{ position: 'sticky', top: 0, zIndex: 40 }}
+        >
           <Header />
         </div>
       )}

@@ -1,7 +1,9 @@
 
 /* Enhanced header styling */
 .enhanced-header {
-  @apply border-b border-gray-100/70 bg-white/70 backdrop-blur-md shadow-sm;
+  @apply border-b border-gray-200 bg-white backdrop-blur-md shadow-sm;
+  position: relative;
+  z-index: 50;
 }
 
 /* Page container with improved spacing */
