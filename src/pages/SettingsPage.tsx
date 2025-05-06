@@ -2,13 +2,13 @@
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
 import { Separator } from "@/components/ui/separator";
-import AvatarSelector from "@/components/settings/AvatarSelector";
+import AvatarSelector from "@/components/settings/avatar/AvatarSelector";
 import BioEditor from "@/components/settings/BioEditor";
 import TwoFactorSetup from "@/components/settings/TwoFactorSetup";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, User, Bell, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button"; // Added button import
+import { Button } from "@/components/ui/button";
 
 const SettingsPage = () => {
   const { user } = useAuth();
