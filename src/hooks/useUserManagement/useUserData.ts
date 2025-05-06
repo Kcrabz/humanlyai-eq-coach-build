@@ -4,18 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { UserTableData } from "./types";
 import { toast } from "sonner";
 import { SubscriptionTier } from "@/types";
-import { useChatUserIds } from "./useChatUserIds";
 
 export const useUserData = () => {
   const [users, setUsers] = useState<UserTableData[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { fetchUsersWithChatActivity } = useChatUserIds();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   // Fetch user emails from the admin edge function
   const fetchUserEmails = async (userIds: string[]) => {
+    if (!userIds.length) return new Map();
+    
     try {
-      if (!userIds.length) return new Map();
-      
       const { data, error } = await supabase.functions.invoke('admin-get-user-emails', {
         body: { userIds },
       });
@@ -38,14 +36,33 @@ export const useUserData = () => {
       return emailMap;
     } catch (error) {
       console.error("Failed to fetch user emails:", error);
-      toast.error("Failed to fetch user emails");
       return new Map();
+    }
+  };
+  
+  // Fetch chat activity
+  const fetchUsersWithChatActivity = async (): Promise<string[]> => {
+    try {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('user_id')
+        .not('user_id', 'is', null);
+
+      if (error) throw error;
+
+      // Get unique user IDs
+      const userIds = [...new Set(data.map(item => item.user_id))];
+      return userIds;
+    } catch (error) {
+      console.error("Error fetching chat activity:", error);
+      return [];
     }
   };
   
   // Fetch all users
   const fetchUsers = useCallback(async (onboardedFilter: string = "all", chatFilter: string = "all") => {
     setIsLoading(true);
+    
     try {
       console.log(`Fetching users with filters - onboarded: ${onboardedFilter}, chat: ${chatFilter}`);
       
@@ -77,7 +94,7 @@ export const useUserData = () => {
         throw error;
       }
 
-      if (!data) {
+      if (!data || !Array.isArray(data)) {
         setUsers([]);
         setIsLoading(false);
         return;
@@ -108,7 +125,7 @@ export const useUserData = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [fetchUsersWithChatActivity]);
+  }, []);
 
   // Handler for updating user subscription tier
   const handleUpdateTier = async (userId: string, newTier: SubscriptionTier) => {
@@ -145,8 +162,8 @@ export const useUserData = () => {
   return { 
     users, 
     isLoading, 
-    fetchUsers, 
+    fetchUsers,
     handleUpdateTier,
-    handleUserDeleted 
+    handleUserDeleted
   };
 };

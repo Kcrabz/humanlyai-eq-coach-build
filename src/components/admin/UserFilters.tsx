@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { memo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,7 +15,7 @@ interface UserFiltersProps {
   onRefresh: () => void;
 }
 
-export const UserFilters = ({
+const UserFiltersComponent = ({
   searchTerm,
   setSearchTerm,
   tierFilter,
@@ -75,3 +75,5 @@ export const UserFilters = ({
     </div>
   );
 };
+
+export const UserFilters = memo(UserFiltersComponent);

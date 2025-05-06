@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,11 +9,7 @@ import { UserManagement } from "@/components/admin/UserManagement";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { Loading } from "@/components/ui/loading";
-
-interface FilterState {
-  type: string;
-  value: string;
-}
+import { FilterState } from "@/hooks/useUserManagement/types";
 
 const AdminPage = () => {
   const { isAdmin, isLoading: isAdminCheckLoading } = useAdminCheck();
@@ -21,7 +17,7 @@ const AdminPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
-  const [currentFilter, setCurrentFilter] = useState<FilterState>({ type: "", value: "" });
+  const [currentFilter, setCurrentFilter] = useState<FilterState | null>(null);
 
   // Check if user is an admin and redirect if not
   useEffect(() => {
@@ -36,15 +32,15 @@ const AdminPage = () => {
   }, [isAdmin, isAuthLoading, isAdminCheckLoading, navigate, toast]);
 
   // Handle filter changes from the overview components
-  const handleFilterChange = (filter: FilterState) => {
+  const handleFilterChange = useCallback((filter: FilterState) => {
     setCurrentFilter(filter);
     setActiveTab("users"); // Switch to users tab when a filter is applied
-  };
+  }, []);
 
   // Reset filter
-  const handleResetFilter = () => {
-    setCurrentFilter({ type: "", value: "" });
-  };
+  const handleResetFilter = useCallback(() => {
+    setCurrentFilter(null);
+  }, []);
 
   if (isAuthLoading || isAdminCheckLoading) {
     return (
@@ -76,7 +72,7 @@ const AdminPage = () => {
 
           <TabsContent value="users" className="space-y-6">
             <UserManagement 
-              initialFilter={currentFilter} 
+              initialFilter={currentFilter || undefined} 
               onResetFilter={handleResetFilter}
             />
           </TabsContent>

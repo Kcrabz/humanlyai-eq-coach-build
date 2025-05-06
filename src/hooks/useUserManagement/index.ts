@@ -1,18 +1,24 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useUserFilters } from "./useUserFilters";
 import { useUserData } from "./useUserData";
+import { useUserFilters } from "./useUserFilters";
 import { FilterState } from "./types";
 
 export const useUserManagement = (initialFilter?: { type: string; value: string }) => {
+  // Create a ref to track if we've done initial fetch
+  const initialFetchDone = useRef<boolean>(false);
+  const initialFilterRef = useRef(initialFilter);
+  
+  // Data fetching hook
   const { 
     users, 
     isLoading, 
-    fetchUsers: originalFetchUsers, 
+    fetchUsers, 
     handleUpdateTier,
     handleUserDeleted 
   } = useUserData();
   
+  // Filtering hook
   const {
     searchTerm,
     setSearchTerm,
@@ -24,35 +30,29 @@ export const useUserManagement = (initialFilter?: { type: string; value: string 
     resetFilters
   } = useUserFilters(users);
 
+  // Store active filter separately to avoid loops
   const [activeFilter, setActiveFilter] = useState<FilterState | null>(
     initialFilter ? { type: initialFilter.type, value: initialFilter.value } : null
   );
   
-  // Use a ref to track if we've done the initial fetch
-  const initialFetchDone = useRef(false);
-
-  // Wrap fetchUsers in useCallback to ensure its reference is stable
-  const fetchUsers = useCallback((onboardedFilter: string = "all", chatFilter: string = "all") => {
-    originalFetchUsers(onboardedFilter, chatFilter);
-  }, [originalFetchUsers]);
-
-  // Apply filters only when activeFilter changes or on initial mount
+  // Handle initial fetch only once
   useEffect(() => {
-    // This effect should only run once on mount or when activeFilter changes
-    if (!initialFetchDone.current) {
-      initialFetchDone.current = true;
-      const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
-      const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
-      fetchUsers(onboardedFilter, chatFilter);
-      return;
-    }
-
-    if (activeFilter) {
-      const onboardedFilter = activeFilter.type === "onboarded" ? activeFilter.value : "all";
-      const chatFilter = activeFilter.type === "chat" ? activeFilter.value : "all";
-      fetchUsers(onboardedFilter, chatFilter);
-    }
-  }, [activeFilter, fetchUsers]);
+    if (initialFetchDone.current) return;
+    
+    initialFetchDone.current = true;
+    
+    const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
+    const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
+    
+    fetchUsers(onboardedFilter, chatFilter);
+    
+  }, [fetchUsers, activeFilter]);
+  
+  // Reset function that also notifies parent components
+  const handleResetFilters = useCallback(() => {
+    resetFilters();
+    setActiveFilter(null);
+  }, [resetFilters]);
 
   return {
     users: filteredUsers,
@@ -64,10 +64,7 @@ export const useUserManagement = (initialFilter?: { type: string; value: string 
     archetypeFilter,
     setArchetypeFilter,
     activeFilter,
-    resetFilters: () => {
-      resetFilters();
-      setActiveFilter(null);
-    },
+    resetFilters: handleResetFilters,
     fetchUsers,
     handleUpdateTier,
     handleUserDeleted

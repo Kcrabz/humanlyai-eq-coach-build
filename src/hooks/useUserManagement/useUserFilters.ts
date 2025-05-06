@@ -1,60 +1,84 @@
 
-import { useState, useEffect, useCallback } from "react";
-import { UserTableData } from "./types";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { UserTableData, UserFilters } from "./types";
 
 export const useUserFilters = (users: UserTableData[] = []) => {
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [tierFilter, setTierFilter] = useState<string>("all");
-  const [archetypeFilter, setArchetypeFilter] = useState<string>("all");
+  const [filters, setFilters] = useState<UserFilters>({
+    searchTerm: "",
+    tierFilter: "all",
+    archetypeFilter: "all"
+  });
+  
   const [filteredUsers, setFilteredUsers] = useState<UserTableData[]>([]);
   
-  // Apply filters and search
-  useEffect(() => {
-    if (!users || !Array.isArray(users)) {
-      setFilteredUsers([]);
-      return;
+  // Memoize the filtered users to prevent unnecessary recalculations
+  const applyFilters = useCallback((users: UserTableData[], filters: UserFilters) => {
+    if (!users || !Array.isArray(users) || users.length === 0) {
+      return [];
     }
 
-    let filtered = [...users];
+    let result = [...users];
 
     // Apply search filter
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(user => 
+    if (filters.searchTerm) {
+      const term = filters.searchTerm.toLowerCase();
+      result = result.filter(user => 
         (user.email && user.email.toLowerCase().includes(term)) ||
         (user.name && user.name.toLowerCase().includes(term))
       );
     }
 
     // Apply tier filter
-    if (tierFilter !== "all") {
-      filtered = filtered.filter(user => user.subscription_tier === tierFilter);
+    if (filters.tierFilter !== "all") {
+      result = result.filter(user => user.subscription_tier === filters.tierFilter);
     }
 
     // Apply archetype filter
-    if (archetypeFilter !== "all") {
-      if (archetypeFilter === "not-set") {
-        filtered = filtered.filter(user => !user.eq_archetype || user.eq_archetype === "Not set");
+    if (filters.archetypeFilter !== "all") {
+      if (filters.archetypeFilter === "not-set") {
+        result = result.filter(user => !user.eq_archetype || user.eq_archetype === "Not set");
       } else {
-        filtered = filtered.filter(user => user.eq_archetype === archetypeFilter);
+        result = result.filter(user => user.eq_archetype === filters.archetypeFilter);
       }
     }
 
-    setFilteredUsers(filtered);
-  }, [users, searchTerm, tierFilter, archetypeFilter]);
+    return result;
+  }, []);
 
+  // Update filtered users when users or filters change
+  useEffect(() => {
+    const result = applyFilters(users, filters);
+    setFilteredUsers(result);
+  }, [users, filters, applyFilters]);
+
+  // Update individual filters
+  const setSearchTerm = useCallback((term: string) => {
+    setFilters(prev => ({ ...prev, searchTerm: term }));
+  }, []);
+
+  const setTierFilter = useCallback((tier: string) => {
+    setFilters(prev => ({ ...prev, tierFilter: tier }));
+  }, []);
+
+  const setArchetypeFilter = useCallback((archetype: string) => {
+    setFilters(prev => ({ ...prev, archetypeFilter: archetype }));
+  }, []);
+
+  // Reset all filters
   const resetFilters = useCallback(() => {
-    setSearchTerm("");
-    setTierFilter("all");
-    setArchetypeFilter("all");
+    setFilters({
+      searchTerm: "",
+      tierFilter: "all",
+      archetypeFilter: "all"
+    });
   }, []);
 
   return {
-    searchTerm,
+    searchTerm: filters.searchTerm,
     setSearchTerm,
-    tierFilter,
+    tierFilter: filters.tierFilter,
     setTierFilter,
-    archetypeFilter,
+    archetypeFilter: filters.archetypeFilter,
     setArchetypeFilter,
     filteredUsers,
     resetFilters

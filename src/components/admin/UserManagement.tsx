@@ -41,46 +41,43 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
     }
   }, [resetFilters, onResetFilter]);
 
+  // Handle refresh - this is a simple function that passes the active filters
+  const handleRefresh = useCallback(() => {
+    const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
+    const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
+    fetchUsers(onboardedFilter, chatFilter);
+  }, [activeFilter, fetchUsers]);
+
   // Export users to CSV
-  const handleExportCsv = async () => {
+  const handleExportCsv = useCallback(async () => {
     try {
       setExportLoading(true);
-      console.log("Starting CSV export...");
       
       // Get current auth session to include in the request
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError) {
-        console.error("Error getting auth session:", sessionError);
         toast.error("Authentication error", { description: "Please try logging in again" });
         return;
       }
       
       if (!sessionData.session) {
-        console.error("No active session found");
         toast.error("Authentication error", { description: "Please log in again" });
         return;
       }
       
-      console.log("Got authenticated session, calling export function...");
-      
-      // Call the edge function with proper authentication and detailed error handling
+      // Call the edge function with proper authentication
       const response = await supabase.functions.invoke('admin-export-users-csv', {
         headers: {
-          Authorization: `Bearer ${sessionData.session.access_token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${sessionData.session.access_token}`
         },
         method: 'POST',
         body: { 
-          filters: { searchTerm, tierFilter, archetypeFilter },
-          debug: true // Add debug flag to get more information
+          filters: { searchTerm, tierFilter, archetypeFilter }
         }
       });
       
-      console.log("Edge function response:", response);
-      
       if (response.error) {
-        console.error("Error from edge function:", response.error);
         toast.error("Failed to export users", { 
           description: response.error.message || "An unexpected error occurred" 
         });
@@ -88,31 +85,17 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
       }
       
       if (!response.data) {
-        console.error("No data returned from edge function");
         toast.error("Failed to export users", { description: "No data returned from server" });
         return;
       }
       
-      // Check if the response is an error message from our server
-      if (typeof response.data === 'object' && response.data.error) {
-        console.error("Error in edge function response:", response.data.error);
-        toast.error("Failed to export users", { 
-          description: response.data.error || "Server returned an error" 
-        });
-        return;
-      }
-      
-      // Handle CSV data (should be a string)
+      // Handle CSV data
       const csvData = typeof response.data === 'string' 
         ? response.data 
         : JSON.stringify(response.data);
       
-      console.log("Export data received successfully, size:", csvData.length);
-      
-      // Create a blob from the CSV data
+      // Create a blob and download
       const blob = new Blob([csvData], { type: 'text/csv' });
-      
-      // Create a download link and trigger the download
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.setAttribute('hidden', '');
@@ -124,21 +107,13 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
       
       toast.success("User data exported successfully");
     } catch (err: any) {
-      console.error("Failed to export users:", err);
       toast.error("Export failed", { 
         description: err?.message || "An unexpected error occurred while exporting users"
       });
     } finally {
       setExportLoading(false);
     }
-  };
-
-  // Handle refresh - wrap in useCallback to prevent constant re-rendering
-  const handleRefresh = useCallback(() => {
-    const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
-    const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
-    fetchUsers(onboardedFilter, chatFilter);
-  }, [activeFilter, fetchUsers]);
+  }, [searchTerm, tierFilter, archetypeFilter]);
 
   return (
     <div className="space-y-6">

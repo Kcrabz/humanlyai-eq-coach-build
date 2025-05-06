@@ -11,3 +11,9 @@ export interface FilterState {
   type: string;
   value: string;
 }
+
+export interface UserFilters {
+  searchTerm: string;
+  tierFilter: string;
+  archetypeFilter: string;
+}
