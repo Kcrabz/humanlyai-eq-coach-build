@@ -1,107 +1,130 @@
+import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { ReactQueryDevtools } from 'react-query/devtools';
+import { AuthProvider } from '@/context/AuthContext';
+import { Toaster } from "@/components/ui/sonner"
 
-import { useEffect } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { AuthProvider } from "@/context/AuthContext";
-import { useAuth } from "@/context/AuthContext";
-import { useAuthNavigation } from "@/hooks/useAuthNavigation";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { AdminRoute } from "@/components/admin/AdminRoute";
+// Import pages
+import Index from './pages/Index';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ChatPage from './pages/ChatPage';
+import SettingsPage from './pages/SettingsPage';
+import UserProgressPage from './pages/UserProgressPage';
+import OnboardingPage from './pages/OnboardingPage';
+import PricingPage from './pages/PricingPage';
+import AboutPage from './pages/AboutPage';
+import HelpPage from './pages/HelpPage';
+import BlogPage from './pages/BlogPage';
+import CommunityPage from './pages/CommunityPage';
+import AdminPage from './pages/AdminPage';
+import NotFound from './pages/NotFound';
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 
-import Index from "./pages/Index";
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import OnboardingPage from "./pages/OnboardingPage";
-import ChatPage from "./pages/ChatPage";
-import PricingPage from "./pages/PricingPage";
-import AboutPage from "./pages/AboutPage";
-import SettingsPage from "./pages/SettingsPage";
-import AdminPage from "./pages/AdminPage";
-import UserProgressPage from "./pages/UserProgressPage";
-import NotFound from "./pages/NotFound";
-import BlogPage from "./pages/BlogPage";
-import HelpPage from "./pages/HelpPage";
-import CommunityPage from "./pages/CommunityPage";
+// Import components
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { AdminRoute } from '@/components/auth/AdminRoute';
 
 const queryClient = new QueryClient();
 
-// Create a component that uses the useAuthNavigation hook
-// This fixes the "rendered fewer hooks than expected" error by ensuring we always call the same hooks
-const AuthNavigationHandler = () => {
-  const { user, isLoading } = useAuth();
-  const location = useLocation();
-  
+function App() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
   useEffect(() => {
-    console.log("Route changed to:", location.pathname, location.search);
-  }, [location]);
-  
-  // Always call the hook, but let it determine internally if it should take action
-  useAuthNavigation(user, isLoading);
-  
-  return null; // This component doesn't render anything
-};
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
-// Main App component with routes
-const AppRoutes = () => (
-  <AuthProvider>
-    <AuthNavigationHandler />
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/pricing" element={<PricingPage />} />
-      <Route path="/about" element={<AboutPage />} />
-      <Route path="/blog" element={<BlogPage />} />
-      <Route path="/help" element={<HelpPage />} />
-      <Route path="/community" element={<CommunityPage />} />
-      
-      {/* Protected routes */}
-      <Route path="/onboarding" element={
-        <ProtectedRoute>
-          <OnboardingPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/chat" element={
-        <ProtectedRoute>
-          <ChatPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/settings" element={
-        <ProtectedRoute>
-          <SettingsPage />
-        </ProtectedRoute>
-      } />
-      <Route path="/progress" element={
-        <ProtectedRoute>
-          <UserProgressPage />
-        </ProtectedRoute>
-      } />
-      
-      {/* Admin route */}
-      <Route path="/admin" element={
-        <AdminRoute>
-          <AdminPage />
-        </AdminRoute>
-      } />
-      
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  </AuthProvider>
-);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Toaster />
+        <Routes>
+          <Route path="/" element={<Index />} />
+          
+          {/* Auth Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/update-password" element={<UpdatePasswordPage />} />
+          <Route path="/forgot-password" element={<ResetPasswordPage />} />
+          
+          {/* Protected Routes */}
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/progress"
+            element={
+              <ProtectedRoute>
+                <UserProgressPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription"
+            element={
+              <ProtectedRoute>
+                <PricingPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminPage />
+              </AdminRoute>
+            }
+          />
+          
+          {/* Public Routes */}
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/community" element={<CommunityPage />} />
+          
+          {/* 404 Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
+}
 
 export default App;

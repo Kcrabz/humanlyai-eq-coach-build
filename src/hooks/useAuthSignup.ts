@@ -2,6 +2,7 @@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
+import { logSecurityEvent } from "@/services/securityLoggingService";
 
 export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   /**
@@ -45,6 +46,13 @@ export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User 
       }
 
       console.log("Signup successful for:", email, "User ID:", data.user.id);
+      
+      // Log account creation
+      await logSecurityEvent({
+        userId: data.user.id,
+        eventType: 'account_created',
+        details: { email }
+      });
       
       // Explicitly create profile with onboarded = false
       if (data.user) {

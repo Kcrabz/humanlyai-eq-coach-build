@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuthState } from "@/hooks/useAuthState";
+import { logSecurityEvent } from "@/services/securityLoggingService";
 
 export const useAuthActions = () => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -23,6 +24,14 @@ export const useAuthActions = () => {
           sessionStorage.removeItem(`chat_session_${user.id}`);
           console.log("Cleared session-specific chat history for free/basic user");
         }
+      }
+      
+      // Log logout event before actually logging out
+      if (user?.id) {
+        await logSecurityEvent({
+          userId: user.id,
+          eventType: 'logout'
+        });
       }
       
       // Perform the actual logout

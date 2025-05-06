@@ -20,7 +20,7 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<any>;
   signup: (email: string, password: string, recaptchaToken?: string) => Promise<any>;
   logout: () => Promise<void>;
-  resetPassword: (email: string) => Promise<void>;
+  resetPassword: (email: string) => Promise<boolean>;
   
   // Re-exported from useProfileActions
   setName: (name: string) => Promise<void>;
@@ -87,12 +87,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const getUserSubscription = useCallback(() => {
     return user?.subscription_tier || 'free';
   }, [user?.subscription_tier]);
-  
-  // Reset password functionality stub - wrapped in useCallback
-  const resetPassword = useCallback(async (email: string): Promise<void> => {
-    // Implement reset password functionality
-    console.log("Reset password for:", email);
-  }, []);
 
   // Wrapper functions to ensure type compatibility and memoized to prevent unnecessary recreations
   const updateProfile = useCallback(async (data: any): Promise<void> => {
@@ -128,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login: authCore.login,
     logout: authLogout,
     signup,
-    resetPassword,
+    resetPassword: authCore.resetPassword,
     updateProfile,
     forceUpdateProfile,
     setName,
@@ -140,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userHasArchetype
   }), [
     user, isLoading, error, isAuthenticated, authCore.login, authLogout, 
-    signup, resetPassword, updateProfile, forceUpdateProfile, setName, 
+    signup, authCore.resetPassword, updateProfile, forceUpdateProfile, setName, 
     setArchetype, setCoachingMode, setOnboarded, setUser, getUserSubscription, 
     userHasArchetype
   ]);

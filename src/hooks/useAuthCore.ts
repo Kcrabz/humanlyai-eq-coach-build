@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { updateUserProfileInDatabase } from "@/services/authService";
+import { logSecurityEvent } from "@/services/securityLoggingService";
 
 const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +27,16 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         console.error("Login error:", error.message);
         setError(error.message);
         toast.error("Login failed", { description: error.message });
+        
+        // Log failed login attempt
+        if (data?.user?.id) {
+          await logSecurityEvent({
+            userId: data.user.id,
+            eventType: 'login_failure',
+            details: { error: error.message }
+          });
+        }
+        
         return false;
       }
       
@@ -36,6 +47,12 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         return false;
       }
       
+      // Log successful login
+      await logSecurityEvent({
+        userId: data.user.id,
+        eventType: 'login_success'
+      });
+      
       console.log("Login successful for:", email, "User data:", data.user.id);
       toast.success("Logged in successfully");
       return true;
@@ -44,6 +61,54 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
       console.error("Unexpected login error:", errorMessage);
       setError(errorMessage);
       toast.error("Login failed", { description: errorMessage });
+      return false;
+    }
+  };
+
+  /**
+   * Sends a password reset email
+   */
+  const resetPassword = async (email: string): Promise<boolean> => {
+    console.log("Password reset attempt started for:", email);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/update-password`,
+      });
+      
+      if (error) {
+        console.error("Password reset error:", error.message);
+        setError(error.message);
+        toast.error("Password reset failed", { description: error.message });
+        return false;
+      }
+      
+      // Log password reset request (using generic ID since we don't know user ID)
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+          
+        if (data?.id) {
+          await logSecurityEvent({
+            userId: data.id,
+            eventType: 'password_reset_requested',
+            details: { email }
+          });
+        }
+      } catch (logError) {
+        console.error("Error logging password reset:", logError);
+      }
+      
+      console.log("Password reset email sent successfully to:", email);
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      console.error("Unexpected password reset error:", errorMessage);
+      setError(errorMessage);
+      toast.error("Password reset failed", { description: errorMessage });
       return false;
     }
   };
@@ -68,6 +133,14 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
       if (success) {
         // Update local state
         setUser((prevUser) => prevUser ? { ...prevUser, ...updates } : null);
+        
+        // Log profile update
+        await logSecurityEvent({
+          userId: authUser.id,
+          eventType: 'profile_updated',
+          details: { fields: Object.keys(updates) }
+        });
+        
         toast.success("Profile updated successfully");
       }
       
@@ -82,6 +155,7 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
 
   return {
     login,
+    resetPassword,
     updateProfile,
     error,
     setError
