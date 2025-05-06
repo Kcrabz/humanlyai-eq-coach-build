@@ -1,3 +1,4 @@
+
 import { useState, FormEvent, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -94,29 +95,12 @@ export function EnhancedChatUI({
     // Clear input right away for better UX
     setMessage("");
     
-    // Add temporary assistant message with loading state
-    const assistantLoadingMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content: "",
-      created_at: new Date().toISOString()
-    };
-    
-    setChatHistory(prev => [...prev, assistantLoadingMessage]);
-    
     // Send message to API
     console.log("Sending message to API:", message);
     try {
       await sendChatMessage(updatedHistory, userMessage.id);
     } catch (error) {
       console.error("Error sending chat message:", error);
-      
-      // If there's an error, update the loading message with an error notification
-      setChatHistory(prev => prev.map(msg => 
-        msg.id === assistantLoadingMessage.id 
-          ? {...msg, content: "Sorry, I couldn't process your request. Please try again."}
-          : msg
-      ));
     }
   };
 
@@ -126,27 +110,10 @@ export function EnhancedChatUI({
       setChatHistory(prev => prev.slice(0, -1));
     }
     
-    // Add temporary assistant message with loading state
-    const assistantLoadingMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      role: "assistant",
-      content: "",
-      created_at: new Date().toISOString()
-    };
-    
-    setChatHistory(prev => [...prev, assistantLoadingMessage]);
-    
     try {
       await retry();
     } catch (error) {
       console.error("Error retrying message:", error);
-      
-      // If there's an error, update the loading message with an error notification
-      setChatHistory(prev => prev.map(msg => 
-        msg.id === assistantLoadingMessage.id 
-          ? {...msg, content: "Sorry, I couldn't process your request. Please try again."}
-          : msg
-      ));
     }
   };
 
@@ -166,10 +133,7 @@ export function EnhancedChatUI({
             </p>
           </div>
         ) : (
-          chatHistory.map((message) => {
-            console.log(`Rendering message: ${message.id}, role: ${message.role}, content length: ${message.content?.length || 0}`);
-            return <ChatBubble key={message.id} message={message} />;
-          })
+          chatHistory.map((message) => <ChatBubble key={message.id} message={message} />)
         )}
         
         {breakThroughDetected && isPremiumMember && (

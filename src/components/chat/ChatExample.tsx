@@ -1,6 +1,7 @@
 
 import { EnhancedChatUI } from "./EnhancedChatUI";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChatProvider } from "@/context/ChatContext";
 
 export function ChatExample() {
   return (
@@ -10,7 +11,9 @@ export function ChatExample() {
           <CardTitle>Chat with AI Assistant</CardTitle>
         </CardHeader>
         <CardContent className="h-[calc(100%-64px)]">
-          <EnhancedChatUI />
+          <ChatProvider>
+            <EnhancedChatUI />
+          </ChatProvider>
         </CardContent>
       </Card>
     </div>
