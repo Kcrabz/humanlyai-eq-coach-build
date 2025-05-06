@@ -14,6 +14,8 @@ export const useUserData = () => {
   // Fetch user emails from the admin edge function
   const fetchUserEmails = async (userIds: string[]) => {
     try {
+      if (!userIds.length) return new Map();
+      
       const { data, error } = await supabase.functions.invoke('admin-get-user-emails', {
         body: { userIds },
       });
@@ -25,11 +27,13 @@ export const useUserData = () => {
 
       // Create a map of user IDs to emails
       const emailMap = new Map();
-      data.data.forEach((item: { id: string; email: string }) => {
-        if (item.email) {
-          emailMap.set(item.id, item.email);
-        }
-      });
+      if (data && data.data) {
+        data.data.forEach((item: { id: string; email: string }) => {
+          if (item.email) {
+            emailMap.set(item.id, item.email);
+          }
+        });
+      }
 
       return emailMap;
     } catch (error) {
@@ -69,7 +73,15 @@ export const useUserData = () => {
       // Get the data
       let { data, error } = await query.order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
+
+      if (!data) {
+        setUsers([]);
+        setIsLoading(false);
+        return;
+      }
 
       // Filter by chat activity if needed
       if (chatFilter === "true" && chatUserIds.length > 0) {
@@ -92,6 +104,7 @@ export const useUserData = () => {
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users");
+      setUsers([]);
     } finally {
       setIsLoading(false);
     }

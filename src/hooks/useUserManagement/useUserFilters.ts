@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { UserTableData } from "./types";
 
 export const useUserFilters = (users: UserTableData[] = []) => {
@@ -43,11 +43,11 @@ export const useUserFilters = (users: UserTableData[] = []) => {
     setFilteredUsers(filtered);
   }, [users, searchTerm, tierFilter, archetypeFilter]);
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSearchTerm("");
     setTierFilter("all");
     setArchetypeFilter("all");
-  };
+  }, []);
 
   return {
     searchTerm,

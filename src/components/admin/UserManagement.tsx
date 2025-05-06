@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, memo } from "react";
 import { ActiveFilter } from "./ActiveFilter";
 import { UserFilters } from "./UserFilters";
 import { UserTable } from "./UserTable";
@@ -14,7 +14,7 @@ interface UserManagementProps {
   onResetFilter?: () => void;
 }
 
-export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementProps) => {
+const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagementProps) => {
   const {
     users,
     isLoading,
@@ -133,6 +133,13 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
     }
   };
 
+  // Handle refresh - wrap in useCallback to prevent constant re-rendering
+  const handleRefresh = useCallback(() => {
+    const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
+    const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
+    fetchUsers(onboardedFilter, chatFilter);
+  }, [activeFilter, fetchUsers]);
+
   return (
     <div className="space-y-6">
       {/* Active filter indicator */}
@@ -148,7 +155,7 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
             setTierFilter={setTierFilter}
             archetypeFilter={archetypeFilter}
             setArchetypeFilter={setArchetypeFilter}
-            onRefresh={() => fetchUsers()}
+            onRefresh={handleRefresh}
           />
         </div>
         
@@ -173,3 +180,5 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
     </div>
   );
 };
+
+export const UserManagement = memo(UserManagementComponent);

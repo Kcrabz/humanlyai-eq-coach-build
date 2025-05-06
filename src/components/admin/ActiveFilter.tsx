@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { Filter, X } from "lucide-react";
 import { FilterState } from "@/hooks/useUserManagement/types";
@@ -8,7 +9,7 @@ interface ActiveFilterProps {
   onReset: () => void;
 }
 
-export const ActiveFilter = ({ activeFilter, onReset }: ActiveFilterProps) => {
+const ActiveFilterComponent = ({ activeFilter, onReset }: ActiveFilterProps) => {
   if (!activeFilter) return null;
   
   return (
@@ -23,3 +24,5 @@ export const ActiveFilter = ({ activeFilter, onReset }: ActiveFilterProps) => {
     </div>
   );
 };
+
+export const ActiveFilter = memo(ActiveFilterComponent);
