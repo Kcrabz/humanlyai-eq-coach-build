@@ -129,18 +129,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await profileActions.setOnboarded(value);
   }, [profileActions]);
   
+  // Create wrapper for resetPassword to adapt the return type
+  const resetPasswordWrapper = useCallback(async (email: string): Promise<void> => {
+    // Call the original function but discard the boolean return value to match the AuthContextType
+    await authCore.resetPassword(email);
+    // No return value needed since the type expects Promise<void>
+  }, [authCore]);
+  
   // Memoize the context value to prevent unnecessary rerenders
   const contextValue: AuthContextType = useMemo(() => ({
     user,
     isLoading,
     error,
     isAuthenticated: !!user,
-    authEvent: authEvent as "SIGN_IN_COMPLETE" | "RESTORED_SESSION" | "SIGN_OUT_COMPLETE" | null, // Type casting to match the AuthContextType
+    authEvent: authEvent as "SIGN_IN_COMPLETE" | "RESTORED_SESSION" | "SIGN_OUT_COMPLETE" | null,
     profileLoaded,
     login: authCore.login,
     logout: authLogout,
     signup,
-    resetPassword: authCore.resetPassword,
+    resetPassword: resetPasswordWrapper,
     updateProfile: profileCore.updateProfile,
     forceUpdateProfile: profileCore.forceUpdateProfile,
     setName: profileActions.setName,
@@ -156,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userAchievements
   }), [
     user, isLoading, error, authCore.login, authLogout, 
-    signup, authCore.resetPassword, profileCore.updateProfile, profileCore.forceUpdateProfile,
+    signup, resetPasswordWrapper, profileCore.updateProfile, profileCore.forceUpdateProfile,
     profileActions.setName, profileActions.setArchetype, profileActions.setCoachingMode, 
     profileActions.setOnboarded, setUser, authEvent, profileLoaded, 
     isPremiumMember, userStreakData, userAchievements
