@@ -20,7 +20,7 @@ export function Header() {
   const isOnProgressPage = location.pathname === "/progress";
 
   return (
-    <header className="enhanced-header py-4 px-4 sm:px-6 sticky top-0 z-30">
+    <header className="enhanced-header py-4 px-4 sm:px-6 sticky top-0 z-30 bg-background/80 backdrop-blur-sm shadow-sm header-fade-in">
       <div className="container mx-auto flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 transition-transform duration-300 hover:scale-[1.02]">
           <span className="bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent text-2xl font-bold">

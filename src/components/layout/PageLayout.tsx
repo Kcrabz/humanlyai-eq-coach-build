@@ -59,7 +59,8 @@ export function PageLayout({ children, fullWidth = false, delayHeaderAnimation =
       )}
       
       <main className={`flex-1 ${fullWidth ? "" : "container py-8"}`}>
-        {React.isValidElement(children) ? React.cloneElement(children as React.ReactElement, { displayHeader }) : children}
+        {React.isValidElement(children) && 
+          React.cloneElement(children as React.ReactElement, { displayHeader })}
       </main>
     </div>
   );
