@@ -13,13 +13,24 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useEffect } from "react";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
-  const { isAdmin } = useAdminCheck();
+  const { isAdmin, isLoading: isAdminLoading } = useAdminCheck();
   const location = useLocation();
   const isOnChatPage = location.pathname === "/chat";
   const isOnProgressPage = location.pathname === "/progress";
+  
+  // Debug log for admin status
+  useEffect(() => {
+    console.log("Header - Admin status:", { 
+      isAdmin, 
+      isAdminLoading,
+      user: user?.email,
+      isAuthenticated
+    });
+  }, [isAdmin, isAdminLoading, user, isAuthenticated]);
 
   return (
     <header className="enhanced-header py-4 px-4 sm:px-6 sticky top-0 z-50 bg-white shadow-md border-b border-gray-200 header-fade-in">
