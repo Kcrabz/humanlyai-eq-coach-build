@@ -1,10 +1,9 @@
-
 import { supabase } from '@/integrations/supabase/client';
-import { logSecurityEvent } from '@/services/securityLoggingService';
+import { toast } from "sonner";
 
 // Constants for rate limiting
-const MAX_REQUESTS_PER_MINUTE = 60;
-const MAX_REQUESTS_PER_HOUR = 300;
+const MAX_REQUESTS_PER_MINUTE = 5; // More strict limits for authentication
+const MAX_REQUESTS_PER_HOUR = 20;
 const RATE_LIMIT_WINDOW_MINUTES = 1;
 const RATE_LIMIT_WINDOW_HOURS = 1;
 
@@ -12,16 +11,15 @@ const RATE_LIMIT_WINDOW_HOURS = 1;
 export type RateLimitPeriod = 'minute' | 'hour' | 'day';
 
 interface RateLimitRequest {
-  userId: string;
+  userId?: string;
+  email?: string;
   endpoint: string;
   period?: RateLimitPeriod;
   maxRequests?: number;
 }
 
 /**
- * Checks if a request should be rate limited (mock implementation until database is updated)
- * @param params Rate limit request parameters
- * @returns Object indicating if the request is rate limited and the limit info
+ * Checks if a request should be rate limited using the database
  */
 export const checkRateLimit = async (params: RateLimitRequest): Promise<{
   isLimited: boolean;
@@ -31,6 +29,7 @@ export const checkRateLimit = async (params: RateLimitRequest): Promise<{
 }> => {
   const { 
     userId, 
+    email,
     endpoint, 
     period = 'minute', 
     maxRequests = MAX_REQUESTS_PER_MINUTE 
@@ -74,46 +73,25 @@ export const checkRateLimit = async (params: RateLimitRequest): Promise<{
       resetTime.setMilliseconds(0);
     }
     
-    // For now, return a mock response since the request_logs table doesn't exist
-    console.log(`Rate limit check for user ${userId} on endpoint ${endpoint} (period: ${period})`);
-    console.log(`This would check for requests since ${windowStart.toISOString()}`);
-    
-    // Simulate not being rate limited
-    const currentCount = 1;
-    const isLimited = false;
-    
-    // If we're rate limiting, log a security event
-    if (isLimited) {
-      await logSecurityEvent({
-        userId,
-        eventType: 'rate_limit_exceeded',
-        details: { 
-          endpoint, 
-          period, 
-          currentCount, 
-          maxRequests 
-        }
-      });
-    }
-    
-    return {
-      isLimited,
-      currentCount,
-      maxRequests,
-      resetTime
-    };
-    
-    /* Uncomment once the request_logs table is created
-    const { data, error } = await supabase
+    // Build query based on available identifiers
+    let query = supabase
       .from('request_logs')
       .select('id')
-      .eq('user_id', userId)
       .eq('endpoint', endpoint)
       .gte('created_at', windowStart.toISOString());
       
+    if (userId) {
+      query = query.eq('user_id', userId);
+    } else if (email) {
+      query = query.eq('email', email);
+    }
+    
+    const { data, error } = await query;
+      
     if (error) {
       console.error("Error checking rate limit:", error);
-      // On error, allow the request but log it
+      // On error, default to allowing the request but log warning
+      console.warn("Rate limit check failed, allowing request by default");
       return { 
         isLimited: false, 
         currentCount: 0, 
@@ -125,16 +103,30 @@ export const checkRateLimit = async (params: RateLimitRequest): Promise<{
     const currentCount = data?.length || 0;
     
     // Log this current request
-    await supabase
-      .from('request_logs')
-      .insert({
-        user_id: userId,
-        endpoint,
-        created_at: now.toISOString()
-      });
+    try {
+      const ip = "client-side"; // We can't get the real IP client-side, this is just for tracking
+      
+      await supabase
+        .from('request_logs')
+        .insert({
+          user_id: userId,
+          email: email,
+          ip_address: ip,
+          endpoint,
+          created_at: now.toISOString()
+        });
+    } catch (insertError) {
+      console.error("Error logging request:", insertError);
+    }
       
     const isLimited = currentCount >= maxRequests;
-    */
+    
+    return {
+      isLimited,
+      currentCount,
+      maxRequests,
+      resetTime
+    };
   } catch (error) {
     console.error("Error in rate limit check:", error);
     // On error, allow the request
@@ -150,10 +142,6 @@ export const checkRateLimit = async (params: RateLimitRequest): Promise<{
 /**
  * Client-side rate limiting function for sensitive actions
  * Uses localStorage to track requests
- * @param action Unique identifier for the action being rate limited
- * @param maxAttempts Maximum number of attempts allowed
- * @param windowMs Time window in milliseconds
- * @returns Whether the action should be allowed or blocked
  */
 export const clientRateLimit = (
   action: string,

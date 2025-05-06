@@ -2,32 +2,35 @@
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
-import { logSecurityEvent } from "@/services/securityLoggingService";
+import { setSecurityQuestion } from "@/services/securityQuestionService";
+
+interface SignupData {
+  email: string;
+  password: string;
+  securityQuestionId?: string;
+  securityAnswer?: string;
+}
 
 export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   /**
    * Handles user signup with email and password
    */
-  const signup = async (email: string, password: string, recaptchaToken?: string): Promise<boolean> => {
+  const signup = async (
+    email: string, 
+    password: string, 
+    securityQuestionId?: string, 
+    securityAnswer?: string
+  ): Promise<boolean> => {
     console.log("Signup attempt started for:", email);
     
     try {
-      // Validate the reCAPTCHA token if provided
-      if (recaptchaToken) {
-        console.log("ReCAPTCHA token provided:", recaptchaToken.substring(0, 10) + "...");
-      } else {
-        console.log("No reCAPTCHA token provided - continuing without verification");
-      }
-      
       // First, attempt to create the account
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
           // Ensure we're redirecting to the right place
-          emailRedirectTo: window.location.origin + '/onboarding',
-          // Set the captchaToken if provided
-          captchaToken: recaptchaToken
+          emailRedirectTo: window.location.origin + '/onboarding'
         }
       });
       
@@ -47,24 +50,25 @@ export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User 
 
       console.log("Signup successful for:", email, "User ID:", data.user.id);
       
-      // Log account creation
-      await logSecurityEvent({
-        userId: data.user.id,
-        eventType: 'account_created',
-        details: { email }
-      });
-      
       // Explicitly create profile with onboarded = false
       if (data.user) {
         try {
           console.log("Creating profile for new user:", data.user.id);
+          
+          const profileData: any = {
+            id: data.user.id,
+            onboarded: false,
+            subscription_tier: 'free'
+          };
+          
+          // Add security question if provided
+          if (securityQuestionId && securityAnswer) {
+            await setSecurityQuestion(data.user.id, securityQuestionId, securityAnswer);
+          }
+          
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert({
-              id: data.user.id,
-              onboarded: false,
-              subscription_tier: 'free'
-            });
+            .insert(profileData);
           
           if (profileError) {
             console.error("Error creating profile:", profileError);

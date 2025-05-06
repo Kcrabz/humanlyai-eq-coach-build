@@ -91,6 +91,8 @@ export type Database = {
           id: string
           name: string | null
           onboarded: boolean | null
+          security_answer: string | null
+          security_question_id: string | null
           subscription_tier: string | null
           updated_at: string | null
         }
@@ -103,6 +105,8 @@ export type Database = {
           id: string
           name?: string | null
           onboarded?: boolean | null
+          security_answer?: string | null
+          security_question_id?: string | null
           subscription_tier?: string | null
           updated_at?: string | null
         }
@@ -115,8 +119,63 @@ export type Database = {
           id?: string
           name?: string | null
           onboarded?: boolean | null
+          security_answer?: string | null
+          security_question_id?: string | null
           subscription_tier?: string | null
           updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_security_question_id_fkey"
+            columns: ["security_question_id"]
+            isOneToOne: false
+            referencedRelation: "security_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_logs: {
+        Row: {
+          created_at: string
+          email: string | null
+          endpoint: string
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          endpoint: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          endpoint?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_questions: {
+        Row: {
+          created_at: string
+          id: string
+          question: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question?: string
         }
         Relationships: []
       }

@@ -8,7 +8,7 @@ import { AlertCircle, Clock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { AuthError } from "./AuthError";
 import { AuthSubmitButton } from "./AuthSubmitButton";
-import { clientRateLimit } from "@/utils/rateLimitUtils";
+import { clientRateLimit, checkRateLimit } from "@/utils/rateLimitUtils";
 
 export function LoginForm() {
   const [email, setEmail] = useState("");
@@ -76,7 +76,7 @@ export function LoginForm() {
       return;
     }
     
-    // Check rate limiting
+    // Check client-side rate limiting
     const rateLimit = clientRateLimit('login_attempt', 5, 60000); // 5 attempts per minute
     
     if (rateLimit.isLimited) {
@@ -96,6 +96,24 @@ export function LoginForm() {
     console.log(`Starting login process for: ${email}`);
     
     try {
+      // Check server-side rate limiting
+      const serverRateLimit = await checkRateLimit({
+        email,
+        endpoint: 'login',
+        period: 'minute',
+        maxRequests: 5 // 5 login attempts per minute
+      });
+      
+      if (serverRateLimit.isLimited) {
+        setErrorMessage(`Too many login attempts from this email. Please try again later.`);
+        setRateLimitInfo({
+          isLimited: true,
+          attemptsRemaining: 0,
+          resetTimeMs: serverRateLimit.resetTime.getTime()
+        });
+        return;
+      }
+      
       const success = await login(email, password);
       console.log(`Login result:`, { success });
       
