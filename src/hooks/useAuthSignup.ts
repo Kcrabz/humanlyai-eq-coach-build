@@ -7,17 +7,26 @@ export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User 
   /**
    * Handles user signup with email and password
    */
-  const signup = async (email: string, password: string): Promise<boolean> => {
+  const signup = async (email: string, password: string, recaptchaToken?: string): Promise<boolean> => {
     console.log("Signup attempt started for:", email);
     
     try {
+      // Validate the reCAPTCHA token if provided
+      if (recaptchaToken) {
+        console.log("ReCAPTCHA token provided:", recaptchaToken.substring(0, 10) + "...");
+      } else {
+        console.log("No reCAPTCHA token provided - continuing without verification");
+      }
+      
       // First, attempt to create the account
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
           // Ensure we're redirecting to the right place
-          emailRedirectTo: window.location.origin + '/onboarding'
+          emailRedirectTo: window.location.origin + '/onboarding',
+          // Set the captchaToken if provided
+          captchaToken: recaptchaToken
         }
       });
       
@@ -62,40 +71,17 @@ export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User 
         }
       }
       
-      // With Supabase, signUp doesn't automatically log in the user in all cases
-      // Let's explicitly sign in after signup to ensure session consistency
+      // Check if email confirmation is required
       if (data.session === null) {
-        console.log("No session after signup. Explicitly signing in the user...");
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password
+        // Email confirmation might be required
+        toast.success("Account created! Please check your email to confirm your account", {
+          duration: 6000,
         });
         
-        if (signInError) {
-          console.error("Auto sign-in error after signup:", signInError.message);
-          toast.error("Account created, but automatic login failed", { 
-            description: "Please try logging in manually with your credentials." 
-          });
-          return false;
-        }
-        
-        console.log("Explicit sign-in successful after signup");
-        
-        // Update user state with session data
-        if (signInData.user) {
-          setUser({
-            id: signInData.user.id,
-            email: signInData.user.email!,
-            onboarded: false,
-            subscription_tier: 'free'
-          });
-          
-          toast.success("Account created and logged in successfully");
-          return true;
-        }
+        return true;
       } else {
-        // We have a session directly from signup
-        console.log("User automatically signed in after signup");
+        // No email confirmation required, proceed with login
+        console.log("No email confirmation required, proceeding with login");
         
         setUser({
           id: data.user.id,
@@ -108,7 +94,6 @@ export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User 
         return true;
       }
       
-      return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       console.error("Unexpected signup error:", errorMessage);

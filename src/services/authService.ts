@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User } from "@/types";
@@ -76,4 +75,29 @@ export const getCurrentUser = async () => {
   }
   
   return data?.user;
+};
+
+/**
+ * Validates if an email domain is allowed for signup
+ */
+export const validateEmailDomain = (email: string): boolean => {
+  const domain = email.split('@')[1]?.toLowerCase();
+  
+  if (!domain) return false;
+  
+  // List of commonly used disposable email domains
+  const blockedDomains = [
+    'tempmail.com',
+    'throwawaymail.com',
+    'mailinator.com',
+    'guerrillamail.com',
+    'yopmail.com',
+    'fakeinbox.com',
+    '10minutemail.com',
+    'dispostable.com',
+    'tempinbox.com',
+    'trashmail.com'
+  ];
+  
+  return !blockedDomains.includes(domain);
 };
