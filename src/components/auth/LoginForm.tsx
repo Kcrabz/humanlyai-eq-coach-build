@@ -1,6 +1,8 @@
 
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { useLoginForm } from "@/hooks/useLoginForm";
+import { useAuth } from "@/context/AuthContext";
 import { AuthError } from "./AuthError";
 import { AuthSubmitButton } from "./AuthSubmitButton";
 import { RateLimitWarning } from "./rate-limit/RateLimitWarning";
@@ -17,6 +19,18 @@ export function LoginForm() {
     handlePasswordChange,
     handleSubmit
   } = useLoginForm();
+  
+  const { authEvent, user } = useAuth();
+  
+  // Debug authentication process
+  useEffect(() => {
+    console.log("LoginForm: Auth state updated", { 
+      authEvent, 
+      hasUser: !!user,
+      userOnboarded: user?.onboarded,
+      timestamp: new Date().toISOString()
+    });
+  }, [authEvent, user]);
   
   return (
     <div className="w-full max-w-md space-y-6">

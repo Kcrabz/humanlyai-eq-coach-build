@@ -15,6 +15,7 @@ export interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   isAuthenticated?: boolean;
+  authEvent?: string | null;
   
   // Re-exported from useAuthActions
   login: (email: string, password: string) => Promise<any>;
@@ -43,7 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<string | null>(null);
   
   // Auth session
-  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading } = useAuthSession();
+  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading, authEvent } = useAuthSession();
   
   // Profile state with unified loading
   const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading);
@@ -56,7 +57,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log("AuthContext loading state updated:", { 
       isSessionLoading, 
       user: user?.id,
-      hasSession: !!session
+      hasSession: !!session,
+      authEvent
     });
     
     // Only mark as loaded when session loading is complete
@@ -64,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Auth state fully loaded, setting isLoading to false");
       setIsLoading(false);
     }
-  }, [isSessionLoading, user, session]);
+  }, [isSessionLoading, user, session, authEvent]);
   
   // Auth core for login/logout
   const authCore = useAuthCore(setUser);
@@ -119,6 +121,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     error,
     isAuthenticated,
+    authEvent,
     login: authCore.login,
     logout: authLogout,
     signup,
@@ -136,7 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user, isLoading, error, isAuthenticated, authCore.login, authLogout, 
     signup, authCore.resetPassword, updateProfile, forceUpdateProfile, setName, 
     setArchetype, setCoachingMode, setOnboarded, setUser, getUserSubscription, 
-    userHasArchetype
+    userHasArchetype, authEvent
   ]);
 
   return (

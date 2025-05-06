@@ -1,14 +1,29 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Hook for managing authentication session state with improved initialization
+ * Hook for managing authentication session state with improved initialization and sign-in handling
  */
 export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authEvent, setAuthEvent] = useState<string | null>(null);
+
+  // Handle explicit session updates after authentication events
+  const updateSessionAfterEvent = useCallback(async (event: string) => {
+    if (event === 'SIGNED_IN') {
+      console.log("User signed in, updating session and state immediately");
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      setAuthEvent('SIGN_IN_COMPLETE');
+    } else if (event === 'SIGNED_OUT') {
+      console.log("User signed out, clearing session");
+      setSession(null);
+      setAuthEvent('SIGN_OUT_COMPLETE');
+    }
+  }, []);
 
   useEffect(() => {
     console.log("Setting up auth session listener");
@@ -17,14 +32,17 @@ export const useAuthSession = () => {
     
     // Set up the auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
+      async (event, newSession) => {
         console.log("Auth state changed:", event, newSession?.user?.id);
+        
         if (isMounted) {
+          // Update the session state
           setSession(newSession);
+          setAuthEvent(event);
           
-          // For login events, we want to force an immediate session update
-          if (event === 'SIGNED_IN') {
-            console.log("User signed in, updating session immediately");
+          // For critical events, force an immediate session check and state update
+          if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+            updateSessionAfterEvent(event);
           }
         }
       }
@@ -49,7 +67,7 @@ export const useAuthSession = () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [updateSessionAfterEvent]);
 
-  return { session, isLoading, setIsLoading };
+  return { session, isLoading, setIsLoading, authEvent };
 };

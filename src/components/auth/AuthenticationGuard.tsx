@@ -8,21 +8,34 @@ import { isOnAuthPage, isOnOnboardingPage } from "@/utils/navigationUtils";
  * Global authentication guard component that handles all redirects based on auth state
  */
 export const AuthenticationGuard = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, authEvent } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
 
+  // Debug logging for session state
+  useEffect(() => {
+    console.log("AuthGuard: Auth state changed", { 
+      isAuthenticated: !!user, 
+      pathname,
+      userOnboarded: user?.onboarded,
+      authEvent,
+      timestamp: new Date().toISOString()
+    });
+  }, [user, pathname, authEvent]);
+
+  // Handle redirects based on authentication status
   useEffect(() => {
     if (isLoading) {
       console.log("AuthGuard: Auth state is still loading, waiting...");
       return;
     }
 
-    console.log("AuthGuard: Authentication check running", { 
+    console.log("AuthGuard: Running redirection check", { 
       isAuthenticated: !!user, 
       pathname,
       userOnboarded: user?.onboarded,
+      authEvent,
       timestamp: new Date().toISOString()
     });
 
@@ -51,7 +64,7 @@ export const AuthenticationGuard = () => {
       console.log("AuthGuard: User is not authenticated on protected route, redirecting to login");
       navigate("/login", { replace: true });
     }
-  }, [user, isLoading, pathname, navigate]);
+  }, [user, isLoading, pathname, navigate, authEvent]);
 
   // This component doesn't render anything, just handles redirects
   return null;

@@ -1,13 +1,41 @@
 
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
 
 const LoginPage = () => {
-  const { isLoading } = useAuth();
+  const { isLoading, user, authEvent } = useAuth();
+  const navigate = useNavigate();
   
-  // We don't need explicit redirection in this component anymore
-  // The AuthenticationGuard will handle all redirects
+  // Handle direct redirection from the login page if user is already authenticated
+  useEffect(() => {
+    if (isLoading) {
+      console.log("LoginPage: Auth state still loading");
+      return;
+    }
+    
+    console.log("LoginPage: Auth state check", { 
+      hasUser: !!user, 
+      userOnboarded: user?.onboarded, 
+      authEvent,
+      timestamp: new Date().toISOString()
+    });
+    
+    // If user is authenticated, redirect appropriately
+    if (user) {
+      console.log("LoginPage: User is already authenticated, redirecting");
+      
+      if (!user.onboarded) {
+        console.log("LoginPage: Redirecting to onboarding");
+        navigate("/onboarding", { replace: true });
+      } else {
+        console.log("LoginPage: Redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [user, isLoading, navigate, authEvent]);
   
   return (
     <PageLayout>
