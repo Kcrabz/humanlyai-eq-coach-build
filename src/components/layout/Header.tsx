@@ -12,12 +12,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
+import { Share2 } from "lucide-react";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { isAdmin } = useAdminCheck();
   const location = useLocation();
   const isOnChatPage = location.pathname === "/chat";
   const isOnProgressPage = location.pathname === "/progress";
+
+  console.log("Header render - isAdmin:", isAdmin, "user:", user?.email);
 
   return (
     <header className="enhanced-header py-4 px-4 sm:px-6 sticky top-0 z-50 bg-white shadow-md border-b border-gray-200 header-fade-in">
@@ -93,6 +98,22 @@ export function Header() {
                   <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
                     <Link to="/subscription">Subscription</Link>
                   </DropdownMenuItem>
+                  
+                  {/* Admin link - only visible for admin users */}
+                  {isAdmin && (
+                    <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
+                      <Link to="/admin">Admin Dashboard</Link>
+                    </DropdownMenuItem>
+                  )}
+
+                  {/* Refer a Friend link */}
+                  <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
+                    <Link to="/refer" className="flex items-center gap-2">
+                      <Share2 className="h-4 w-4" />
+                      <span>Refer a Friend</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="rounded-md text-red-500 hover:text-red-600 transition-colors hover:bg-red-50 cursor-pointer">
                     Log out

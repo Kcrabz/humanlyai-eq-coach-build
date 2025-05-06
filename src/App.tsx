@@ -24,6 +24,7 @@ import AdminPage from './pages/AdminPage';
 import NotFound from './pages/NotFound';
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
+import ReferPage from './pages/ReferPage';
 
 // Import components
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -109,6 +110,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <PricingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/refer"
+            element={
+              <ProtectedRoute>
+                <ReferPage />
               </ProtectedRoute>
             }
           />

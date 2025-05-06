@@ -10,13 +10,21 @@ export const useAdminCheck = () => {
 
   useEffect(() => {
     const checkIsAdmin = async () => {
+      console.log("useAdminCheck - Starting admin check:", {
+        isAuthenticated,
+        user: user?.email,
+        userId: user?.id
+      });
+      
       if (!isAuthenticated || !user) {
+        console.log("useAdminCheck - User not authenticated or missing");
         setIsAdmin(false);
         setIsLoading(false);
         return;
       }
 
       try {
+        console.log("useAdminCheck - Calling is_admin RPC function");
         // Call the is_admin database function
         const { data, error } = await supabase.rpc('is_admin');
         
@@ -24,6 +32,7 @@ export const useAdminCheck = () => {
           console.error("Error checking admin status:", error);
           setIsAdmin(false);
         } else {
+          console.log("useAdminCheck - is_admin result:", data);
           setIsAdmin(data || false);
         }
       } catch (error) {
@@ -34,7 +43,11 @@ export const useAdminCheck = () => {
       }
     };
 
-    checkIsAdmin();
+    if (isAuthenticated) {
+      checkIsAdmin();
+    } else {
+      setIsLoading(false);
+    }
   }, [user, isAuthenticated]);
 
   return { isAdmin, isLoading };
