@@ -44,14 +44,49 @@ export const UserManagement = ({ initialFilter, onResetFilter }: UserManagementP
   const handleExportCsv = async () => {
     try {
       setExportLoading(true);
+      console.log("Starting CSV export...");
       
-      const { data, error } = await supabase.functions.invoke('admin-export-users-csv');
+      // Get current auth session to include in the request
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Error getting auth session:", sessionError);
+        toast.error("Authentication error", { description: "Please try logging in again" });
+        return;
+      }
+      
+      if (!sessionData.session) {
+        console.error("No active session found");
+        toast.error("Authentication error", { description: "Please log in again" });
+        return;
+      }
+      
+      console.log("Got authenticated session, calling export function...");
+      
+      // Call the edge function with proper authentication
+      const { data, error } = await supabase.functions.invoke('admin-export-users-csv', {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        }
+      });
       
       if (error) {
         console.error("Error exporting users:", error);
-        toast.error("Failed to export users", { description: error.message });
+        toast.error("Failed to export users", { 
+          description: error.message || "An unknown error occurred" 
+        });
         return;
       }
+      
+      if (!data) {
+        console.error("No data returned from export function");
+        toast.error("Failed to export users", { 
+          description: "No data returned from server" 
+        });
+        return;
+      }
+      
+      console.log("Export data received successfully, size:", data.length);
       
       // Create a blob from the CSV data
       const blob = new Blob([data], { type: 'text/csv' });

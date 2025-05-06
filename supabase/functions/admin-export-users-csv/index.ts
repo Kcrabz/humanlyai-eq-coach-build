@@ -13,6 +13,8 @@ Deno.serve(async (req) => {
   }
   
   try {
+    console.log("CSV export function called");
+    
     // Create Supabase client with admin privileges
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
@@ -25,13 +27,25 @@ Deno.serve(async (req) => {
       );
     }
     
+    // Get authorization header from the request
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      console.error("No authorization header provided");
+      return new Response(
+        JSON.stringify({ error: 'Missing authorization header' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    console.log("Creating admin client with service role");
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       global: {
-        headers: { Authorization: req.headers.get('Authorization') || '' },
+        headers: { Authorization: authHeader },
       },
     });
     
     // Verify the request is from an admin user
+    console.log("Verifying user authentication");
     const {
       data: { user },
       error: authError,
@@ -40,21 +54,32 @@ Deno.serve(async (req) => {
     if (authError || !user) {
       console.error("Authentication error:", authError);
       return new Response(
-        JSON.stringify({ error: 'Unauthorized' }),
+        JSON.stringify({ error: 'Unauthorized', details: authError?.message }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
     // Check if the user has admin access using the is_admin function
+    console.log("Checking admin privileges for user:", user.email);
     const { data: isAdmin, error: adminCheckError } = await supabaseAdmin.rpc('is_admin');
     
-    if (adminCheckError || !isAdmin) {
+    if (adminCheckError) {
       console.error("Admin check error:", adminCheckError);
+      return new Response(
+        JSON.stringify({ error: 'Error checking admin status', details: adminCheckError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    if (!isAdmin) {
+      console.error("User is not an admin:", user.email);
       return new Response(
         JSON.stringify({ error: 'Forbidden: Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    console.log("User is admin, proceeding with data gathering");
     
     // Get all users from auth.users - this requires admin privileges
     const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers();
@@ -62,10 +87,12 @@ Deno.serve(async (req) => {
     if (authUsersError) {
       console.error("Error fetching users:", authUsersError);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch users' }),
+        JSON.stringify({ error: 'Failed to fetch users', details: authUsersError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    console.log(`Found ${authUsers.users.length} users`);
     
     // Get all profiles from profiles table
     const { data: profiles, error: profilesError } = await supabaseAdmin
@@ -75,10 +102,12 @@ Deno.serve(async (req) => {
     if (profilesError) {
       console.error("Error fetching profiles:", profilesError);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch user profiles' }),
+        JSON.stringify({ error: 'Failed to fetch user profiles', details: profilesError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+    
+    console.log(`Found ${profiles?.length || 0} profiles`);
     
     // Get usage data from usage_logs table, aggregated by user
     const { data: usageLogs, error: usageError } = await supabaseAdmin
@@ -88,13 +117,15 @@ Deno.serve(async (req) => {
     if (usageError) {
       console.error("Error fetching usage logs:", usageError);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch usage data' }),
+        JSON.stringify({ error: 'Failed to fetch usage data', details: usageError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
+    console.log(`Found ${usageLogs?.length || 0} usage logs`);
+    
     // Calculate total token usage per user
-    const userUsage = usageLogs.reduce((acc, log) => {
+    const userUsage = (usageLogs || []).reduce((acc, log) => {
       if (!acc[log.user_id]) {
         acc[log.user_id] = 0;
       }
@@ -104,7 +135,7 @@ Deno.serve(async (req) => {
     
     // Combine the data
     const combinedData = authUsers.users.map(authUser => {
-      const profile = profiles.find(p => p.id === authUser.id) || {};
+      const profile = profiles?.find(p => p.id === authUser.id) || {};
       const totalTokens = userUsage[authUser.id] || 0;
       
       return {
@@ -119,6 +150,8 @@ Deno.serve(async (req) => {
         total_tokens_used: totalTokens
       };
     });
+    
+    console.log("Combined data prepared, generating CSV");
     
     // Convert to CSV
     const headers = [
@@ -146,6 +179,8 @@ Deno.serve(async (req) => {
       ].join(','))
     ].join('\n');
     
+    console.log("CSV generated successfully, returning response");
+    
     // Return the CSV file
     return new Response(csv, {
       status: 200,
@@ -160,7 +195,7 @@ Deno.serve(async (req) => {
     console.error("Unexpected error:", error);
     
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { 
         status: 500, 
         headers: { "Content-Type": "application/json", ...corsHeaders } 
