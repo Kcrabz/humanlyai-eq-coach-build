@@ -13,9 +13,18 @@ const HeroSection = ({
   const navigate = useNavigate();
   const [isLogoVisible, setIsLogoVisible] = useState(false);
   
-  // Create an array of words for the subtitle
-  const subtitleWords = "Meet Kai, the AI Coach for the Human in You.".split(" ");
-  const [visibleWords, setVisibleWords] = useState<boolean[]>(Array(subtitleWords.length).fill(false));
+  // We'll work with individual characters instead of words
+  const subtitle = "Meet Kai, the AI Coach for the Human in You.";
+  const subtitleParts = [
+    // Group 1: "Meet Kai"
+    subtitle.slice(0, 8).split(""),
+    // Group 2: ", the AI Coach for the Human in You."
+    subtitle.slice(8).split("")
+  ];
+  
+  const [visibleLetters, setVisibleLetters] = useState<boolean[][]>(
+    subtitleParts.map(part => Array(part.length).fill(false))
+  );
   
   useEffect(() => {
     // Set a small delay before triggering the animation for the logo
@@ -23,31 +32,41 @@ const HeroSection = ({
       setIsLogoVisible(true);
     }, 200);
     
-    // Create staggered animations for each word
-    subtitleWords.forEach((_, index) => {
-      let delay = 400;
-      
-      // Add extra pause after "Meet Kai"
-      if (index <= 1) {
-        delay += index * 100; // Normal timing for first two words
-      } else if (index === 2) {
-        delay += 200 + 400; // Add a 400ms pause after "Meet Kai"
-      } else {
-        delay += 200 + 400 + ((index - 2) * 100); // Continue normal timing after the pause
-      }
-      
-      const wordTimer = setTimeout(() => {
-        setVisibleWords(prev => {
+    // First animate "Meet Kai" letters
+    subtitleParts[0].forEach((_, index) => {
+      const letterTimer = setTimeout(() => {
+        setVisibleLetters(prev => {
           const updated = [...prev];
-          updated[index] = true;
+          updated[0] = [...updated[0]];
+          updated[0][index] = true;
           return updated;
         });
-      }, delay);
+      }, 600 + (index * 50)); // 50ms stagger between letters
       
-      return () => clearTimeout(wordTimer);
+      return () => clearTimeout(letterTimer);
     });
     
-    return () => clearTimeout(logoTimer);
+    // Add a pause after "Meet Kai" before animating the rest
+    const pauseTimer = setTimeout(() => {
+      // Then animate the rest of the sentence
+      subtitleParts[1].forEach((_, index) => {
+        const letterTimer = setTimeout(() => {
+          setVisibleLetters(prev => {
+            const updated = [...prev];
+            updated[1] = [...updated[1]];
+            updated[1][index] = true;
+            return updated;
+          });
+        }, index * 30); // 30ms stagger between letters for the second part
+        
+        return () => clearTimeout(letterTimer);
+      });
+    }, 600 + (subtitleParts[0].length * 50) + 400); // Delay after the first group + 400ms pause
+    
+    return () => {
+      clearTimeout(logoTimer);
+      clearTimeout(pauseTimer);
+    };
   }, []);
   
   return <section className="py-20 md:py-28 relative overflow-hidden">
@@ -62,16 +81,31 @@ const HeroSection = ({
               HumanlyAI
             </span>
             <span className="block mt-2">
-              {subtitleWords.map((word, index) => (
+              {/* First part: "Meet Kai" */}
+              {subtitleParts[0].map((letter, letterIndex) => (
                 <span 
-                  key={index} 
-                  className={`inline-block transition-opacity duration-300 ease-in-out ${visibleWords[index] ? 'opacity-100' : 'opacity-0'}`}
+                  key={`p1-${letterIndex}`} 
+                  className="letter-reveal"
                   style={{ 
-                    transitionDelay: `${index * 0.1}s`,
-                    marginRight: index < subtitleWords.length - 1 ? '0.15em' : '0' 
+                    animationDelay: `${600 + (letterIndex * 50)}ms`,
+                    animationFillMode: 'forwards'
                   }}
                 >
-                  {word}
+                  {letter}
+                </span>
+              ))}
+              
+              {/* Second part: ", the AI Coach for the Human in You." */}
+              {subtitleParts[1].map((letter, letterIndex) => (
+                <span 
+                  key={`p2-${letterIndex}`} 
+                  className="letter-reveal"
+                  style={{ 
+                    animationDelay: `${600 + (subtitleParts[0].length * 50) + 400 + (letterIndex * 30)}ms`,
+                    animationFillMode: 'forwards'
+                  }}
+                >
+                  {letter}
                 </span>
               ))}
             </span>
