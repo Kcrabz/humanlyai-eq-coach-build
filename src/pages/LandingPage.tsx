@@ -8,11 +8,7 @@ import HowItWorksSection from "@/components/landing/HowItWorksSection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import CtaSection from "@/components/landing/CtaSection";
 
-interface LandingPageProps {
-  displayHeader?: () => void;
-}
-
-const LandingPage = ({ displayHeader }: LandingPageProps) => {
+const LandingPage = () => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
@@ -29,8 +25,8 @@ const LandingPage = ({ displayHeader }: LandingPageProps) => {
   };
 
   return (
-    <PageLayout fullWidth delayHeaderAnimation>
-      <HeroSection onGetStarted={handleGetStarted} displayHeader={displayHeader} />
+    <PageLayout fullWidth>
+      <HeroSection onGetStarted={handleGetStarted} />
       <ArchetypesSection onFindArchetype={handleGetStarted} />
       <HowItWorksSection onGetStarted={handleGetStarted} />
       <TestimonialsSection maxTestimonials={2} />

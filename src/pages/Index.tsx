@@ -4,11 +4,7 @@ import { useNavigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import { useAuth } from "@/context/AuthContext";
 
-interface IndexProps {
-  displayHeader?: () => void;
-}
-
-const Index = ({ displayHeader }: IndexProps) => {
+const Index = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -32,7 +28,7 @@ const Index = ({ displayHeader }: IndexProps) => {
     }
   }, [isAuthenticated, user, isLoading, navigate]);
 
-  return <LandingPage displayHeader={displayHeader} />;
+  return <LandingPage />;
 };
 
 export default Index;
