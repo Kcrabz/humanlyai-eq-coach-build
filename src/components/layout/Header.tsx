@@ -12,9 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { isAdmin } = useAdminCheck();
   const location = useLocation();
   const isOnChatPage = location.pathname === "/chat";
   const isOnProgressPage = location.pathname === "/progress";
@@ -93,6 +95,14 @@ export function Header() {
                   <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
                     <Link to="/subscription">Subscription</Link>
                   </DropdownMenuItem>
+                  
+                  {/* Admin link - only shown to admin users */}
+                  {isAdmin && (
+                    <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
+                      <Link to="/admin">Admin Portal</Link>
+                    </DropdownMenuItem>
+                  )}
+                  
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={logout} className="rounded-md text-red-500 hover:text-red-600 transition-colors hover:bg-red-50 cursor-pointer">
                     Log out
