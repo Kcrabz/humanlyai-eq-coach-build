@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useEffect } from "react";
+import { Share2 } from "lucide-react";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -105,6 +106,14 @@ export function Header() {
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
                     <Link to="/subscription">Subscription</Link>
+                  </DropdownMenuItem>
+                  
+                  {/* Refer a Friend link */}
+                  <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
+                    <Link to="/refer" className="flex items-center gap-2">
+                      <Share2 className="h-4 w-4" />
+                      <span>Refer a Friend</span>
+                    </Link>
                   </DropdownMenuItem>
                   
                   {/* Admin link - only shown to admin users */}
