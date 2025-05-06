@@ -11,6 +11,9 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
+  // Extract first name from the user's name
+  const firstName = user?.name ? user.name.split(" ")[0] : "Friend";
+  
   const handleReferral = () => {
     // Copy a referral link to clipboard
     const referralLink = `${window.location.origin}?ref=${user?.id}`;
@@ -25,10 +28,10 @@ const DashboardPage = () => {
       <div className="max-w-4xl mx-auto p-4 py-8">
         <div className="text-center mb-8 animate-fade-in">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
-            Welcome, {user?.name || "Friend"}!
+            Welcome back, {firstName}!
           </h1>
           <p className="text-muted-foreground mt-2">
-            Choose what you'd like to do today
+            What would you like to do now?
           </p>
         </div>
         
