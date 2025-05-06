@@ -12,17 +12,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
-import { Share2 } from "lucide-react";
+import { Share2, Shield } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useEffect } from "react";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
-  const { isAdmin } = useAdminCheck();
+  const { isAdmin, isLoading: isAdminCheckLoading } = useAdminCheck();
   const location = useLocation();
   const isOnChatPage = location.pathname === "/chat";
   const isOnProgressPage = location.pathname === "/progress";
 
-  console.log("Header render - isAdmin:", isAdmin, "user:", user?.email);
+  // Add logging to debug admin status on dashboard
+  useEffect(() => {
+    console.log("Header rendered on path:", location.pathname);
+    console.log("Header admin status:", { 
+      isAdmin, 
+      isAdminCheckLoading, 
+      user: user?.email, 
+      authenticated: isAuthenticated 
+    });
+  }, [isAdmin, isAdminCheckLoading, user, location.pathname, isAuthenticated]);
 
   return (
     <header className="enhanced-header py-4 px-4 sm:px-6 sticky top-0 z-50 bg-white shadow-md border-b border-gray-200 header-fade-in">
@@ -102,7 +112,10 @@ export function Header() {
                   {/* Admin link - only visible for admin users */}
                   {isAdmin && (
                     <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
-                      <Link to="/admin">Admin Dashboard</Link>
+                      <Link to="/admin" className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        <span>Admin Dashboard</span>
+                      </Link>
                     </DropdownMenuItem>
                   )}
 
