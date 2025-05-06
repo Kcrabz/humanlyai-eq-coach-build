@@ -26,8 +26,8 @@ export function CollapsibleMenu() {
   return (
     <div className="fixed top-0 right-0 z-50 w-full">
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-        {/* Always visible toggle button - uses 'X' icon when menu is open */}
-        <div className="absolute top-4 right-4 z-[100]">
+        {/* Repositioned toggle button - moved to the right and separated from avatar */}
+        <div className="absolute top-4 right-8 z-[100]">
           <CollapsibleTrigger asChild>
             <Button 
               variant="outline" 
