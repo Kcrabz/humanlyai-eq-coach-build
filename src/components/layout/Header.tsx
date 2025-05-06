@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
-import { Book, HelpCircle, Users } from "lucide-react";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -36,16 +35,13 @@ export function Header() {
           <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300">
             Pricing
           </Link>
-          <Link to="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300 flex items-center gap-1.5">
-            <Book className="h-4 w-4" />
+          <Link to="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300">
             Blog
           </Link>
-          <Link to="/help" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300 flex items-center gap-1.5">
-            <HelpCircle className="h-4 w-4" />
+          <Link to="/help" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300">
             Help
           </Link>
-          <Link to="/community" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300 flex items-center gap-1.5">
-            <Users className="h-4 w-4" />
+          <Link to="/community" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors hover:scale-105 duration-300">
             Community
           </Link>
         </nav>

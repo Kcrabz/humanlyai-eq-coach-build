@@ -2,7 +2,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageCircle, Settings, LayoutGrid, TrendingUp, Book, HelpCircle, Users } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 
 export function MainNavigationLinks() {
@@ -20,7 +20,6 @@ export function MainNavigationLinks() {
         asChild
       >
         <Link to="/">
-          <Home className="mr-2 h-4 w-4" />
           Home
         </Link>
       </Button>
@@ -32,7 +31,6 @@ export function MainNavigationLinks() {
         asChild
       >
         <Link to="/chat">
-          <MessageCircle className="mr-2 h-4 w-4" />
           Chat
         </Link>
       </Button>
@@ -44,7 +42,6 @@ export function MainNavigationLinks() {
         asChild
       >
         <Link to="/progress">
-          <TrendingUp className="mr-2 h-4 w-4" />
           Progress
         </Link>
       </Button>
@@ -56,7 +53,6 @@ export function MainNavigationLinks() {
         asChild
       >
         <Link to="/blog">
-          <Book className="mr-2 h-4 w-4" />
           Blog
         </Link>
       </Button>
@@ -68,7 +64,6 @@ export function MainNavigationLinks() {
         asChild
       >
         <Link to="/help">
-          <HelpCircle className="mr-2 h-4 w-4" />
           Help
         </Link>
       </Button>
@@ -80,7 +75,6 @@ export function MainNavigationLinks() {
         asChild
       >
         <Link to="/community">
-          <Users className="mr-2 h-4 w-4" />
           Community
         </Link>
       </Button>
@@ -92,7 +86,6 @@ export function MainNavigationLinks() {
         asChild
       >
         <Link to="/settings">
-          <Settings className="mr-2 h-4 w-4" />
           Settings
         </Link>
       </Button>
