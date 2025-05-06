@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { User, SubscriptionTier } from "@/types";
 import { toast } from "sonner";
 
-interface UserTableData extends User {
-  email?: string;
+// Fixed TypeScript error by making email required in UserTableData
+interface UserTableData extends Omit<User, 'email'> {
+  email: string;
   created_at?: string;
   updated_at?: string;
 }

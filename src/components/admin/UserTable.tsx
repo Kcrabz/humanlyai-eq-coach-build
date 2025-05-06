@@ -4,8 +4,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { UserOperations } from "./UserOperations";
 
-interface UserTableData extends User {
-  email?: string;
+// Fixed TypeScript error by making email required in UserTableData
+interface UserTableData extends Omit<User, 'email'> {
+  email: string;
   created_at?: string;
   updated_at?: string;
 }
