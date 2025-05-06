@@ -1,5 +1,5 @@
 
-import { ReactNode, useState, useEffect } from "react";
+import React, { ReactNode, useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
