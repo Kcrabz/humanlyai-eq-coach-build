@@ -21,7 +21,6 @@ import HelpPage from './pages/HelpPage';
 import BlogPage from './pages/BlogPage';
 import CommunityPage from './pages/CommunityPage';
 import AdminPage from './pages/AdminPage';
-import ReferPage from './pages/ReferPage';
 import NotFound from './pages/NotFound';
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import UpdatePasswordPage from "./pages/UpdatePasswordPage";
@@ -110,14 +109,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <PricingPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/refer"
-            element={
-              <ProtectedRoute>
-                <ReferPage />
               </ProtectedRoute>
             }
           />
