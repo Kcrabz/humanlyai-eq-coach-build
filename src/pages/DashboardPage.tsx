@@ -3,13 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, TrendingUp, Users } from "lucide-react";
+import { MessageCircle, TrendingUp, Users, Shield } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin, isLoading: isAdminCheckLoading } = useAdminCheck();
   
   // Extract first name from the user's name
   const firstName = user?.name ? user.name.split(" ")[0] : "Friend";
@@ -35,7 +37,7 @@ const DashboardPage = () => {
           </p>
         </div>
         
-        <div className="grid gap-6 md:grid-cols-3 animate-scale-fade-in">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-scale-fade-in">
           {/* Chat with Kai */}
           <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-indigo/10">
             <CardContent className="p-0">
@@ -89,6 +91,26 @@ const DashboardPage = () => {
               </Button>
             </CardContent>
           </Card>
+          
+          {/* Admin Portal - Only visible for admin users */}
+          {isAdmin && (
+            <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-gray-400/20">
+              <CardContent className="p-0">
+                <Button 
+                  variant="ghost" 
+                  className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
+                  onClick={() => navigate("/admin")}
+                >
+                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                    <Shield className="w-8 h-8 text-gray-700" />
+                  </div>
+                  <div className="text-center w-full">
+                    <h2 className="text-xl font-semibold">Admin Portal</h2>
+                  </div>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </PageLayout>
