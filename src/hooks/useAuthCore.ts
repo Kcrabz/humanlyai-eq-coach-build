@@ -28,13 +28,13 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         setError(error.message);
         toast.error("Login failed", { description: error.message });
         
-        // Log failed login attempt - avoiding type recursion by using basic event details
+        // Log failed login attempt - using primitive types to avoid recursion
         if (data?.user?.id) {
           try {
             await logSecurityEvent({
               userId: data.user.id,
               eventType: 'login_failure',
-              details: { errorMessage: error.message }
+              details: { message: error.message } // Using string instead of object reference
             });
           } catch (logError) {
             console.error("Failed to log security event:", logError);
@@ -51,12 +51,12 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         return false;
       }
       
-      // Log successful login - avoiding type recursion by using basic event details
+      // Log successful login - using primitive types to avoid recursion
       try {
         await logSecurityEvent({
           userId: data.user.id,
           eventType: 'login_success',
-          details: { timestamp: new Date().toISOString() }
+          details: { time: new Date().toISOString() } // Using string primitive
         });
       } catch (logError) {
         console.error("Failed to log security event:", logError);
@@ -104,7 +104,7 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
           await logSecurityEvent({
             userId: data.id,
             eventType: 'password_reset_requested',
-            details: { email, timestamp: new Date().toISOString() }
+            details: { email: email, time: new Date().toISOString() } // Using string primitives
           });
         }
       } catch (logError) {
@@ -143,13 +143,13 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         // Update local state
         setUser((prevUser) => prevUser ? { ...prevUser, ...updates } : null);
         
-        // Log profile update with simplified details to avoid recursion
+        // Log profile update - using primitive types to avoid recursion
         try {
           await logSecurityEvent({
             userId: authUser.id,
             eventType: 'profile_updated',
             details: { 
-              updatedFields: Object.keys(updates),
+              fields: JSON.stringify(Object.keys(updates)), // Stringify to avoid reference
               timestamp: new Date().toISOString()
             }
           });
