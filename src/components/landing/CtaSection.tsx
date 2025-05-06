@@ -1,6 +1,5 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 
 interface CtaSectionProps {
   onGetStarted: () => void;
@@ -29,7 +28,6 @@ const CtaSection = ({ onGetStarted }: CtaSectionProps) => {
               onClick={onGetStarted}
             >
               Get Started Now
-              <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
             
             <Button 
