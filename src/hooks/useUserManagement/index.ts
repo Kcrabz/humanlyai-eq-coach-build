@@ -36,21 +36,20 @@ export const useUserManagement = (initialFilter?: { type: string; value: string 
     originalFetchUsers(onboardedFilter, chatFilter);
   }, [originalFetchUsers]);
 
-  // Apply filters only when activeFilter changes
+  // Apply filters only when activeFilter changes or on initial mount
   useEffect(() => {
-    // Skip the first render if no initialFilter
-    if (!initialFilter && !initialFetchDone.current) {
+    // This effect should only run once on mount or when activeFilter changes
+    if (!initialFetchDone.current) {
       initialFetchDone.current = true;
-      const onboardedFilter = "all";
-      const chatFilter = "all";
+      const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
+      const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
       fetchUsers(onboardedFilter, chatFilter);
       return;
     }
 
-    // Only re-fetch if activeFilter changes
-    if (activeFilter || initialFetchDone.current) {
-      const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
-      const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
+    if (activeFilter) {
+      const onboardedFilter = activeFilter.type === "onboarded" ? activeFilter.value : "all";
+      const chatFilter = activeFilter.type === "chat" ? activeFilter.value : "all";
       fetchUsers(onboardedFilter, chatFilter);
     }
   }, [activeFilter, fetchUsers]);
