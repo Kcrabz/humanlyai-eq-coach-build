@@ -9,4 +9,3 @@ verify_jwt = true
 
 [functions.detect-eq-breakthrough]
 verify_jwt = true
-

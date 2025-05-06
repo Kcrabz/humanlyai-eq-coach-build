@@ -1,11 +1,9 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.8";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+import { corsHeaders } from "./cors.ts";
+import { verifyAdmin } from "./auth.ts";
+import { getUsersData } from "./data.ts";
+import { convertToCsv } from "./csv.ts";
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -42,7 +40,7 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Create Supabase client with admin privileges
+    // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
@@ -64,6 +62,7 @@ Deno.serve(async (req) => {
       );
     }
     
+    // Create admin client
     console.log("Creating admin client with service role");
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -71,165 +70,34 @@ Deno.serve(async (req) => {
         persistSession: false
       },
       global: {
-        headers: { 
-          Authorization: authHeader 
-        },
+        headers: { Authorization: authHeader },
       },
     });
     
-    // Verify the request is from an admin user
-    console.log("Verifying user authentication");
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseAdmin.auth.getUser();
+    // Verify admin access
+    const { user, error: authError } = await verifyAdmin(supabaseAdmin);
     
     if (authError) {
-      console.error("Authentication error:", authError);
       return new Response(
-        JSON.stringify({ error: 'Authentication failed', details: authError.message }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: authError.message }),
+        { status: authError.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-    
-    if (!user) {
-      console.error("No user found in session");
-      return new Response(
-        JSON.stringify({ error: 'User not authenticated' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    // Check if the user has admin access using the is_admin function
-    console.log("Checking admin privileges for user:", user.email);
-    const { data: isAdmin, error: adminCheckError } = await supabaseAdmin.rpc('is_admin');
-    
-    if (adminCheckError) {
-      console.error("Admin check error:", adminCheckError);
-      return new Response(
-        JSON.stringify({ error: 'Error checking admin status', details: adminCheckError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    if (!isAdmin) {
-      console.error("User is not an admin:", user.email);
-      return new Response(
-        JSON.stringify({ error: 'Forbidden: Admin access required' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-    
-    console.log("User is admin, proceeding with data gathering");
     
     try {
-      // Get all users from auth.users - this requires admin privileges
-      console.log("Attempting to fetch users with admin client");
+      // Get all user data
+      const { data, error } = await getUsersData(supabaseAdmin);
       
-      const { data: authUsers, error: authUsersError } = await supabaseAdmin.auth.admin.listUsers();
-      
-      if (authUsersError) {
-        console.error("Error fetching users:", authUsersError);
+      if (error) {
+        console.error("Error fetching data:", error);
         return new Response(
-          JSON.stringify({ error: 'Failed to fetch users', details: authUsersError.message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ error: error.message, details: error.details }),
+          { status: error.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
       
-      if (!authUsers || !authUsers.users || authUsers.users.length === 0) {
-        console.error("No users found or empty users array");
-        return new Response(
-          JSON.stringify({ error: 'No users found in the system' }),
-          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      console.log(`Found ${authUsers.users.length} users`);
-      
-      // Get all profiles from profiles table
-      const { data: profiles, error: profilesError } = await supabaseAdmin
-        .from('profiles')
-        .select('*');
-      
-      if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to fetch user profiles', details: profilesError.message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      console.log(`Found ${profiles?.length || 0} profiles`);
-      
-      // Get usage data from usage_logs table, aggregated by user
-      const { data: usageLogs, error: usageError } = await supabaseAdmin
-        .from('usage_logs')
-        .select('user_id, token_count');
-      
-      if (usageError) {
-        console.error("Error fetching usage logs:", usageError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to fetch usage data', details: usageError.message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      console.log(`Found ${usageLogs?.length || 0} usage logs`);
-      
-      // Calculate total token usage per user
-      const userUsage = (usageLogs || []).reduce((acc, log) => {
-        if (!acc[log.user_id]) {
-          acc[log.user_id] = 0;
-        }
-        acc[log.user_id] += log.token_count;
-        return acc;
-      }, {} as Record<string, number>);
-      
-      // Combine the data
-      const combinedData = authUsers.users.map(authUser => {
-        const profile = profiles?.find(p => p.id === authUser.id) || {};
-        const totalTokens = userUsage[authUser.id] || 0;
-        
-        return {
-          id: authUser.id,
-          email: authUser.email,
-          first_name: profile.first_name || '',
-          last_name: profile.last_name || '',
-          subscription_tier: profile.subscription_tier || 'free',
-          eq_archetype: profile.eq_archetype || 'Not set',
-          onboarded: profile.onboarded ? 'Yes' : 'No',
-          created_at: authUser.created_at,
-          total_tokens_used: totalTokens
-        };
-      });
-      
-      console.log("Combined data prepared, generating CSV");
-      
-      // Convert to CSV
-      const headers = [
-        'Email',
-        'First Name',
-        'Last Name',
-        'Subscription Tier',
-        'EQ Archetype',
-        'Onboarded',
-        'Created At',
-        'Total Tokens Used'
-      ];
-      
-      const csv = [
-        headers.join(','),
-        ...combinedData.map(user => [
-          `"${user.email || ''}"`,
-          `"${user.first_name || ''}"`,
-          `"${user.last_name || ''}"`,
-          `"${user.subscription_tier || ''}"`,
-          `"${user.eq_archetype || ''}"`,
-          `"${user.onboarded || ''}"`,
-          `"${user.created_at || ''}"`,
-          user.total_tokens_used
-        ].join(','))
-      ].join('\n');
+      // Convert data to CSV
+      const csv = convertToCsv(data);
       
       console.log("CSV generated successfully, returning response");
       
