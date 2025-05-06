@@ -14,9 +14,8 @@ export const useOnboardingActions = (
 ) => {
   const [processingStep, setProcessingStep] = useState<string | null>(null);
   const { 
-    user, 
-    setFirstName, 
-    setLastName,
+    user,
+    updateProfile,
     setArchetype: updateUserArchetype, 
     setCoachingMode: updateUserCoachingMode, 
     setOnboarded, 
@@ -32,8 +31,11 @@ export const useOnboardingActions = (
       // Save the step data based on which step it is
       if (step === "name" && state.firstName) {
         try {
-          await setFirstName(state.firstName);
-          await setLastName(state.lastName || '');
+          // Use updateProfile instead of separate setFirstName/setLastName
+          await updateProfile({
+            first_name: state.firstName,
+            last_name: state.lastName || ''
+          });
           toast.success("Name saved successfully");
         } catch (error) {
           toast.error("Failed to save your name");

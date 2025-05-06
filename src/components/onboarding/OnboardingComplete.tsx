@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
@@ -44,7 +43,8 @@ export function OnboardingComplete() {
           onboarded: true,
           eq_archetype: state.archetype || 'Not set',
           coaching_mode: state.coachingMode || 'normal',
-          name: state.name || 'Anonymous'
+          // Use firstName and lastName instead of name
+          name: state.firstName ? `${state.firstName} ${state.lastName || ''}`.trim() : 'Anonymous'
         });
         
         if (success) {
@@ -64,7 +64,7 @@ export function OnboardingComplete() {
     if (state.currentStep === "complete") {
       markComplete();
     }
-  }, [user?.id, navigate, state.currentStep, setUser, state.archetype, state.coachingMode, state.name, forceUpdateProfile]);
+  }, [user?.id, navigate, state.currentStep, setUser, state.archetype, state.coachingMode, state.firstName, state.lastName, forceUpdateProfile]);
   
   const handleComplete = async () => {
     try {

@@ -59,7 +59,8 @@ export const ArchetypeSelectorWithQuiz = () => {
       // Explicitly type the subscription_tier as SubscriptionTier to avoid type error
       const profileUpdates = {
         subscription_tier: 'free' as SubscriptionTier,
-        name: state.name || 'Anonymous',
+        // Use firstName instead of name
+        name: state.firstName ? `${state.firstName} ${state.lastName || ''}`.trim() : 'Anonymous',
         eq_archetype: 'Not set' as EQArchetype,
         coaching_mode: 'normal' as CoachingMode,
         onboarded: true
@@ -76,7 +77,8 @@ export const ArchetypeSelectorWithQuiz = () => {
             id: userId,
             email: sessionData.session?.user.email || '',
             subscription_tier: 'free' as SubscriptionTier,
-            name: state.name || 'Anonymous',
+            // Use firstName and lastName to construct the name
+            name: state.firstName ? `${state.firstName} ${state.lastName || ''}`.trim() : 'Anonymous',
             eq_archetype: 'Not set' as EQArchetype,
             coaching_mode: 'normal' as CoachingMode,
             onboarded: true
