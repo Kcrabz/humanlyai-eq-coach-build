@@ -28,7 +28,7 @@ export const useEQProgress = () => {
     setStats(prev => ({ ...prev, loading: true }));
     
     try {
-      // We need to use RPC calls for tables not defined in the generated types
+      // Call RPC functions using function invocation instead of direct table access
       const { data: breakthroughs, error: breakthroughsError } = await supabase
         .rpc('get_user_breakthroughs', { user_id_param: user.id, limit_param: 10 });
         
@@ -41,10 +41,10 @@ export const useEQProgress = () => {
       if (countError) throw countError;
       
       // Format data
-      const breakthroughsByCategory = {};
+      const breakthroughsByCategory: Record<string, number> = {};
       let totalBreakthroughs = 0;
       
-      // If we got data back as expected
+      // If we got data back and it's an array as expected
       if (Array.isArray(categoryCounts)) {
         categoryCounts.forEach(item => {
           const count = parseInt(item.count);

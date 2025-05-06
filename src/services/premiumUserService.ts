@@ -9,13 +9,13 @@ export const fetchUserStreakData = async (userId: string): Promise<UserStreakDat
     
     if (error) throw error;
     
-    if (data && data.length > 0) {
-      const streakData = data[0];
+    if (data) {
+      // Handle data as a single object since that's what our RPC returns
       return {
-        currentStreak: streakData.current_streak || 0,
-        longestStreak: streakData.longest_streak || 0,
-        lastActiveDate: streakData.last_active_date,
-        totalActiveDays: streakData.total_active_days || 0
+        currentStreak: data.current_streak || 0,
+        longestStreak: data.longest_streak || 0,
+        lastActiveDate: data.last_active_date,
+        totalActiveDays: data.total_active_days || 0
       };
     }
     
@@ -33,7 +33,7 @@ export const fetchUserAchievements = async (userId: string): Promise<UserAchieve
     
     if (error) throw error;
     
-    if (data && data.length > 0) {
+    if (data && Array.isArray(data)) {
       return data.map(item => ({
         id: item.achievement_id,
         title: item.title,
