@@ -98,6 +98,7 @@ export const fetchUserProfile = async (userId: string): Promise<User | null> => 
       email: user.email,
       name: profile.name || undefined,
       avatar_url: profile.avatar_url || undefined,
+      bio: profile.bio || undefined,  // Added this line to include the bio field
       eq_archetype: profile.eq_archetype as EQArchetype || undefined,
       coaching_mode: profile.coaching_mode as CoachingMode || undefined,
       subscription_tier: profile.subscription_tier as SubscriptionTier || 'free',
