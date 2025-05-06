@@ -23,7 +23,7 @@ const HowItWorksSection = ({ onGetStarted }: HowItWorksSectionProps) => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10">
             <div className="text-center flex flex-col items-center backdrop-blur-sm">
-              <div className="w-20 h-20 bg-gradient-to-br from-humanly-indigo to-humanly-indigo-light rounded-full flex items-center justify-center mx-auto mb-6 shadow-soft">
+              <div className="w-20 h-20 bg-gradient-to-br from-humanly-indigo to-humanly-indigo-light rounded-full flex items-center justify-center mx-auto mb-6 shadow-soft animate-subtle-bounce">
                 <span className="text-white text-xl font-bold">1</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">Discover Your Archetype</h3>
@@ -33,7 +33,7 @@ const HowItWorksSection = ({ onGetStarted }: HowItWorksSectionProps) => {
             </div>
             
             <div className="text-center flex flex-col items-center backdrop-blur-sm">
-              <div className="w-20 h-20 bg-gradient-to-br from-humanly-teal to-humanly-teal-light rounded-full flex items-center justify-center mx-auto mb-6 shadow-soft">
+              <div className="w-20 h-20 bg-gradient-to-br from-humanly-pastel-lavender to-humanly-indigo rounded-full flex items-center justify-center mx-auto mb-6 shadow-soft animate-subtle-bounce" style={{animationDelay: "0.3s"}}>
                 <span className="text-white text-xl font-bold">2</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">Chat With Your Coach</h3>
@@ -43,7 +43,7 @@ const HowItWorksSection = ({ onGetStarted }: HowItWorksSectionProps) => {
             </div>
             
             <div className="text-center flex flex-col items-center backdrop-blur-sm">
-              <div className="w-20 h-20 bg-gradient-to-br from-humanly-pastel-rose to-humanly-pastel-peach rounded-full flex items-center justify-center mx-auto mb-6 shadow-soft">
+              <div className="w-20 h-20 bg-gradient-to-br from-humanly-pastel-peach to-humanly-pastel-rose rounded-full flex items-center justify-center mx-auto mb-6 shadow-soft animate-subtle-bounce" style={{animationDelay: "0.6s"}}>
                 <span className="text-humanly-indigo-dark text-xl font-bold">3</span>
               </div>
               <h3 className="text-xl font-semibold mb-3">Track Your Growth</h3>

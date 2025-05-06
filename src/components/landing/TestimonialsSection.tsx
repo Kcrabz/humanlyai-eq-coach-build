@@ -37,6 +37,24 @@ const testimonials: Testimonial[] = [
     name: "David L.",
     archetype: "Observer",
     avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=100&h=100&auto=format&fit=crop"
+  },
+  {
+    quote: "Learning to regulate my emotions has made me a better leader. My team actually commented on how much calmer I am during stressful situations.",
+    name: "Emma J.",
+    archetype: "Regulator",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=100&h=100&auto=format&fit=crop"
+  },
+  {
+    quote: "The insights about my observation patterns have helped me become more present in conversations instead of just analyzing everything.",
+    name: "Thomas R.",
+    archetype: "Observer",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&h=100&auto=format&fit=crop"
+  },
+  {
+    quote: "I've been able to connect with my team on a much deeper level. The coaching has helped me understand different emotional styles.",
+    name: "Priya S.",
+    archetype: "Connector",
+    avatar: "https://images.unsplash.com/photo-1619946794135-5bc917a27793?q=80&w=100&h=100&auto=format&fit=crop"
   }
 ];
 
@@ -57,9 +75,9 @@ const TestimonialsSection: FC<TestimonialsSectionProps> = ({ maxTestimonials = 3
           </p>
         </div>
         
-        {/* For desktop - show side by side */}
-        <div className="hidden md:block max-w-5xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* For desktop - show grid of testimonials */}
+        <div className="hidden md:block max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayedTestimonials.map((testimonial, index) => (
               <TestimonialCard key={index} testimonial={testimonial} />
             ))}
@@ -81,6 +99,13 @@ const TestimonialsSection: FC<TestimonialsSectionProps> = ({ maxTestimonials = 3
               <CarouselNext className="static transform-none mx-2" />
             </div>
           </Carousel>
+        </div>
+        
+        {/* View more testimonials section */}
+        <div className="text-center mt-10">
+          <Button variant="outline" className="border-humanly-indigo/30 text-humanly-indigo hover:bg-humanly-indigo/5">
+            View More Stories
+          </Button>
         </div>
       </div>
     </section>

@@ -9,9 +9,10 @@ interface CtaSectionProps {
 const CtaSection = ({ onGetStarted }: CtaSectionProps) => {
   return (
     <section className="py-24 bg-gradient-to-r from-humanly-indigo to-humanly-indigo-light text-white relative overflow-hidden">
-      {/* Decorative blobs */}
-      <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full bg-white/5 blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-white/5 blur-3xl"></div>
+      {/* Decorative blobs with animation */}
+      <div className="absolute top-0 left-0 w-[300px] h-[300px] rounded-full bg-white/5 blur-3xl animate-float"></div>
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-white/5 blur-3xl animate-float" style={{animationDelay: "1s"}}></div>
+      <div className="absolute top-1/2 left-1/3 w-[200px] h-[200px] rounded-full bg-white/5 blur-3xl animate-float" style={{animationDelay: "1.5s"}}></div>
       
       <div className="container px-4 mx-auto text-center relative z-10">
         <div className="max-w-2xl mx-auto">
@@ -34,7 +35,7 @@ const CtaSection = ({ onGetStarted }: CtaSectionProps) => {
             <Button 
               size="lg" 
               variant="outline"
-              className="border-white text-white hover:bg-white/10"
+              className="border-white text-white hover:bg-white/10 transition-all duration-300"
             >
               View Pricing
             </Button>

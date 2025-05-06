@@ -20,16 +20,18 @@ const ArchetypesSection = ({ onFindArchetype }: ArchetypesSectionProps) => {
           </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {Object.values(ARCHETYPES).slice(0, 3).map((archetype, index) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 max-w-7xl mx-auto">
+          {Object.values(ARCHETYPES).map((archetype, index) => (
             <Card 
               key={archetype.type} 
-              className="zen-hover border-humanly-pastel-lavender/30 shadow-soft overflow-hidden"
+              className="zen-hover border-humanly-pastel-lavender/30 shadow-soft overflow-hidden h-full"
             >
               <div className={`h-2 w-full ${
                 index === 0 ? "bg-humanly-indigo" : 
                 index === 1 ? "bg-humanly-teal" : 
-                "bg-humanly-pastel-rose"
+                index === 2 ? "bg-humanly-pastel-rose" :
+                index === 3 ? "bg-humanly-pastel-peach" :
+                "bg-humanly-pastel-mint"
               }`}></div>
               <CardContent className="p-6">
                 <div className="text-3xl mb-4">{archetype.icon}</div>
