@@ -5,6 +5,8 @@ export interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  authEvent?: "SIGN_IN_COMPLETE" | "RESTORED_SESSION" | "SIGN_OUT_COMPLETE" | null;
+  profileLoaded?: boolean;
   login: (email: string, password: string) => Promise<any>;
   signup: (email: string, password: string) => Promise<any>;
   logout: () => void;
@@ -16,7 +18,7 @@ export interface AuthContextType {
   setUser: (updater: ((prevUser: User | null) => User | null) | User | null) => void;
   forceUpdateProfile: (updates: Record<string, any>) => Promise<boolean>;
   
-  // New premium features
+  // Premium features
   isPremiumMember: boolean;
   userStreakData: UserStreakData | null;
   userAchievements: UserAchievement[] | null;

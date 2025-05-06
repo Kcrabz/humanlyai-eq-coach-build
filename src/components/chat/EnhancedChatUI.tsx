@@ -1,4 +1,3 @@
-
 import { useState, FormEvent, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,11 +49,11 @@ export function EnhancedChatUI({
       setChatHistory(prev => [...prev, newAssistantMessage]);
       
       // For premium users, check if the user's message contains an EQ breakthrough
-      if (isPremiumMember) {
+      if (isPremiumMember && userMessageId) {
         // Find the user message that triggered this response
         const userMessage = chatHistory.find(msg => msg.id === userMessageId);
         if (userMessage) {
-          const hasBreakthrough = await checkForBreakthrough(userMessage.content, userMessage.id);
+          const hasBreakthrough = await checkForBreakthrough(userMessage.content, userMessageId);
           setBreakThroughDetected(hasBreakthrough);
         }
       }

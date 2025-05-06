@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          threshold: number | null
+          title: string
+          type: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description: string
+          icon: string
+          id?: string
+          threshold?: number | null
+          title: string
+          type: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          threshold?: number | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -77,6 +110,36 @@ export type Database = {
           id?: string
           role?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      eq_breakthroughs: {
+        Row: {
+          category: string
+          detected_at: string | null
+          id: string
+          insight: string
+          message: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          detected_at?: string | null
+          id?: string
+          insight: string
+          message: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          detected_at?: string | null
+          id?: string
+          insight?: string
+          message?: string
+          message_id?: string
           user_id?: string
         }
         Relationships: []
@@ -212,6 +275,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_achievements: {
+        Row: {
+          achieved: boolean
+          achieved_at: string | null
+          achievement_id: string
+          created_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          achieved?: boolean
+          achieved_at?: string | null
+          achievement_id: string
+          created_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          achieved?: boolean
+          achieved_at?: string | null
+          achievement_id?: string
+          created_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_api_keys: {
         Row: {
           created_at: string | null
@@ -231,6 +329,39 @@ export type Database = {
           created_at?: string | null
           id?: string
           openai_api_key?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          created_at: string | null
+          current_streak: number
+          id: string
+          last_active_date: string | null
+          longest_streak: number
+          total_active_days: number
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_active_date?: string | null
+          longest_streak?: number
+          total_active_days?: number
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number
+          id?: string
+          last_active_date?: string | null
+          longest_streak?: number
+          total_active_days?: number
           updated_at?: string | null
           user_id?: string
         }

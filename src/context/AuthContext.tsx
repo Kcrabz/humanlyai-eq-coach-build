@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -9,7 +8,7 @@ import { useProfileCore } from "@/hooks/useProfileCore";
 import { useProfileActions } from "@/hooks/useProfileActions";
 import { useProfileState } from "@/hooks/useProfileState";
 import { UserStreakData, UserAchievement, AuthContextType } from "@/types/auth";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchUserStreakData, fetchUserAchievements } from "@/services/premiumUserService";
 
 // Create the auth context with default values
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -71,55 +70,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchPremiumUserData = async () => {
       if (user?.id && isPremiumMember) {
         try {
-          // Fetch user streak data
-          const { data: streakData, error: streakError } = await supabase
-            .from('user_streaks')
-            .select('*')
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (streakError) throw streakError;
-          
+          // Fetch user streak data using our service function
+          const streakData = await fetchUserStreakData(user.id);
           if (streakData) {
-            setUserStreakData({
-              currentStreak: streakData.current_streak,
-              longestStreak: streakData.longest_streak,
-              lastActiveDate: streakData.last_active_date,
-              totalActiveDays: streakData.total_active_days
-            });
+            setUserStreakData(streakData);
           }
           
-          // Fetch user achievements
-          const { data: achievementData, error: achievementError } = await supabase
-            .from('user_achievements')
-            .select(`
-              id,
-              achievement_id,
-              achieved,
-              achieved_at,
-              achievements (
-                title,
-                description,
-                type,
-                icon
-              )
-            `)
-            .eq('user_id', user.id);
-          
-          if (achievementError) throw achievementError;
-          
-          if (achievementData && achievementData.length > 0) {
-            const formattedAchievements = achievementData.map(item => ({
-              id: item.achievement_id,
-              title: item.achievements.title,
-              description: item.achievements.description,
-              achieved: item.achieved,
-              achievedAt: item.achieved_at,
-              type: item.achievements.type,
-              icon: item.achievements.icon
-            }));
-            
-            setUserAchievements(formattedAchievements);
+          // Fetch user achievements using our service function
+          const achievementData = await fetchUserAchievements(user.id);
+          if (achievementData) {
+            setUserAchievements(achievementData);
           }
         } catch (error) {
           console.error("Error fetching premium user data:", error);
@@ -173,31 +133,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     isLoading,
     error,
-    isAuthenticated,
+    isAuthenticated: !!user,
     authEvent,
     profileLoaded,
     login: authCore.login,
     logout: authLogout,
     signup,
     resetPassword: authCore.resetPassword,
-    updateProfile,
-    forceUpdateProfile,
-    setName,
-    setArchetype,
-    setCoachingMode,
-    setOnboarded,
+    updateProfile: profileCore.updateProfile,
+    forceUpdateProfile: profileCore.forceUpdateProfile,
+    setName: profileActions.setName,
+    setArchetype: profileActions.setArchetype,
+    setCoachingMode: profileActions.setCoachingMode,
+    setOnboarded: profileActions.setOnboarded,
     setUser,
-    getUserSubscription,
-    userHasArchetype,
+    getUserSubscription: () => user?.subscription_tier || 'free',
+    userHasArchetype: !!user?.eq_archetype,
     // Premium member features
     isPremiumMember,
     userStreakData,
     userAchievements
   }), [
-    user, isLoading, error, isAuthenticated, authCore.login, authLogout, 
-    signup, authCore.resetPassword, updateProfile, forceUpdateProfile, setName, 
-    setArchetype, setCoachingMode, setOnboarded, setUser, getUserSubscription, 
-    userHasArchetype, authEvent, profileLoaded, isPremiumMember, userStreakData, userAchievements
+    user, isLoading, error, authCore.login, authLogout, 
+    signup, authCore.resetPassword, profileCore.updateProfile, profileCore.forceUpdateProfile,
+    profileActions.setName, profileActions.setArchetype, profileActions.setCoachingMode, 
+    profileActions.setOnboarded, setUser, authEvent, profileLoaded, 
+    isPremiumMember, userStreakData, userAchievements
   ]);
 
   return (

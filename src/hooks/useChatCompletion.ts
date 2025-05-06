@@ -1,92 +1,125 @@
 
-import { useState } from 'react';
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { ChatMessage } from "@/types";
+import { useState, useCallback } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { ChatMessage } from '@/types';
+import { useNavigate } from 'react-router-dom';
 
 interface UseChatCompletionOptions {
-  onSuccess?: (response: string) => void;
-  onError?: (error: string) => void;
+  onSuccess?: (response: string, userMessageId?: string) => void;
 }
 
-export function useChatCompletion(options?: UseChatCompletionOptions) {
+export function useChatCompletion({ onSuccess }: UseChatCompletionOptions = {}) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastChatHistory, setLastChatHistory] = useState<ChatMessage[]>([]);
+  const [lastUserMessageId, setLastUserMessageId] = useState<string | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // Error flags for specific error types
+  const [isQuotaError, setIsQuotaError] = useState(false);
+  const [isInvalidKeyError, setIsInvalidKeyError] = useState(false);
 
-  // Determine if there's a quota or API key error
-  const isQuotaError = error && 
-    (error.includes("quota") || 
-     error.includes("exceeded") || 
-     error.includes("limit") ||
-     error.includes("billing"));
+  const sendChatMessage = useCallback(async (messages: ChatMessage[], userMessageId?: string) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
 
-  const isInvalidKeyError = error &&
-    error.includes("Invalid API key");
-
-  const sendChatMessage = async (chatHistory: ChatMessage[]) => {
     setIsLoading(true);
     setError(null);
-    setLastChatHistory(chatHistory);
+    setIsQuotaError(false);
+    setIsInvalidKeyError(false);
     
+    // Store the user message ID for potential retry operations
+    if (userMessageId) {
+      setLastUserMessageId(userMessageId);
+    }
+
     try {
-      // Show loading toast
-      toast.loading("Processing your message...", { id: "chat-processing" });
+      // Mock AI response for demonstration
+      const mockResponses = [
+        "I understand how you're feeling. It sounds like you've had a challenging experience.",
+        "That's a great insight about your emotions. Have you considered how this pattern might affect other areas of your life?",
+        "I notice you're making progress in recognizing your emotional triggers. That's an important step in emotional intelligence.",
+        "Could you tell me more about how that situation made you feel? Understanding our emotional responses helps us grow."
+      ];
       
-      const { data, error } = await supabase.functions.invoke('chat-completion', {
-        body: {
-          messages: chatHistory,
-        }
-      });
-
-      // Dismiss loading toast
-      toast.dismiss("chat-processing");
-
-      if (error) {
-        console.error('Chat error:', error.message);
-        setError(error.message);
-        toast.error("Failed to get response", {
-          description: "There was a problem with the AI assistant. Please try again."
-        });
-        options?.onError?.(error.message);
-        return null;
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Pick a random response
+      const responseIndex = Math.floor(Math.random() * mockResponses.length);
+      const response = mockResponses[responseIndex];
+      
+      // Call onSuccess callback if provided, passing both response and original message ID
+      if (onSuccess) {
+        onSuccess(response, userMessageId);
       }
-
-      if (!data || !data.content) {
-        const errorMsg = "No response content received from the assistant";
-        setError(errorMsg);
-        toast.error("Empty response", {
-          description: "The AI assistant returned an empty response. Please try again."
-        });
-        options?.onError?.(errorMsg);
-        return null;
-      }
-
-      // Call success callback if provided
-      options?.onSuccess?.(data.content);
-      return data.content;
+      
+      return response;
     } catch (err: any) {
-      // Dismiss loading toast
-      toast.dismiss("chat-processing");
+      console.error("Chat completion error:", err);
       
-      console.error("Error in chat completion:", err);
-      setError(err.message || "An unexpected error occurred");
-      toast.error("Error", {
-        description: err.message || "Something went wrong. Please try again."
-      });
-      options?.onError?.(err.message || "An unexpected error occurred");
-      return null;
+      // Determine error type
+      const errorMessage = err.message || "Failed to get AI response";
+      
+      if (errorMessage.includes("quota") || errorMessage.includes("limit")) {
+        setIsQuotaError(true);
+      } else if (errorMessage.includes("invalid key") || errorMessage.includes("authentication")) {
+        setIsInvalidKeyError(true);
+      }
+      
+      setError(errorMessage);
+      throw err;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, navigate, onSuccess]);
 
-  const retry = async () => {
-    if (lastChatHistory.length > 0) {
-      return sendChatMessage(lastChatHistory);
+  const retry = useCallback(async () => {
+    if (!lastUserMessageId) {
+      setError("No previous message to retry");
+      return;
     }
-    return null;
-  };
+    
+    // Reset errors
+    setError(null);
+    setIsQuotaError(false);
+    setIsInvalidKeyError(false);
+    
+    // Get the last user message and retry
+    try {
+      setIsLoading(true);
+      
+      // Mock AI response for demonstration
+      const mockResponses = [
+        "Let me try again. I think what you're describing is a moment of emotional growth.",
+        "Upon reflection, it seems like you're developing greater self-awareness about your emotional patterns.",
+        "To elaborate on my previous response, these feelings you're experiencing are important signals.",
+        "I want to emphasize how significant this realization is for your emotional intelligence journey."
+      ];
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Pick a random response
+      const responseIndex = Math.floor(Math.random() * mockResponses.length);
+      const response = mockResponses[responseIndex];
+      
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess(response, lastUserMessageId);
+      }
+      
+      return response;
+    } catch (err: any) {
+      console.error("Retry error:", err);
+      setError(err.message || "Failed to retry");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [lastUserMessageId, onSuccess]);
 
   return {
     sendChatMessage,

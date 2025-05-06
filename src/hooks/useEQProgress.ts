@@ -28,22 +28,15 @@ export const useEQProgress = () => {
     setStats(prev => ({ ...prev, loading: true }));
     
     try {
-      // Get recent breakthroughs
+      // We need to use RPC calls for tables not defined in the generated types
       const { data: breakthroughs, error: breakthroughsError } = await supabase
-        .from('eq_breakthroughs')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('detected_at', { ascending: false })
-        .limit(10);
+        .rpc('get_user_breakthroughs', { user_id_param: user.id, limit_param: 10 });
         
       if (breakthroughsError) throw breakthroughsError;
       
       // Get category counts
       const { data: categoryCounts, error: countError } = await supabase
-        .from('eq_breakthroughs')
-        .select('category, count')
-        .eq('user_id', user.id)
-        .group_by('category');
+        .rpc('get_breakthrough_category_counts', { user_id_param: user.id });
         
       if (countError) throw countError;
       
@@ -51,21 +44,25 @@ export const useEQProgress = () => {
       const breakthroughsByCategory = {};
       let totalBreakthroughs = 0;
       
-      categoryCounts.forEach(item => {
-        const count = parseInt(item.count);
-        breakthroughsByCategory[item.category] = count;
-        totalBreakthroughs += count;
-      });
+      // If we got data back as expected
+      if (Array.isArray(categoryCounts)) {
+        categoryCounts.forEach(item => {
+          const count = parseInt(item.count);
+          breakthroughsByCategory[item.category] = count;
+          totalBreakthroughs += count;
+        });
+      }
       
       // Transform breakthroughs to match interface
-      const formattedBreakthroughs: EQBreakthrough[] = breakthroughs.map(item => ({
-        id: item.id,
-        userId: item.user_id,
-        message: item.message,
-        insight: item.insight,
-        detectedAt: item.detected_at,
-        category: item.category
-      }));
+      const formattedBreakthroughs: EQBreakthrough[] = Array.isArray(breakthroughs) ? 
+        breakthroughs.map(item => ({
+          id: item.id,
+          userId: item.user_id,
+          message: item.message,
+          insight: item.insight,
+          detectedAt: item.detected_at,
+          category: item.category
+        })) : [];
       
       setStats({
         totalBreakthroughs,
