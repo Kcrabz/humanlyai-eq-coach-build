@@ -133,7 +133,10 @@ export const getUserSecurityQuestion = async (email: string): Promise<SecurityQu
       return null;
     }
     
-    return questionData;
+    return {
+      id: questionData.id,
+      question: questionData.question
+    };
   } catch (error) {
     console.error("Unexpected error getting security question:", error);
     return null;

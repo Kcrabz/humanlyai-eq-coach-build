@@ -158,8 +158,8 @@ export function useSignupForm() {
         return;
       }
       
-      // Attempt to sign up the user
-      const success = await signup(email, password, securityQuestionId, securityAnswer);
+      // Attempt to sign up the user - fix the error by passing correct parameters
+      const success = await signup(email, password);
       console.log(`Signup result:`, { success });
       
       // Will be redirected by the auth state change listener if successful
