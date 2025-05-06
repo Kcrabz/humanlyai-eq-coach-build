@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isOnAuthPage, isOnOnboardingPage } from "@/utils/navigationUtils";
+import { toast } from "sonner";
 
 /**
  * Global authentication guard component that handles all redirects based on auth state
@@ -39,7 +40,27 @@ export const AuthenticationGuard = () => {
       timestamp: new Date().toISOString()
     });
 
-    // User is authenticated
+    // Handle after successful login
+    if (authEvent === "SIGNED_IN" || authEvent === "SIGN_IN_COMPLETE") {
+      console.log("AuthGuard: Auth event detected, forcing redirect");
+      
+      // Force redirect after login based on onboarded status
+      if (user) {
+        if (!user.onboarded) {
+          console.log("AuthGuard: User just logged in, redirecting to onboarding");
+          navigate("/onboarding", { replace: true });
+          toast.success("Welcome! Please complete onboarding to continue.");
+          return;
+        } else {
+          console.log("AuthGuard: User just logged in, redirecting to dashboard");
+          navigate("/dashboard", { replace: true });
+          toast.success(`Welcome back, ${user.name || 'Friend'}!`);
+          return;
+        }
+      }
+    }
+
+    // Standard auth checks
     if (user) {
       // If user is on an auth page (login/signup), redirect to appropriate page
       if (isOnAuthPage(pathname)) {

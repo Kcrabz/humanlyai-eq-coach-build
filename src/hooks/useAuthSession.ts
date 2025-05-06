@@ -15,9 +15,13 @@ export const useAuthSession = () => {
   const updateSessionAfterEvent = useCallback(async (event: string) => {
     if (event === 'SIGNED_IN') {
       console.log("User signed in, updating session and state immediately");
-      const { data } = await supabase.auth.getSession();
-      setSession(data.session);
-      setAuthEvent('SIGN_IN_COMPLETE');
+      try {
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        setAuthEvent('SIGN_IN_COMPLETE');
+      } catch (error) {
+        console.error("Error updating session after sign in:", error);
+      }
     } else if (event === 'SIGNED_OUT') {
       console.log("User signed out, clearing session");
       setSession(null);
@@ -54,6 +58,11 @@ export const useAuthSession = () => {
       if (isMounted) {
         setSession(existingSession);
         setIsLoading(false);
+        
+        // If we have an existing session, set a "RESTORED_SESSION" event
+        if (existingSession) {
+          setAuthEvent('RESTORED_SESSION');
+        }
       }
     }).catch(error => {
       console.error("Error getting session:", error);

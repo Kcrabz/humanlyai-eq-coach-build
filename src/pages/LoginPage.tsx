@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 const LoginPage = () => {
   const { isLoading, user, authEvent } = useAuth();
@@ -30,9 +31,11 @@ const LoginPage = () => {
       if (!user.onboarded) {
         console.log("LoginPage: Redirecting to onboarding");
         navigate("/onboarding", { replace: true });
+        toast.success("Welcome! Please complete onboarding to continue.");
       } else {
         console.log("LoginPage: Redirecting to dashboard");
         navigate("/dashboard", { replace: true });
+        toast.success(`Welcome back, ${user.name || 'Friend'}!`);
       }
     }
   }, [user, isLoading, navigate, authEvent]);

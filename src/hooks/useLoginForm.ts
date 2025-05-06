@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
+import { toast } from "sonner";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -14,8 +15,9 @@ export function useLoginForm() {
     resetTimeMs: number;
   } | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   
   // Timer for rate limit countdown
   useEffect(() => {
@@ -110,7 +112,10 @@ export function useLoginForm() {
       const success = await login(email, password);
       console.log(`Login result:`, { success });
       
-      if (!success) {
+      if (success) {
+        setLoginSuccess(true);
+        toast.success("Login successful!");
+      } else {
         // If login failed, update rate limit info
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);
@@ -139,6 +144,7 @@ export function useLoginForm() {
     errorMessage,
     rateLimitInfo,
     timeRemaining,
+    loginSuccess,
     handleEmailChange,
     handlePasswordChange,
     handleSubmit

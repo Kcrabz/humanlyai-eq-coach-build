@@ -7,6 +7,7 @@ import { AuthError } from "./AuthError";
 import { AuthSubmitButton } from "./AuthSubmitButton";
 import { RateLimitWarning } from "./rate-limit/RateLimitWarning";
 import { EmailPasswordFields } from "./login/EmailPasswordFields";
+import { useNavigate } from "react-router-dom";
 
 export function LoginForm() {
   const {
@@ -15,12 +16,14 @@ export function LoginForm() {
     isSubmitting,
     errorMessage,
     rateLimitInfo,
+    loginSuccess,
     handleEmailChange,
     handlePasswordChange,
     handleSubmit
   } = useLoginForm();
   
   const { authEvent, user } = useAuth();
+  const navigate = useNavigate();
   
   // Debug authentication process
   useEffect(() => {
@@ -30,7 +33,20 @@ export function LoginForm() {
       userOnboarded: user?.onboarded,
       timestamp: new Date().toISOString()
     });
-  }, [authEvent, user]);
+    
+    // Extra handling for successful login
+    if (user && (authEvent === 'SIGNED_IN' || authEvent === 'SIGN_IN_COMPLETE')) {
+      console.log("LoginForm: Login successful, redirecting user");
+      
+      if (!user.onboarded) {
+        console.log("LoginForm: User not onboarded, redirecting to onboarding");
+        navigate("/onboarding", { replace: true });
+      } else {
+        console.log("LoginForm: User onboarded, redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [authEvent, user, navigate]);
   
   return (
     <div className="w-full max-w-md space-y-6">
