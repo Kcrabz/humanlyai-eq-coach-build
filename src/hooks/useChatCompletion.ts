@@ -45,7 +45,7 @@ export function useChatCompletion({ onSuccess }: UseChatCompletionOptions = {}) 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user.accessToken}`
+          'Authorization': `Bearer ${user.id}` // Using user.id instead of accessToken
         },
         body: JSON.stringify({
           messages: messages.map(m => ({ role: m.role, content: m.content })),
@@ -57,7 +57,7 @@ export function useChatCompletion({ onSuccess }: UseChatCompletionOptions = {}) 
       });
 
       if (!response.ok) {
-        let errorData = {};
+        let errorData: { error?: string, type?: string } = {};
         try {
           errorData = await response.json();
         } catch (e) {
@@ -66,8 +66,8 @@ export function useChatCompletion({ onSuccess }: UseChatCompletionOptions = {}) 
         }
         
         // Check for usage limit error
-        if (errorData.error?.includes("monthly message limit") || 
-            errorData.error?.type === "usage_limit") {
+        if ((errorData.error && errorData.error.includes("monthly message limit")) || 
+            (errorData.type === "usage_limit")) {
           setIsQuotaError(true);
           throw new Error(errorData.error || "You've reached your monthly message limit");
         }
