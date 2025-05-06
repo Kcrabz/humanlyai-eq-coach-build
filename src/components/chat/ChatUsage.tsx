@@ -14,8 +14,8 @@ export function ChatUsage() {
   
   const { currentUsage, limit, percentage } = usageInfo;
   
-  // Only show for high usage (over 80%)
-  if (percentage < 80) return null;
+  // Only show for high usage (over 70%)
+  if (percentage < 70) return null;
   
   return (
     <div className={`p-2 text-xs ${percentage > 95 ? 'bg-red-50' : 'bg-amber-50'} border-b`}>

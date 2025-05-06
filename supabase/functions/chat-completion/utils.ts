@@ -12,7 +12,7 @@ export const corsHeaders = {
 // Usage tier limits
 export const TIER_LIMITS = {
   free: 500,
-  premium: 10000
+  premium: 25000  // Increased from 10000 to 25000
 };
 
 // Create standardized error response

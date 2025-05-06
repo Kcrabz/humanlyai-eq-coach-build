@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { ChatMessage } from '@/types';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface UseChatCompletionOptions {
   onSuccess?: (response: string, userMessageId?: string) => void;
@@ -36,27 +37,52 @@ export function useChatCompletion({ onSuccess }: UseChatCompletionOptions = {}) 
     }
 
     try {
-      // Mock AI response for demonstration
-      const mockResponses = [
-        "I understand how you're feeling. It sounds like you've had a challenging experience.",
-        "That's a great insight about your emotions. Have you considered how this pattern might affect other areas of your life?",
-        "I notice you're making progress in recognizing your emotional triggers. That's an important step in emotional intelligence.",
-        "Could you tell me more about how that situation made you feel? Understanding our emotional responses helps us grow."
-      ];
+      // Prepare API request
+      const apiUrl = import.meta.env.VITE_SUPABASE_FUNCTIONS_URL || 'http://localhost:54321';
+      const endpoint = `${apiUrl}/functions/v1/chat-completion`;
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Pick a random response
-      const responseIndex = Math.floor(Math.random() * mockResponses.length);
-      const response = mockResponses[responseIndex];
-      
-      // Call onSuccess callback if provided, passing both response and original message ID
-      if (onSuccess) {
-        onSuccess(response, userMessageId);
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user.accessToken}`
+        },
+        body: JSON.stringify({
+          messages: messages.map(m => ({ role: m.role, content: m.content })),
+          archetype: user.eq_archetype,
+          coachingMode: user.coaching_mode,
+          subscriptionTier: user.subscription_tier,
+          stream: false // Use non-streaming for simplicity
+        })
+      });
+
+      if (!response.ok) {
+        let errorData = {};
+        try {
+          errorData = await response.json();
+        } catch (e) {
+          // If not JSON, use status text
+          throw new Error(`Request failed with status: ${response.status}`);
+        }
+        
+        // Check for usage limit error
+        if (errorData.error?.includes("monthly message limit") || 
+            errorData.error?.type === "usage_limit") {
+          setIsQuotaError(true);
+          throw new Error(errorData.error || "You've reached your monthly message limit");
+        }
+        
+        throw new Error(errorData.error || `Request failed with status: ${response.status}`);
       }
       
-      return response;
+      const data = await response.json();
+      
+      // Call onSuccess callback if provided, passing both response and original message ID
+      if (onSuccess && data.content) {
+        onSuccess(data.content, userMessageId);
+      }
+      
+      return data.content;
     } catch (err: any) {
       console.error("Chat completion error:", err);
       
@@ -65,6 +91,13 @@ export function useChatCompletion({ onSuccess }: UseChatCompletionOptions = {}) 
       
       if (errorMessage.includes("quota") || errorMessage.includes("limit")) {
         setIsQuotaError(true);
+        toast.error("Token usage limit exceeded", { 
+          description: "You've reached your monthly message limit. Please upgrade your subscription.",
+          action: {
+            label: "Upgrade",
+            onClick: () => navigate("/pricing")
+          }
+        });
       } else if (errorMessage.includes("invalid key") || errorMessage.includes("authentication")) {
         setIsInvalidKeyError(true);
       }
