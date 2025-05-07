@@ -11,10 +11,14 @@ export const isOnOnboardingPage = (pathname: string): boolean => {
 };
 
 /**
- * Determines if the current path is an authentication page (login or signup)
+ * Determines if the current path is an authentication page (login, signup, or password reset)
  */
 export const isOnAuthPage = (pathname: string): boolean => {
-  return pathname === "/login" || pathname === "/signup";
+  return pathname === "/login" || 
+         pathname === "/signup" || 
+         pathname === "/reset-password" || 
+         pathname === "/update-password" || 
+         pathname === "/forgot-password";
 };
 
 /**

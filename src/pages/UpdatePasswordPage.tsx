@@ -18,6 +18,7 @@ const UpdatePasswordPage = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [tokenChecked, setTokenChecked] = useState(false);
 
   // Check if we have the necessary parameters from the reset email
   useEffect(() => {
@@ -25,7 +26,21 @@ const UpdatePasswordPage = () => {
     const type = searchParams.get("type");
     
     if (!accessToken || type !== "recovery") {
-      setErrorMessage("Invalid or expired password reset link. Please try again.");
+      setErrorMessage("Invalid or expired password reset link. Please request a new one.");
+    } else {
+      // Set the session from the recovery token
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: '',
+      }).then(({ error }) => {
+        if (error) {
+          console.error("Error setting session from recovery token:", error);
+          setErrorMessage("Invalid or expired password reset link. Please request a new one.");
+        } else {
+          console.log("Successfully set session from recovery token");
+        }
+        setTokenChecked(true);
+      });
     }
   }, [searchParams]);
 
@@ -53,13 +68,7 @@ const UpdatePasswordPage = () => {
 
     try {
       setIsSubmitting(true);
-      
-      const accessToken = searchParams.get("access_token");
-      
-      if (!accessToken) {
-        throw new Error("Missing access token");
-      }
-      
+
       const { error } = await supabase.auth.updateUser({
         password: password
       });
@@ -89,6 +98,19 @@ const UpdatePasswordPage = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading state while token is being checked
+  if (!tokenChecked && !errorMessage) {
+    return (
+      <PageLayout>
+        <div className="flex min-h-screen items-center justify-center py-12 animate-scale-fade-in">
+          <div className="text-center">
+            <p>Verifying your password reset link...</p>
+          </div>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>

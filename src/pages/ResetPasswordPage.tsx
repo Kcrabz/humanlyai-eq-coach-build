@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { AlertCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 
 const ResetPasswordPage = () => {
   const [email, setEmail] = useState("");
@@ -14,6 +16,7 @@ const ResetPasswordPage = () => {
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { resetPassword } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,11 +29,15 @@ const ResetPasswordPage = () => {
       setIsSubmitting(true);
       setErrorMessage(null);
       
-      await resetPassword(email);
-      setSubmitted(true);
-      toast.success("Password reset instructions sent", {
-        description: "Please check your email inbox"
-      });
+      const success = await resetPassword(email);
+      if (success) {
+        setSubmitted(true);
+        toast.success("Password reset instructions sent", {
+          description: "Please check your email inbox"
+        });
+      } else {
+        throw new Error("Failed to send reset instructions");
+      }
     } catch (error) {
       console.error("Password reset error:", error);
       const message = error instanceof Error ? error.message : "Failed to send reset instructions";
@@ -41,6 +48,10 @@ const ResetPasswordPage = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleReturnToLogin = () => {
+    navigate("/login");
   };
 
   return (
@@ -91,9 +102,13 @@ const ResetPasswordPage = () => {
                   </Button>
                   
                   <div className="text-center mt-4">
-                    <a href="/login" className="text-humanly-teal hover:text-humanly-teal-dark text-sm">
+                    <Button 
+                      variant="link" 
+                      onClick={handleReturnToLogin}
+                      className="text-humanly-teal hover:text-humanly-teal-dark text-sm p-0"
+                    >
                       Return to login
-                    </a>
+                    </Button>
                   </div>
                 </form>
               ) : (
@@ -111,9 +126,13 @@ const ResetPasswordPage = () => {
                   </Button>
                   
                   <div className="text-center mt-4">
-                    <a href="/login" className="text-humanly-teal hover:text-humanly-teal-dark text-sm">
+                    <Button 
+                      variant="link" 
+                      onClick={handleReturnToLogin}
+                      className="text-humanly-teal hover:text-humanly-teal-dark text-sm p-0"
+                    >
                       Return to login
-                    </a>
+                    </Button>
                   </div>
                 </div>
               )}

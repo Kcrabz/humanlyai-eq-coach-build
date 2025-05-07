@@ -27,11 +27,20 @@ export const AuthenticationGuard = () => {
     });
   }, [user, pathname, authEvent, profileLoaded]);
 
+  // Skip redirects for password reset/update pages
+  const isPasswordResetPage = pathname === "/reset-password" || pathname === "/update-password";
+  
   // Handle redirects based on authentication status - with loop protection
   useEffect(() => {
     // Only proceed when auth is fully ready
     if (isLoading) {
       console.log("AuthGuard: Auth state is still loading, waiting...");
+      return;
+    }
+    
+    // Skip any redirects for password reset/update pages regardless of auth state
+    if (isPasswordResetPage) {
+      console.log("AuthGuard: On password reset/update page, skipping redirects");
       return;
     }
     
@@ -96,7 +105,7 @@ export const AuthenticationGuard = () => {
       console.log("AuthGuard: Redirecting to dashboard");
       navigate("/dashboard", { replace: true });
     }
-  }, [user, isLoading, pathname, navigate, authEvent, profileLoaded]);
+  }, [user, isLoading, pathname, navigate, authEvent, profileLoaded, isPasswordResetPage]);
 
   // This component doesn't render anything, just handles redirects
   return null;

@@ -36,8 +36,6 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         return false;
       }
       
-      // Removed security event logging for successful login
-      
       console.log("Login successful for:", email, "User data:", data.user.id);
       toast.success("Logged in successfully");
       return true;
@@ -67,8 +65,6 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
         toast.error("Password reset failed", { description: error.message });
         return false;
       }
-      
-      // Removed security event logging for password reset
       
       console.log("Password reset email sent successfully to:", email);
       return true;
@@ -101,9 +97,6 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
       if (success) {
         // Update local state
         setUser((prevUser) => prevUser ? { ...prevUser, ...updates } : null);
-        
-        // Removed security event logging for profile update
-        
         toast.success("Profile updated successfully");
       }
       
