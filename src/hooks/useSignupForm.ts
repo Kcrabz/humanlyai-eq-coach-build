@@ -1,116 +1,70 @@
 
-import { useState, useEffect } from "react";
+import { useSignupFormState } from "./signup/useSignupFormState";
+import { useSignupValidation } from "./signup/useSignupValidation";
+import { useSignupRateLimit } from "./signup/useSignupRateLimit";
 import { useAuth } from "@/context/AuthContext";
-import { isValidEmail, validatePassword } from "@/utils/validationUtils";
-import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
 import { useNavigate } from "react-router-dom";
 
 export function useSignupForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [securityQuestionId, setSecurityQuestionId] = useState("");
-  const [securityAnswer, setSecurityAnswer] = useState("");
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<{
-    email?: string;
-    password?: string;
-    terms?: string;
-    securityQuestion?: string;
-  }>({});
-  const [passwordStrength, setPasswordStrength] = useState<{
-    isValid: boolean;
-    feedback: string;
-    strength: 'weak' | 'medium' | 'strong';
-  }>({ isValid: false, feedback: "", strength: 'weak' });
-  const [rateLimitInfo, setRateLimitInfo] = useState<{
-    isLimited: boolean;
-    attemptsRemaining: number;
-    resetTimeMs: number;
-  } | null>(null);
+  const {
+    email,
+    password,
+    securityQuestionId,
+    securityAnswer,
+    agreeToTerms,
+    isSubmitting,
+    errorMessage,
+    setIsSubmitting,
+    setErrorMessage,
+    handleEmailChange,
+    handlePasswordChange,
+    handleAgreeChange,
+    handleSecurityQuestionChange,
+    handleSecurityAnswerChange
+  } = useSignupFormState();
+  
+  const {
+    validationErrors,
+    passwordStrength,
+    validateForm,
+    clearValidationError,
+    setValidationErrors
+  } = useSignupValidation(email, password, securityQuestionId, securityAnswer, agreeToTerms);
+  
+  const {
+    rateLimitInfo,
+    checkClientRateLimit,
+    checkServerRateLimit,
+    updateRateLimitAfterFailure
+  } = useSignupRateLimit();
   
   const { signup } = useAuth();
   const navigate = useNavigate();
   
-  // Check password strength whenever password changes
-  useEffect(() => {
-    if (password.length > 0) {
-      const result = validatePassword(password);
-      setPasswordStrength(result);
-    } else {
-      setPasswordStrength({ isValid: false, feedback: "", strength: 'weak' });
-    }
-  }, [password]);
-  
-  const validateForm = (): boolean => {
-    const errors: typeof validationErrors = {};
-    let isValid = true;
-    
-    // Validate email
-    if (!email.trim()) {
-      errors.email = "Email is required";
-      isValid = false;
-    } else if (!isValidEmail(email)) {
-      errors.email = "Please enter a valid email address";
-      isValid = false;
-    }
-    
-    // Validate password
-    if (!password) {
-      errors.password = "Password is required";
-      isValid = false;
-    } else if (password.length < 8) {
-      errors.password = "Password must be at least 8 characters";
-      isValid = false;
-    }
-    
-    // Validate security question
-    if (!securityQuestionId) {
-      errors.securityQuestion = "Please select a security question";
-      isValid = false;
-    }
-    
-    if (!securityAnswer.trim()) {
-      errors.securityQuestion = "Please provide an answer to your security question";
-      isValid = false;
-    }
-    
-    // Validate terms agreement
-    if (!agreeToTerms) {
-      errors.terms = "You must agree to the terms and policies";
-      isValid = false;
-    }
-    
-    setValidationErrors(errors);
-    return isValid;
-  };
-  
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    setErrorMessage(null);
-    setValidationErrors(prev => ({ ...prev, email: undefined }));
+  // Modified event handlers to clear validation errors
+  const handleEmailChangeWithValidation = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleEmailChange(e);
+    clearValidationError('email');
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    setErrorMessage(null);
-    setValidationErrors(prev => ({ ...prev, password: undefined }));
+  const handlePasswordChangeWithValidation = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handlePasswordChange(e);
+    clearValidationError('password');
   };
   
-  const handleAgreeChange = (checked: boolean) => {
-    setAgreeToTerms(checked);
-    setValidationErrors(prev => ({ ...prev, terms: undefined }));
+  const handleAgreeChangeWithValidation = (checked: boolean) => {
+    handleAgreeChange(checked);
+    clearValidationError('terms');
   };
   
-  const handleSecurityQuestionChange = (questionId: string) => {
-    setSecurityQuestionId(questionId);
-    setValidationErrors(prev => ({ ...prev, securityQuestion: undefined }));
+  const handleSecurityQuestionChangeWithValidation = (questionId: string) => {
+    handleSecurityQuestionChange(questionId);
+    clearValidationError('securityQuestion');
   };
   
-  const handleSecurityAnswerChange = (answer: string) => {
-    setSecurityAnswer(answer);
-    setValidationErrors(prev => ({ ...prev, securityQuestion: undefined }));
+  const handleSecurityAnswerChangeWithValidation = (answer: string) => {
+    handleSecurityAnswerChange(answer);
+    clearValidationError('securityQuestion');
   };
   
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,11 +76,9 @@ export function useSignupForm() {
     }
     
     // Check client-side rate limiting
-    const rateLimit = clientRateLimit('signup_attempt', 5, 60000); // 5 attempts per minute
-    
-    if (rateLimit.isLimited) {
-      setRateLimitInfo(rateLimit);
-      setErrorMessage(`Too many signup attempts. Please try again in ${Math.ceil((rateLimit.resetTimeMs - Date.now()) / 1000)} seconds.`);
+    const rateLimitError = checkClientRateLimit();
+    if (rateLimitError) {
+      setErrorMessage(rateLimitError);
       return;
     }
     
@@ -143,20 +95,9 @@ export function useSignupForm() {
     
     try {
       // Check server-side rate limiting
-      const serverRateLimit = await checkRateLimit({
-        email,
-        endpoint: 'signup',
-        period: 'hour',
-        maxRequests: 5 // Stricter limit for signup
-      });
-      
-      if (serverRateLimit.isLimited) {
-        setErrorMessage(`Too many signup attempts from this email. Please try again later.`);
-        setRateLimitInfo({
-          isLimited: true,
-          attemptsRemaining: 0,
-          resetTimeMs: serverRateLimit.resetTime.getTime()
-        });
+      const serverRateLimitError = await checkServerRateLimit(email);
+      if (serverRateLimitError) {
+        setErrorMessage(serverRateLimitError);
         return;
       }
       
@@ -174,8 +115,7 @@ export function useSignupForm() {
       setErrorMessage(message);
       
       // Update client-side rate limit info after failure
-      const updatedRateLimit = clientRateLimit('signup_attempt', 5, 60000);
-      setRateLimitInfo(updatedRateLimit);
+      updateRateLimitAfterFailure();
     } finally {
       console.log(`Signup process completed, resetting submission state`);
       setIsSubmitting(false);
@@ -193,11 +133,11 @@ export function useSignupForm() {
     validationErrors,
     passwordStrength,
     rateLimitInfo,
-    handleEmailChange,
-    handlePasswordChange,
-    handleAgreeChange,
-    handleSecurityQuestionChange,
-    handleSecurityAnswerChange,
+    handleEmailChange: handleEmailChangeWithValidation,
+    handlePasswordChange: handlePasswordChangeWithValidation,
+    handleAgreeChange: handleAgreeChangeWithValidation,
+    handleSecurityQuestionChange: handleSecurityQuestionChangeWithValidation,
+    handleSecurityAnswerChange: handleSecurityAnswerChangeWithValidation,
     handleSubmit
   };
 }
