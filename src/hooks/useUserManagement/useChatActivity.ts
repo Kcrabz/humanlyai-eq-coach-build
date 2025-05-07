@@ -3,44 +3,43 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const useChatActivity = () => {
   // Fetch chat activity
-  const fetchChatActivity = async (): Promise<Map<string, { count: number, chatTime: string }>> => {
+  const fetchChatActivity = async (userIds: string[]): Promise<Map<string, { count: number, chatTime: string }>> => {
     try {
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .select('user_id, created_at')
-        .not('user_id', 'is', null);
+      if (!userIds || userIds.length === 0) {
+        return new Map();
+      }
 
-      if (error) throw error;
+      // Get current session auth token
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        console.error("No authenticated session found");
+        return new Map();
+      }
+
+      // Call our admin-user-activity edge function
+      const { data, error } = await supabase.functions.invoke('admin-user-activity', {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        },
+        body: { userIds }
+      });
       
-      // Count messages per user and estimate chat time
-      const chatStats = new Map<string, { count: number, chatTime: string }>();
+      if (error) {
+        console.error("Error fetching chat activity:", error);
+        throw error;
+      }
       
-      if (data && data.length > 0) {
-        data.forEach(message => {
-          const userId = message.user_id;
-          const current = chatStats.get(userId) || { count: 0, chatTime: '0' };
-          
-          // Increment message count
-          current.count += 1;
-          
-          // Estimate chat time (30 seconds per message is our assumption)
-          const timeInMinutes = Math.round((current.count * 30) / 60);
-          let timeDisplay = '';
-          
-          if (timeInMinutes < 60) {
-            timeDisplay = `${timeInMinutes} min`;
-          } else {
-            const hours = Math.floor(timeInMinutes / 60);
-            const mins = timeInMinutes % 60;
-            timeDisplay = `${hours}h ${mins > 0 ? mins + 'm' : ''}`;
-          }
-          
-          current.chatTime = timeDisplay;
-          chatStats.set(userId, current);
+      // Convert the object to a Map
+      const chatMap = new Map<string, { count: number, chatTime: string }>();
+      
+      if (data && data.chatActivity) {
+        Object.entries(data.chatActivity).forEach(([userId, activityData]) => {
+          const typedData = activityData as { count: number, chatTime: string };
+          chatMap.set(userId, typedData);
         });
       }
       
-      return chatStats;
+      return chatMap;
     } catch (error) {
       console.error("Error fetching chat activity:", error);
       return new Map();

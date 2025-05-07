@@ -68,14 +68,21 @@ export const useUserData = () => {
       // Collect all user IDs to fetch emails
       const userIds = data.map(profile => profile.id);
       
+      // Early return if no users found
+      if (userIds.length === 0) {
+        setUsers([]);
+        setIsLoading(false);
+        return;
+      }
+      
       // Fetch emails from the admin edge function
       const emailMap = await fetchUserEmails(userIds);
       
-      // Fetch chat activity data
-      const chatActivityMap = await fetchChatActivity();
+      // Fetch chat activity data - pass actual user IDs to the function
+      const chatActivityMap = await fetchChatActivity(userIds);
       
-      // Fetch last login data
-      const lastLoginMap = await fetchLastLogins();
+      // Fetch last login data - pass actual user IDs to the function
+      const lastLoginMap = await fetchLastLogins(userIds);
       
       // Add emails and activity data to the profiles
       const usersWithData = data.map(profile => {

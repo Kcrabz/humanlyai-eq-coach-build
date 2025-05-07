@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { UserOperations } from "./user-operations";
 import { UserTableData } from "@/hooks/useUserManagement/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface UserTableProps {
   users: UserTableData[];
@@ -13,6 +14,30 @@ interface UserTableProps {
 }
 
 export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: UserTableProps) => {
+  const renderLastLoginCell = (user: UserTableData) => {
+    if (isLoading) {
+      return <Skeleton className="h-4 w-20" />;
+    }
+    
+    return user.last_login || "Never";
+  };
+  
+  const renderChatActivityCell = (user: UserTableData) => {
+    if (isLoading) {
+      return <Skeleton className="h-4 w-20" />;
+    }
+    
+    if (user.chat_time) {
+      return (
+        <span title={`${user.message_count || 0} messages`} className="cursor-help">
+          {user.chat_time}
+        </span>
+      );
+    }
+    
+    return "No activity";
+  };
+  
   return (
     <div className="rounded-md border">
       <Table>
@@ -30,11 +55,18 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
         </TableHeader>
         <TableBody>
           {isLoading ? (
-            <TableRow>
-              <TableCell colSpan={8} className="text-center py-6">
-                Loading users...
-              </TableCell>
-            </TableRow>
+            Array(5).fill(0).map((_, index) => (
+              <TableRow key={`loading-${index}`}>
+                <TableCell><Skeleton className="h-4 w-[180px]" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-[100px]" /></TableCell>
+                <TableCell><Skeleton className="h-6 w-16" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-10" /></TableCell>
+                <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
+              </TableRow>
+            ))
           ) : users.length === 0 ? (
             <TableRow>
               <TableCell colSpan={8} className="text-center py-6">
@@ -55,15 +87,8 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
                   </Badge>
                 </TableCell>
                 <TableCell>{user.eq_archetype || "Not set"}</TableCell>
-                <TableCell>{user.last_login || "Unknown"}</TableCell>
-                <TableCell>
-                  {user.chat_time ? 
-                    <span title={`${user.message_count || 0} messages`}>
-                      {user.chat_time}
-                    </span> : 
-                    "No activity"
-                  }
-                </TableCell>
+                <TableCell>{renderLastLoginCell(user)}</TableCell>
+                <TableCell>{renderChatActivityCell(user)}</TableCell>
                 <TableCell>{user.onboarded ? "Yes" : "No"}</TableCell>
                 <TableCell>
                   <UserOperations 

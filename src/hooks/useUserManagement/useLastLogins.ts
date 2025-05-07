@@ -1,54 +1,40 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Define a type for the user data from admin.listUsers()
-interface AdminUser {
-  id?: string;
-  email?: string;
-  last_sign_in_at?: string;
-  [key: string]: any; // Allow for other properties
-}
-
 export const useLastLogins = () => {
   // Fetch last login time for users
-  const fetchLastLogins = async (): Promise<Map<string, string>> => {
+  const fetchLastLogins = async (userIds: string[]): Promise<Map<string, string>> => {
     try {
-      // For each user, we'll get the latest auth session
-      const { data, error } = await supabase.auth.admin.listUsers();
+      if (!userIds || userIds.length === 0) {
+        return new Map();
+      }
+
+      // Get current session auth token
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        console.error("No authenticated session found");
+        return new Map();
+      }
+
+      // Call our admin-user-activity edge function
+      const { data, error } = await supabase.functions.invoke('admin-user-activity', {
+        headers: {
+          Authorization: `Bearer ${sessionData.session.access_token}`
+        },
+        body: { userIds }
+      });
       
       if (error) {
-        console.error("Error fetching user sessions:", error);
+        console.error("Error fetching last logins:", error);
         throw error;
       }
       
+      // Convert the object to a Map
       const loginMap = new Map<string, string>();
       
-      // Format the last sign in time
-      if (data && data.users) {
-        data.users.forEach((user: AdminUser) => {
-          if (user && user.last_sign_in_at) {
-            const lastLogin = new Date(user.last_sign_in_at);
-            const now = new Date();
-            const diffDays = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
-            
-            let formatted = '';
-            if (diffDays === 0) {
-              formatted = 'Today';
-            } else if (diffDays === 1) {
-              formatted = 'Yesterday';
-            } else if (diffDays < 7) {
-              formatted = `${diffDays} days ago`;
-            } else if (diffDays < 30) {
-              const weeks = Math.floor(diffDays / 7);
-              formatted = `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
-            } else {
-              formatted = lastLogin.toLocaleDateString();
-            }
-            
-            if (user.id) {
-              loginMap.set(user.id, formatted);
-            }
-          }
+      if (data && data.lastLogins) {
+        Object.entries(data.lastLogins).forEach(([userId, lastLogin]) => {
+          loginMap.set(userId, lastLogin as string);
         });
       }
       
