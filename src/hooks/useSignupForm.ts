@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { isValidEmail, validatePassword } from "@/utils/validationUtils";
 import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
+import { useNavigate } from "react-router-dom";
 
 export function useSignupForm() {
   const [email, setEmail] = useState("");
@@ -30,6 +31,7 @@ export function useSignupForm() {
   } | null>(null);
   
   const { signup } = useAuth();
+  const navigate = useNavigate();
   
   // Check password strength whenever password changes
   useEffect(() => {
@@ -158,11 +160,14 @@ export function useSignupForm() {
         return;
       }
       
-      // Attempt to sign up the user - fix the error by passing correct parameters
-      const success = await signup(email, password);
+      // Attempt to sign up the user
+      const success = await signup(email, password, securityQuestionId, securityAnswer);
       console.log(`Signup result:`, { success });
       
-      // Will be redirected by the auth state change listener if successful
+      // If signup was successful, redirect to onboarding
+      if (success) {
+        navigate("/onboarding", { replace: true });
+      }
     } catch (error) {
       console.error(`Error during signup:`, error);
       const message = error instanceof Error ? error.message : "Signup failed";

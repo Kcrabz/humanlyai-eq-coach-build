@@ -1,9 +1,24 @@
 
+import { useEffect } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
 import { PageLayout } from "@/components/layout/PageLayout";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const SignupPage = () => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Direct users to onboarding if they're authenticated but not onboarded
+  useEffect(() => {
+    if (!isLoading && user) {
+      if (!user.onboarded) {
+        navigate("/onboarding", { replace: true });
+      }
+    }
+  }, [user, isLoading, navigate]);
+  
   return (
     <PageLayout>
       <AuthRedirect />

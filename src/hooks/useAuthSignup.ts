@@ -3,13 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { setSecurityQuestion } from "@/services/securityQuestionService";
-
-interface SignupData {
-  email: string;
-  password: string;
-  securityQuestionId?: string;
-  securityAnswer?: string;
-}
+import { useNavigate } from "react-router-dom";
 
 export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   /**
@@ -102,7 +96,7 @@ export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User 
           subscription_tier: 'free'
         });
         
-        toast.success("Account created successfully");
+        toast.success("Account created successfully! Redirecting to onboarding...");
         return true;
       }
       

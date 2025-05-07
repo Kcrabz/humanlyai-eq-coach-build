@@ -66,7 +66,6 @@ export const AuthenticationGuard = () => {
           // Use a timeout to ensure state updates have completed
           setTimeout(() => {
             navigate("/onboarding", { replace: true });
-            toast.success("Welcome! Please complete onboarding to continue.");
           }, 50);
         }
       } else if (isCurrentlyOnAuth) {
