@@ -8,7 +8,7 @@ export interface AuthContextType {
   authEvent?: "SIGN_IN_COMPLETE" | "RESTORED_SESSION" | "SIGN_OUT_COMPLETE" | null;
   profileLoaded?: boolean;
   login: (email: string, password: string) => Promise<any>;
-  signup: (email: string, password: string) => Promise<any>;
+  signup: (email: string, password: string, securityQuestionId?: string, securityAnswer?: string) => Promise<any>;
   logout: () => void;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
