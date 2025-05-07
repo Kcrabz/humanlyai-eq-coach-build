@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,14 +7,23 @@ import { MessageCircle, TrendingUp, Users, Shield } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isAdmin, isLoading: isAdminCheckLoading } = useAdminCheck();
+  const { isAdmin, isLoading: isAdminCheckLoading, refreshAdminStatus } = useAdminCheck();
   
   // Add logging to verify admin status on dashboard
   console.log("Dashboard admin status:", { isAdmin, isAdminCheckLoading, userEmail: user?.email });
+  
+  // Force refresh admin status when dashboard is loaded
+  useEffect(() => {
+    if (user?.email) {
+      console.log("DashboardPage - Refreshing admin status for:", user.email);
+      refreshAdminStatus();
+    }
+  }, [user?.email, refreshAdminStatus]);
   
   // Extract first name from the user's name
   const firstName = user?.name ? user.name.split(" ")[0] : "Friend";
