@@ -29,7 +29,7 @@ export function Header() {
     console.log("Header admin status:", { 
       isAdmin, 
       isAdminCheckLoading, 
-      user: user?.email, 
+      userEmail: user?.email, 
       authenticated: isAuthenticated 
     });
   }, [isAdmin, isAdminCheckLoading, user, location.pathname, isAuthenticated]);

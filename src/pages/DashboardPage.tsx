@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +11,9 @@ const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin, isLoading: isAdminCheckLoading } = useAdminCheck();
+  
+  // Add logging to verify admin status on dashboard
+  console.log("Dashboard admin status:", { isAdmin, isAdminCheckLoading, userEmail: user?.email });
   
   // Extract first name from the user's name
   const firstName = user?.name ? user.name.split(" ")[0] : "Friend";
@@ -74,7 +76,7 @@ const DashboardPage = () => {
             </CardContent>
           </Card>
           
-          {/* Help a Friend (formerly "Refer a Fellow Human") */}
+          {/* Help a Friend */}
           <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-rose/20">
             <CardContent className="p-0">
               <Button 
@@ -99,7 +101,10 @@ const DashboardPage = () => {
                 <Button 
                   variant="ghost" 
                   className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                  onClick={() => navigate("/admin")}
+                  onClick={() => {
+                    console.log("Admin portal access requested by:", user?.email);
+                    navigate("/admin");
+                  }}
                 >
                   <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
                     <Shield className="w-8 h-8 text-gray-700" />
