@@ -102,8 +102,8 @@ export const useUserData = () => {
       // Format the last sign in time
       if (data && data.users) {
         data.users.forEach(user => {
-          if (user.last_sign_in_at) {
-            const lastLogin = new Date(user.last_sign_in_at);
+          if (user && typeof user === 'object' && 'last_sign_in_at' in user && user.last_sign_in_at) {
+            const lastLogin = new Date(user.last_sign_in_at as string);
             const now = new Date();
             const diffDays = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
             
@@ -121,7 +121,9 @@ export const useUserData = () => {
               formatted = lastLogin.toLocaleDateString();
             }
             
-            loginMap.set(user.id, formatted);
+            if ('id' in user && user.id) {
+              loginMap.set(user.id as string, formatted);
+            }
           }
         });
       }

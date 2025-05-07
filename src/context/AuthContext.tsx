@@ -9,7 +9,7 @@ import { useProfileActions } from "@/hooks/useProfileActions";
 import { useProfileState } from "@/hooks/useProfileState";
 import { UserStreakData, UserAchievement, AuthContextType } from "@/types/auth";
 import { fetchUserStreakData, fetchUserAchievements } from "@/services/premiumUserService";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/integrations/supabase/client";
 
 // Create the auth context with default values
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
