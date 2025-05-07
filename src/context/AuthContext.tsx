@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -10,6 +9,7 @@ import { useProfileActions } from "@/hooks/useProfileActions";
 import { useProfileState } from "@/hooks/useProfileState";
 import { UserStreakData, UserAchievement, AuthContextType } from "@/types/auth";
 import { fetchUserStreakData, fetchUserAchievements } from "@/services/premiumUserService";
+import { supabase } from "@/lib/supabase";
 
 // Create the auth context with default values
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -45,6 +45,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isSessionLoading) {
       console.log("Auth state fully loaded, setting isLoading to false");
       setIsLoading(false);
+    }
+    
+    // Record login event when a user successfully logs in
+    if (authEvent === "SIGN_IN_COMPLETE" && user?.id) {
+      // Track login in our database
+      supabase.from('user_login_history').insert({
+        user_id: user.id,
+        ip_address: null, // We don't have this info client-side
+        user_agent: navigator.userAgent
+      }).then(({ error }) => {
+        if (error) {
+          console.error("Failed to record login event:", error);
+        } else {
+          console.log("Login event recorded for user:", user.id);
+        }
+      });
     }
   }, [isSessionLoading, user, session, authEvent, profileLoaded]);
   

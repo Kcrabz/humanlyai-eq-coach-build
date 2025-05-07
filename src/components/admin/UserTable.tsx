@@ -22,6 +22,8 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
             <TableHead>Name</TableHead>
             <TableHead>Subscription</TableHead>
             <TableHead>Archetype</TableHead>
+            <TableHead>Last Login</TableHead>
+            <TableHead>Chat Activity</TableHead>
             <TableHead>Onboarded</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -29,13 +31,13 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
         <TableBody>
           {isLoading ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-6">
+              <TableCell colSpan={8} className="text-center py-6">
                 Loading users...
               </TableCell>
             </TableRow>
           ) : users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-6">
+              <TableCell colSpan={8} className="text-center py-6">
                 No users found
               </TableCell>
             </TableRow>
@@ -53,6 +55,15 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
                   </Badge>
                 </TableCell>
                 <TableCell>{user.eq_archetype || "Not set"}</TableCell>
+                <TableCell>{user.last_login || "Unknown"}</TableCell>
+                <TableCell>
+                  {user.chat_time ? 
+                    <span title={`${user.message_count || 0} messages`}>
+                      {user.chat_time}
+                    </span> : 
+                    "No activity"
+                  }
+                </TableCell>
                 <TableCell>{user.onboarded ? "Yes" : "No"}</TableCell>
                 <TableCell>
                   <UserOperations 
