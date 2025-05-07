@@ -28,7 +28,6 @@ export function useSignupForm() {
     passwordStrength,
     validateForm,
     clearValidationError,
-    setValidationErrors
   } = useSignupValidation(email, password, securityQuestionId, securityAnswer, agreeToTerms);
   
   const {
