@@ -334,6 +334,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_login_history: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_streaks: {
         Row: {
           created_at: string | null
@@ -374,6 +398,10 @@ export type Database = {
     Functions: {
       is_admin: {
         Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      record_user_login: {
+        Args: { user_id_param: string; user_agent_param?: string }
         Returns: boolean
       }
     }
