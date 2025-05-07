@@ -29,11 +29,11 @@ const ResetPasswordPage = () => {
       setIsSubmitting(true);
       setErrorMessage(null);
       
-      // Make sure resetPassword is awaited and returns a boolean value
+      // Call resetPassword and await the boolean result
       const success = await resetPassword(email);
       
-      // Now we can properly check the success value
-      if (success === true) {
+      // Check if success is true (using simple boolean check)
+      if (success) {
         setSubmitted(true);
         toast.success("Password reset instructions sent", {
           description: "Please check your email inbox"

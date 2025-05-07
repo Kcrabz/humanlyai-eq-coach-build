@@ -1,13 +1,7 @@
-
 import { useCallback } from "react";
 import { User, EQArchetype, CoachingMode } from "@/types";
 
-export function useAuthActionWrappers(
-  user: User | null,
-  profileCore: any,
-  profileActions: any,
-  authCore: any
-) {
+export const useAuthActionWrappers = (user, profileCore, profileActions, authCore) => {
   // Wrapper functions to ensure type compatibility and memoized to prevent unnecessary recreations
   const updateProfile = useCallback(async (data: Partial<User>): Promise<void> => {
     await profileCore.updateProfile(user?.id || "", data);
@@ -43,12 +37,10 @@ export function useAuthActionWrappers(
   }, [profileActions]);
   
   // Create wrapper for resetPassword to adapt the return type
-  const resetPasswordWrapper = useCallback(async (email: string): Promise<void> => {
-    // Call the original function but discard the boolean return value to match the AuthContextType
-    await authCore.resetPassword(email);
-    // No return value needed since the type expects Promise<void>
-  }, [authCore]);
-
+  const resetPasswordWrapper = async (email: string): Promise<boolean> => {
+    return authCore.resetPassword(email);
+  };
+  
   return {
     updateProfile,
     forceUpdateProfile,
@@ -58,4 +50,4 @@ export function useAuthActionWrappers(
     setOnboardedWrapper,
     resetPasswordWrapper
   };
-}
+};
