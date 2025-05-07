@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Auth core for login/logout
   const authCore = useAuthCore(setUser);
   
-  // Auth signup
+  // Auth signup - Pass the function through directly without wrapping it
   const { signup } = useAuthSignup(setUser);
   
   // Auth actions
@@ -155,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profileLoaded,
     login: authCore.login,
     logout: authLogout,
-    signup,
+    signup,  // Pass the signup function directly
     resetPassword: resetPasswordWrapper,
     updateProfile,
     forceUpdateProfile,
