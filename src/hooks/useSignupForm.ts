@@ -161,7 +161,6 @@ export function useSignupForm() {
       }
       
       // Attempt to sign up the user
-      // Pass all required parameters to the signup function
       const success = await signup(email, password, securityQuestionId, securityAnswer);
       console.log(`Signup result:`, { success });
       

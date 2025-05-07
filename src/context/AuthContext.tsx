@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
 import { useAuthSession } from "@/hooks/useAuthSession";
