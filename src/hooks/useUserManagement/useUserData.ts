@@ -5,6 +5,14 @@ import { UserTableData } from "./types";
 import { toast } from "sonner";
 import { SubscriptionTier } from "@/types";
 
+// Define a type for the user data from admin.listUsers()
+interface AdminUser {
+  id?: string;
+  email?: string;
+  last_sign_in_at?: string;
+  [key: string]: any; // Allow for other properties
+}
+
 export const useUserData = () => {
   const [users, setUsers] = useState<UserTableData[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -89,7 +97,6 @@ export const useUserData = () => {
   const fetchLastLogins = async (): Promise<Map<string, string>> => {
     try {
       // For each user, we'll get the latest auth session
-      // This is an approximation - in a real app you'd want to store this info explicitly
       const { data, error } = await supabase.auth.admin.listUsers();
       
       if (error) {
@@ -101,9 +108,9 @@ export const useUserData = () => {
       
       // Format the last sign in time
       if (data && data.users) {
-        data.users.forEach(user => {
-          if (user && typeof user === 'object' && 'last_sign_in_at' in user && user.last_sign_in_at) {
-            const lastLogin = new Date(user.last_sign_in_at as string);
+        data.users.forEach((user: AdminUser) => {
+          if (user && user.last_sign_in_at) {
+            const lastLogin = new Date(user.last_sign_in_at);
             const now = new Date();
             const diffDays = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
             
@@ -121,8 +128,8 @@ export const useUserData = () => {
               formatted = lastLogin.toLocaleDateString();
             }
             
-            if ('id' in user && user.id) {
-              loginMap.set(user.id as string, formatted);
+            if (user.id) {
+              loginMap.set(user.id, formatted);
             }
           }
         });

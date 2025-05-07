@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 import { User, EQArchetype, CoachingMode, SubscriptionTier } from "@/types";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -49,18 +50,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     // Record login event when a user successfully logs in
     if (authEvent === "SIGN_IN_COMPLETE" && user?.id) {
-      // Track login in our database
-      supabase.from('user_login_history').insert({
-        user_id: user.id,
-        ip_address: null, // We don't have this info client-side
-        user_agent: navigator.userAgent
-      }).then(({ error }) => {
-        if (error) {
-          console.error("Failed to record login event:", error);
-        } else {
-          console.log("Login event recorded for user:", user.id);
-        }
+      // Since we can't directly use the user_login_history table with typed client,
+      // we'll use a more generic approach
+      const { data, error } = supabase.rpc('record_user_login', { 
+        user_id_param: user.id,
+        user_agent_param: navigator.userAgent
       });
+      
+      if (error) {
+        console.error("Failed to record login event:", error);
+      } else {
+        console.log("Login event recorded for user:", user.id);
+      }
     }
   }, [isSessionLoading, user, session, authEvent, profileLoaded]);
   
