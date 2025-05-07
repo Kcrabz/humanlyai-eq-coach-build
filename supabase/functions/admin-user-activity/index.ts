@@ -65,6 +65,24 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Get user subscription tiers for context
+    const { data: profiles, error: profilesError } = await supabaseAdmin
+      .from('profiles')
+      .select('id, subscription_tier')
+      .in('id', userIds);
+    
+    if (profilesError) {
+      console.error('Error fetching user profiles:', profilesError);
+    }
+    
+    // Create a map of user subscription tiers
+    const subscriptionTiers = new Map();
+    if (profiles) {
+      profiles.forEach(profile => {
+        subscriptionTiers.set(profile.id, profile.subscription_tier);
+      });
+    }
+
     // Fetch login history data for each user
     const { data: loginHistory, error: loginError } = await supabaseAdmin
       .from('user_login_history')
@@ -74,16 +92,56 @@ serve(async (req) => {
 
     if (loginError) {
       console.error('Error fetching login history:', loginError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch login history' }), 
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // Get auth.users creation dates for comparison
+    const userCreationDates = new Map();
+    try {
+      // This requires the service role since we're querying auth.users
+      for (const userId of userIds) {
+        // Get user creation time from Supabase Auth API
+        const { data, error } = await supabaseAdmin.auth.admin.getUserById(userId);
+        if (!error && data?.user) {
+          userCreationDates.set(userId, new Date(data.user.created_at));
+        } else {
+          console.error(`Error fetching user ${userId} creation date:`, error);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user creation dates:', error);
+    }
+    
     // Process login data to get last login for each user
     const lastLoginMap = new Map();
     
-    if (loginHistory) {
+    // First populate with account creation dates (as fallback)
+    userIds.forEach(userId => {
+      const creationDate = userCreationDates.get(userId);
+      if (creationDate) {
+        const now = new Date();
+        const diffDays = Math.floor((now.getTime() - creationDate.getTime()) / (1000 * 60 * 60 * 24));
+        
+        let formatted = '';
+        if (diffDays === 0) {
+          formatted = 'Created today';
+        } else if (diffDays === 1) {
+          formatted = 'Created yesterday';
+        } else if (diffDays < 7) {
+          formatted = `Created ${diffDays} days ago`;
+        } else {
+          formatted = `Created on ${creationDate.toLocaleDateString()}`;
+        }
+        
+        lastLoginMap.set(userId, formatted);
+      } else {
+        lastLoginMap.set(userId, 'Unknown');
+      }
+    });
+    
+    // Then override with actual login data if it exists
+    if (loginHistory && loginHistory.length > 0) {
       loginHistory.forEach(record => {
-        if (!lastLoginMap.has(record.user_id)) {
+        if (!lastLoginMap.has(record.user_id) || !lastLoginMap.get(record.user_id).includes('Created')) {
           const lastLogin = new Date(record.created_at);
           const now = new Date();
           const diffDays = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
@@ -107,16 +165,29 @@ serve(async (req) => {
       });
     }
 
-    // Fetch chat activity data
-    const { data: chatData, error: chatError } = await supabaseAdmin
+    // Fetch chat activity data - try chat_messages first, then fall back to chat_logs if needed
+    let chatData = [];
+    const { data: messagesData, error: messagesError } = await supabaseAdmin
       .from('chat_messages')
       .select('user_id, created_at')
       .in('user_id', userIds);
-
-    if (chatError) {
-      console.error('Error fetching chat data:', chatError);
-      return new Response(JSON.stringify({ error: 'Failed to fetch chat activity' }), 
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      
+    if (messagesError) {
+      console.error('Error fetching chat message data:', messagesError);
+      
+      // Fall back to chat_logs
+      const { data: logsData, error: logsError } = await supabaseAdmin
+        .from('chat_logs')
+        .select('user_id, created_at')
+        .in('user_id', userIds);
+        
+      if (logsError) {
+        console.error('Error fetching chat logs data:', logsError);
+      } else {
+        chatData = logsData || [];
+      }
+    } else {
+      chatData = messagesData || [];
     }
 
     // Process chat data to calculate activity metrics
@@ -178,11 +249,23 @@ serve(async (req) => {
         });
       });
     }
+    
+    // Fill in empty data for users with no chat activity
+    userIds.forEach(userId => {
+      if (!chatActivityMap.has(userId)) {
+        const tier = subscriptionTiers.get(userId);
+        chatActivityMap.set(userId, {
+          count: 0,
+          chatTime: tier === 'free' ? 'No data (free tier)' : 'No activity'
+        });
+      }
+    });
 
     return new Response(
       JSON.stringify({ 
         lastLogins: Object.fromEntries(lastLoginMap),
-        chatActivity: Object.fromEntries(chatActivityMap)
+        chatActivity: Object.fromEntries(chatActivityMap),
+        subscriptionTiers: Object.fromEntries(subscriptionTiers)
       }),
       { 
         status: 200, 

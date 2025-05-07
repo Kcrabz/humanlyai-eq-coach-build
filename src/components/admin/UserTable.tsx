@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { UserOperations } from "./user-operations";
 import { UserTableData } from "@/hooks/useUserManagement/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface UserTableProps {
   users: UserTableData[];
@@ -14,12 +16,55 @@ interface UserTableProps {
 }
 
 export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: UserTableProps) => {
+  // Helper to determine the style for the subscription badge
+  const getBadgeVariant = (tier?: string) => {
+    switch (tier) {
+      case "premium": return "default";
+      case "basic": return "outline";
+      case "trial": return "secondary";
+      default: return "secondary"; // free tier or undefined
+    }
+  };
+
   const renderLastLoginCell = (user: UserTableData) => {
     if (isLoading) {
       return <Skeleton className="h-4 w-20" />;
     }
     
-    return user.last_login || "Never";
+    if (!user.last_login) {
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="flex items-center text-amber-500">
+              <span>No login data</span>
+              <InfoCircledIcon className="ml-1 h-3 w-3" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>User account exists but no login has been recorded yet.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    
+    // Check if this is a creation date rather than login
+    const isCreationDate = user.last_login.includes('Created');
+    
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger className={`flex items-center ${isCreationDate ? 'text-amber-500' : ''}`}>
+            <span>{user.last_login}</span>
+            {isCreationDate && <InfoCircledIcon className="ml-1 h-3 w-3" />}
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{isCreationDate ? 
+              "No explicit login detected, showing account creation date" : 
+              "Last time user logged in"}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
   };
   
   const renderChatActivityCell = (user: UserTableData) => {
@@ -28,10 +73,27 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
     }
     
     if (user.chat_time) {
+      const isFreeTier = user.chat_time.includes('free tier');
+      
       return (
-        <span title={`${user.message_count || 0} messages`} className="cursor-help">
-          {user.chat_time}
-        </span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className={`flex items-center ${isFreeTier ? 'text-amber-500' : ''}`}>
+              <span>{user.chat_time}</span>
+              {user.message_count > 0 && !isFreeTier && (
+                <Badge variant="outline" className="ml-2 text-xs">
+                  {user.message_count} msg
+                </Badge>
+              )}
+              {isFreeTier && <InfoCircledIcon className="ml-1 h-3 w-3" />}
+            </TooltipTrigger>
+            <TooltipContent>
+              {isFreeTier ? 
+                <p>Free tier users don't have chat data stored in the database</p> : 
+                <p>Total time spent chatting, based on {user.message_count} messages</p>}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     }
     
@@ -80,8 +142,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
                 <TableCell>{user.name || "-"}</TableCell>
                 <TableCell>
                   <Badge 
-                    variant={user.subscription_tier === "premium" ? "default" : 
-                           user.subscription_tier === "basic" ? "outline" : "secondary"}
+                    variant={getBadgeVariant(user.subscription_tier)}
                   >
                     {user.subscription_tier || "free"}
                   </Badge>

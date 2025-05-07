@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useLastLogins = () => {
   // Fetch last login time for users
@@ -10,9 +11,16 @@ export const useLastLogins = () => {
       }
 
       // Get current session auth token
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        toast.error("Authentication error", { description: "Please try logging in again" });
+        return new Map();
+      }
+      
       if (!sessionData.session) {
         console.error("No authenticated session found");
+        toast.error("Authentication error", { description: "Please log in again" });
         return new Map();
       }
 
@@ -26,7 +34,10 @@ export const useLastLogins = () => {
       
       if (error) {
         console.error("Error fetching last logins:", error);
-        throw error;
+        toast.error("Failed to fetch user login data", { 
+          description: error.message || "An unexpected error occurred" 
+        });
+        return new Map();
       }
       
       // Convert the object to a Map
@@ -41,6 +52,7 @@ export const useLastLogins = () => {
       return loginMap;
     } catch (error) {
       console.error("Failed to fetch last logins:", error);
+      toast.error("Failed to fetch user login data");
       return new Map();
     }
   };

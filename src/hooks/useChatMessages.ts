@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChatMessage } from "@/types";
 import { useAuth } from "@/context/AuthContext";
@@ -29,65 +28,53 @@ export const useChatMessages = () => {
     if (!user) return;
     
     const loadChatHistory = async () => {
-      // Only fetch chat history from database for premium users
-      if (user.subscription_tier === 'premium') {
-        setIsLoadingHistory(true);
-        try {
-          // Use chat_logs table for now to maintain backward compatibility
-          const { data, error } = await supabase
-            .from('chat_logs')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: true })
-            .limit(20); // Limit to the most recent 20 messages
-            
-          if (error) {
-            console.error("Error loading chat history:", error);
-            
-            // Fallback to local storage if database fetch fails
-            const savedMessages = localStorage.getItem(`chat_messages_${user.id}`);
-            if (savedMessages) {
-              setMessages(JSON.parse(savedMessages));
-            }
-          } else if (data && data.length > 0) {
-            // Convert database format to ChatMessage format
-            const formattedMessages: ChatMessage[] = data.map(item => ({
-              id: item.id,
-              content: item.content,
-              role: item.role === 'user' || item.role === 'assistant' 
-                ? item.role 
-                : 'user', // Default to user if invalid role
-              created_at: item.created_at
-            }));
-            setMessages(formattedMessages);
-          } else {
-            // If no messages in database, try loading from localStorage
-            const savedMessages = localStorage.getItem(`chat_messages_${user.id}`);
-            if (savedMessages) {
-              setMessages(JSON.parse(savedMessages));
-            }
+      setIsLoadingHistory(true);
+      try {
+        // Use chat_messages table for chat history - for all users
+        const { data, error } = await supabase
+          .from('chat_messages')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: true })
+          .limit(20); // Limit to the most recent 20 messages
+          
+        if (error) {
+          console.error("Error loading chat history:", error);
+          
+          // Fallback to local storage if database fetch fails
+          const savedMessages = localStorage.getItem(`chat_messages_${user.id}`);
+          if (savedMessages) {
+            setMessages(JSON.parse(savedMessages));
           }
-        } catch (error) {
-          console.error("Error in chat history loading:", error);
-        } finally {
-          setIsLoadingHistory(false);
+        } else if (data && data.length > 0) {
+          // Convert database format to ChatMessage format
+          const formattedMessages: ChatMessage[] = data.map(item => ({
+            id: item.id,
+            content: item.content,
+            role: item.role === 'user' || item.role === 'assistant' 
+              ? item.role 
+              : 'user', // Default to user if invalid role
+            created_at: item.created_at
+          }));
+          setMessages(formattedMessages);
+        } else {
+          // If no messages in database, try loading from localStorage
+          const savedMessages = localStorage.getItem(`chat_messages_${user.id}`);
+          if (savedMessages) {
+            setMessages(JSON.parse(savedMessages));
+          }
         }
-      } else {
-        // For non-premium users, load from session-specific localStorage key
-        const sessionId = getSessionId();
-        const sessionKey = `chat_messages_${user.id}_${sessionId}`;
-        const savedMessages = localStorage.getItem(sessionKey);
-        
-        if (savedMessages) {
-          setMessages(JSON.parse(savedMessages));
-        }
+      } catch (error) {
+        console.error("Error in chat history loading:", error);
+      } finally {
+        setIsLoadingHistory(false);
       }
     };
     
     loadChatHistory();
-  }, [user, getSessionId]);
+  }, [user]);
 
-  // Debounced save to localStorage to prevent excessive writes
+  // Debounced save to localStorage and database
   useEffect(() => {
     if (!user || isLoadingHistory || messages.length === 0) return;
     
@@ -98,19 +85,18 @@ export const useChatMessages = () => {
     
     // Set a timeout to save after 1 second of inactivity
     savePendingRef.current = setTimeout(() => {
-      // For non-premium users, use session-specific storage key
+      // Always save to localStorage for all users
       const storageKey = user.subscription_tier === 'premium' 
         ? `chat_messages_${user.id}`
         : `chat_messages_${user.id}_${getSessionId()}`;
         
-      // Always save to localStorage for all users
       localStorage.setItem(storageKey, JSON.stringify(messages));
       
-      // For premium users, also sync the latest message to the database
-      if (user.subscription_tier === 'premium' && messages.length > 0) {
+      // For ALL users, sync the latest message to the database
+      if (messages.length > 0) {
         const lastMessage = messages[messages.length - 1];
         
-        // Only insert if message doesn't already have a DB ID
+        // Only insert if message doesn't already have a DB ID (UUID format)
         if (!lastMessage.id.includes('-')) return;
         
         supabase

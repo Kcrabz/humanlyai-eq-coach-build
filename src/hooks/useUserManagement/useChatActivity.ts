@@ -1,5 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useChatActivity = () => {
   // Fetch chat activity
@@ -10,9 +11,16 @@ export const useChatActivity = () => {
       }
 
       // Get current session auth token
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      if (sessionError) {
+        console.error("Session error:", sessionError);
+        toast.error("Authentication error", { description: "Please try logging in again" });
+        return new Map();
+      }
+      
       if (!sessionData.session) {
         console.error("No authenticated session found");
+        toast.error("Authentication error", { description: "Please log in again" });
         return new Map();
       }
 
@@ -26,7 +34,10 @@ export const useChatActivity = () => {
       
       if (error) {
         console.error("Error fetching chat activity:", error);
-        throw error;
+        toast.error("Failed to fetch chat activity data", { 
+          description: error.message || "An unexpected error occurred" 
+        });
+        return new Map();
       }
       
       // Convert the object to a Map
@@ -42,6 +53,7 @@ export const useChatActivity = () => {
       return chatMap;
     } catch (error) {
       console.error("Error fetching chat activity:", error);
+      toast.error("Failed to fetch chat activity data");
       return new Map();
     }
   };
