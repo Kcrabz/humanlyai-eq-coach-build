@@ -1,45 +1,28 @@
 
-import { CoachingMode } from "@/types";
+// Function to check if we've already shown the introduction to this user
+export function shouldShowIntroduction(userId: string): boolean {
+  const introShown = localStorage.getItem(`humanly_intro_shown_${userId}`);
+  return introShown !== 'true';
+}
 
-// Introduction messages for different coaching modes
-export const introductionMessages = {
-  normal: `Hey there — I'm Kai, your HumanlyAI coach.
+// Function to mark that we've shown the introduction to this user
+export function markIntroductionAsShown(userId: string): void {
+  localStorage.setItem(`humanly_intro_shown_${userId}`, 'true');
+}
 
-I'm here to help you grow your Emotional Intelligence one honest conversation at a time. We'll explore things like self-awareness, communication, and how to understand your emotions without being ruled by them.
-
-This isn't therapy or fluff — this is a space to reflect, grow, and feel more like yourself, day by day.
-
-You can check in anytime, share what's on your mind, ask for a daily EQ tip, or just explore your archetype. I'll be here to guide, nudge, and celebrate your progress along the way.
-
-So, where do you want to start today?`,
-
-  tough: `Alright, let's skip the fluff — I'm Kai. I'm not here to coddle you, I'm here to challenge you.
-
-My job? To help you stop running from your blind spots and start leveling up your Emotional Intelligence — the real kind that builds better relationships, clearer decisions, and a stronger sense of self.
-
-Expect honesty. Expect growth. And expect to get called out — with care.
-
-So, what are you pretending *not* to know about yourself right now?`
-};
-
-// Helper function to get the appropriate introduction message
-export const getIntroductionMessage = (coachingMode: CoachingMode | undefined): string => {
-  // Default to normal mode if coaching mode is not set
-  if (!coachingMode || coachingMode === 'normal') {
-    return introductionMessages.normal;
-  } else {
-    return introductionMessages.tough;
+// Get the coaching mode-specific introduction message
+export function getIntroductionMessage(coachingMode?: string): string {
+  switch (coachingMode?.toLowerCase()) {
+    case 'gentle':
+      return "Hi there! I'm Kai, your EQ coach. I'm here to help you develop your emotional intelligence skills. I'll listen carefully and ask thoughtful questions, while offering supportive guidance when needed. What would you like to focus on today?";
+    
+    case 'tough love':
+      return "Hey! I'm Kai, your EQ coach. I'll be direct with you - growth happens when we face challenges head-on. I'll ask pointed questions and give you straight-up feedback, but always with your best interest in mind. What's something you want to work on?";
+    
+    case 'analytical':
+      return "Hello. I'm Kai, your EQ coach. I specialize in evidence-based approaches to emotional intelligence development. I can help you analyze patterns in your emotional responses and develop practical strategies. What area would you like to explore?";
+    
+    default: // 'normal' mode
+      return "Hey! I'm Kai, your EQ coach. I'm here to help you develop emotionally intelligent skills through thoughtful questions and practical guidance. What's on your mind today?";
   }
-};
-
-// Check if we should show the introduction (first-time user)
-export const shouldShowIntroduction = (userId: string): boolean => {
-  const key = `humanly_intro_shown_${userId}`;
-  return localStorage.getItem(key) !== 'true';
-};
-
-// Mark that the introduction has been shown
-export const markIntroductionAsShown = (userId: string): void => {
-  const key = `humanly_intro_shown_${userId}`;
-  localStorage.setItem(key, 'true');
-};
+}

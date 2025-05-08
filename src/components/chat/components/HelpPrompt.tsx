@@ -1,13 +1,7 @@
 
-import { Info } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { InfoIcon } from "lucide-react";
 
 interface HelpPromptProps {
   sendSuggestedMessage: (content: string) => void;
@@ -15,60 +9,34 @@ interface HelpPromptProps {
 
 export function HelpPrompt({ sendSuggestedMessage }: HelpPromptProps) {
   return (
-    <Alert className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30 flex items-center">
-      <Info className="h-4 w-4 text-humanly-indigo" />
-      <AlertDescription className="text-sm flex-grow">
-        What would you like from Kai now?
-      </AlertDescription>
-      <div className="flex gap-2 ml-2">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => sendSuggestedMessage("I'd like some practical advice on this situation.")}
-                className="text-xs h-7 px-2"
-              >
-                Advice
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Get practical suggestions</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => sendSuggestedMessage("Help me reflect more on why I might feel this way.")}
-                className="text-xs h-7 px-2"
-              >
-                Reflection
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Explore your feelings deeper</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => sendSuggestedMessage("Give me a challenge to help with this.")}
-                className="text-xs h-7 px-2"
-              >
-                Challenge
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Get an activity to try</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+    <Card className="p-4 bg-humanly-pastel-lavender/10 border-humanly-indigo/20 mb-4">
+      <div className="flex items-start gap-3">
+        <InfoIcon className="h-5 w-5 text-humanly-indigo flex-shrink-0 mt-1" />
+        <div>
+          <h4 className="font-medium text-sm mb-2">Looking for something specific?</h4>
+          <p className="text-sm text-muted-foreground mb-3">
+            Try asking Kai for practical advice on a specific emotional intelligence challenge.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => sendSuggestedMessage("I'd like some practical tips on managing stress at work.")}
+              className="text-xs bg-white/80"
+            >
+              "I'd like some practical tips on managing stress."
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => sendSuggestedMessage("How can I be more confident in difficult conversations?")}
+              className="text-xs bg-white/80"
+            >
+              "How can I be more confident in difficult conversations?"
+            </Button>
+          </div>
+        </div>
       </div>
-    </Alert>
+    </Card>
   );
 }

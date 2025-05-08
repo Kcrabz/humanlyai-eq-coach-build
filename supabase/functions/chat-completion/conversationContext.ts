@@ -27,13 +27,14 @@ interface ConversationMemory {
 }
 
 // Helper function to detect if user is directly asking for help
-// Made more stringent to avoid false positives in early turns
 function isUserRequestingDirectHelp(message: string): boolean {
   // More specific patterns that clearly indicate a direct request for guidance
   const explicitHelpRequestPatterns = [
-    /^(?:please |can you |could you )?(?:give|provide|share|tell) me (?:some|a few|the|your)? (?:advice|suggestions|tips|steps|guidance) /i,
-    /^what (?:are|is) (?:some|a few|the) (?:ways|steps|methods|techniques) to /i,
-    /^how (?:exactly|specifically) (?:can|should|would|could) I (?:deal with|handle|manage|approach)/i,
+    /(?:please |can you |could you )?(?:give|provide|share|tell) me (?:some|a few|the|your)? (?:advice|suggestions|tips|steps|guidance) /i,
+    /what (?:are|is) (?:some|a few|the) (?:ways|steps|methods|techniques) to /i,
+    /how (?:can|should|would|could) I (?:deal with|handle|manage|approach)/i,
+    /(?:i need|i want|i'm looking for|looking for) (?:advice|help|guidance|tips|suggestions)/i,
+    /what (?:should|would|can) i do/i,
   ];
   
   // Check if any explicit patterns match
@@ -54,15 +55,14 @@ export function extractConversationContext(messages: any[]): {
   // Count the number of user turns in the conversation
   const conversationTurnCount = userMessages.length;
   
-  // Check if current message is a direct help request, but only consider it
-  // for turns 3+ to ensure early messages still focus on exploration
+  // Check if current message is a direct help request
   const isLatestMessageDirectHelp = userMessages.length > 0 && 
     isUserRequestingDirectHelp(userMessages[userMessages.length - 1].content || '');
   
-  // Only allow direct help detection after turn 2 to ensure early exploration
-  const isDirectHelpRequest = conversationTurnCount >= 3 && isLatestMessageDirectHelp;
+  // Allow direct help detection at any point
+  const isDirectHelpRequest = isLatestMessageDirectHelp;
   
-  // Simple topic extraction (this would be more sophisticated in a real implementation)
+  // Simple topic extraction
   const recentTopics = userMessages.slice(-3).map(m => {
     const content = m.content || '';
     // Extract potential topics (simplified)
@@ -121,15 +121,11 @@ export function enrichSystemMessageWithContext(
   
   // Add specific instructions based on conversation turn
   if (conversationContext.conversationTurnCount === 1) {
-    turnInstruction = "IMPORTANT: This is the user's first message. ONLY ask thoughtful, exploratory questions to understand their situation. DO NOT provide any suggestions, bullet points, or advice yet. Focus exclusively on curious exploration. Ask at least 1-2 meaningful questions.";
-  } else if (conversationContext.conversationTurnCount === 2) {
-    turnInstruction = "This is the user's second message. Continue with thoughtful follow-up questions. You may reflect patterns or insights you notice, but DO NOT give direct advice or suggestions yet. Still focus primarily on exploration with questions.";
-  } else if (conversationContext.conversationTurnCount === 3) {
-    turnInstruction = "This is the user's third message. Begin with a thoughtful question, then explicitly ask: 'Would you like some practical suggestions, or should we explore this further?' If they've already indicated they want advice, you may offer ONE specific suggestion after asking at least one question.";
+    turnInstruction = "This is the user's first message. Ask 1-2 thoughtful questions to understand their situation better. Be conversational and friendly - like a coach, not a therapist.";
   } else if (conversationContext.isDirectHelpRequest) {
-    turnInstruction = "The user is explicitly asking for guidance. Still start with at least one thoughtful question to ensure proper understanding, then provide specific guidance that's tailored to their situation. Avoid generic advice.";
-  } else {
-    turnInstruction = `This is the user's message #${conversationContext.conversationTurnCount}. At this stage, begin with a thoughtful question, then provide a good balance of insightful questions and practical guidance. Offer concrete suggestions after appropriate exploration.`;
+    turnInstruction = "The user is asking for guidance. Ask a brief clarifying question if needed, then provide specific and practical advice. Be direct and helpful.";
+  } else if (conversationContext.conversationTurnCount >= 2) {
+    turnInstruction = `This is turn #${conversationContext.conversationTurnCount}. Ask 1-2 insightful questions, and consider asking if they want practical advice with phrases like "Would you like a tip on this?" or "Want to explore solutions or dig deeper?"`;
   }
   
   // Add conversation memory section if we have context
@@ -166,29 +162,15 @@ export function enrichSystemMessageWithContext(
     
     // Add response guidance based on turn count
     contextSection += "\n💡 RESPONSE GUIDANCE:\n";
+    contextSection += "• Keep your response casual and conversational\n";
+    contextSection += "• Ask only 1-3 questions max, preferably just one good question\n";
+    contextSection += "• Use natural phrases like 'I'm curious about...' or 'What do you think about...'\n";
+    contextSection += "• Keep responses shorter and more direct\n";
     
-    if (conversationContext.conversationTurnCount === 1) {
-      contextSection += "• FIRST TURN: Ask 1-2 thoughtful questions ONLY. NO advice, bullet points, or suggestions yet.\n";
-      contextSection += "• AVOID premature problem-solving. Focus entirely on exploration.\n";
-      contextSection += "• DO NOT use bullet points or numbered lists in your response.\n";
-    } else if (conversationContext.conversationTurnCount === 2) {
-      contextSection += "• SECOND TURN: Continue exploration through questions. No advice yet.\n";
-      contextSection += "• You may reflect what you're noticing but AVOID problem-solving still.\n";
-      contextSection += "• Ask questions that build on what they've shared so far.\n";
-    } else {
-      contextSection += "• Balance questions with insights - but always start with a question\n";
-      contextSection += "• After 3+ turns, you can include specific, thoughtful guidance\n";
-      contextSection += "• Use a conversational, friendly tone rather than a clinical approach\n";
-      
-      // For turn 3+, encourage asking about guidance preferences
-      if (conversationContext.conversationTurnCount === 3) {
-        contextSection += "• Ask if they want practical suggestions or want to explore further\n";
-      }
-      
-      // If they've directly asked for help after turn 2, provide guidance
-      if (conversationContext.isDirectHelpRequest && conversationContext.conversationTurnCount > 2) {
-        contextSection += "• They're asking for guidance - provide specific, tailored advice AFTER asking at least one question\n";
-      }
+    if (conversationContext.isDirectHelpRequest) {
+      contextSection += "• They're asking for guidance - provide specific, actionable advice after a brief clarifying question\n";
+    } else if (conversationContext.conversationTurnCount >= 2) {
+      contextSection += "• Consider asking if they want practical advice: 'Would you like a tip on this?' or 'Should we explore solutions?'\n";
     }
   }
   
