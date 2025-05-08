@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { ChatMessage } from "@/types";
 import { useChatContextMessages } from "@/hooks/chat/useChatContextMessages";
@@ -50,6 +51,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // State to track if we've shown a fresh chat welcome message
   const [hasFreshChatRun, setHasFreshChatRun] = useState(false);
+  // State to track if we've already processed the initial login clearing
+  const [hasInitialCleared, setHasInitialCleared] = useState(false);
 
   // Check if we should show the introduction message for first-time users
   useEffect(() => {
@@ -77,6 +80,29 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     checkAndSendIntroduction();
   }, [user, isLoading, messages.length]);
+
+  // Start a fresh chat experience when the component mounts if user is authenticated
+  useEffect(() => {
+    if (!user || hasInitialCleared) return;
+    
+    // Always show a fresh chat when the chat page is loaded after login
+    console.log("Showing fresh chat on initial page load");
+    
+    // Clear the UI messages (but database records are preserved)
+    clearMessages();
+    
+    // Add a welcome message
+    const welcomeMessage = getWelcomeMessage();
+    addAssistantMessage(welcomeMessage);
+    
+    // Mark as done so we don't show again in this session
+    setHasFreshChatRun(true);
+    setHasInitialCleared(true);
+    
+    // Create a flag in sessionStorage to prevent repeated clearing if the user navigates away and back
+    sessionStorage.setItem('chat_cleared_for_session', 'true');
+    
+  }, [user, hasInitialCleared]);
 
   // Check for fresh login to display a clear chat experience
   useEffect(() => {

@@ -15,6 +15,9 @@ export const markLoginSuccess = (): void => {
   
   // Set a flag to indicate that the chat should be reset for fresh experience
   sessionStorage.setItem('fresh_chat_needed', 'true');
+  
+  // Remove any previous chat clearing flag to ensure we clear on new login
+  sessionStorage.removeItem('chat_cleared_for_session');
 
   console.log("Login success marked with timestamp", { timestamp });
 };

@@ -42,9 +42,16 @@ export const useChatContextMessages = () => {
     }
   }, [user?.subscription_tier]);
 
-  // Load messages based on user's subscription tier
+  // Modified load messages function - only loads messages if not already cleared for session
   useEffect(() => {
     if (!user) return;
+    
+    // Check if we've already cleared the chat for this session - if so, don't load history
+    const alreadyCleared = sessionStorage.getItem('chat_cleared_for_session') === 'true';
+    if (alreadyCleared) {
+      console.log("Chat already cleared for this session, skipping history load");
+      return;
+    }
     
     const loadChatHistory = async () => {
       setIsLoadingHistory(true);
