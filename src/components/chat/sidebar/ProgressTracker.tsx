@@ -15,9 +15,9 @@ export function ProgressTracker() {
   if (!isPremiumMember) {
     return (
       <Card className="border-dashed border-gray-300 bg-gray-50">
-        <CardContent className="p-4">
-          <div className="flex flex-col items-center text-center gap-2">
-            <Sparkle className="h-8 w-8 text-humanly-teal opacity-60" />
+        <CardContent className="p-3">
+          <div className="flex flex-col items-center text-center gap-1.5">
+            <Sparkle className="h-7 w-7 text-humanly-teal opacity-60" />
             <h3 className="font-medium text-sm">Premium Feature</h3>
             <p className="text-xs text-muted-foreground">
               Upgrade to track EQ progress, record streaks, and unlock achievements
@@ -25,7 +25,7 @@ export function ProgressTracker() {
             <Button 
               variant="outline" 
               size="sm" 
-              className="mt-2 text-xs bg-humanly-teal text-white hover:bg-humanly-teal-dark"
+              className="mt-1 text-xs bg-humanly-teal text-white hover:bg-humanly-teal-dark"
               onClick={() => window.location.href = "/pricing"}
             >
               Upgrade
@@ -40,13 +40,13 @@ export function ProgressTracker() {
   if (userStreakData) {
     return (
       <Card className="bg-white">
-        <CardContent className="p-4">
-          <h3 className="font-medium text-sm mb-3">Your Progress</h3>
+        <CardContent className="p-3">
+          <h3 className="font-medium text-sm mb-2">Your Progress</h3>
           
-          <div className="space-y-4">
+          <div className="space-y-3">
             {/* Current streak */}
             <div>
-              <div className="flex justify-between items-center mb-1">
+              <div className="flex justify-between items-center mb-0.5">
                 <span className="text-xs">Current streak</span>
                 <span className="text-xs font-medium">{userStreakData.currentStreak} days</span>
               </div>
@@ -73,8 +73,8 @@ export function ProgressTracker() {
             
             {/* Breakthrough categories */}
             {Object.keys(breakthroughsByCategory || {}).length > 0 && (
-              <div className="mt-2">
-                <p className="text-xs mb-1">Top EQ Areas:</p>
+              <div className="mt-1">
+                <p className="text-xs mb-0.5">Top EQ Areas:</p>
                 <div className="flex flex-wrap gap-1">
                   {Object.entries(breakthroughsByCategory)
                     .sort(([, countA], [, countB]) => countB - countA)
@@ -99,8 +99,8 @@ export function ProgressTracker() {
   // For premium users without streak data yet
   return (
     <Card className="bg-white">
-      <CardContent className="p-4">
-        <h3 className="font-medium text-sm mb-3">Your Progress</h3>
+      <CardContent className="p-3">
+        <h3 className="font-medium text-sm mb-2">Your Progress</h3>
         <p className="text-xs text-muted-foreground">
           Start chatting to track your EQ progress and streak!
         </p>

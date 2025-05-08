@@ -61,11 +61,11 @@ export function ConversationStarters() {
   };
   
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <h3 className="text-xs uppercase font-semibold text-muted-foreground">Start a conversation</h3>
       
       {getRelevantPrompts().map((category) => (
-        <div key={category.category} className="space-y-2">
+        <div key={category.category} className="space-y-1">
           <p className="text-xs font-medium text-muted-foreground ml-1">{category.category}</p>
           
           {category.prompts.slice(0, 2).map((prompt, index) => (
@@ -74,7 +74,7 @@ export function ConversationStarters() {
               className="hover:shadow-md transition-all duration-300 hover:-translate-y-0.5 cursor-pointer border-humanly-teal/10 bg-white"
               onClick={() => handlePromptClick(prompt)}
             >
-              <CardContent className="p-3 flex items-center gap-2">
+              <CardContent className="p-2 flex items-center gap-2">
                 <span className="text-humanly-teal p-1 rounded-full bg-humanly-teal/10">
                   <MessageSquare className="h-3 w-3" />
                 </span>

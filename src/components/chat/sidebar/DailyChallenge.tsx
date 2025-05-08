@@ -58,13 +58,13 @@ export function DailyChallenge() {
   const archetype = userArchetype ? ARCHETYPES[userArchetype] : null;
   
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <h3 className="text-xs uppercase font-semibold text-muted-foreground">Daily EQ Challenge</h3>
       
-      <div className={`rounded-lg p-3 border shadow-sm transition-all duration-300 ${
+      <div className={`rounded-lg p-2 border shadow-sm transition-all duration-300 ${
         isCompleted ? 'bg-humanly-teal/5 border-humanly-teal/20' : 'bg-gradient-to-br from-white to-humanly-gray-lightest border-humanly-teal/10'
       }`}>
-        <div className="flex items-start gap-2 mb-2">
+        <div className="flex items-start gap-2 mb-1">
           {archetype && (
             <span className="text-lg" title={archetype.title}>{archetype.icon}</span>
           )}
@@ -79,14 +79,14 @@ export function DailyChallenge() {
             onClick={handleComplete}
             size="sm"
             variant="outline" 
-            className="w-full mt-2 border-humanly-teal/20 text-humanly-teal hover:bg-humanly-teal/5"
+            className="w-full mt-1 border-humanly-teal/20 text-humanly-teal hover:bg-humanly-teal/5"
           >
             <ListCheck className="h-3.5 w-3.5 mr-1" />
             Complete Challenge
           </Button>
         ) : (
-          <div className="bg-humanly-teal/10 text-humanly-teal p-2 rounded-md flex items-center justify-center gap-2 mt-2">
-            <Check className="h-4 w-4" />
+          <div className="bg-humanly-teal/10 text-humanly-teal p-1.5 rounded-md flex items-center justify-center gap-2 mt-1">
+            <Check className="h-3.5 w-3.5" />
             <span className="text-xs font-medium">Challenge Completed!</span>
           </div>
         )}

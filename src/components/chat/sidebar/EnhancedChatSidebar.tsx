@@ -35,7 +35,7 @@ export function EnhancedChatSidebar() {
         <SidebarRail className="hover:bg-humanly-pastel-lavender/20" />
         
         <SidebarHeader>
-          <div className="mb-4 p-1">
+          <div className="mb-2 p-1">
             <h2 className="font-medium text-base bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent flex items-center gap-2">
               <PanelLeft className="h-4 w-4 text-humanly-indigo" />
               EQ Coach
@@ -46,18 +46,18 @@ export function EnhancedChatSidebar() {
           </div>
         </SidebarHeader>
         
-        <SidebarContent className="space-y-8 px-1">
+        <SidebarContent className="space-y-4 px-1">
           {/* Progress tracker (now first) */}
           <ProgressTracker />
           
-          <Separator />
+          <Separator className="my-2" />
           
           {/* Chat history section (now second) */}
           <div>
             <ChatHistorySidebar />
           </div>
           
-          <Separator />
+          <Separator className="my-2" />
           
           {/* Daily challenges (now third) */}
           <DailyChallenge />

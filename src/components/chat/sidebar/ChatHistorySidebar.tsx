@@ -36,7 +36,7 @@ export function ChatHistorySidebar() {
 
   if (isLoading) {
     return (
-      <div className="py-2 flex justify-center">
+      <div className="py-1 flex justify-center">
         <TypingIndicator />
       </div>
     );
@@ -44,8 +44,8 @@ export function ChatHistorySidebar() {
 
   if (conversations.length === 0) {
     return (
-      <div className="text-center py-4 px-2">
-        <History className="mx-auto h-6 w-6 text-muted-foreground/50 mb-2" />
+      <div className="text-center py-2 px-2">
+        <History className="mx-auto h-6 w-6 text-muted-foreground/50 mb-1" />
         <p className="text-xs text-muted-foreground">
           Your chat history will appear here
         </p>
@@ -54,7 +54,7 @@ export function ChatHistorySidebar() {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="flex items-center justify-between px-2">
         <h3 className="text-sm font-medium">Previous Conversations</h3>
         <Button 
@@ -69,12 +69,12 @@ export function ChatHistorySidebar() {
         </Button>
       </div>
       
-      <ScrollArea className="h-[180px] px-1">
-        <div className="space-y-1">
+      <ScrollArea className="h-[160px] px-1">
+        <div className="space-y-0.5">
           {conversations.map((conversation) => (
             <div 
               key={conversation.id}
-              className="group flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors cursor-pointer"
+              className="group flex items-center justify-between rounded-md px-2 py-1 text-sm hover:bg-accent transition-colors cursor-pointer"
             >
               <div 
                 className="flex-1 truncate"
