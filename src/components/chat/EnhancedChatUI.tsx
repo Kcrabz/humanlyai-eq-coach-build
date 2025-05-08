@@ -144,8 +144,8 @@ export function EnhancedChatUI({
   // Generate dynamic placeholder based on conversation stage
   const getDynamicPlaceholder = () => {
     if (userTurnCount === 0) return "What's on your mind today?";
-    if (userTurnCount === 1) return "Tell me more...";
-    if (userTurnCount === 2) return "How does that impact you?";
+    if (userTurnCount === 1) return "Tell me more about that...";
+    if (userTurnCount === 2) return "How does this affect you?";
     return placeholder;
   };
 
@@ -171,9 +171,10 @@ export function EnhancedChatUI({
             <h3 className="text-xl font-medium">Start a conversation</h3>
             <p className="text-muted-foreground mt-2 max-w-md">
               Send a message to begin your conversation with Kai, your EQ coach.
+              Kai will ask questions to understand your situation before offering guidance.
             </p>
             <div className="mt-6 space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">Try asking:</p>
+              <p className="text-sm font-medium text-muted-foreground">Try starting with:</p>
               <div className="flex flex-wrap gap-2 justify-center">
                 <Button 
                   variant="outline" 
@@ -186,10 +187,10 @@ export function EnhancedChatUI({
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => sendSuggestedMessage("How can I improve my communication with my team?")}
+                  onClick={() => sendSuggestedMessage("I struggle with communicating my needs to others.")}
                   className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30"
                 >
-                  "How can I improve my communication with my team?"
+                  "I struggle with communicating my needs to others."
                 </Button>
               </div>
             </div>
