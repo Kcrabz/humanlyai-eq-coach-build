@@ -15,6 +15,8 @@ import {
 import { ConversationStarters } from "./ConversationStarters";
 import { ProgressTracker } from "./ProgressTracker";
 import { DailyChallenge } from "./DailyChallenge";
+import { ChatHistorySidebar } from "./ChatHistorySidebar";
+import { Separator } from "@/components/ui/separator";
 
 export function EnhancedChatSidebar() {
   const { user } = useAuth();
@@ -45,6 +47,13 @@ export function EnhancedChatSidebar() {
         </SidebarHeader>
         
         <SidebarContent className="space-y-8 px-1">
+          {/* Chat history section */}
+          <div>
+            <ChatHistorySidebar />
+          </div>
+          
+          <Separator />
+          
           {/* Progress tracker */}
           <ProgressTracker />
           
