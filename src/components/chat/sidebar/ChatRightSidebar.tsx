@@ -11,7 +11,7 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 
-// Import our new component files
+// Import our component files
 import { UserProfile } from "./right/UserProfile";
 import { MainNavigationLinks } from "./right/MainNavigationLinks";
 import { UserAccountLinks } from "./right/UserAccountLinks";
@@ -51,7 +51,8 @@ export function ChatRightSidebar() {
       side="right" 
       variant="sidebar" 
       collapsible="offcanvas"
-      className="user-sidebar"
+      className={`user-sidebar ${open ? 'w-64' : 'w-0'}`}
+      style={{ width: open ? '16rem' : '0', minWidth: open ? '16rem' : '0' }}
       data-state={open ? "open" : "closed"}
     >
       <SidebarHeader className="p-4">

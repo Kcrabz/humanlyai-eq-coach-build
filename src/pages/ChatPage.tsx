@@ -1,3 +1,4 @@
+
 import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -78,7 +79,7 @@ const ChatPage = () => {
         <LeftSidebarProvider>
           <RightSidebarProvider>
             <ChatProvider>
-              <div className="flex h-screen overflow-hidden">
+              <div className="flex h-screen overflow-hidden w-full">
                 {/* Left Sidebar */}
                 <Suspense fallback={<div className="w-64 zen-sidebar animate-pulse"></div>}>
                   <EnhancedChatSidebar />

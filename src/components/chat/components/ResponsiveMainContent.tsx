@@ -23,6 +23,9 @@ export function ResponsiveMainContent({
       className={`flex-1 flex flex-col overflow-hidden main-content ${
         rightSidebarOpen ? 'main-content-with-right-sidebar-open' : 'main-content-with-right-sidebar-closed'
       }`}
+      style={{
+        width: rightSidebarOpen ? 'calc(100% - 16rem)' : '100%'
+      }}
     >
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}
