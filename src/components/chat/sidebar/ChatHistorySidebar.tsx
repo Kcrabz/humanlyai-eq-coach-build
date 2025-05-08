@@ -4,12 +4,10 @@ import { useChatHistory, ChatConversation } from "@/hooks/chat/useChatHistory";
 import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { 
   History, 
   Trash, 
-  RefreshCw,
-  ChevronRight
+  RefreshCw
 } from "lucide-react";
 import { TypingIndicator } from "../components/TypingIndicator";
 import { toast } from "sonner";
@@ -44,9 +42,9 @@ export function ChatHistorySidebar() {
 
   if (conversations.length === 0) {
     return (
-      <div className="text-center py-2 px-2">
-        <History className="mx-auto h-6 w-6 text-muted-foreground/50 mb-1" />
-        <p className="text-xs text-muted-foreground">
+      <div className="text-center py-1">
+        <History className="mx-auto h-5 w-5 text-muted-foreground/50" />
+        <p className="text-xs text-muted-foreground mt-1">
           Your chat history will appear here
         </p>
       </div>
@@ -55,12 +53,12 @@ export function ChatHistorySidebar() {
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between px-2">
-        <h3 className="text-sm font-medium">Previous Conversations</h3>
+      <div className="flex items-center justify-between px-1">
+        <h3 className="text-xs font-medium text-muted-foreground uppercase">Recent Conversations</h3>
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-6 w-6"
+          className="h-5 w-5"
           onClick={() => refreshHistory()}
           disabled={isLoading}
         >
@@ -69,9 +67,9 @@ export function ChatHistorySidebar() {
         </Button>
       </div>
       
-      <ScrollArea className="h-[160px] px-1">
+      <ScrollArea className="h-[120px]">
         <div className="space-y-0.5">
-          {conversations.map((conversation) => (
+          {conversations.slice(0, 5).map((conversation) => (
             <div 
               key={conversation.id}
               className="group flex items-center justify-between rounded-md px-2 py-1 text-sm hover:bg-accent transition-colors cursor-pointer"
@@ -80,23 +78,20 @@ export function ChatHistorySidebar() {
                 className="flex-1 truncate"
                 onClick={() => handleRestoreConversation(conversation)}
               >
-                <p className="font-medium truncate">{conversation.title}</p>
-                <p className="text-xs text-muted-foreground truncate">{conversation.preview}</p>
+                <p className="text-sm font-medium truncate">{conversation.title}</p>
               </div>
-              <div className="flex opacity-0 group-hover:opacity-100 transition-opacity">
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteConversation(conversation.id);
-                  }}
-                >
-                  <Trash className="h-3 w-3 text-muted-foreground" />
-                  <span className="sr-only">Delete</span>
-                </Button>
-              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  deleteConversation(conversation.id);
+                }}
+              >
+                <Trash className="h-3 w-3 text-muted-foreground" />
+                <span className="sr-only">Delete</span>
+              </Button>
             </div>
           ))}
         </div>

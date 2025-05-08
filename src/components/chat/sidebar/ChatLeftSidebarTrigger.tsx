@@ -11,7 +11,7 @@ export function ChatLeftSidebarTrigger() {
     <Button 
       variant="ghost" 
       size="icon" 
-      className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300" 
+      className="h-9 w-9 flex items-center justify-center rounded-full bg-white shadow-soft text-humanly-indigo hover:bg-humanly-pastel-lavender/30 transition-colors duration-300" 
       aria-label="Toggle Left Sidebar"
       onClick={() => toggleSidebar()}
     >

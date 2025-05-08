@@ -1,19 +1,19 @@
 
 /* Enhanced header styling */
 .enhanced-header {
-  @apply border-b border-gray-200 bg-white backdrop-blur-md shadow-sm;
+  @apply border-b border-gray-100 bg-white/90 backdrop-blur-md;
   position: relative;
   z-index: 50;
 }
 
 /* Page container with improved spacing */
 .page-container {
-  @apply max-w-5xl mx-auto px-4 py-8 md:px-8 md:py-12;
+  @apply max-w-5xl mx-auto px-4 py-8 md:px-6 md:py-10;
 }
 
 /* Section container */
 .section-container {
-  @apply py-8 md:py-12;
+  @apply py-6 md:py-10;
 }
 
 /* Content container */
@@ -23,35 +23,35 @@
 
 /* Zen card */
 .zen-card {
-  @apply bg-white/80 backdrop-blur-sm border border-gray-100/70 rounded-xl p-6 shadow-soft;
+  @apply bg-white border border-gray-50 rounded-xl p-5 shadow-sm;
 }
 
 /* Meditation space */
 .meditation-space {
-  @apply bg-gradient-to-br from-humanly-pastel-lavender/30 to-humanly-pastel-blue/20 p-8 rounded-xl border border-humanly-pastel-lavender/20 shadow-inner-soft;
+  @apply bg-gradient-to-br from-humanly-pastel-lavender/20 to-humanly-pastel-blue/10 p-6 rounded-xl border border-humanly-pastel-lavender/10;
 }
 
 /* Sidebar styling */
 .zen-sidebar {
-  @apply bg-white/70 backdrop-blur-md border-r border-gray-100/70;
+  @apply bg-white border-r border-gray-50;
 }
 
 /* User sidebar styling */
 .user-sidebar {
-  @apply bg-white/70 backdrop-blur-md border-l border-gray-100/70;
+  @apply bg-white border-l border-gray-50;
 }
 
 /* Main content area */
 .main-content {
-  @apply flex-1 overflow-auto bg-gradient-to-br from-white via-white to-humanly-pastel-lavender/20;
+  @apply flex-1 overflow-auto bg-gradient-to-br from-white to-humanly-pastel-lavender/10;
 }
 
 /* Footer styling */
 .zen-footer {
-  @apply border-t border-gray-100/70 py-4 px-4 text-xs text-gray-500 bg-white/70 backdrop-blur-sm;
+  @apply border-t border-gray-50 py-3 px-4 text-xs text-gray-500 bg-white;
 }
 
 /* Chat container with calming background */
 .chat-container {
-  @apply bg-white/50 backdrop-blur-sm rounded-xl shadow-soft border border-gray-100/70 overflow-hidden;
+  @apply bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-50 overflow-hidden;
 }

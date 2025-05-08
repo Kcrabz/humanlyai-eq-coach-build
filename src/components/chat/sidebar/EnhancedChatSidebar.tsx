@@ -17,9 +17,16 @@ import { ProgressTracker } from "./ProgressTracker";
 import { DailyChallenge } from "./DailyChallenge";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { Separator } from "@/components/ui/separator";
+import { useEffect } from "react";
 
 export function EnhancedChatSidebar() {
   const { user } = useAuth();
+  const { setOpen } = useSidebar("left");
+  
+  // Set sidebar to be collapsed by default
+  useEffect(() => {
+    setOpen(false);
+  }, [setOpen]);
   
   if (!user) return null;
   
@@ -35,43 +42,45 @@ export function EnhancedChatSidebar() {
         <SidebarRail className="hover:bg-humanly-pastel-lavender/20" />
         
         <SidebarHeader>
-          <div className="mb-2 p-1">
+          <div className="mb-1 p-1">
             <h2 className="font-medium text-base bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent flex items-center gap-2">
               <PanelLeft className="h-4 w-4 text-humanly-indigo" />
               EQ Coach
             </h2>
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="text-xs text-muted-foreground">
               Daily practice for emotional intelligence
             </p>
           </div>
         </SidebarHeader>
         
-        <SidebarContent className="space-y-4 px-1">
+        <SidebarContent className="space-y-2 px-1">
           {/* Progress tracker (now first) */}
           <ProgressTracker />
           
-          <Separator className="my-2" />
+          <Separator className="my-1" />
           
           {/* Chat history section (now second) */}
           <div>
             <ChatHistorySidebar />
           </div>
           
-          <Separator className="my-2" />
+          <Separator className="my-1" />
           
           {/* Daily challenges (now third) */}
           <DailyChallenge />
+          
+          <Separator className="my-1" />
           
           {/* Conversation starters (now last) */}
           <ConversationStarters />
         </SidebarContent>
         
         <SidebarFooter>
-          <div className="mt-auto p-3">
+          <div className="mt-auto p-2">
             <Button 
-              variant="outline" 
+              variant="ghost" 
               size="sm" 
-              className="w-full text-xs rounded-lg bg-white hover:bg-humanly-pastel-lavender/30 border-gray-200 text-humanly-indigo/80 transition-all duration-300" 
+              className="w-full text-xs rounded-lg hover:bg-humanly-pastel-lavender/30 text-humanly-indigo/80 transition-all duration-300" 
               onClick={() => window.open("https://humanlyai.me/support", "_blank")}
             >
               <ExternalLink className="h-3 w-3 mr-1" />
