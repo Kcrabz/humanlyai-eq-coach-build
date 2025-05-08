@@ -18,6 +18,52 @@ export const useChatHistory = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
+  // Generate a descriptive title from conversation content
+  const generateConversationTitle = (messages: ChatMessage[]): string => {
+    // Find first user message as the potential title
+    const firstUserMsg = messages.find(m => m.role === 'user');
+    
+    if (firstUserMsg) {
+      // Extract key topics or the first sentence
+      const content = firstUserMsg.content;
+      
+      // Look for common EQ topics in the first message
+      const eqTopics = [
+        'anxiety', 'stress', 'confidence', 'imposter syndrome', 
+        'communication', 'conflict', 'relationship', 'emotion',
+        'self-awareness', 'empathy', 'leadership', 'burnout',
+        'motivation', 'goals', 'feedback', 'criticism',
+        'work-life balance', 'mindfulness', 'resilience'
+      ];
+      
+      // Check if any EQ topics are in the content
+      for (const topic of eqTopics) {
+        if (content.toLowerCase().includes(topic)) {
+          // Capitalize the first letter of the topic
+          return topic.charAt(0).toUpperCase() + topic.slice(1);
+        }
+      }
+      
+      // If no specific topic found, use first part of message
+      // Take the first 3-5 words or up to 30 characters
+      const words = content.split(' ');
+      const titleWords = words.slice(0, Math.min(5, words.length));
+      let title = titleWords.join(' ');
+      
+      // Trim and add ellipsis if needed
+      if (title.length > 30) {
+        title = title.substring(0, 30) + '...';
+      } else if (content.length > title.length) {
+        title += '...';
+      }
+      
+      return title;
+    }
+    
+    // Fallback to date if no user message found
+    return 'Conversation on ' + new Date(messages[0].created_at).toLocaleDateString();
+  };
+
   // Load user's chat conversations
   const loadChatHistory = useCallback(async () => {
     if (!user) return;
@@ -55,16 +101,16 @@ export const useChatHistory = () => {
       // Create conversation objects from grouped messages
       const conversationList: ChatConversation[] = Array.from(conversationMap.entries())
         .map(([date, messages]) => {
-          // Find first user message for title/preview
-          const firstUserMsg = messages.find(m => m.role === 'user');
-          const title = firstUserMsg ? 
-            firstUserMsg.content.substring(0, 30) + (firstUserMsg.content.length > 30 ? '...' : '') : 
-            'Conversation on ' + date;
+          // Generate a meaningful title
+          const title = generateConversationTitle(messages);
+          
+          // Create a preview that shows the number of messages
+          const preview = `${messages.length} messages • ${new Date(messages[0].created_at).toLocaleDateString()}`;
             
           return {
             id: date,
             title,
-            preview: `${messages.length} messages`,
+            preview,
             last_updated: new Date(messages[0].created_at).toISOString(),
             messages: [...messages].sort((a, b) => 
               new Date(a.created_at).getTime() - new Date(b.created_at).getTime()

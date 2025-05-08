@@ -56,7 +56,7 @@ export function ChatHistorySidebar() {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between px-2">
-        <h3 className="text-sm font-medium">Conversation History</h3>
+        <h3 className="text-sm font-medium">Previous Conversations</h3>
         <Button 
           variant="ghost" 
           size="icon" 

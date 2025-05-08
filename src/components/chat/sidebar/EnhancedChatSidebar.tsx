@@ -47,20 +47,22 @@ export function EnhancedChatSidebar() {
         </SidebarHeader>
         
         <SidebarContent className="space-y-8 px-1">
-          {/* Chat history section */}
+          {/* Progress tracker (now first) */}
+          <ProgressTracker />
+          
+          <Separator />
+          
+          {/* Chat history section (now second) */}
           <div>
             <ChatHistorySidebar />
           </div>
           
           <Separator />
           
-          {/* Progress tracker */}
-          <ProgressTracker />
-          
-          {/* Daily challenges */}
+          {/* Daily challenges (now third) */}
           <DailyChallenge />
           
-          {/* Conversation starters */}
+          {/* Conversation starters (now last) */}
           <ConversationStarters />
         </SidebarContent>
         
