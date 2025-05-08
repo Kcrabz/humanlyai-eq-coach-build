@@ -75,23 +75,8 @@ You're conversational, practical, and emotionally attuned — like a smart, grou
 
 Your mission is to help people feel seen and move forward — one thoughtful conversation at a time.`;
 
-// Function to create a personalized system message
+// Function to create a system message without any additional personalization or context
 export function createSystemMessage(archetype: string, coachingMode: string): string {
-  // Create the dynamic personalization header
-  let archetypeInfo = archetype;
-  let archetypePrompt = "";
-  
-  // Handle case where archetype is not set yet
-  if (!archetype || archetype === 'unknown' || archetype === 'Not set') {
-    archetypeInfo = "Not yet determined.";
-    archetypePrompt = "Since the user hasn't completed their EQ assessment yet, focus on general emotional intelligence concepts. Gently encourage them to complete their assessment for more personalized coaching, but don't be pushy about it. Provide value in every interaction regardless.";
-  }
-  
-  const personalizationHeader = 
-    `Coaching Mode: ${coachingMode || 'normal'}.\n` +
-    `EQ Archetype: ${archetypeInfo}.\n` +
-    archetypePrompt;
-  
-  // Combine the personalization header with the system prompt
-  return personalizationHeader + "\n\n" + KAI_SYSTEM_PROMPT;
+  // Simply return the base system prompt without any modifications
+  return KAI_SYSTEM_PROMPT;
 }
