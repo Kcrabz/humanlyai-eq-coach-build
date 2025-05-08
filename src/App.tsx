@@ -1,12 +1,11 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   createBrowserRouter,
   RouterProvider,
   useNavigate,
   Outlet,
 } from "react-router-dom";
-import { useAuth } from "./context/AuthContext";
 import { AuthProvider } from "./context/AuthContext";
 import OnboardingPage from "./pages/OnboardingPage";
 import LoginPage from "./pages/LoginPage";
@@ -19,10 +18,11 @@ import { PageLayout } from "./components/layout/PageLayout";
 import { Toaster } from "./components/ui/sonner";
 import { AuthenticationGuard } from "./components/auth/AuthenticationGuard";
 
+// Home page that redirects to chat
 const Index = () => {
   const navigate = useNavigate();
 
-  useEffect(() => {
+  React.useEffect(() => {
     navigate("/chat");
   }, [navigate]);
 
@@ -37,7 +37,7 @@ const Root = () => {
   );
 };
 
-// Add a redirect from dashboard to chat
+// Create the router configuration
 const router = createBrowserRouter([
   {
     path: "/",
@@ -81,11 +81,13 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <AuthProvider>
-      <RouterProvider router={router} />
-      <AuthenticationGuard />
-      <Toaster position="bottom-right" />
-    </AuthProvider>
+    // First render the RouterProvider, then the AuthProvider
+    <RouterProvider router={router}>
+      <AuthProvider>
+        <AuthenticationGuard />
+        <Toaster position="bottom-right" />
+      </AuthProvider>
+    </RouterProvider>
   );
 }
 

@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import AuthContext from "./AuthContext";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import useAuthActions from "@/hooks/useAuthActions";
@@ -37,8 +37,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Auth signup - Pass the function through directly without wrapping it
   const { signup } = useAuthSignup(setUser);
   
-  // Auth actions
-  const { logout: authLogout } = useAuthActions();
+  // Auth actions - we don't directly use useNavigate here
+  const { logout: rawLogout } = useAuthActions();
+  
+  // Wrap the logout function to be used without navigation context
+  const logout = useCallback(() => {
+    return rawLogout();
+  }, [rawLogout]);
   
   // Profile hooks
   const profileCore = useProfileCore(setUser);
@@ -70,7 +75,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     authEvent: authEvent as "SIGN_IN_COMPLETE" | "RESTORED_SESSION" | "SIGN_OUT_COMPLETE" | null,
     profileLoaded,
     login: authCore.login,
-    logout: authLogout,
+    logout, // Use our wrapped version that doesn't depend on navigation context
     signup,
     resetPassword: resetPasswordWrapper,
     updateProfile,
@@ -87,7 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userStreakData,
     userAchievements
   }), [
-    user, isLoading, error, authCore.login, authLogout, 
+    user, isLoading, error, authCore.login, logout, 
     signup, resetPasswordWrapper, updateProfile, forceUpdateProfile,
     setNameWrapper, setArchetypeWrapper, setCoachingModeWrapper, 
     setOnboardedWrapper, setUser, authEvent, profileLoaded, 
