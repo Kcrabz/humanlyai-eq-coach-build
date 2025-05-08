@@ -121,11 +121,16 @@ export function enrichSystemMessageWithContext(
   
   // Add specific instructions based on conversation turn
   if (conversationContext.conversationTurnCount === 1) {
-    turnInstruction = "This is the user's first message. Ask 1-2 thoughtful questions to understand their situation better. Be conversational and friendly - like a coach, not a therapist.";
+    turnInstruction = "This is the user's first message. Start with a warm reflection. Ask **one open-ended question only**. Do not offer advice yet. Be conversational and friendly — like a helpful coach, not a therapist.";
   } else if (conversationContext.isDirectHelpRequest) {
-    turnInstruction = "The user is asking for guidance. Ask a brief clarifying question if needed, then provide specific and practical advice. Be direct and helpful.";
+    turnInstruction = "The user is asking for guidance. Ask a brief clarifying question if needed, then provide **one** specific, practical idea. Be direct, concise, and supportive.";
   } else if (conversationContext.conversationTurnCount >= 2) {
-    turnInstruction = `This is turn #${conversationContext.conversationTurnCount}. Ask 1-2 insightful questions, and consider asking if they want practical advice with phrases like "Would you like a tip on this?" or "Want to explore solutions or dig deeper?"`;
+    turnInstruction = `This is turn #${conversationContext.conversationTurnCount}. Continue the conversation with **one insightful question**. You may follow up with "Want a practical tip on this?" or "Want to explore this more or talk solutions?" depending on tone.`;
+  }
+  
+  // Add fallback instruction if none of the above conditions are met
+  if (!turnInstruction) {
+    turnInstruction = "If unsure, say: 'I can ask a few questions to better understand, or offer something practical to try — what would feel more helpful right now?'";
   }
   
   // Add conversation memory section if we have context
@@ -163,12 +168,12 @@ export function enrichSystemMessageWithContext(
     // Add response guidance based on turn count
     contextSection += "\n💡 RESPONSE GUIDANCE:\n";
     contextSection += "• Keep your response casual and conversational\n";
-    contextSection += "• Ask only 1-3 questions max, preferably just one good question\n";
+    contextSection += "• Ask only ONE good question at a time\n";
     contextSection += "• Use natural phrases like 'I'm curious about...' or 'What do you think about...'\n";
     contextSection += "• Keep responses shorter and more direct\n";
     
     if (conversationContext.isDirectHelpRequest) {
-      contextSection += "• They're asking for guidance - provide specific, actionable advice after a brief clarifying question\n";
+      contextSection += "• They're asking for guidance - provide ONE specific, actionable suggestion\n";
     } else if (conversationContext.conversationTurnCount >= 2) {
       contextSection += "• Consider asking if they want practical advice: 'Would you like a tip on this?' or 'Should we explore solutions?'\n";
     }
@@ -177,3 +182,4 @@ export function enrichSystemMessageWithContext(
   // Combine with the base system message
   return systemMessage + contextSection;
 }
+
