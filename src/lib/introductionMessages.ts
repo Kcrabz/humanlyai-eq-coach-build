@@ -14,10 +14,10 @@ export function markIntroductionAsShown(userId: string): void {
 export function getIntroductionMessage(coachingMode?: string): string {
   switch (coachingMode?.toLowerCase()) {
     case 'gentle':
-      return "Hi there! I'm Kai, your EQ coach. I'm here to help you develop your emotional intelligence skills. I'll listen carefully and ask thoughtful questions, while offering supportive guidance when needed. What would you like to focus on today?";
+      return "Hi there, I'm Kai — your EQ coach. I'm here to support your emotional growth with thoughtful questions and simple, practical ideas. We'll take it one step at a time. What would you like to focus on today?";
     
     case 'tough love':
-      return "Hey! I'm Kai, your EQ coach. I'll be direct with you - growth happens when we face challenges head-on. I'll ask pointed questions and give you straight-up feedback, but always with your best interest in mind. What's something you want to work on?";
+      return "Hey, I'm Kai — your EQ coach. I'll be direct and honest, because growth takes guts. I'll challenge your thinking and give it to you straight — always with your goals in mind. So, what's something real you want to work on?";
     
     case 'analytical':
       return "Hello. I'm Kai, your EQ coach. I specialize in evidence-based approaches to emotional intelligence development. I can help you analyze patterns in your emotional responses and develop practical strategies. What area would you like to explore?";
