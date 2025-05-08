@@ -18,6 +18,8 @@ interface ChatContextType {
   } | null;
   error: string | null;
   retryLastMessage: () => Promise<void>;
+  clearMessages: () => void;
+  restoreConversation: (messages: ChatMessage[]) => void;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -29,7 +31,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     addAssistantMessage,
     updateAssistantMessage,
     clearMessages,
-    checkMessageLimits
+    checkMessageLimits,
+    setMessages
   } = useChatContextMessages();
   
   const {
@@ -90,6 +93,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     startNewChatSession(clearMessages);
   };
 
+  // New method to restore a conversation
+  const restoreConversation = (conversationMessages: ChatMessage[]) => {
+    setMessages(conversationMessages);
+  };
+
   return (
     <ChatContext.Provider value={{ 
       messages, 
@@ -98,7 +106,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       startNewChat, 
       usageInfo, 
       error,
-      retryLastMessage 
+      retryLastMessage,
+      clearMessages,
+      restoreConversation
     }}>
       {children}
     </ChatContext.Provider>

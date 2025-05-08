@@ -1,158 +1,78 @@
 
-import { useState, FormEvent } from "react";
+// Updating the ChatInput component to include the history button
+import React, { useState, useRef, useEffect } from "react";
+import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useChat } from "@/context/ChatContext";
-import { Loading } from "@/components/ui/loading";
-import { AlertCircle, ExternalLink, RefreshCw, MessageSquare } from "lucide-react";
-import { toast } from "sonner";
+import { Send } from "lucide-react";
+import { HistoryButton } from "./components/HistoryButton";
+import { ChatHistoryPanel } from "./ChatHistoryPanel";
 
 export function ChatInput() {
   const [message, setMessage] = useState("");
-  const { sendMessage, isLoading, error, retryLastMessage } = useChat();
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { sendMessage, isLoading } = useChat();
 
-  const handleSubmit = async (e: FormEvent) => {
+  // Adjust textarea height based on content
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [message]);
+
+  // Reset height when the message is sent
+  useEffect(() => {
+    if (!message && textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
+  }, [message]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim() || isLoading) return;
-
-    // Store message value before clearing
-    const messageToSend = message;
     
-    // Clear input right away for better UX
+    sendMessage(message);
     setMessage("");
-    
-    try {
-      // Show a processing toast
-      toast.loading("Processing your message...", { id: "message-processing" });
-      
-      // Send the message
-      await sendMessage(messageToSend);
-      
-      // Dismiss the loading toast on success
-      toast.dismiss("message-processing");
-    } catch (error) {
-      console.error("Failed to send message:", error);
-      // Restore the message if sending fails
-      setMessage(messageToSend);
-      
-      // Dismiss the loading toast
-      toast.dismiss("message-processing");
-      
-      // Show error toast
-      toast.error("Failed to send message", {
-        description: "There was a problem sending your message. Please try again."
-      });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e);
     }
   };
 
-  // Check for specific error types
-  const isQuotaError = error && 
-    (error.includes("quota") || 
-     error.includes("exceeded") || 
-     error.includes("limit") ||
-     error.includes("billing"));
-
-  const isInvalidKeyError = error &&
-    error.includes("Invalid API key");
-
   return (
-    <form onSubmit={handleSubmit} className="border-t p-4 bg-background sticky bottom-0">
-      {error && (
-        <div className={`mb-2 p-3 rounded-md ${
-          isQuotaError 
-            ? 'bg-amber-50 border border-amber-200 text-amber-800' 
-            : isInvalidKeyError 
-              ? 'bg-orange-50 border border-orange-200 text-orange-800'
-              : 'bg-red-50 border border-red-200 text-red-800'
-          } text-sm flex items-start`}
-        >
-          <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
-          <div>
-            <p className="font-medium">
-              {isQuotaError 
-                ? "API usage limit reached" 
-                : isInvalidKeyError
-                  ? "Invalid API key"
-                  : "Failed to send message"}
-            </p>
-            <p className="text-xs mt-1">
-              {isQuotaError 
-                ? "Your OpenAI account has reached its usage limit or has billing issues. Please check your OpenAI account billing status." 
-                : isInvalidKeyError
-                  ? "The API key provided was rejected by OpenAI. Please check your key and try again."
-                  : "Please try again or contact support if the issue persists."}
-            </p>
-            <div className="mt-2 flex gap-2">
-              {isQuotaError && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs" 
-                  onClick={() => window.open("https://platform.openai.com/account/billing/overview", "_blank")}
-                >
-                  <ExternalLink className="h-3 w-3 mr-1" />
-                  Check OpenAI Billing
-                </Button>
-              )}
-              
-              {retryLastMessage && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-xs" 
-                  onClick={retryLastMessage}
-                >
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  Retry
-                </Button>
-              )}
-              
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-xs" 
-                onClick={() => window.open("https://humanlyai.me/support", "_blank")}
-              >
-                <ExternalLink className="h-3 w-3 mr-1" />
-                Contact Support
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-      <div className="flex gap-2">
+    <>
+      <form 
+        className="p-4 border-t flex items-end gap-2" 
+        onSubmit={handleSubmit}
+      >
+        <HistoryButton onClick={() => setIsHistoryOpen(true)} />
+        
         <Textarea
+          ref={textareaRef}
+          className="flex-1 resize-none max-h-32 py-3"
+          placeholder="Type a message..."
+          rows={1}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Type a message..."
-          className="min-h-[60px] resize-none"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit(e);
-            }
-          }}
+          onKeyDown={handleKeyDown}
           disabled={isLoading}
         />
+        
         <Button 
-          type="submit"
-          disabled={isLoading || !message.trim()}
-          className="self-end"
+          type="submit" 
+          size="icon" 
+          disabled={!message.trim() || isLoading}
         >
-          {isLoading ? <Loading size="small" /> : 
-            <>
-              <MessageSquare className="h-4 w-4 mr-1" />
-              Send
-            </>
-          }
+          <Send className="h-4 w-4" />
         </Button>
-      </div>
+      </form>
       
-      {isLoading && (
-        <p className="text-xs text-muted-foreground mt-2 animate-pulse">
-          AI coach is thinking...
-        </p>
-      )}
-    </form>
+      <ChatHistoryPanel open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
+    </>
   );
 }
