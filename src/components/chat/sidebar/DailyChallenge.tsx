@@ -3,6 +3,7 @@ import React from "react";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useChat } from "@/context/ChatContext";
+import { useNavigate } from "react-router-dom";
 
 // Simplified daily challenge
 const DAILY_CHALLENGE = {
@@ -11,11 +12,28 @@ const DAILY_CHALLENGE = {
   prompt: "How can I improve my active listening skills?"
 };
 
-export function DailyChallenge() {
-  const { sendMessage } = useChat();
+interface DailyChallengeProps {
+  standaloneMode?: boolean;
+  onChallengeClick?: () => void;
+}
+
+export function DailyChallenge({ standaloneMode = false, onChallengeClick }: DailyChallengeProps) {
+  const navigate = useNavigate();
+  // Only use the chat context if not in standalone mode
+  const chatContext = !standaloneMode ? useChat() : null;
   
   const handleStartChallenge = () => {
-    sendMessage(DAILY_CHALLENGE.prompt);
+    if (standaloneMode) {
+      // If in standalone mode, use the provided callback or navigate to chat
+      if (onChallengeClick) {
+        onChallengeClick();
+      } else {
+        navigate("/chat");
+      }
+    } else if (chatContext) {
+      // If chat context exists, send the message
+      chatContext.sendMessage(DAILY_CHALLENGE.prompt);
+    }
   };
   
   return (

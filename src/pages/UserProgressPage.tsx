@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
@@ -13,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ARCHETYPES } from "@/lib/constants";
 import { EQArchetype } from "@/types";
+import { useNavigate } from "react-router-dom";
 
 // Mock progress data - this would come from your backend in a real implementation
 const MOCK_ACHIEVEMENTS = [
@@ -33,6 +33,7 @@ const MOCK_CHALLENGE_HISTORY = [
 const UserProgressPage = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const navigate = useNavigate();
   
   // Stats that would be fetched from a real backend
   const [stats, setStats] = useState({
@@ -45,6 +46,10 @@ const UserProgressPage = () => {
     totalMinutes: 45,
     totalReflections: 8
   });
+  
+  const handleChallengeTakeToChatPage = () => {
+    navigate("/chat");
+  };
   
   if (!user) {
     return (
@@ -190,7 +195,7 @@ const UserProgressPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <DailyChallenge />
+                  <DailyChallenge standaloneMode={true} onChallengeClick={handleChallengeTakeToChatPage} />
                 </CardContent>
               </Card>
             </div>
@@ -262,7 +267,7 @@ const UserProgressPage = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <DailyChallenge />
+                    <DailyChallenge standaloneMode={true} onChallengeClick={handleChallengeTakeToChatPage} />
                   </CardContent>
                 </Card>
               </div>
