@@ -27,6 +27,7 @@ export function EnhancedChatUI({
   const [chatHistory, setChatHistory] = useState<ChatMessage[]>(initialMessages);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [breakThroughDetected, setBreakThroughDetected] = useState<boolean>(false);
+  const [userTurnCount, setUserTurnCount] = useState<number>(0);
   
   const { isPremiumMember } = useAuth();
   const { checkForBreakthrough } = useEQProgress();
@@ -76,6 +77,12 @@ export function EnhancedChatUI({
       return () => clearTimeout(timer);
     }
   }, [breakThroughDetected]);
+  
+  // Track user turn count
+  useEffect(() => {
+    const userMessages = chatHistory.filter(msg => msg.role === "user");
+    setUserTurnCount(userMessages.length);
+  }, [chatHistory]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -162,7 +169,8 @@ export function EnhancedChatUI({
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder={placeholder}
+            placeholder={userTurnCount === 0 ? "What's on your mind today?" : 
+                         userTurnCount === 1 ? "Tell me more..." : placeholder}
             className="min-h-[60px] resize-none soft-input"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {

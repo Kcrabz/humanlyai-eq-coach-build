@@ -31,9 +31,13 @@ export function extractConversationContext(messages: any[]): {
   recentTopics: string[];
   potentialPersonalDetails: string[];
   userEmotions: string[];
+  conversationTurnCount: number;
 } {
   // Filter only user messages
   const userMessages = messages.filter(m => m.role === 'user');
+  
+  // Count the number of user turns in the conversation
+  const conversationTurnCount = userMessages.length;
   
   // Simple topic extraction (this would be more sophisticated in a real implementation)
   const recentTopics = userMessages.slice(-3).map(m => {
@@ -70,7 +74,8 @@ export function extractConversationContext(messages: any[]): {
   return {
     recentTopics,
     potentialPersonalDetails,
-    userEmotions
+    userEmotions,
+    conversationTurnCount
   };
 }
 
@@ -82,46 +87,63 @@ export function enrichSystemMessageWithContext(
     recentTopics: string[];
     potentialPersonalDetails: string[];
     userEmotions: string[];
+    conversationTurnCount: number;
   }
 ): string {
+  // Add conversation turn count information
+  const turnCountSection = `\n\n🔄 CONVERSATION TURN: ${conversationContext.conversationTurnCount}\n`;
+  let turnInstruction = '';
+  
+  // Add specific instructions based on conversation turn
+  if (conversationContext.conversationTurnCount === 1) {
+    turnInstruction = "This is the user's first message. ONLY ask thoughtful open-ended questions to understand their situation better. DO NOT provide advice, suggestions, or recommendations yet.";
+  } else if (conversationContext.conversationTurnCount === 2) {
+    turnInstruction = "This is the user's second message. Continue asking follow-up questions to go deeper. Still avoid giving direct advice or suggestions.";
+  } else {
+    turnInstruction = `This is the user's message #${conversationContext.conversationTurnCount}. You may now offer guidance if appropriate, but still prioritize understanding through questions.`;
+  }
+  
   // Add conversation memory section if we have context
-  if (conversationContext.recentTopics.length === 0 && 
-      conversationContext.potentialPersonalDetails.length === 0 &&
-      conversationContext.userEmotions.length === 0) {
-    return systemMessage; // No context to add
+  const hasContext = conversationContext.recentTopics.length > 0 || 
+      conversationContext.potentialPersonalDetails.length > 0 ||
+      conversationContext.userEmotions.length > 0;
+  
+  let contextSection = turnCountSection + turnInstruction;
+  
+  if (hasContext) {
+    contextSection += "\n\n🧠 CONVERSATION MEMORY:\n";
+    
+    // Add recent topics
+    if (conversationContext.recentTopics.length > 0) {
+      contextSection += "• Recent topics discussed: " + 
+        conversationContext.recentTopics.join("; ") + "\n";
+    }
+    
+    // Add personal details
+    if (conversationContext.potentialPersonalDetails.length > 0) {
+      contextSection += "• Personal details shared: " + 
+        conversationContext.potentialPersonalDetails
+          .slice(0, 3) // Limit to 3 to avoid making prompt too long
+          .join("; ") + "\n";
+    }
+    
+    // Add emotional states
+    if (conversationContext.userEmotions.length > 0) {
+      contextSection += "• Recent emotional states: " + 
+        conversationContext.userEmotions
+          .slice(0, 2) // Limit to 2 most recent
+          .join("; ") + "\n";
+    }
+    
+    // Add relationship-building suggestions
+    contextSection += "\n💡 RELATIONSHIP-BUILDING SUGGESTIONS:\n";
+    contextSection += "• Refer back to the topics or emotions mentioned above where relevant\n";
+    contextSection += "• Use conversational transitions between topics\n";
+    contextSection += "• Match the user's emotional tone when appropriate\n";
+    contextSection += "• Share relatable examples or analogies when it might help illustrate a point\n";
   }
-  
-  let contextSection = "\n\n🧠 CONVERSATION MEMORY:\n";
-  
-  // Add recent topics
-  if (conversationContext.recentTopics.length > 0) {
-    contextSection += "• Recent topics discussed: " + 
-      conversationContext.recentTopics.join("; ") + "\n";
-  }
-  
-  // Add personal details
-  if (conversationContext.potentialPersonalDetails.length > 0) {
-    contextSection += "• Personal details shared: " + 
-      conversationContext.potentialPersonalDetails
-        .slice(0, 3) // Limit to 3 to avoid making prompt too long
-        .join("; ") + "\n";
-  }
-  
-  // Add emotional states
-  if (conversationContext.userEmotions.length > 0) {
-    contextSection += "• Recent emotional states: " + 
-      conversationContext.userEmotions
-        .slice(0, 2) // Limit to 2 most recent
-        .join("; ") + "\n";
-  }
-  
-  // Add relationship-building suggestions
-  contextSection += "\n💡 RELATIONSHIP-BUILDING SUGGESTIONS:\n";
-  contextSection += "• Refer back to the topics or emotions mentioned above where relevant\n";
-  contextSection += "• Use conversational transitions between topics\n";
-  contextSection += "• Match the user's emotional tone when appropriate\n";
-  contextSection += "• Share relatable examples or analogies when it might help illustrate a point\n";
   
   // Combine with the base system message
   return systemMessage + contextSection;
 }
+

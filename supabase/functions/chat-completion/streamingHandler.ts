@@ -31,6 +31,9 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
       clientProvidedHistory
     );
     
+    console.log(`Retrieved ${chatHistory.length} messages from chat history`);
+    console.log(`User turn count: ${chatHistory.filter(msg => msg.role === 'user').length + 1}`);
+    
     // Prepare messages for OpenAI - optimized to reuse cached system messages when possible
     const preparedMessages = prepareMessagesForAI(
       userMessage,
