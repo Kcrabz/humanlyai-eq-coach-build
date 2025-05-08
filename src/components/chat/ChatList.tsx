@@ -8,6 +8,7 @@ import { ChatLoadingIndicator } from "./components/ChatLoadingIndicator";
 export function ChatList() {
   const { messages, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const firstRenderRef = useRef(true);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -15,9 +16,17 @@ export function ChatList() {
 
   // If there are messages and this is the first render, scroll to the most recent message
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && firstRenderRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      firstRenderRef.current = false;
     }
+  }, [messages]);
+
+  // Ensure we reset the first render flag when component unmounts/remounts
+  useEffect(() => {
+    return () => {
+      firstRenderRef.current = true;
+    };
   }, []);
 
   return (

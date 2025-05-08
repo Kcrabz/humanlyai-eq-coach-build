@@ -28,6 +28,7 @@ export const markLoginSuccess = (): void => {
 export const clearLoginSuccess = (): void => {
   localStorage.removeItem('login_success_timestamp');
   sessionStorage.removeItem('login_success');
+  sessionStorage.removeItem('fresh_chat_needed');
 };
 
 /**

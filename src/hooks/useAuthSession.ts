@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { markLoginSuccess } from '@/utils/loginRedirectUtils';
 
 /**
  * Hook for managing authentication session state with improved initialization and sign-in handling
@@ -30,8 +31,10 @@ export const useAuthSession = () => {
         // Mark that we need to wait for profile to load
         setProfileLoaded(false);
         
-        // Store login success in localStorage as a fallback mechanism
-        localStorage.setItem('login_success_timestamp', timestamp.toString());
+        // Mark login success to trigger fresh chat experience
+        markLoginSuccess();
+        
+        console.log("Login success marked for fresh chat experience");
       } catch (error) {
         console.error("Error updating session after sign in:", error);
       }

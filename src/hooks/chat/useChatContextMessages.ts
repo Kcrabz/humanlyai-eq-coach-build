@@ -48,8 +48,14 @@ export const useChatContextMessages = () => {
     
     // Check if we've already cleared the chat for this session - if so, don't load history
     const alreadyCleared = sessionStorage.getItem('chat_cleared_for_session') === 'true';
-    if (alreadyCleared) {
-      console.log("Chat already cleared for this session, skipping history load");
+    const freshChatNeeded = sessionStorage.getItem('fresh_chat_needed') === 'true';
+    
+    if (alreadyCleared || freshChatNeeded) {
+      console.log("Chat will be fresh for this session, skipping history load");
+      // If fresh chat is needed, let's set the cleared flag for consistency
+      if (freshChatNeeded) {
+        sessionStorage.setItem('chat_cleared_for_session', 'true');
+      }
       return;
     }
     
@@ -190,6 +196,10 @@ export const useChatContextMessages = () => {
 
   const clearMessages = useCallback(() => {
     setMessages([]);
+    
+    // When clearing messages, mark in session storage
+    sessionStorage.setItem('chat_cleared_for_session', 'true');
+    console.log("Messages cleared, set chat_cleared_for_session flag");
   }, []);
 
   // Check if user has reached their message limit

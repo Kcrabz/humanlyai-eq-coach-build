@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { ChatMessage } from "@/types";
 import { useChatContextMessages } from "@/hooks/chat/useChatContextMessages";
@@ -81,7 +80,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAndSendIntroduction();
   }, [user, isLoading, messages.length]);
 
-  // Start a fresh chat experience when the component mounts if user is authenticated
+  // Force clean chat every time the component mounts with authenticated user
   useEffect(() => {
     if (!user || hasInitialCleared) return;
     
@@ -102,7 +101,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Create a flag in sessionStorage to prevent repeated clearing if the user navigates away and back
     sessionStorage.setItem('chat_cleared_for_session', 'true');
     
-  }, [user, hasInitialCleared]);
+  }, [user, hasInitialCleared, clearMessages, addAssistantMessage]);
 
   // Check for fresh login to display a clear chat experience
   useEffect(() => {
@@ -121,8 +120,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Mark as done so we don't show again
       setHasFreshChatRun(true);
+      setHasInitialCleared(true);
+      
+      // Set the session flag to prevent history loading
+      sessionStorage.setItem('chat_cleared_for_session', 'true');
     }
-  }, [user, hasFreshChatRun]);
+  }, [user, hasFreshChatRun, clearMessages, addAssistantMessage]);
 
   // Wrapper for sending messages
   const sendMessage = async (content: string) => {
