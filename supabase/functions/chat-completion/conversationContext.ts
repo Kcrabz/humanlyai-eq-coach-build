@@ -26,18 +26,38 @@ interface ConversationMemory {
   lastInteractionDate?: string;
 }
 
+// Helper function to detect if user is directly asking for help
+function isUserRequestingDirectHelp(message: string): boolean {
+  const helpRequestPatterns = [
+    /how (?:can|could|should|would) (?:i|you)/i,
+    /(?:can|could|would) you (?:help|suggest|recommend|advise)/i,
+    /(?:what|how) (?:should|can) i do/i,
+    /(?:give|provide) me (?:some|a few)? (?:advice|suggestions|tips|help|guidance)/i,
+    /i need (?:help|advice|guidance|suggestions|tips)/i,
+    /i'm looking for (?:help|advice|guidance|suggestions|tips)/i,
+    /i want (?:help|advice|guidance|suggestions|tips|to know)/i,
+  ];
+  
+  return helpRequestPatterns.some(pattern => pattern.test(message));
+}
+
 // Helper function to extract conversation context from messages
 export function extractConversationContext(messages: any[]): {
   recentTopics: string[];
   potentialPersonalDetails: string[];
   userEmotions: string[];
   conversationTurnCount: number;
+  isDirectHelpRequest: boolean;
 } {
   // Filter only user messages
   const userMessages = messages.filter(m => m.role === 'user');
   
   // Count the number of user turns in the conversation
   const conversationTurnCount = userMessages.length;
+  
+  // Check if current message is a direct help request
+  const isDirectHelpRequest = userMessages.length > 0 && 
+    isUserRequestingDirectHelp(userMessages[userMessages.length - 1].content || '');
   
   // Simple topic extraction (this would be more sophisticated in a real implementation)
   const recentTopics = userMessages.slice(-3).map(m => {
@@ -67,7 +87,7 @@ export function extractConversationContext(messages: any[]): {
   ];
   
   const userEmotions = userMessages.filter(m => {
-    const content = m.content.toLowerCase() || '';
+    const content = m.content?.toLowerCase() || '';
     return emotionWords.some(emotion => content.includes(emotion));
   }).map(m => m.content);
   
@@ -75,7 +95,8 @@ export function extractConversationContext(messages: any[]): {
     recentTopics,
     potentialPersonalDetails,
     userEmotions,
-    conversationTurnCount
+    conversationTurnCount,
+    isDirectHelpRequest
   };
 }
 
@@ -88,6 +109,7 @@ export function enrichSystemMessageWithContext(
     potentialPersonalDetails: string[];
     userEmotions: string[];
     conversationTurnCount: number;
+    isDirectHelpRequest: boolean;
   }
 ): string {
   // Add conversation turn count information
@@ -95,12 +117,17 @@ export function enrichSystemMessageWithContext(
   let turnInstruction = '';
   
   // Add specific instructions based on conversation turn
-  if (conversationContext.conversationTurnCount === 1) {
-    turnInstruction = "This is the user's first message. ONLY ask thoughtful open-ended questions to understand their situation better. DO NOT provide advice, suggestions, or recommendations yet.";
+  if (conversationContext.isDirectHelpRequest) {
+    // User is directly asking for help, provide more guidance even on early turns
+    turnInstruction = "The user is explicitly asking for help or guidance. You can provide thoughtful advice and practical suggestions while still asking clarifying questions as needed.";
+  } else if (conversationContext.conversationTurnCount === 1) {
+    turnInstruction = "This is the user's first message. Focus on open-ended questions to understand their situation. Be curious and explore what they're sharing. No advice or suggestions yet.";
   } else if (conversationContext.conversationTurnCount === 2) {
-    turnInstruction = "This is the user's second message. Continue asking follow-up questions to go deeper. Still avoid giving direct advice or suggestions.";
+    turnInstruction = "This is the user's second message. Continue with thoughtful follow-up questions, but you can begin to reflect patterns or insights you notice. Still avoid giving direct advice.";
+  } else if (conversationContext.conversationTurnCount === 3) {
+    turnInstruction = "This is the user's third message. Now you can balance questions with some initial guidance. Consider asking: 'Would you like some practical suggestions, a reflection exercise, or a different perspective on this?'";
   } else {
-    turnInstruction = `This is the user's message #${conversationContext.conversationTurnCount}. You may now offer guidance if appropriate, but still prioritize understanding through questions.`;
+    turnInstruction = `This is the user's message #${conversationContext.conversationTurnCount}. At this stage, provide a good balance of insightful questions and practical guidance. Offer concrete suggestions when appropriate while continuing to explore deeper.`;
   }
   
   // Add conversation memory section if we have context
@@ -136,14 +163,19 @@ export function enrichSystemMessageWithContext(
     }
     
     // Add relationship-building suggestions
-    contextSection += "\n💡 RELATIONSHIP-BUILDING SUGGESTIONS:\n";
-    contextSection += "• Refer back to the topics or emotions mentioned above where relevant\n";
-    contextSection += "• Use conversational transitions between topics\n";
-    contextSection += "• Match the user's emotional tone when appropriate\n";
-    contextSection += "• Share relatable examples or analogies when it might help illustrate a point\n";
+    contextSection += "\n💡 RESPONSE GUIDANCE:\n";
+    contextSection += "• Balance questions with insights - don't just ask questions repeatedly\n";
+    contextSection += "• After turn 3, include at least one practical suggestion or action item\n";
+    contextSection += "• Use a conversational, friendly tone rather than a clinical approach\n";
+    contextSection += "• Refer back to previous topics when relevant to show continuity\n";
+    
+    // Add guidance based on turn count
+    if (conversationContext.conversationTurnCount >= 3) {
+      contextSection += "• Provide at least one specific, actionable suggestion\n";
+      contextSection += "• Aim for a 60% guidance / 40% questions balance\n";
+    }
   }
   
   // Combine with the base system message
   return systemMessage + contextSection;
 }
-

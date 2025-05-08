@@ -3,7 +3,7 @@ import { useState, FormEvent, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loading } from "@/components/ui/loading";
-import { MessageSquare, Sparkle } from "lucide-react";
+import { MessageSquare, Sparkle, Info } from "lucide-react";
 import { ChatMessage } from "@/types";
 import { ChatBubble } from "@/components/chat/ChatBubble";
 import { ChatErrorBanner } from "@/components/chat/ChatErrorBanner";
@@ -11,6 +11,12 @@ import { useChatCompletion } from "@/hooks/useChatCompletion";
 import { useAuth } from "@/context/AuthContext";
 import { useEQProgress } from "@/hooks/useEQProgress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface EnhancedChatUIProps {
   initialMessages?: ChatMessage[];
@@ -28,6 +34,7 @@ export function EnhancedChatUI({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [breakThroughDetected, setBreakThroughDetected] = useState<boolean>(false);
   const [userTurnCount, setUserTurnCount] = useState<number>(0);
+  const [showHelpPrompt, setShowHelpPrompt] = useState<boolean>(false);
   
   const { isPremiumMember } = useAuth();
   const { checkForBreakthrough } = useEQProgress();
@@ -78,11 +85,16 @@ export function EnhancedChatUI({
     }
   }, [breakThroughDetected]);
   
-  // Track user turn count
+  // Track user turn count and show help prompt at turn 3
   useEffect(() => {
     const userMessages = chatHistory.filter(msg => msg.role === "user");
     setUserTurnCount(userMessages.length);
-  }, [chatHistory]);
+    
+    // Show help prompt when user reaches turn 3
+    if (userMessages.length === 3 && !showHelpPrompt) {
+      setShowHelpPrompt(true);
+    }
+  }, [chatHistory, showHelpPrompt]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -101,6 +113,11 @@ export function EnhancedChatUI({
     
     // Clear input right away for better UX
     setMessage("");
+    
+    // Hide help prompt after user sends a message
+    if (showHelpPrompt) {
+      setShowHelpPrompt(false);
+    }
     
     // Send message to API
     console.log("Sending message to API:", message);
@@ -124,6 +141,23 @@ export function EnhancedChatUI({
     }
   };
 
+  // Generate dynamic placeholder based on conversation stage
+  const getDynamicPlaceholder = () => {
+    if (userTurnCount === 0) return "What's on your mind today?";
+    if (userTurnCount === 1) return "Tell me more...";
+    if (userTurnCount === 2) return "How does that impact you?";
+    return placeholder;
+  };
+
+  const sendSuggestedMessage = (content: string) => {
+    setMessage(content);
+    // Focus the textarea
+    const textarea = document.querySelector('textarea');
+    if (textarea) {
+      textarea.focus();
+    }
+  };
+
   return (
     <div className={`flex flex-col h-full ${className}`}>
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -136,11 +170,90 @@ export function EnhancedChatUI({
             </div>
             <h3 className="text-xl font-medium">Start a conversation</h3>
             <p className="text-muted-foreground mt-2 max-w-md">
-              Send a message to begin your conversation with the AI assistant.
+              Send a message to begin your conversation with Kai, your EQ coach.
             </p>
+            <div className="mt-6 space-y-2">
+              <p className="text-sm font-medium text-muted-foreground">Try asking:</p>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => sendSuggestedMessage("I've been feeling overwhelmed at work lately.")}
+                  className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30"
+                >
+                  "I've been feeling overwhelmed at work lately."
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => sendSuggestedMessage("How can I improve my communication with my team?")}
+                  className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30"
+                >
+                  "How can I improve my communication with my team?"
+                </Button>
+              </div>
+            </div>
           </div>
         ) : (
           chatHistory.map((message) => <ChatBubble key={message.id} message={message} />)
+        )}
+        
+        {showHelpPrompt && (
+          <Alert className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30 flex items-center">
+            <Info className="h-4 w-4 text-humanly-indigo" />
+            <AlertDescription className="text-sm flex-grow">
+              What would you like from Kai now?
+            </AlertDescription>
+            <div className="flex gap-2 ml-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => sendSuggestedMessage("I'd like some practical advice on this situation.")}
+                      className="text-xs h-7 px-2"
+                    >
+                      Advice
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Get practical suggestions</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => sendSuggestedMessage("Help me reflect more on why I might feel this way.")}
+                      className="text-xs h-7 px-2"
+                    >
+                      Reflection
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Explore your feelings deeper</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => sendSuggestedMessage("Give me a challenge to help with this.")}
+                      className="text-xs h-7 px-2"
+                    >
+                      Challenge
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Get an activity to try</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </Alert>
         )}
         
         {breakThroughDetected && isPremiumMember && (
@@ -169,8 +282,7 @@ export function EnhancedChatUI({
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            placeholder={userTurnCount === 0 ? "What's on your mind today?" : 
-                         userTurnCount === 1 ? "Tell me more..." : placeholder}
+            placeholder={getDynamicPlaceholder()}
             className="min-h-[60px] resize-none soft-input"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
@@ -196,7 +308,7 @@ export function EnhancedChatUI({
         
         {isLoading && (
           <p className="text-xs text-muted-foreground mt-2 animate-pulse">
-            AI assistant is thinking...
+            Kai is thinking...
           </p>
         )}
         

@@ -6,11 +6,20 @@ import { extractConversationContext, enrichSystemMessageWithContext } from "./co
 
 // Prepare messages for OpenAI API
 export function prepareMessages(message: string, archetype: string, coachingMode: string, chatHistory: any[] = [], userId: string = "") {
+  // Log conversation turn count for debugging
+  const conversationTurnCount = chatHistory.filter(msg => msg.role === 'user').length + 1;
+  console.log(`User turn count: ${conversationTurnCount}`);
+  
   // Get the system message with personalization
   const systemContent = createSystemMessage(archetype, coachingMode);
   
   // Extract conversation context from chat history
   const conversationContext = extractConversationContext(chatHistory);
+  
+  // Log whether this is a direct help request
+  if (conversationContext.isDirectHelpRequest) {
+    console.log("User is directly asking for help or guidance");
+  }
   
   // Enrich system message with conversation context
   const enrichedSystemContent = enrichSystemMessageWithContext(
