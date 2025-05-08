@@ -14,8 +14,10 @@ import SignupPage from "./pages/SignupPage";
 import PricingPage from "./pages/PricingPage";
 import AccountPage from "./pages/AccountPage";
 import ChatPage from "./pages/ChatPage";
+import DashboardPage from "./pages/DashboardPage";
 import { PageLayout } from "./components/layout/PageLayout";
 import { Toaster } from "./components/ui/sonner";
+import { AuthenticationGuard } from "./components/auth/AuthenticationGuard";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -55,7 +57,7 @@ const router = createBrowserRouter([
       },
       {
         path: "/dashboard",
-        element: <ChatPage />, // Redirect dashboard to chat page
+        element: <DashboardPage />,
       },
       {
         path: "/chat",
@@ -81,6 +83,7 @@ function App() {
   return (
     <AuthProvider>
       <RouterProvider router={router} />
+      <AuthenticationGuard />
       <Toaster position="bottom-right" />
     </AuthProvider>
   );

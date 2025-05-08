@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isOnAuthPage } from "@/utils/navigationUtils";
 import { toast } from "sonner";
+import { wasLoginSuccessful, clearLoginSuccess, forceRedirectToDashboard } from "@/utils/loginRedirectUtils";
 
 /**
  * Global authentication guard component that handles all redirects based on auth state
@@ -29,6 +30,19 @@ export const AuthenticationGuard = () => {
 
   // Skip redirects for password reset/update pages
   const isPasswordResetPage = pathname === "/reset-password" || pathname === "/update-password";
+  
+  // Check for successful login flag set by the login form
+  useEffect(() => {
+    if (wasLoginSuccessful()) {
+      console.log("AuthGuard: Login success flag detected, forcing redirection to dashboard");
+      clearLoginSuccess();
+      
+      // Force redirect to dashboard using window.location if we're still on an auth page
+      if (isOnAuthPage(pathname)) {
+        forceRedirectToDashboard();
+      }
+    }
+  }, [pathname]);
   
   // Handle redirects based on authentication status - with loop protection
   useEffect(() => {
@@ -72,22 +86,13 @@ export const AuthenticationGuard = () => {
         // Redirect to onboarding if not already there
         if (pathname !== "/onboarding") {
           console.log("AuthGuard: User not onboarded, redirecting to onboarding");
-          // Use a timeout to ensure state updates have completed
-          setTimeout(() => {
-            navigate("/onboarding", { replace: true });
-          }, 50);
+          navigate("/onboarding", { replace: true });
         }
       } else if (isCurrentlyOnAuth) {
         // Only redirect to dashboard after successful login if we're on an auth page
-        // This prevents interrupting normal navigation on the dashboard and other pages
-        if (pathname !== "/dashboard") {
-          console.log("AuthGuard: User onboarded and on auth page, redirecting to dashboard");
-          // Use a timeout to ensure state updates have completed
-          setTimeout(() => {
-            navigate("/dashboard", { replace: true });
-            toast.success(`Welcome back, ${user.name || 'Friend'}!`);
-          }, 50);
-        }
+        console.log("AuthGuard: User onboarded and on auth page, redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
+        toast.success(`Welcome back, ${user.first_name || user.name || 'Friend'}!`);
       }
       return;
     }
