@@ -2,7 +2,7 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Trophy, Award, Certificate } from "lucide-react";
+import { Trophy, Award, Scroll } from "lucide-react";
 
 interface BadgeOrCertificate {
   id: string;
@@ -39,7 +39,7 @@ export const BadgesCertificatesTab = ({ badges }: BadgesCertificatesTabProps) =>
             {item.type === "badge" ? (
               <Trophy className="h-8 w-8" />
             ) : (
-              <Certificate className="h-8 w-8" />
+              <Scroll className="h-8 w-8" />
             )}
           </div>
           {item.type === "badge" && (
