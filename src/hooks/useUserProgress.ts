@@ -8,7 +8,7 @@ interface UserProgressStats {
   challengesCompleted: number;
   currentStreak: number;
   longestStreak: number;
-  eq_archetype: string;
+  eq_archetype: EQArchetype;
   archetypeProgress: number;
   totalMinutes: number;
   totalReflections: number;
@@ -23,13 +23,13 @@ export const useUserProgress = () => {
     challengesCompleted: 4,
     currentStreak: 5,
     longestStreak: 7,
-    eq_archetype: user?.eq_archetype || "innovator",
+    eq_archetype: (user?.eq_archetype as EQArchetype) || "innovator",
     archetypeProgress: 65, // percentage
     totalMinutes: 45,
     totalReflections: 8
   });
   
-  const userArchetype = user?.eq_archetype as EQArchetype | undefined || "innovator";
+  const userArchetype = (user?.eq_archetype as EQArchetype) || "innovator";
   
   return {
     user,

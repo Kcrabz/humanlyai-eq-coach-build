@@ -7,5 +7,9 @@ interface AchievementsTabProps {
 }
 
 export const AchievementsTab = ({ achievements }: AchievementsTabProps) => {
-  return <AchievementsDetailCard achievements={achievements} />;
+  return (
+    <div className="animate-fade-in">
+      <AchievementsDetailCard achievements={achievements} />
+    </div>
+  );
 };

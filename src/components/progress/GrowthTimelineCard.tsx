@@ -35,7 +35,7 @@ export const GrowthTimelineCard = ({ timelineItems }: GrowthTimelineCardProps) =
   };
 
   return (
-    <Card>
+    <Card className="transition-all duration-300 hover:shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-humanly-teal" />
@@ -53,22 +53,22 @@ export const GrowthTimelineCard = ({ timelineItems }: GrowthTimelineCardProps) =
           <div className="space-y-8">
             {timelineItems.map((item, index) => (
               <div key={index} className="relative pl-10">
-                <div className={`absolute left-0 top-1 h-8 w-8 rounded-full ${item.isCurrent ? 'bg-amber-500' : 'bg-humanly-teal'} flex items-center justify-center text-white`}>
+                <div className={`absolute left-0 top-1 h-8 w-8 rounded-full ${item.isCurrent ? 'bg-amber-500' : 'bg-humanly-teal'} flex items-center justify-center text-white transition-all duration-300 hover:scale-110`}>
                   {renderIcon(item.icon)}
                 </div>
-                <div className={`bg-white border ${item.isCurrent ? 'border-amber-200' : 'border-gray-100'} rounded-lg p-4 shadow-sm`}>
+                <div className={`bg-white border ${item.isCurrent ? 'border-amber-200' : 'border-gray-100'} rounded-lg p-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-humanly-pastel-lavender/50`}>
                   <p className="text-xs text-gray-500 mb-1">{item.date}</p>
                   <h3 className="font-medium text-base">{item.title}</h3>
                   <p className="text-sm text-muted-foreground mt-1">
                     {item.description}
                   </p>
                   {item.isCurrent && item.progress !== undefined && (
-                    <div className="mt-3">
+                    <div className="mt-3 transition-all duration-500">
                       <div className="flex justify-between mb-1">
                         <span className="text-xs font-medium">Progress</span>
                         <span className="text-xs font-medium">{item.progress}%</span>
                       </div>
-                      <Progress value={item.progress} className="h-2" />
+                      <Progress value={item.progress} className="h-2 transition-all duration-1000" />
                     </div>
                   )}
                 </div>

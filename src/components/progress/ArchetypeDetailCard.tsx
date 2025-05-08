@@ -14,11 +14,11 @@ export const ArchetypeDetailCard = ({ userArchetype }: ArchetypeDetailCardProps)
   const archetype = ARCHETYPES[userArchetype];
   
   return (
-    <Card>
+    <Card className="transition-all duration-300 hover:shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           {archetype && (
-            <span className="text-lg" title={archetype.title}>{archetype.icon}</span>
+            <span className="text-lg transition-all duration-300 hover:scale-110" title={archetype.title}>{archetype.icon}</span>
           )}
           Your Archetype
         </CardTitle>
@@ -35,7 +35,7 @@ export const ArchetypeDetailCard = ({ userArchetype }: ArchetypeDetailCardProps)
           <h4 className="text-sm font-medium mb-2">Your strengths:</h4>
           <ul className="text-sm space-y-2">
             {archetype?.strengths.map((strength, idx) => (
-              <li key={idx} className="flex items-start gap-2">
+              <li key={idx} className="flex items-start gap-2 transition-all duration-300 hover:translate-x-0.5">
                 <Check className="h-4 w-4 text-green-500 mt-0.5" />
                 <span>{strength}</span>
               </li>
@@ -49,7 +49,7 @@ export const ArchetypeDetailCard = ({ userArchetype }: ArchetypeDetailCardProps)
           <h4 className="text-sm font-medium mb-2">Growth areas:</h4>
           <ul className="text-sm space-y-2">
             {archetype?.growthAreas.map((area, idx) => (
-              <li key={idx} className="flex items-start gap-2">
+              <li key={idx} className="flex items-start gap-2 transition-all duration-300 hover:translate-x-0.5">
                 <Flag className="h-4 w-4 text-amber-500 mt-0.5" />
                 <span>{area}</span>
               </li>

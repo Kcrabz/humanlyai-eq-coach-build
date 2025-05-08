@@ -32,7 +32,7 @@ export const AchievementsDetailCard = ({ achievements }: AchievementsDetailCardP
   };
 
   return (
-    <Card>
+    <Card className="transition-all duration-300 hover:shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Award className="h-5 w-5 text-humanly-teal" />
@@ -45,8 +45,11 @@ export const AchievementsDetailCard = ({ achievements }: AchievementsDetailCardP
       <CardContent>
         <div className="space-y-6">
           {achievements.map((achievement) => (
-            <div key={achievement.id} className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-lg shadow-sm">
-              <div className="h-12 w-12 rounded-full bg-humanly-teal/10 text-humanly-teal flex items-center justify-center flex-shrink-0">
+            <div 
+              key={achievement.id} 
+              className="flex items-start gap-4 p-4 bg-white border border-gray-100 rounded-lg shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:border-humanly-pastel-lavender/50"
+            >
+              <div className="h-12 w-12 rounded-full bg-humanly-teal/10 text-humanly-teal flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:scale-110">
                 {renderIcon(achievement.icon)}
               </div>
               <div>

@@ -10,10 +10,10 @@ interface DailyChallengeCardProps {
 
 export const DailyChallengeCard = ({ onChallengeClick }: DailyChallengeCardProps) => {
   return (
-    <Card>
+    <Card className="transition-all duration-300 hover:shadow-md hover:-translate-y-0.5">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Star className="h-5 w-5 text-humanly-teal" />
+          <Star className="h-5 w-5 text-humanly-teal animate-pulse-soft" />
           Today's Challenge
         </CardTitle>
       </CardHeader>
