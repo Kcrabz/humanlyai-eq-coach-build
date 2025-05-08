@@ -30,12 +30,13 @@ export function extractConversationContext(chatHistory: any[] = []) {
   return context;
 }
 
-// Modified to NOT enrich the system message with additional context
+// Modified to NOT add any additional instructions to the system message
 export function enrichSystemMessageWithContext(
   systemContent: string,
   userId: string = "",
   context: any = {}
 ): string {
-  // Simply return the original system content without adding any additional context
+  // Return the original system content without any modifications
+  // This ensures KAI_SYSTEM_PROMPT solely controls tone, question pacing and flow
   return systemContent;
 }
