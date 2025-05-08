@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useChatHistory, ChatConversation } from "@/hooks/chat/useChatHistory";
 import { useChat } from "@/context/ChatContext";
 import { 
@@ -29,6 +29,13 @@ interface ChatHistoryPanelProps {
 export function ChatHistoryPanel({ open, onOpenChange }: ChatHistoryPanelProps) {
   const { conversations, isLoading, refreshHistory, deleteConversation } = useChatHistory();
   const { clearMessages, restoreConversation, isLoading: isChatLoading } = useChat();
+  
+  // Force refresh when panel opens to ensure we have the latest data
+  useEffect(() => {
+    if (open) {
+      refreshHistory();
+    }
+  }, [open, refreshHistory]);
   
   // Handle restoring a conversation
   const handleRestoreConversation = (conversation: ChatConversation) => {

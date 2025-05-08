@@ -43,10 +43,20 @@ export const useSessionStorage = () => {
     console.log("Chat cleared for session flag set");
   }, []);
 
+  /**
+   * Clears chat session flags to force a reload of history
+   */
+  const clearChatSessionFlags = useCallback(() => {
+    sessionStorage.removeItem('chat_cleared_for_session');
+    sessionStorage.removeItem('fresh_chat_needed');
+    console.log("Chat session flags cleared to force history refresh");
+  }, []);
+
   return {
     getSessionId,
     isChatClearedForSession,
     isFreshChatNeeded,
-    markChatClearedForSession
+    markChatClearedForSession,
+    clearChatSessionFlags
   };
 };

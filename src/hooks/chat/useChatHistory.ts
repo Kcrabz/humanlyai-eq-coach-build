@@ -33,19 +33,57 @@ export const useChatHistory = () => {
         'communication', 'conflict', 'relationship', 'emotion',
         'self-awareness', 'empathy', 'leadership', 'burnout',
         'motivation', 'goals', 'feedback', 'criticism',
-        'work-life balance', 'mindfulness', 'resilience'
+        'work-life balance', 'mindfulness', 'resilience', 'presence',
+        'gratitude', 'boundaries', 'vulnerability', 'strengths',
+        'purpose', 'values', 'growth', 'reflection', 'patience'
       ];
       
-      // Check if any EQ topics are in the content
-      for (const topic of eqTopics) {
-        if (content.toLowerCase().includes(topic)) {
-          // Capitalize the first letter of the topic
-          return topic.charAt(0).toUpperCase() + topic.slice(1);
+      // Check for EQ topics in any user message
+      for (const message of messages) {
+        if (message.role === 'user') {
+          const lowerContent = message.content.toLowerCase();
+          
+          for (const topic of eqTopics) {
+            if (lowerContent.includes(topic)) {
+              // Create a more descriptive title based on the topic
+              if (topic === 'anxiety') return 'Managing Anxiety';
+              if (topic === 'stress') return 'Stress Reduction';
+              if (topic === 'confidence') return 'Building Confidence';
+              if (topic === 'imposter syndrome') return 'Overcoming Imposter Syndrome';
+              if (topic === 'communication') return 'Effective Communication';
+              if (topic === 'conflict') return 'Resolving Conflicts';
+              if (topic === 'relationship') return 'Improving Relationships';
+              if (topic === 'emotion') return 'Understanding Emotions';
+              if (topic === 'self-awareness') return 'Developing Self-Awareness';
+              if (topic === 'empathy') return 'Practicing Empathy';
+              if (topic === 'leadership') return 'Leadership Skills';
+              if (topic === 'burnout') return 'Preventing Burnout';
+              if (topic === 'motivation') return 'Finding Motivation';
+              if (topic === 'goals') return 'Setting Goals';
+              if (topic === 'feedback') return 'Giving & Receiving Feedback';
+              if (topic === 'criticism') return 'Handling Criticism';
+              if (topic === 'work-life balance') return 'Work-Life Balance';
+              if (topic === 'mindfulness') return 'Mindfulness Practice';
+              if (topic === 'resilience') return 'Building Resilience';
+              if (topic === 'presence') return 'Being Present';
+              if (topic === 'gratitude') return 'Practicing Gratitude';
+              if (topic === 'boundaries') return 'Setting Boundaries';
+              if (topic === 'vulnerability') return 'Embracing Vulnerability';
+              if (topic === 'strengths') return 'Leveraging Strengths';
+              if (topic === 'purpose') return 'Finding Purpose';
+              if (topic === 'values') return 'Living Your Values';
+              if (topic === 'growth') return 'Personal Growth';
+              if (topic === 'reflection') return 'Self-Reflection';
+              if (topic === 'patience') return 'Developing Patience';
+              
+              // Default to capitalized topic if no specific title is defined
+              return topic.charAt(0).toUpperCase() + topic.slice(1);
+            }
+          }
         }
       }
       
-      // If no specific topic found, use first part of message
-      // Take the first 3-5 words or up to 30 characters
+      // For topics not in our list, analyze the first few words of the first user message
       const words = content.split(' ');
       const titleWords = words.slice(0, Math.min(5, words.length));
       let title = titleWords.join(' ');
@@ -64,13 +102,54 @@ export const useChatHistory = () => {
     return 'Conversation on ' + new Date(messages[0].created_at).toLocaleDateString();
   };
 
+  // Group messages into conversations based on time gaps
+  const groupMessagesIntoConversations = (messages: ChatMessage[]): Map<string, ChatMessage[]> => {
+    const conversationMap = new Map<string, ChatMessage[]>();
+    
+    // Sort messages by time
+    const sortedMessages = [...messages].sort((a, b) => 
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    
+    if (sortedMessages.length === 0) return conversationMap;
+    
+    // Set a time threshold for grouping messages (30 minutes)
+    const TIME_GAP_THRESHOLD = 30 * 60 * 1000; // 30 minutes in milliseconds
+    
+    let currentConvId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    let currentMessages: ChatMessage[] = [];
+    let lastMessageTime = new Date(sortedMessages[0].created_at).getTime();
+    
+    // Group messages into conversations
+    sortedMessages.forEach(message => {
+      const messageTime = new Date(message.created_at).getTime();
+      
+      // If time gap is too large, start a new conversation
+      if (messageTime - lastMessageTime > TIME_GAP_THRESHOLD && currentMessages.length > 0) {
+        conversationMap.set(currentConvId, currentMessages);
+        currentConvId = `conv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        currentMessages = [];
+      }
+      
+      currentMessages.push(message);
+      lastMessageTime = messageTime;
+    });
+    
+    // Add the last conversation if it has messages
+    if (currentMessages.length > 0) {
+      conversationMap.set(currentConvId, currentMessages);
+    }
+    
+    return conversationMap;
+  };
+
   // Load user's chat conversations
   const loadChatHistory = useCallback(async () => {
     if (!user) return;
 
     setIsLoading(true);
     try {
-      // Group messages by conversation ID
+      // Fetch all user messages
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
@@ -80,27 +159,27 @@ export const useChatHistory = () => {
       if (error) throw error;
 
       // Process messages to create conversation objects
-      const conversationMap = new Map<string, ChatMessage[]>();
+      if (!data || data.length === 0) {
+        setConversations([]);
+        return;
+      }
       
-      // Group messages by the day they were created (simple conversation separation)
-      data?.forEach(message => {
-        const date = new Date(message.created_at).toLocaleDateString();
-        if (!conversationMap.has(date)) {
-          conversationMap.set(date, []);
-        }
-        conversationMap.get(date)?.push({
-          id: message.id,
-          content: message.content,
-          role: message.role === 'user' || message.role === 'assistant' 
-            ? message.role 
-            : 'user', // Default to user if invalid role
-          created_at: message.created_at
-        });
-      });
+      // Convert DB records to ChatMessage format
+      const messages: ChatMessage[] = data.map(item => ({
+        id: item.id,
+        content: item.content,
+        role: item.role === 'user' || item.role === 'assistant' 
+          ? item.role 
+          : 'user', // Default to user if invalid role
+        created_at: item.created_at
+      }));
+      
+      // Group messages into conversations by time gaps
+      const conversationMap = groupMessagesIntoConversations(messages);
 
       // Create conversation objects from grouped messages
       const conversationList: ChatConversation[] = Array.from(conversationMap.entries())
-        .map(([date, messages]) => {
+        .map(([convId, messages]) => {
           // Generate a meaningful title
           const title = generateConversationTitle(messages);
           
@@ -108,10 +187,10 @@ export const useChatHistory = () => {
           const preview = `${messages.length} messages • ${new Date(messages[0].created_at).toLocaleDateString()}`;
             
           return {
-            id: date,
+            id: convId,
             title,
             preview,
-            last_updated: new Date(messages[0].created_at).toISOString(),
+            last_updated: new Date(messages[messages.length - 1].created_at).toISOString(),
             messages: [...messages].sort((a, b) => 
               new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             )

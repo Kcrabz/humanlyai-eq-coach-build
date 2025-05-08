@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useChatHistory, ChatConversation } from "@/hooks/chat/useChatHistory";
 import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,11 @@ import { toast } from "sonner";
 export function ChatHistorySidebar() {
   const { conversations, isLoading, refreshHistory, deleteConversation } = useChatHistory();
   const { restoreConversation, clearMessages, isLoading: isChatLoading } = useChat();
+
+  // Force refresh on mount to ensure we have the latest conversation titles
+  useEffect(() => {
+    refreshHistory();
+  }, [refreshHistory]);
 
   // Handle restoring a conversation
   const handleRestoreConversation = (conversation: ChatConversation) => {
@@ -73,12 +78,14 @@ export function ChatHistorySidebar() {
             <div 
               key={conversation.id}
               className="group flex items-center justify-between rounded-md px-2 py-1 text-sm hover:bg-accent transition-colors cursor-pointer"
+              title={conversation.title}
             >
               <div 
                 className="flex-1 truncate"
                 onClick={() => handleRestoreConversation(conversation)}
               >
                 <p className="text-sm font-medium truncate">{conversation.title}</p>
+                <p className="text-xs text-muted-foreground truncate">{conversation.preview.split('•')[0]}</p>
               </div>
               <Button 
                 variant="ghost" 
@@ -98,4 +105,4 @@ export function ChatHistorySidebar() {
       </ScrollArea>
     </div>
   );
-}
+};
