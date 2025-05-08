@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
-import { Share2, Shield } from "lucide-react";
+import { Share2, Shield, LayoutDashboard } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useEffect } from "react";
 
@@ -22,6 +22,7 @@ export function Header() {
   const location = useLocation();
   const isOnChatPage = location.pathname === "/chat";
   const isOnProgressPage = location.pathname === "/progress";
+  const isOnDashboardPage = location.pathname === "/dashboard";
 
   // Add logging to debug admin status on dashboard
   useEffect(() => {
@@ -64,6 +65,16 @@ export function Header() {
         <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
+              {/* Dashboard Button - only show when not on dashboard page */}
+              {!isOnDashboardPage && (
+                <Link to="/dashboard">
+                  <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
+                    <LayoutDashboard className="h-4 w-4 mr-1" />
+                    Dashboard
+                  </Button>
+                </Link>
+              )}
+            
               {/* Only show "Chat with Coach" button when not on the chat page */}
               {!isOnChatPage && (
                 <Link to="/chat">

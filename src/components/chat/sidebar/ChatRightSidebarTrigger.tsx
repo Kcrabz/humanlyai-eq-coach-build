@@ -13,6 +13,7 @@ export function ChatRightSidebarTrigger() {
       onClick={() => setOpen(!open)}
       className="hover:bg-humanly-pastel-lavender/20 hover:text-humanly-indigo"
       aria-label={open ? "Close user menu" : "Open user menu"}
+      title="Access dashboard and settings"
     >
       <User className="h-4 w-4" />
     </Button>

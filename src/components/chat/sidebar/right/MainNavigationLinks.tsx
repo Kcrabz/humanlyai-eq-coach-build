@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { Shield } from "lucide-react";
+import { Shield, LayoutDashboard } from "lucide-react";
 import { useEffect } from "react";
 
 export function MainNavigationLinks() {
@@ -33,6 +33,18 @@ export function MainNavigationLinks() {
       >
         <Link to="/">
           Home
+        </Link>
+      </Button>
+
+      <Button
+        variant={isActive("/dashboard") ? "default" : "ghost"}
+        className="w-full justify-start"
+        size="sm"
+        asChild
+      >
+        <Link to="/dashboard" className="flex items-center gap-2">
+          <LayoutDashboard className="h-4 w-4 mr-2" />
+          Dashboard
         </Link>
       </Button>
 
