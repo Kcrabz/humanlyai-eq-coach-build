@@ -1,5 +1,5 @@
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isOnAuthPage } from "@/utils/navigationUtils";
@@ -14,40 +14,39 @@ export const AuthenticationGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
-  const redirectedRef = useRef(false);
-  const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Debug logging for session state
+  useEffect(() => {
+    console.log("AuthGuard: Auth state changed", { 
+      isAuthenticated: !!user, 
+      pathname,
+      userOnboarded: user?.onboarded,
+      authEvent,
+      profileLoaded,
+      timestamp: new Date().toISOString()
+    });
+  }, [user, pathname, authEvent, profileLoaded]);
+
   // Skip redirects for password reset/update pages
   const isPasswordResetPage = pathname === "/reset-password" || pathname === "/update-password";
   
-  // Clear any pending redirect timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (redirectTimeoutRef.current) {
-        clearTimeout(redirectTimeoutRef.current);
-      }
-    };
-  }, []);
-
   // Handle redirects based on authentication status - with loop protection
   useEffect(() => {
     // Only proceed when auth is fully ready
     if (isLoading) {
+      console.log("AuthGuard: Auth state is still loading, waiting...");
       return;
     }
     
-    // Skip redirects for password reset/update pages
+    // Skip any redirects for password reset/update pages regardless of auth state
     if (isPasswordResetPage) {
+      console.log("AuthGuard: On password reset/update page, skipping redirects");
       return;
     }
     
     // Critical: Wait for profile to load after sign-in before redirecting
     if (authEvent === 'SIGN_IN_COMPLETE' && !profileLoaded) {
-      return;
-    }
-
-    // Prevent multiple redirects in the same render cycle
-    if (redirectedRef.current) {
+      console.log("AuthGuard: Auth complete but waiting for profile to load");
       return;
     }
 
@@ -57,25 +56,54 @@ export const AuthenticationGuard = () => {
     const shouldGoToDashboard = user && user.onboarded && isCurrentlyOnAuth;
     const shouldGoToLogin = !user && pathname !== "/" && !isCurrentlyOnAuth;
     
-    // Debug log instead of console
-    if (shouldGoToOnboarding || shouldGoToDashboard || shouldGoToLogin) {
-      redirectedRef.current = true;
+    console.log("AuthGuard: Navigation logic check", {
+      isCurrentlyOnAuth,
+      shouldGoToOnboarding,
+      shouldGoToDashboard,
+      shouldGoToLogin,
+      pathname
+    });
+
+    // Handle successful login with direct redirect - but only from auth pages
+    if (user && (authEvent === "SIGN_IN_COMPLETE" || authEvent === "RESTORED_SESSION") && profileLoaded) {
+      console.log("AuthGuard: Auth event detected, handling login redirect", { authEvent });
       
-      // Add a small delay to prevent rapid redirects
-      redirectTimeoutRef.current = setTimeout(() => {
-        if (shouldGoToLogin) {
-          navigate("/login", { replace: true });
+      if (!user.onboarded) {
+        // Redirect to onboarding if not already there
+        if (pathname !== "/onboarding") {
+          console.log("AuthGuard: User not onboarded, redirecting to onboarding");
+          // Use a timeout to ensure state updates have completed
+          setTimeout(() => {
+            navigate("/onboarding", { replace: true });
+          }, 50);
         }
-        else if (shouldGoToOnboarding) {
-          navigate("/onboarding", { replace: true });
+      } else if (isCurrentlyOnAuth) {
+        // Only redirect to dashboard after successful login if we're on an auth page
+        // This prevents interrupting normal navigation on the dashboard and other pages
+        if (pathname !== "/dashboard") {
+          console.log("AuthGuard: User onboarded and on auth page, redirecting to dashboard");
+          // Use a timeout to ensure state updates have completed
+          setTimeout(() => {
+            navigate("/dashboard", { replace: true });
+            toast.success(`Welcome back, ${user.name || 'Friend'}!`);
+          }, 50);
         }
-        else if (shouldGoToDashboard) {
-          navigate("/dashboard", { replace: true });
-          toast.success(`Welcome back, ${user.first_name || user.name || 'Friend'}!`);
-        }
-        // Reset redirected flag after a redirect
-        redirectedRef.current = false;
-      }, 100);
+      }
+      return;
+    }
+
+    // Non-login redirects - carefully managed to prevent loops
+    if (shouldGoToLogin) {
+      console.log("AuthGuard: Redirecting unauthenticated user to login");
+      navigate("/login", { replace: true });
+    }
+    else if (shouldGoToOnboarding) {
+      console.log("AuthGuard: Redirecting to onboarding");
+      navigate("/onboarding", { replace: true });
+    }
+    else if (shouldGoToDashboard) {
+      console.log("AuthGuard: Redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
     }
   }, [user, isLoading, pathname, navigate, authEvent, profileLoaded, isPasswordResetPage]);
 

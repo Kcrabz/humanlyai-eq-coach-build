@@ -1,4 +1,5 @@
 
+// Updating the ChatInput component to include the history button
 import React, { useState, useRef, useEffect } from "react";
 import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";

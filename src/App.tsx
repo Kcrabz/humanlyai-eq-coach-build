@@ -1,104 +1,151 @@
 
-import React from 'react';
-import {
-  createBrowserRouter,
-  RouterProvider,
-  useNavigate,
-  Outlet,
-} from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import OnboardingPage from "./pages/OnboardingPage";
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import PricingPage from "./pages/PricingPage";
-import AccountPage from "./pages/AccountPage";
-import ChatPage from "./pages/ChatPage";
-import DashboardPage from "./pages/DashboardPage";
-import AdminPage from "./pages/AdminPage";
-import NotFound from "./pages/NotFound";
-import { PageLayout } from "./components/layout/PageLayout";
-import { Toaster } from "./components/ui/sonner";
-import { AuthenticationGuard } from "./components/auth/AuthenticationGuard";
-import { Header } from "./components/layout/Header";
-import { AdminRoute } from "./components/admin/AdminRoute";
+import React, { useState, useEffect } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { AuthProvider } from '@/context/AuthContext';
+import { AuthenticationGuard } from '@/components/auth/AuthenticationGuard';
 
-// Home page that redirects to chat
-const Index = () => {
-  const navigate = useNavigate();
+// Import pages
+import Index from './pages/Index';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignupPage';
+import ChatPage from './pages/ChatPage';
+import DashboardPage from './pages/DashboardPage';
+import SettingsPage from './pages/SettingsPage';
+import UserProgressPage from './pages/UserProgressPage';
+import OnboardingPage from './pages/OnboardingPage';
+import PricingPage from './pages/PricingPage';
+import AboutPage from './pages/AboutPage';
+import HelpPage from './pages/HelpPage';
+import BlogPage from './pages/BlogPage';
+import CommunityPage from './pages/CommunityPage';
+import AdminPage from './pages/AdminPage';
+import NotFound from './pages/NotFound';
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import UpdatePasswordPage from "./pages/UpdatePasswordPage";
+import ReferPage from './pages/ReferPage';
 
-  React.useEffect(() => {
-    navigate("/chat");
-  }, [navigate]);
+// Import components
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { AdminRoute } from '@/components/admin/AdminRoute';
 
-  return null;
-};
-
-// Root layout component that includes AuthProvider
-const RootLayout = () => {
-  return (
-    <AuthProvider>
-      <AuthenticationGuard />
-      <div className="min-h-screen flex flex-col bg-background">
-        <Header />
-        <Outlet />
-      </div>
-      <Toaster position="bottom-right" />
-    </AuthProvider>
-  );
-};
-
-// Create the router configuration
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <RootLayout />,
-    children: [
-      {
-        path: "/",
-        element: <PageLayout><Index /></PageLayout>
-      },
-      {
-        path: "/login",
-        element: <PageLayout fullWidth><LoginPage /></PageLayout>
-      },
-      {
-        path: "/signup",
-        element: <PageLayout fullWidth><SignupPage /></PageLayout>
-      },
-      {
-        path: "/dashboard",
-        element: <PageLayout><DashboardPage /></PageLayout>,
-      },
-      {
-        path: "/chat",
-        element: <PageLayout><ChatPage /></PageLayout>
-      },
-      {
-        path: "/onboarding",
-        element: <PageLayout fullWidth><OnboardingPage /></PageLayout>
-      },
-      {
-        path: "/pricing",
-        element: <PageLayout><PricingPage /></PageLayout>
-      },
-      {
-        path: "/account",
-        element: <PageLayout><AccountPage /></PageLayout>
-      },
-      {
-        path: "/admin",
-        element: <PageLayout><AdminRoute><AdminPage /></AdminRoute></PageLayout>
-      },
-      {
-        path: "*",
-        element: <PageLayout><NotFound /></PageLayout>
-      }
-    ]
-  }
-]);
+const queryClient = new QueryClient();
 
 function App() {
-  return <RouterProvider router={router} />;
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        {/* Global authentication guard to handle redirects */}
+        <AuthenticationGuard />
+        
+        <Routes>
+          <Route path="/" element={<Index />} />
+          
+          {/* Auth Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/update-password" element={<UpdatePasswordPage />} />
+          <Route path="/forgot-password" element={<ResetPasswordPage />} />
+          
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat"
+            element={
+              <ProtectedRoute>
+                <ChatPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/progress"
+            element={
+              <ProtectedRoute>
+                <UserProgressPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/subscription"
+            element={
+              <ProtectedRoute>
+                <PricingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/refer"
+            element={
+              <ProtectedRoute>
+                <ReferPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminPage />
+              </AdminRoute>
+            }
+          />
+          
+          {/* Public Routes */}
+          <Route path="/about" element={<AboutPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/help" element={<HelpPage />} />
+          <Route path="/blog" element={<BlogPage />} />
+          <Route path="/community" element={<CommunityPage />} />
+          
+          {/* 404 Route */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </AuthProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
+  );
 }
 
 export default App;

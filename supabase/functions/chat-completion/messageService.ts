@@ -30,7 +30,7 @@ export function extractUserMessage(reqBody: any) {
   return { userMessage, clientProvidedHistory };
 }
 
-// Prepare messages for OpenAI with minimal context
+// Prepare messages for OpenAI with proper context
 export function prepareMessagesForAI(userMessage: string, archetype: string, coachingMode: string, chatHistory: any[], userId: string = "") {
   return prepareMessages(userMessage, archetype, coachingMode, chatHistory, userId);
 }

@@ -23,12 +23,6 @@ export function CollapsibleMenu() {
   const isOnProgressPage = location.pathname === "/progress";
   const [isOpen, setIsOpen] = useState(false);
 
-  // Function to handle logout with navigation fallback
-  const handleLogout = () => {
-    logout();
-    setIsOpen(false);
-  };
-
   return (
     <div className="fixed top-0 right-0 z-50 w-full">
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
@@ -151,7 +145,10 @@ export function CollapsibleMenu() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
-                            onClick={handleLogout} 
+                            onClick={() => {
+                              logout();
+                              setIsOpen(false);
+                            }} 
                             className="rounded-md text-red-500 hover:text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
                           >
                             Log out

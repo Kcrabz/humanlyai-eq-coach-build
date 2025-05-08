@@ -46,40 +46,32 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const { user } = useAuth();
 
-  // When user logs in or changes, clear messages and show welcome message
+  // Check if we should show the introduction message for first-time users
   useEffect(() => {
-    if (!user) return;
+    if (!user || isLoading || messages.length > 0) return;
     
-    // Clear existing messages when user logs in
-    if (messages.length === 0) {
-      const welcomeUser = async () => {
-        // Get personalized greeting
-        let greeting = `Hey${user.first_name ? ' ' + user.first_name : ''}, what's on your mind today?`;
+    const checkAndSendIntroduction = async () => {
+      // Only for first-time visitors to the chat
+      if (user.id && shouldShowIntroduction(user.id)) {
+        // Get the appropriate introduction message based on coaching mode
+        const introMessage = getIntroductionMessage(user.coaching_mode);
         
-        // For first-time users, show introduction instead of simple greeting
-        if (shouldShowIntroduction(user.id)) {
-          const introMessage = getIntroductionMessage(user.coaching_mode);
-          
-          // If user has a bio, append a personalized note
-          let finalIntroMessage = introMessage;
-          if (user.bio) {
-            finalIntroMessage = `${introMessage}\n\nI see from your bio that you mentioned: "${user.bio}". I'll keep this in mind as we work together.`;
-          }
-          
-          // Use the full introduction message
-          addAssistantMessage(finalIntroMessage);
-          
-          // Mark that we've shown the introduction to this user
-          markIntroductionAsShown(user.id);
-        } else {
-          // For returning users, just show the greeting
-          addAssistantMessage(greeting);
+        // If user has a bio, append a personalized note
+        let finalIntroMessage = introMessage;
+        if (user.bio) {
+          finalIntroMessage = `${introMessage}\n\nI see from your bio that you mentioned: "${user.bio}". I'll keep this in mind as we work together.`;
         }
-      };
-      
-      welcomeUser();
-    }
-  }, [user?.id]);
+        
+        // Add the assistant message with the introduction
+        addAssistantMessage(finalIntroMessage);
+        
+        // Mark that we've shown the introduction to this user
+        markIntroductionAsShown(user.id);
+      }
+    };
+    
+    checkAndSendIntroduction();
+  }, [user, isLoading, messages.length]);
 
   // Wrapper for sending messages
   const sendMessage = async (content: string) => {
@@ -101,7 +93,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     startNewChatSession(clearMessages);
   };
 
-  // Method to restore a conversation
+  // New method to restore a conversation
   const restoreConversation = (conversationMessages: ChatMessage[]) => {
     setMessages(conversationMessages);
   };

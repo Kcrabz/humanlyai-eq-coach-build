@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
-import { markLoginSuccess } from "@/utils/loginRedirectUtils";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -121,10 +120,21 @@ export function useLoginForm() {
       if (success) {
         setLoginSuccess(true);
         
-        // Mark login as successful for redirect mechanism
-        markLoginSuccess();
+        // Store login timestamp in localStorage for fallback redirect mechanism
+        const timestamp = Date.now();
+        localStorage.setItem('login_timestamp', timestamp.toString());
         
         toast.success("Login successful!");
+        
+        // Use alternate window location redirect as a fallback
+        // This will only execute if the React Router navigation fails
+        setTimeout(() => {
+          // Check if we're still on the login page after success
+          if (window.location.pathname === '/login') {
+            console.log("Fallback redirect: Using window.location to go to dashboard");
+            window.location.href = '/dashboard';
+          }
+        }, 1000);
       } else {
         // If login failed, update rate limit info
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);

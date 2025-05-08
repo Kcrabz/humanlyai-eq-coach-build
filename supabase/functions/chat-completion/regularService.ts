@@ -1,6 +1,5 @@
 
 import { handleOpenAIApiError, handleGeneralError } from "./openaiErrorHandler.ts";
-import { validateResponse } from "./responseValidator.ts";
 
 // Call OpenAI API (non-streaming version for fallback)
 export async function callOpenAI(openAiApiKey: string, messages: any[]) {
@@ -29,11 +28,7 @@ export async function callOpenAI(openAiApiKey: string, messages: any[]) {
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: messages,
-        max_tokens: 400, // about 120-150 words
-        temperature: 0.85,
-        top_p: 1.0,
-        frequency_penalty: 0.2,
-        presence_penalty: 0.2
+        max_tokens: 500
       }),
     });
     
@@ -59,12 +54,7 @@ export async function callOpenAI(openAiApiKey: string, messages: any[]) {
     
     const content = completion.choices[0].message.content;
     console.log(`Response content length: ${content.length} characters`);
-    
-    // Apply the response validator before returning
-    const validatedContent = validateResponse(content);
-    console.log("Response validated and potentially modified");
-    
-    return validatedContent;
+    return content;
   } catch (error) {
     console.error("Error in callOpenAI:", error);
     

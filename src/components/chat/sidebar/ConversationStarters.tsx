@@ -13,8 +13,7 @@ const STARTER_PROMPTS = [
     prompts: [
       "How can I better recognize my emotional triggers?",
       "What strategies help identify emotions in the moment?",
-      "How might my personality type influence my reactions?",
-      "Help me manage my imposter syndrome."
+      "How might my personality type influence my reactions?"
     ]
   },
   {

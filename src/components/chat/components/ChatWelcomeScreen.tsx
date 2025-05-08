@@ -14,10 +14,10 @@ export function ChatWelcomeScreen({ sendSuggestedMessage }: ChatWelcomeScreenPro
           <MessageSquare className="text-humanly-teal h-6 w-6" />
         </span>
       </div>
-      <h3 className="text-xl font-medium">Chat with Kai, your EQ Coach</h3>
+      <h3 className="text-xl font-medium">Start a conversation</h3>
       <p className="text-muted-foreground mt-2 max-w-md">
-        Kai can help you develop emotional intelligence skills through 
-        thoughtful questions and practical guidance. What would you like to talk about?
+        Send a message to begin your conversation with Kai, your EQ coach.
+        Kai will ask questions to understand your situation before offering guidance.
       </p>
       <div className="mt-6 space-y-2">
         <p className="text-sm font-medium text-muted-foreground">Try starting with:</p>
@@ -25,26 +25,18 @@ export function ChatWelcomeScreen({ sendSuggestedMessage }: ChatWelcomeScreenPro
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => sendSuggestedMessage("I want to be better at handling difficult conversations with my team.")}
+            onClick={() => sendSuggestedMessage("I've been feeling overwhelmed at work lately.")}
             className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30"
           >
-            "I want to be better at handling difficult conversations."
+            "I've been feeling overwhelmed at work lately."
           </Button>
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => sendSuggestedMessage("I get stressed when speaking in front of groups. Any tips?")}
+            onClick={() => sendSuggestedMessage("I struggle with communicating my needs to others.")}
             className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30"
           >
-            "I get stressed when speaking in front of groups. Any tips?"
-          </Button>
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => sendSuggestedMessage("Help me manage my imposter syndrome.")}
-            className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30"
-          >
-            "Help me manage my imposter syndrome."
+            "I struggle with communicating my needs to others."
           </Button>
         </div>
       </div>
