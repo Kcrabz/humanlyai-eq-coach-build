@@ -28,7 +28,7 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: messages,
-        max_tokens: 250, // about 80-100 words
+        max_tokens: 400, // about 120-150 words
         stream: true,
         temperature: 0.85,
         top_p: 1.0,
@@ -128,7 +128,7 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
     
     // If we didn't get any response, provide a fallback
     if (completeResponse.trim() === '') {
-      const fallbackResponse = "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?";
+      const fallbackResponse = "Hey there! I'm Kai, your EQ coach. I'm here to help you develop your emotional intelligence. What would you like to work on today?";
       yield fallbackResponse;
       return fallbackResponse;
     }

@@ -41,7 +41,7 @@ export function validateResponse(response: string): string {
     }
     
     // Add a gentle redirect
-    return `${firstPart}\n\nWould you like to focus on just one specific technique or approach?`;
+    return `${firstPart}\n\nWhat specific aspect would you like to focus on?`;
   }
   
   // Check for response length
@@ -56,14 +56,22 @@ export function validateResponse(response: string): string {
     
     if (lastSentenceBreak > 300) {
       const shortenedResponse = response.substring(0, lastSentenceBreak + 1);
-      return `${shortenedResponse}\n\nWould you like me to continue or shall we explore this point first?`;
+      return `${shortenedResponse}\n\nWhat are your thoughts on this so far?`;
     }
   }
   
   // Check if response ends with a question
   if (!response.trim().match(/[?]\s*$/)) {
-    // Add an open-ended question if one isn't present
-    return `${response.trim()}\n\nWhat are your thoughts on this?`;
+    // Add a personalized open-ended question if one isn't present
+    const questions = [
+      "What's your experience with this?",
+      "How does that resonate with you?",
+      "What are your thoughts on this?",
+      "How might this work for your situation?",
+      "What part of this feels most relevant to you?"
+    ];
+    const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+    return `${response.trim()}\n\n${randomQuestion}`;
   }
   
   return response;
