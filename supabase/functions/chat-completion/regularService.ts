@@ -1,5 +1,6 @@
 
 import { handleOpenAIApiError, handleGeneralError } from "./openaiErrorHandler.ts";
+import { validateResponse } from "./responseValidator.ts";
 
 // Call OpenAI API (non-streaming version for fallback)
 export async function callOpenAI(openAiApiKey: string, messages: any[]) {
@@ -58,7 +59,12 @@ export async function callOpenAI(openAiApiKey: string, messages: any[]) {
     
     const content = completion.choices[0].message.content;
     console.log(`Response content length: ${content.length} characters`);
-    return content;
+    
+    // Apply the response validator before returning
+    const validatedContent = validateResponse(content);
+    console.log("Response validated and potentially modified");
+    
+    return validatedContent;
   } catch (error) {
     console.error("Error in callOpenAI:", error);
     

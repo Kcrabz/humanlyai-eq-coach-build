@@ -1,6 +1,7 @@
 
 import { estimateTokenCount } from "./utils.ts";
 import { handleOpenAIApiError, handleGeneralError } from "./openaiErrorHandler.ts";
+import { validateResponse } from "./responseValidator.ts";
 
 // Call OpenAI API with streaming support
 export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
@@ -112,6 +113,19 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
       throw streamError; // Re-throw if we have no response
     }
     
+    // For streaming, we need to validate the full response at the end
+    // If the response requires modification, we'll yield the modified version
+    const validatedResponse = validateResponse(completeResponse);
+    
+    // If the response was modified, yield the difference
+    if (validatedResponse !== completeResponse) {
+      console.log("Response modified by validator, yielding difference");
+      const additionalContent = validatedResponse.substring(completeResponse.length);
+      if (additionalContent) {
+        yield additionalContent;
+      }
+    }
+    
     // If we didn't get any response, provide a fallback
     if (completeResponse.trim() === '') {
       const fallbackResponse = "I'm Kai, your EQ coach. I'm here to help with your emotional intelligence development. What would you like to work on today?";
@@ -119,7 +133,7 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
       return fallbackResponse;
     }
     
-    return completeResponse;
+    return validatedResponse;
   } catch (error) {
     console.error("Error in streamOpenAI:", error);
     
