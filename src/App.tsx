@@ -14,10 +14,13 @@ import PricingPage from "./pages/PricingPage";
 import AccountPage from "./pages/AccountPage";
 import ChatPage from "./pages/ChatPage";
 import DashboardPage from "./pages/DashboardPage";
+import AdminPage from "./pages/AdminPage";
+import NotFound from "./pages/NotFound";
 import { PageLayout } from "./components/layout/PageLayout";
 import { Toaster } from "./components/ui/sonner";
 import { AuthenticationGuard } from "./components/auth/AuthenticationGuard";
 import { Header } from "./components/layout/Header";
+import { AdminRoute } from "./components/admin/AdminRoute";
 
 // Home page that redirects to chat
 const Index = () => {
@@ -82,6 +85,14 @@ const router = createBrowserRouter([
         path: "/account",
         element: <PageLayout><AccountPage /></PageLayout>
       },
+      {
+        path: "/admin",
+        element: <PageLayout><AdminRoute><AdminPage /></AdminRoute></PageLayout>
+      },
+      {
+        path: "*",
+        element: <PageLayout><NotFound /></PageLayout>
+      }
     ]
   }
 ]);
