@@ -38,7 +38,8 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
       userMessage,
       effectiveArchetype,
       effectiveCoachingMode,
-      chatHistory
+      chatHistory,
+      user.id // Pass the user ID for context personalization
     );
     
     console.log(`Prepared ${preparedMessages.length} messages for OpenAI`);

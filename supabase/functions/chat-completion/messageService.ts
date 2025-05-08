@@ -31,8 +31,8 @@ export function extractUserMessage(reqBody: any) {
 }
 
 // Prepare messages for OpenAI with proper context
-export function prepareMessagesForAI(userMessage: string, archetype: string, coachingMode: string, chatHistory: any[]) {
-  return prepareMessages(userMessage, archetype, coachingMode, chatHistory);
+export function prepareMessagesForAI(userMessage: string, archetype: string, coachingMode: string, chatHistory: any[], userId: string = "") {
+  return prepareMessages(userMessage, archetype, coachingMode, chatHistory, userId);
 }
 
 // Calculate token usage from request and response

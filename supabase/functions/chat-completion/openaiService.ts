@@ -2,15 +2,26 @@
 import { createSystemMessage } from "./promptTemplates.ts";
 import { streamOpenAI } from "./streamingService.ts";
 import { callOpenAI } from "./regularService.ts";
+import { extractConversationContext, enrichSystemMessageWithContext } from "./conversationContext.ts";
 
 // Prepare messages for OpenAI API
-export function prepareMessages(message: string, archetype: string, coachingMode: string, chatHistory: any[] = []) {
+export function prepareMessages(message: string, archetype: string, coachingMode: string, chatHistory: any[] = [], userId: string = "") {
   // Get the system message with personalization
   const systemContent = createSystemMessage(archetype, coachingMode);
   
-  // Base messages with system prompt and current user message
+  // Extract conversation context from chat history
+  const conversationContext = extractConversationContext(chatHistory);
+  
+  // Enrich system message with conversation context
+  const enrichedSystemContent = enrichSystemMessageWithContext(
+    systemContent, 
+    userId,
+    conversationContext
+  );
+  
+  // Base messages with enhanced system prompt and current user message
   let messages = [
-    { role: 'system', content: systemContent },
+    { role: 'system', content: enrichedSystemContent },
     { role: 'user', content: message }
   ];
   
