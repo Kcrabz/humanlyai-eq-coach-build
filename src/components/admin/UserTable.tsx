@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { UserOperations } from "./user-operations";
 import { UserTableData } from "@/hooks/useUserManagement/types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { InfoCircledIcon } from "@radix-ui/react-icons";
+import { InfoIcon } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface UserTableProps {
@@ -37,7 +37,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
           <Tooltip>
             <TooltipTrigger className="flex items-center text-amber-500">
               <span>No login data</span>
-              <InfoCircledIcon className="ml-1 h-3 w-3" />
+              <InfoIcon className="ml-1 h-3 w-3" />
             </TooltipTrigger>
             <TooltipContent>
               <p>User account exists but no login has been recorded yet.</p>
@@ -55,7 +55,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
         <Tooltip>
           <TooltipTrigger className={`flex items-center ${isCreationDate ? 'text-amber-500' : ''}`}>
             <span>{user.last_login}</span>
-            {isCreationDate && <InfoCircledIcon className="ml-1 h-3 w-3" />}
+            {isCreationDate && <InfoIcon className="ml-1 h-3 w-3" />}
           </TooltipTrigger>
           <TooltipContent>
             <p>{isCreationDate ? 
@@ -85,7 +85,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
                   {user.message_count} msg
                 </Badge>
               )}
-              {isFreeTier && <InfoCircledIcon className="ml-1 h-3 w-3" />}
+              {isFreeTier && <InfoIcon className="ml-1 h-3 w-3" />}
             </TooltipTrigger>
             <TooltipContent>
               {isFreeTier ? 
