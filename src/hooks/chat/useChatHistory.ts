@@ -45,7 +45,9 @@ export const useChatHistory = () => {
         conversationMap.get(date)?.push({
           id: message.id,
           content: message.content,
-          role: message.role,
+          role: message.role === 'user' || message.role === 'assistant' 
+            ? message.role 
+            : 'user', // Default to user if invalid role
           created_at: message.created_at
         });
       });

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChatMessage } from "@/types";
 import { useAuth } from "@/context/AuthContext";
@@ -223,6 +224,3 @@ export const useChatContextMessages = () => {
     setMessages
   };
 };
-
-// Import toast after defining the hook to avoid the before initialization error
-import { toast } from "sonner";
