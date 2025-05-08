@@ -77,12 +77,10 @@ Your mission is to help people feel seen and move forward — one thoughtful con
 
 // Function to create a system message with minimal personalization
 export function createSystemMessage(archetype: string, coachingMode: string): string {
-  let archetypeInfo = archetype;
-  
-  // Simple archetype handling without extra guidance
-  if (!archetype || archetype === 'unknown' || archetype === 'Not set') {
-    archetypeInfo = "Not yet determined";
-  }
+  // Simpler archetype handling without fallback text
+  const archetypeInfo = archetype && archetype !== 'unknown' && archetype !== 'Not set' 
+    ? archetype 
+    : "Unknown";
   
   const personalizationHeader =
     `Coaching Mode: ${coachingMode || 'normal'}.\n` +
