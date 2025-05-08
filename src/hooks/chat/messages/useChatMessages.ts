@@ -21,7 +21,7 @@ export const useChatMessages = () => {
       created_at: new Date().toISOString(),
     };
 
-    return userMessage;
+    return userMessage.id;
   }, [createId]);
 
   /**
@@ -35,7 +35,7 @@ export const useChatMessages = () => {
       created_at: new Date().toISOString(),
     };
 
-    return assistantMessage;
+    return assistantMessage.id;
   }, [createId]);
 
   /**

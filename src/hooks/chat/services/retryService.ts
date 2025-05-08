@@ -1,11 +1,10 @@
 
-import { handleApiErrors } from "@/utils/chatErrorHandler";
-import { sendMessageStream } from "./streamService";
+import { prepareContextMessages } from "./contextService";
+import { sendMessage } from "./messageService";
 import { RetryOptions } from "../types";
-import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Retry the last message that was sent
+ * Retry the last message that failed
  */
 export async function retryLastMessage(
   lastSentMessage: string | null,
@@ -19,24 +18,35 @@ export async function retryLastMessage(
   setIsLoading: (loading: boolean) => void,
   setUsageInfo: (info: any) => void
 ) {
-  if (!lastSentMessage) return;
+  if (!lastSentMessage) {
+    console.error("No message to retry");
+    return;
+  }
   
-  errorOptions.setError(null);
-  // Use streaming for retries
-  const userMessageId = options.addUserMessage(lastSentMessage);
-  const assistantMessageId = options.addAssistantMessage("");
+  console.log("Retrying last message:", lastSentMessage);
   
-  await sendMessageStream(
-    {
-      content: lastSentMessage,
-      userMessageId,
-      assistantMessageId,
-      updateAssistantMessage: options.updateAssistantMessage
-    },
-    user,
+  const { addUserMessage, addAssistantMessage } = options;
+  
+  // Create a new user message with the last content
+  addUserMessage(lastSentMessage);
+  
+  // Prepare minimal context for retry
+  const contextMessages = prepareContextMessages(
+    lastSentMessage, 
+    [], // No previous context needed for retry
+    user?.subscription_tier
+  );
+  
+  // Send the message again
+  await sendMessage(
+    lastSentMessage,
+    addUserMessage,
+    addAssistantMessage,
     errorOptions,
     setLastSentMessage,
     setIsLoading,
-    setUsageInfo
+    setUsageInfo,
+    contextMessages,
+    user
   );
 }

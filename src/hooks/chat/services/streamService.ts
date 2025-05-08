@@ -1,85 +1,69 @@
 
-import { handleApiErrors } from "@/utils/chatErrorHandler";
 import { supabase } from "@/integrations/supabase/client";
+import { handleApiErrors } from "@/utils/chatErrorHandler";
 import { toast } from "sonner";
 import { processStreamResponse } from "./streamProcessor";
+import { prepareContextMessages } from "./contextService";
+import { SendMessageOptions } from "../types";
 
 /**
- * Service for handling streaming chat responses
+ * Send a message with streaming response
  */
 export async function sendMessageStream(
-  options: {
-    content: string;
-    userMessageId: string;
-    assistantMessageId: string;
-    updateAssistantMessage?: (id: string, content: string) => void;
-  },
+  options: SendMessageOptions,
   user: any,
   errorOptions: {
     navigate: ReturnType<typeof import("react-router-dom").useNavigate>;
     setError: (error: string | null) => void;
-  }, 
+  },
   setLastSentMessage: (content: string | null) => void,
-  setIsLoading: (loading: boolean) => void, 
-  setUsageInfo: (info: any) => void
+  setIsLoading: (loading: boolean) => void,
+  setUsageInfo: (info: any) => void,
+  currentMessages: any[] = []
 ) {
-  const { content, userMessageId, assistantMessageId, updateAssistantMessage } = options;
+  const { content, assistantMessageId, updateAssistantMessage } = options;
   
   if (!content.trim()) return;
-
-  // Reset any previous errors
+  
+  // Reset errors and set loading state
   errorOptions.setError(null);
   setLastSentMessage(content);
   setIsLoading(true);
-
+  
   try {
-    // Show loading toast
     toast.loading("Connecting to Kai...", { id: "kai-connecting" });
     
-    // Get user context for the AI
-    const subscriptionTier = user?.subscription_tier || 'free';
+    // Prepare context messages for AI based on subscription tier
+    const contextMessages = prepareContextMessages(content, currentMessages, user?.subscription_tier);
+    console.log(`Sending stream with ${contextMessages.length} context messages`);
     
-    console.log("Sending message stream with content:", content);
-    console.log("User context:", {
-      subscriptionTier: subscriptionTier,
-      archetype: user?.eq_archetype || 'unknown',
+    // Prepare user context for personalization
+    const userContext = {
+      subscriptionTier: user?.subscription_tier || 'free',
+      archetype: user?.eq_archetype || 'Not set',
       coachingMode: user?.coaching_mode || 'normal',
       userId: user?.id
-    });
-    
-    // Initialize assistant message with empty content immediately
-    if (updateAssistantMessage) {
-      updateAssistantMessage(assistantMessageId, "");
-    }
+    };
     
     // Call the edge function with streaming enabled
-    const { data, error } = await supabase.functions.invoke('chat-completion', {
-      body: { 
-        message: content, 
+    const { data, error: apiError } = await supabase.functions.invoke('chat-completion', {
+      body: {
+        message: content,
+        messages: contextMessages,
         stream: true,
-        // Include important user context
-        subscriptionTier: subscriptionTier,
-        archetype: user?.eq_archetype || 'Not set',
-        coachingMode: user?.coaching_mode || 'normal',
-        userId: user?.id
+        ...userContext
       }
     });
-
+    
     toast.dismiss("kai-connecting");
-
-    if (error) {
-      console.error("Edge function error:", error);
+    
+    if (apiError) {
+      console.error("Stream API error:", apiError);
       errorOptions.setError("Failed to connect to AI assistant. Please try again later.");
-      throw new Error(error.message || "Failed to send message");
+      throw new Error(apiError.message || "Failed to send message");
     }
-
-    if (!data) {
-      console.error("Invalid response from edge function:", { data, error });
-      errorOptions.setError("No response received from AI assistant");
-      throw new Error("No response received from AI assistant");
-    }
-
-    // Process the stream response
+    
+    // Process the streaming response
     await processStreamResponse(
       data, 
       assistantMessageId,
@@ -91,12 +75,6 @@ export async function sendMessageStream(
   } catch (error: any) {
     console.error("Error in streaming message:", error);
     handleApiErrors(error, errorOptions);
-    
-    // Provide a fallback message to the user when streaming fails
-    if (updateAssistantMessage && assistantMessageId) {
-      updateAssistantMessage(assistantMessageId, 
-        "I'm Kai, your EQ coach. I'm having trouble processing your message right now. Could you try again? If the issue persists, please try refreshing the page.");
-    }
   } finally {
     setIsLoading(false);
     toast.dismiss("kai-connecting");

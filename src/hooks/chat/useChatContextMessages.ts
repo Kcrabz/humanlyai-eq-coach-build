@@ -58,16 +58,34 @@ export const useChatContextMessages = () => {
 
   // Add user message wrapper
   const addUserMessage = useCallback((content: string): string => {
-    const userMessage = createUserMessage(content);
+    const userMessageId = createUserMessage(content);
+    
+    // Create the user message object
+    const userMessage: ChatMessage = {
+      id: userMessageId,
+      content,
+      role: "user",
+      created_at: new Date().toISOString(),
+    };
+    
     setMessages((prev) => [...prev, userMessage]);
-    return userMessage.id;
+    return userMessageId;
   }, [createUserMessage]);
 
   // Add assistant message wrapper
   const addAssistantMessage = useCallback((content: string): string => {
-    const assistantMessage = createAssistantMessage(content);
+    const assistantMessageId = createAssistantMessage(content);
+    
+    // Create the assistant message object
+    const assistantMessage: ChatMessage = {
+      id: assistantMessageId,
+      content,
+      role: "assistant",
+      created_at: new Date().toISOString(),
+    };
+    
     setMessages((prev) => [...prev, assistantMessage]);
-    return assistantMessage.id;
+    return assistantMessageId;
   }, [createAssistantMessage]);
 
   // Update assistant message wrapper

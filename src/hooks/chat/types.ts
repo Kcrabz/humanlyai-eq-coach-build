@@ -21,3 +21,17 @@ export interface RetryOptions {
   addAssistantMessage: (message: string) => string;
   updateAssistantMessage: (id: string, content: string) => void;
 }
+
+// Chat actions context type
+export interface ChatActionsContext {
+  isLoading: boolean;
+  usageInfo: UsageInfo | null;
+  error: string | null;
+  sendMessage: (content: string, 
+    addUserMessage: (content: string) => string,
+    addAssistantMessage: (content: string) => string,
+    updateAssistantMessage: (id: string, content: string) => void,
+    currentMessages?: any[]) => Promise<void>;
+  retryLastMessage: (options: RetryOptions) => Promise<void>;
+  startNewChat: (clearMessages: () => void) => void;
+}
