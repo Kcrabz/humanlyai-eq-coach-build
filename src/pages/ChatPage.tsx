@@ -10,7 +10,7 @@ import { ARCHETYPES } from "@/lib/constants";
 import { ExternalLink, ClipboardCheck, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EQArchetype } from "@/types";
-import { SidebarProvider, LeftSidebarProvider, RightSidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, LeftSidebarProvider, RightSidebarProvider, useSidebar } from "@/components/ui/sidebar";
 import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar, ChatRightSidebarTrigger } from "@/components/chat/sidebar/ChatRightSidebar";
 import { ChatLeftSidebarTrigger } from "@/components/chat/sidebar/ChatLeftSidebarTrigger";
@@ -40,9 +40,10 @@ const StartNewChatButton = () => {
 };
 
 // Simplified header component specific for the chat page
-const ChatHeader = ({ hasCompletedAssessment, userArchetype }: { 
+const ChatHeader = ({ hasCompletedAssessment, userArchetype, onStartAssessment }: { 
   hasCompletedAssessment: boolean, 
-  userArchetype: string | undefined 
+  userArchetype: string | undefined,
+  onStartAssessment: () => void
 }) => {
   return (
     <div className="enhanced-header p-4 flex items-center justify-between">
@@ -141,6 +142,7 @@ const ChatPage = () => {
                 <ResponsiveMainContent 
                   hasCompletedAssessment={hasCompletedAssessment}
                   userArchetype={userArchetype}
+                  onStartAssessment={handleStartAssessment}
                 />
                 
                 {/* Right Sidebar (User Profile & Settings) */}
@@ -157,10 +159,12 @@ const ChatPage = () => {
 // New component that responds to sidebar state
 const ResponsiveMainContent = ({ 
   hasCompletedAssessment, 
-  userArchetype 
+  userArchetype,
+  onStartAssessment
 }: { 
   hasCompletedAssessment: boolean,
-  userArchetype: string | undefined 
+  userArchetype: string | undefined,
+  onStartAssessment: () => void
 }) => {
   // Get right sidebar state to adjust main content
   const { open: rightSidebarOpen } = useSidebar("right");
@@ -175,6 +179,7 @@ const ResponsiveMainContent = ({
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}
         userArchetype={userArchetype}
+        onStartAssessment={onStartAssessment}
       />
       
       <div className="flex-1 overflow-hidden flex flex-col">
@@ -182,7 +187,7 @@ const ResponsiveMainContent = ({
             <ClipboardCheck className="h-4 w-4 text-humanly-indigo" />
             <AlertDescription className="text-sm">
               For more personalized coaching, consider{" "}
-              <Button variant="link" size="sm" className="p-0 h-auto text-humanly-indigo hover:text-humanly-indigo-dark underline decoration-humanly-indigo/30" onClick={handleStartAssessment}>
+              <Button variant="link" size="sm" className="p-0 h-auto text-humanly-indigo hover:text-humanly-indigo-dark underline decoration-humanly-indigo/30" onClick={onStartAssessment}>
                 completing your EQ assessment
               </Button>
             </AlertDescription>
@@ -209,3 +214,4 @@ const ResponsiveMainContent = ({
 };
 
 export default ChatPage;
+
