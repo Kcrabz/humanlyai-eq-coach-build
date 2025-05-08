@@ -45,16 +45,17 @@
 .main-content {
   @apply flex-1 overflow-auto bg-gradient-to-br from-white to-humanly-pastel-lavender/10;
   transition: width 0.3s ease, margin 0.3s ease;
+  width: 100%;
 }
 
 /* Main content area that responds to right sidebar state */
 .main-content-with-right-sidebar-open {
-  width: calc(100% - 16rem);
+  width: calc(100% - 16rem) !important;
   transition: width 0.3s ease;
 }
 
 .main-content-with-right-sidebar-closed {
-  width: 100%;
+  width: 100% !important;
   transition: width 0.3s ease;
 }
 

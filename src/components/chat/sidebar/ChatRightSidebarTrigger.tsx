@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 
 export function ChatRightSidebarTrigger() {
@@ -15,7 +15,7 @@ export function ChatRightSidebarTrigger() {
       aria-label={open ? "Close user menu" : "Open user menu"}
       title="Access dashboard and settings"
     >
-      <User className="h-4 w-4" />
+      <Menu className="h-4 w-4" />
     </Button>
   );
 }
