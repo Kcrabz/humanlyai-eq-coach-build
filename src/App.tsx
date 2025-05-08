@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import {
   createBrowserRouter,
@@ -14,8 +15,7 @@ import PricingPage from "./pages/PricingPage";
 import AccountPage from "./pages/AccountPage";
 import ChatPage from "./pages/ChatPage";
 import { PageLayout } from "./components/layout/PageLayout";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from "./components/ui/sonner";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -81,7 +81,7 @@ function App() {
   return (
     <AuthProvider>
       <RouterProvider router={router} />
-      <ToastContainer position="bottom-right" />
+      <Toaster position="bottom-right" />
     </AuthProvider>
   );
 }
