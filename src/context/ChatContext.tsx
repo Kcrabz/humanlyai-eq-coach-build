@@ -22,6 +22,7 @@ interface ChatContextType {
   retryLastMessage: () => Promise<void>;
   clearMessages: () => void;
   restoreConversation: (messages: ChatMessage[]) => void;
+  clearChatNow: () => void; // New function to clear chat immediately
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -131,6 +132,14 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setMessages(conversationMessages);
   };
 
+  // New function to immediately clear the chat and show welcome message
+  const clearChatNow = () => {
+    console.log("Clearing chat immediately");
+    clearMessages();
+    const welcomeMessage = getWelcomeMessage();
+    addAssistantMessage(welcomeMessage);
+  };
+
   return (
     <ChatContext.Provider value={{ 
       messages, 
@@ -141,7 +150,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       error,
       retryLastMessage,
       clearMessages,
-      restoreConversation
+      restoreConversation,
+      clearChatNow // Expose the new function
     }}>
       {children}
     </ChatContext.Provider>
