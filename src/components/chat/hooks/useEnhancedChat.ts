@@ -111,18 +111,18 @@ export function useEnhancedChat(initialMessages: ChatMessage[] = []) {
     // We're not using this function to directly submit since we want users to see the message before sending
   };
   
-  // Generate dynamic placeholder based on conversation stage - more casual and coach-like
+  // Generate dynamic placeholder based on conversation stage - more coaching-style prompts
   const getDynamicPlaceholder = () => {
     if (userTurnCount === 0) return "What's on your mind today?";
     if (userTurnCount === 1) return "Tell me more...";
     if (userTurnCount === 2) return "How does that impact you?";
     
-    // Rotate through different coach-like prompts for variety
+    // Updated coaching-style prompts for more variety and better coaching tone
     const coachPrompts = [
-      "What else would help me understand?",
-      "Need advice or want to share more?",
-      "What are you thinking about this?",
-      "What would you like to focus on next?"
+      "Want a tip or just need to talk it out?",
+      "Curious to explore more?",
+      "Should we dig in or go practical?",
+      "What would be most helpful right now?"
     ];
     
     return coachPrompts[userTurnCount % coachPrompts.length];
