@@ -28,7 +28,11 @@ export async function callOpenAI(openAiApiKey: string, messages: any[]) {
       body: JSON.stringify({
         model: 'gpt-4o',
         messages: messages,
-        max_tokens: 500
+        max_tokens: 500,
+        temperature: 0.85,
+        top_p: 1.0,
+        frequency_penalty: 0.2,
+        presence_penalty: 0.2
       }),
     });
     
