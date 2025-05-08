@@ -31,9 +31,9 @@
   @apply bg-gradient-to-br from-humanly-pastel-lavender/20 to-humanly-pastel-blue/10 p-6 rounded-xl border border-humanly-pastel-lavender/10;
 }
 
-/* Sidebar styling */
+/* Sidebar styling with improved transitions */
 .zen-sidebar {
-  @apply bg-white border-r border-gray-50;
+  @apply bg-white border-r border-gray-50 transition-transform duration-300 ease-in-out;
 }
 
 /* User sidebar styling */

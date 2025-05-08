@@ -17,16 +17,13 @@ import { ProgressTracker } from "./ProgressTracker";
 import { DailyChallenge } from "./DailyChallenge";
 import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { Separator } from "@/components/ui/separator";
-import { useEffect } from "react";
 
 export function EnhancedChatSidebar() {
   const { user } = useAuth();
-  const { setOpen } = useSidebar("left");
+  const { open } = useSidebar("left");
   
-  // Set sidebar to be collapsed by default
-  useEffect(() => {
-    setOpen(false);
-  }, [setOpen]);
+  // Remove the effect that forces the sidebar to collapse by default
+  // This allows the sidebar to respond to user interactions properly
   
   if (!user) return null;
   
@@ -37,9 +34,10 @@ export function EnhancedChatSidebar() {
         side="left" 
         variant="sidebar" 
         collapsible="offcanvas"
-        className="zen-sidebar"
+        className="zen-sidebar transition-all duration-300"
+        data-state={open ? "open" : "closed"}
       >
-        <SidebarRail className="hover:bg-humanly-pastel-lavender/20" />
+        <SidebarRail className="hover:bg-humanly-pastel-lavender/20 z-30" />
         
         <SidebarHeader>
           <div className="mb-1 p-1">
