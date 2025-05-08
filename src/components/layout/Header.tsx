@@ -34,6 +34,11 @@ export function Header() {
     });
   }, [isAdmin, isAdminCheckLoading, user, location.pathname, isAuthenticated]);
 
+  // Function to handle logout
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <header className="enhanced-header py-4 px-4 sm:px-6 sticky top-0 z-50 bg-white shadow-md border-b border-gray-200 header-fade-in">
       <div className="container mx-auto flex items-center justify-between">
@@ -128,7 +133,7 @@ export function Header() {
                   </DropdownMenuItem>
                   
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout} className="rounded-md text-red-500 hover:text-red-600 transition-colors hover:bg-red-50 cursor-pointer">
+                  <DropdownMenuItem onClick={handleLogout} className="rounded-md text-red-500 hover:text-red-600 transition-colors hover:bg-red-50 cursor-pointer">
                     Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>

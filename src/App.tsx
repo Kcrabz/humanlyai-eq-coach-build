@@ -29,11 +29,16 @@ const Index = () => {
   return null;
 };
 
-const Root = () => {
+// Root layout component that includes AuthProvider
+const RootLayout = () => {
   return (
-    <PageLayout>
-      <Outlet />
-    </PageLayout>
+    <AuthProvider>
+      <AuthenticationGuard />
+      <PageLayout>
+        <Outlet />
+      </PageLayout>
+      <Toaster position="bottom-right" />
+    </AuthProvider>
   );
 };
 
@@ -41,7 +46,7 @@ const Root = () => {
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Root />,
+    element: <RootLayout />,
     children: [
       {
         path: "/",
@@ -80,15 +85,7 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return (
-    // First render the RouterProvider, then the AuthProvider
-    <RouterProvider router={router}>
-      <AuthProvider>
-        <AuthenticationGuard />
-        <Toaster position="bottom-right" />
-      </AuthProvider>
-    </RouterProvider>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
