@@ -40,8 +40,17 @@ export function validateResponse(response: string): string {
       firstPart = response.split("\n")[0];
     }
     
-    // Add a gentle redirect
-    return `${firstPart}\n\nWhat specific aspect would you like to focus on?`;
+    // Add a more conversational transition instead of the repetitive question
+    const conversationalTransitions = [
+      "I'm curious which of these resonates most with you?",
+      "What's catching your attention here?",
+      "Which of these feels most relevant to your situation?",
+      "What stands out to you from what I've shared?",
+      "How does this connect with your experience?"
+    ];
+    const randomTransition = conversationalTransitions[Math.floor(Math.random() * conversationalTransitions.length)];
+    
+    return `${firstPart}\n\n${randomTransition}`;
   }
   
   // Check for response length
@@ -56,7 +65,18 @@ export function validateResponse(response: string): string {
     
     if (lastSentenceBreak > 300) {
       const shortenedResponse = response.substring(0, lastSentenceBreak + 1);
-      return `${shortenedResponse}\n\nWhat are your thoughts on this so far?`;
+      
+      // More varied transitions for long responses
+      const lengthTransitions = [
+        "I'd love to hear your thoughts on this so far.",
+        "How is this landing for you?",
+        "Does this perspective make sense for your situation?",
+        "What's your reaction to this?",
+        "I'm curious about your thoughts on this approach."
+      ];
+      const randomLengthTransition = lengthTransitions[Math.floor(Math.random() * lengthTransitions.length)];
+      
+      return `${shortenedResponse}\n\n${randomLengthTransition}`;
     }
   }
   
@@ -68,7 +88,11 @@ export function validateResponse(response: string): string {
       "How does that resonate with you?",
       "What are your thoughts on this?",
       "How might this work for your situation?",
-      "What part of this feels most relevant to you?"
+      "What part of this feels most relevant to you?",
+      "How does this connect to your own experiences?",
+      "What would be most helpful to explore next?",
+      "What's coming up for you as you consider this?",
+      "What feels important about this for you right now?"
     ];
     const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
     return `${response.trim()}\n\n${randomQuestion}`;
