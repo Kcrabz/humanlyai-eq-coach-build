@@ -36,7 +36,7 @@ export function ConversationStarters() {
             onClick={() => handlePromptClick(prompt)}
           >
             <MessageSquare className="h-3 w-3 mr-1.5 text-humanly-teal flex-shrink-0" />
-            <span className="truncate">{prompt}</span>
+            <span className="whitespace-normal line-clamp-2">{prompt}</span>
           </Button>
         ))}
       </div>
