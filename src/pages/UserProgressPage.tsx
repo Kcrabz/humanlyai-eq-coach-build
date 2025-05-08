@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useUserProgress } from "@/hooks/useUserProgress";
+import { EQArchetype } from "@/types";
 
 // Import tabs
 import { OverviewTab } from "@/components/progress/OverviewTab";
@@ -68,7 +69,7 @@ const UserProgressPage = () => {
             <OverviewTab 
               stats={stats} 
               achievements={MOCK_ACHIEVEMENTS} 
-              userArchetype={userArchetype} 
+              userArchetype={userArchetype}
               onChallengeClick={handleChallengeTakeToChatPage} 
             />
           </TabsContent>
@@ -89,7 +90,7 @@ const UserProgressPage = () => {
           {/* EQ Journey Tab */}
           <TabsContent value="journey" className="animate-scale-fade-in">
             <EQJourneyTab 
-              userArchetype={userArchetype} 
+              userArchetype={userArchetype}
               timelineItems={MOCK_TIMELINE_ITEMS} 
             />
           </TabsContent>

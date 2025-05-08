@@ -17,23 +17,27 @@ interface UserProgressStats {
 export const useUserProgress = () => {
   const { user } = useAuth();
   
+  // Make sure the user archetype is one of the allowed values or default to "reflector"
+  const userEqArchetype: EQArchetype = (user?.eq_archetype && 
+    ["reflector", "activator", "regulator", "connector", "observer"].includes(user.eq_archetype as string)) 
+    ? (user.eq_archetype as EQArchetype) 
+    : "reflector";
+  
   // Stats that would be fetched from a real backend
   const [stats, setStats] = useState<UserProgressStats>({
     totalSessions: 12,
     challengesCompleted: 4,
     currentStreak: 5,
     longestStreak: 7,
-    eq_archetype: (user?.eq_archetype as EQArchetype) || "innovator",
+    eq_archetype: userEqArchetype,
     archetypeProgress: 65, // percentage
     totalMinutes: 45,
     totalReflections: 8
   });
   
-  const userArchetype = (user?.eq_archetype as EQArchetype) || "innovator";
-  
   return {
     user,
     stats,
-    userArchetype
+    userArchetype: userEqArchetype
   };
 };
