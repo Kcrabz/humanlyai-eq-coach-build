@@ -1,7 +1,5 @@
 
 import { AuthForm } from "@/components/auth/AuthForm";
-import { AuthRedirect } from "@/components/auth/AuthRedirect";
-import { PageLayout } from "@/components/layout/PageLayout";
 
 const LoginPage = () => {
   return (

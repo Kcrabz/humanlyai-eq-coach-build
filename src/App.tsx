@@ -37,9 +37,7 @@ const RootLayout = () => {
       <AuthenticationGuard />
       <div className="min-h-screen flex flex-col bg-background">
         <Header />
-        <PageLayout>
-          <Outlet />
-        </PageLayout>
+        <Outlet />
       </div>
       <Toaster position="bottom-right" />
     </AuthProvider>
@@ -54,35 +52,35 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Index />
+        element: <PageLayout><Index /></PageLayout>
       },
       {
         path: "/login",
-        element: <LoginPage />
+        element: <PageLayout fullWidth><LoginPage /></PageLayout>
       },
       {
         path: "/signup",
-        element: <SignupPage />
+        element: <PageLayout fullWidth><SignupPage /></PageLayout>
       },
       {
         path: "/dashboard",
-        element: <DashboardPage />,
+        element: <PageLayout><DashboardPage /></PageLayout>,
       },
       {
         path: "/chat",
-        element: <ChatPage />
+        element: <PageLayout><ChatPage /></PageLayout>
       },
       {
         path: "/onboarding",
-        element: <OnboardingPage />
+        element: <PageLayout fullWidth><OnboardingPage /></PageLayout>
       },
       {
         path: "/pricing",
-        element: <PricingPage />
+        element: <PageLayout><PricingPage /></PageLayout>
       },
       {
         path: "/account",
-        element: <AccountPage />
+        element: <PageLayout><AccountPage /></PageLayout>
       },
     ]
   }

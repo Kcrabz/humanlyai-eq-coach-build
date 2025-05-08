@@ -1,6 +1,5 @@
 
 import { useNavigate } from "react-router-dom";
-import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, TrendingUp, Users, Shield, MessageSquare } from "lucide-react";
@@ -43,115 +42,113 @@ const DashboardPage = () => {
   };
   
   return (
-    <PageLayout>
-      <div className="max-w-4xl mx-auto p-4 py-8">
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
-            Welcome back, {firstName}!
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            What would you like to do now?
-          </p>
-        </div>
-        
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-scale-fade-in">
-          {/* Chat with Kai */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-indigo/10">
-            <CardContent className="p-0">
-              <Button 
-                variant="ghost" 
-                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                onClick={() => navigate("/chat")}
-              >
-                <div className="w-16 h-16 rounded-full bg-humanly-indigo/10 flex items-center justify-center">
-                  <MessageCircle className="w-8 h-8 text-humanly-indigo" />
-                </div>
-                <div className="text-center w-full">
-                  <h2 className="text-xl font-semibold">Chat with Kai</h2>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
-          
-          {/* Track Your Growth */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-teal/10">
-            <CardContent className="p-0">
-              <Button 
-                variant="ghost" 
-                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                onClick={() => navigate("/progress")}
-              >
-                <div className="w-16 h-16 rounded-full bg-humanly-teal/10 flex items-center justify-center">
-                  <TrendingUp className="w-8 h-8 text-humanly-teal" />
-                </div>
-                <div className="text-center w-full">
-                  <h2 className="text-xl font-semibold">Track Your Growth</h2>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
-          
-          {/* Help a Friend */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-rose/20">
-            <CardContent className="p-0">
-              <Button 
-                variant="ghost" 
-                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                onClick={handleReferral}
-              >
-                <div className="w-16 h-16 rounded-full bg-humanly-pastel-rose/20 flex items-center justify-center">
-                  <Users className="w-8 h-8 text-humanly-indigo" />
-                </div>
-                <div className="text-center w-full">
-                  <h2 className="text-xl font-semibold">Help a Friend</h2>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
-          
-          {/* Give Feedback - new card for beta testers */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-blue/20">
-            <CardContent className="p-0">
-              <Button 
-                variant="ghost" 
-                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                onClick={openFeedbackForm}
-              >
-                <div className="w-16 h-16 rounded-full bg-humanly-pastel-blue/20 flex items-center justify-center">
-                  <MessageSquare className="w-8 h-8 text-humanly-teal" />
-                </div>
-                <div className="text-center w-full">
-                  <h2 className="text-xl font-semibold">Give Feedback</h2>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
-          
-          {/* Admin Portal - Only visible for admin users */}
-          {isAdmin && (
-            <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-gray-400/20">
-              <CardContent className="p-0">
-                <Button 
-                  variant="ghost" 
-                  className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                  onClick={() => {
-                    console.log("Admin portal access requested by:", user?.email);
-                    navigate("/admin");
-                  }}
-                >
-                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                    <Shield className="w-8 h-8 text-gray-700" />
-                  </div>
-                  <div className="text-center w-full">
-                    <h2 className="text-xl font-semibold">Admin Portal</h2>
-                  </div>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+    <div className="max-w-4xl mx-auto p-4 py-8">
+      <div className="text-center mb-8 animate-fade-in">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
+          Welcome back, {firstName}!
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          What would you like to do now?
+        </p>
       </div>
-    </PageLayout>
+      
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-scale-fade-in">
+        {/* Chat with Kai */}
+        <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-indigo/10">
+          <CardContent className="p-0">
+            <Button 
+              variant="ghost" 
+              className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
+              onClick={() => navigate("/chat")}
+            >
+              <div className="w-16 h-16 rounded-full bg-humanly-indigo/10 flex items-center justify-center">
+                <MessageCircle className="w-8 h-8 text-humanly-indigo" />
+              </div>
+              <div className="text-center w-full">
+                <h2 className="text-xl font-semibold">Chat with Kai</h2>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
+        
+        {/* Track Your Growth */}
+        <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-teal/10">
+          <CardContent className="p-0">
+            <Button 
+              variant="ghost" 
+              className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
+              onClick={() => navigate("/progress")}
+            >
+              <div className="w-16 h-16 rounded-full bg-humanly-teal/10 flex items-center justify-center">
+                <TrendingUp className="w-8 h-8 text-humanly-teal" />
+              </div>
+              <div className="text-center w-full">
+                <h2 className="text-xl font-semibold">Track Your Growth</h2>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
+        
+        {/* Help a Friend */}
+        <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-rose/20">
+          <CardContent className="p-0">
+            <Button 
+              variant="ghost" 
+              className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
+              onClick={handleReferral}
+            >
+              <div className="w-16 h-16 rounded-full bg-humanly-pastel-rose/20 flex items-center justify-center">
+                <Users className="w-8 h-8 text-humanly-indigo" />
+              </div>
+              <div className="text-center w-full">
+                <h2 className="text-xl font-semibold">Help a Friend</h2>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
+        
+        {/* Give Feedback - new card for beta testers */}
+        <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-blue/20">
+          <CardContent className="p-0">
+            <Button 
+              variant="ghost" 
+              className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
+              onClick={openFeedbackForm}
+            >
+              <div className="w-16 h-16 rounded-full bg-humanly-pastel-blue/20 flex items-center justify-center">
+                <MessageSquare className="w-8 h-8 text-humanly-teal" />
+              </div>
+              <div className="text-center w-full">
+                <h2 className="text-xl font-semibold">Give Feedback</h2>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
+        
+        {/* Admin Portal - Only visible for admin users */}
+        {isAdmin && (
+          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-gray-400/20">
+            <CardContent className="p-0">
+              <Button 
+                variant="ghost" 
+                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
+                onClick={() => {
+                  console.log("Admin portal access requested by:", user?.email);
+                  navigate("/admin");
+                }}
+              >
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
+                  <Shield className="w-8 h-8 text-gray-700" />
+                </div>
+                <div className="text-center w-full">
+                  <h2 className="text-xl font-semibold">Admin Portal</h2>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </div>
   );
 };
 
