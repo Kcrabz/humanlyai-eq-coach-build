@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MessageCircle, TrendingUp, Users, Shield } from "lucide-react";
+import { MessageCircle, TrendingUp, Users, Shield, MessageSquare } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
@@ -35,6 +35,11 @@ const DashboardPage = () => {
     toast.success("Referral link copied to clipboard!", {
       description: "Share this link with your friends to invite them to join."
     });
+  };
+  
+  // Function to open the feedback form in a new tab
+  const openFeedbackForm = () => {
+    window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
   
   return (
@@ -99,6 +104,24 @@ const DashboardPage = () => {
                 </div>
                 <div className="text-center w-full">
                   <h2 className="text-xl font-semibold">Help a Friend</h2>
+                </div>
+              </Button>
+            </CardContent>
+          </Card>
+          
+          {/* Give Feedback - new card for beta testers */}
+          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-blue/20">
+            <CardContent className="p-0">
+              <Button 
+                variant="ghost" 
+                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
+                onClick={openFeedbackForm}
+              >
+                <div className="w-16 h-16 rounded-full bg-humanly-pastel-blue/20 flex items-center justify-center">
+                  <MessageSquare className="w-8 h-8 text-humanly-teal" />
+                </div>
+                <div className="text-center w-full">
+                  <h2 className="text-xl font-semibold">Give Feedback</h2>
                 </div>
               </Button>
             </CardContent>
