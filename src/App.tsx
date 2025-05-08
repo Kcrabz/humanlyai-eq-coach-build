@@ -17,6 +17,7 @@ import DashboardPage from "./pages/DashboardPage";
 import { PageLayout } from "./components/layout/PageLayout";
 import { Toaster } from "./components/ui/sonner";
 import { AuthenticationGuard } from "./components/auth/AuthenticationGuard";
+import { Header } from "./components/layout/Header";
 
 // Home page that redirects to chat
 const Index = () => {
@@ -34,9 +35,12 @@ const RootLayout = () => {
   return (
     <AuthProvider>
       <AuthenticationGuard />
-      <PageLayout>
-        <Outlet />
-      </PageLayout>
+      <div className="min-h-screen flex flex-col bg-background">
+        <Header />
+        <PageLayout>
+          <Outlet />
+        </PageLayout>
+      </div>
       <Toaster position="bottom-right" />
     </AuthProvider>
   );

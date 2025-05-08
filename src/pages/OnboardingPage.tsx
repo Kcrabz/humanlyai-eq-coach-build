@@ -1,7 +1,6 @@
 
 import { useEffect } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
-import { PageLayout } from "@/components/layout/PageLayout";
 import { OnboardingContainer } from "@/components/onboarding/OnboardingContainer";
 import { OnboardingLoader } from "@/components/onboarding/OnboardingLoader";
 import { OnboardingProvider } from "@/context/OnboardingContext";
@@ -21,30 +20,22 @@ const OnboardingPage = () => {
       console.log("OnboardingPage auth check:", {
         isAuthenticated,
         userOnboarded: user?.onboarded,
-        isLoading,
         isRetaking,
-        search: location.search,
-        state: location.state
+        search: location.search
       });
     }
   }, [isAuthenticated, user, isLoading, isRetaking, location]);
   
   if (isLoading) {
-    return (
-      <PageLayout>
-        <OnboardingLoader />
-      </PageLayout>
-    );
+    return <OnboardingLoader />;
   }
   
   return (
-    <PageLayout>
-      <div className="bg-gradient-to-b from-white to-humanly-gray-lightest min-h-screen">
-        <OnboardingProvider>
-          <OnboardingContainer />
-        </OnboardingProvider>
-      </div>
-    </PageLayout>
+    <div className="bg-gradient-to-b from-white to-humanly-gray-lightest min-h-screen">
+      <OnboardingProvider>
+        <OnboardingContainer />
+      </OnboardingProvider>
+    </div>
   );
 };
 
