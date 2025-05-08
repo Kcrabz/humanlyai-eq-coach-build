@@ -13,9 +13,11 @@ import { OverviewTab } from "@/components/progress/OverviewTab";
 import { AchievementsTab } from "@/components/progress/AchievementsTab";
 import { ChallengesTab } from "@/components/progress/ChallengesTab";
 import { EQJourneyTab } from "@/components/progress/EQJourneyTab";
+import { BadgesCertificatesTab } from "@/components/progress/BadgesCertificatesTab";
 
 // Import mock data
 import { MOCK_ACHIEVEMENTS, MOCK_CHALLENGE_HISTORY, MOCK_TIMELINE_ITEMS } from "@/data/mockProgressData";
+import { MOCK_BADGES_CERTIFICATES } from "@/data/mockBadgesCertificatesData";
 
 const UserProgressPage = () => {
   const { user, stats, userArchetype } = useUserProgress();
@@ -57,9 +59,10 @@ const UserProgressPage = () => {
         </div>
         
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="animate-scale-fade-in">
-          <TabsList className="grid grid-cols-4 mb-8">
+          <TabsList className="grid grid-cols-5 mb-8">
             <TabsTrigger value="overview" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Overview</TabsTrigger>
             <TabsTrigger value="achievements" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Achievements</TabsTrigger>
+            <TabsTrigger value="badges" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Badges & Certificates</TabsTrigger>
             <TabsTrigger value="challenges" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Daily Challenges</TabsTrigger>
             <TabsTrigger value="journey" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">EQ Journey</TabsTrigger>
           </TabsList>
@@ -77,6 +80,11 @@ const UserProgressPage = () => {
           {/* Achievements Tab */}
           <TabsContent value="achievements" className="animate-scale-fade-in">
             <AchievementsTab achievements={MOCK_ACHIEVEMENTS} />
+          </TabsContent>
+          
+          {/* Badges & Certificates Tab */}
+          <TabsContent value="badges" className="animate-scale-fade-in">
+            <BadgesCertificatesTab badges={MOCK_BADGES_CERTIFICATES} />
           </TabsContent>
           
           {/* Challenges Tab */}
