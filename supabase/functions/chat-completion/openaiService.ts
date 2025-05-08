@@ -2,35 +2,16 @@
 import { createSystemMessage } from "./promptTemplates.ts";
 import { streamOpenAI } from "./streamingService.ts";
 import { callOpenAI } from "./regularService.ts";
-import { extractConversationContext, enrichSystemMessageWithContext } from "./conversationContext.ts";
+import { enrichSystemMessageWithContext } from "./conversationContext.ts";
 
-// Prepare messages for OpenAI API
+// Prepare messages for OpenAI API with minimal personalization
 export function prepareMessages(message: string, archetype: string, coachingMode: string, chatHistory: any[] = [], userId: string = "") {
-  // Log conversation turn count for debugging
-  const conversationTurnCount = chatHistory.filter(msg => msg.role === 'user').length + 1;
-  console.log(`User turn count: ${conversationTurnCount}`);
-  
-  // Get the system message with personalization
+  // Get the system message with minimal personalization
   const systemContent = createSystemMessage(archetype, coachingMode);
   
-  // Extract conversation context from chat history
-  const conversationContext = extractConversationContext(chatHistory);
-  
-  // Log whether this is a direct help request
-  if (conversationContext.isDirectHelpRequest) {
-    console.log("User is directly asking for help or guidance");
-  }
-  
-  // Enrich system message with conversation context
-  const enrichedSystemContent = enrichSystemMessageWithContext(
-    systemContent, 
-    userId,
-    conversationContext
-  );
-  
-  // Base messages with enhanced system prompt and current user message
+  // Base messages with system prompt and current user message
   let messages = [
-    { role: 'system', content: enrichedSystemContent },
+    { role: 'system', content: systemContent },
     { role: 'user', content: message }
   ];
   
