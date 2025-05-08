@@ -1,30 +1,25 @@
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChatMessage } from "@/types";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useSessionStorage } from "./messages/useSessionStorage";
+import { useChatMessages } from "./messages/useChatMessages";
+import { useChatStorage } from "./messages/useChatStorage";
+import { useHistoryLoader } from "./messages/useHistoryLoader";
 
+/**
+ * Main hook for managing chat context messages
+ */
 export const useChatContextMessages = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [messageLimit, setMessageLimit] = useState(30); // Default limit
   const { user } = useAuth();
-  const savePendingRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Generate a session ID for free users - memoized
-  const getSessionId = useCallback(() => {
-    // For free users, create a session ID if it doesn't exist
-    if (user?.subscription_tier !== 'premium') {
-      let sessionId = sessionStorage.getItem(`chat_session_${user?.id}`);
-      if (!sessionId) {
-        sessionId = `session_${Date.now()}`;
-        sessionStorage.setItem(`chat_session_${user?.id}`, sessionId);
-      }
-      return sessionId;
-    }
-    return null; // Premium users don't need a session ID
-  }, [user?.id, user?.subscription_tier]);
+  // Initialize sub-hooks
+  const { markChatClearedForSession } = useSessionStorage();
+  const { isLoadingHistory, loadChatHistory } = useHistoryLoader();
+  const { addUserMessage: createUserMessage, addAssistantMessage: createAssistantMessage, checkMessageLimits } = useChatMessages();
+  const { saveMessages } = useChatStorage(user, messages, isLoadingHistory);
 
   // Set message limit based on user subscription tier
   useEffect(() => {
@@ -42,148 +37,40 @@ export const useChatContextMessages = () => {
     }
   }, [user?.subscription_tier]);
 
-  // Modified load messages function - only loads messages if not already cleared for session
+  // Load chat history on mount
   useEffect(() => {
-    if (!user) return;
-    
-    // Check if we've already cleared the chat for this session - if so, don't load history
-    const alreadyCleared = sessionStorage.getItem('chat_cleared_for_session') === 'true';
-    const freshChatNeeded = sessionStorage.getItem('fresh_chat_needed') === 'true';
-    
-    if (alreadyCleared || freshChatNeeded) {
-      console.log("Chat will be fresh for this session, skipping history load");
-      // If fresh chat is needed, let's set the cleared flag for consistency
-      if (freshChatNeeded) {
-        sessionStorage.setItem('chat_cleared_for_session', 'true');
-      }
-      return;
-    }
-    
-    const loadChatHistory = async () => {
-      setIsLoadingHistory(true);
-      try {
-        // Use chat_messages table for chat history - for all users
-        const { data, error } = await supabase
-          .from('chat_messages')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: true })
-          .limit(messageLimit);
-          
-        if (error) {
-          console.error("Error loading chat history:", error);
-          
-          // Fallback to local storage if database fetch fails
-          const savedMessages = localStorage.getItem(`chat_messages_${user.id}`);
-          if (savedMessages) {
-            setMessages(JSON.parse(savedMessages));
-          }
-        } else if (data && data.length > 0) {
-          // Convert database format to ChatMessage format
-          const formattedMessages: ChatMessage[] = data.map(item => ({
-            id: item.id,
-            content: item.content,
-            role: item.role === 'user' || item.role === 'assistant' 
-              ? item.role 
-              : 'user', // Default to user if invalid role
-            created_at: item.created_at
-          }));
-          setMessages(formattedMessages);
-        } else {
-          // If no messages in database, try loading from localStorage
-          const savedMessages = localStorage.getItem(`chat_messages_${user.id}`);
-          if (savedMessages) {
-            setMessages(JSON.parse(savedMessages));
-          }
-        }
-      } catch (error) {
-        console.error("Error in chat history loading:", error);
-      } finally {
-        setIsLoadingHistory(false);
-      }
-    };
-    
-    loadChatHistory();
-  }, [user, messageLimit]);
-
-  // Debounced save to localStorage and database
-  useEffect(() => {
-    if (!user || isLoadingHistory || messages.length === 0) return;
-    
-    // Clear any pending save operation
-    if (savePendingRef.current) {
-      clearTimeout(savePendingRef.current);
-    }
-    
-    // Set a timeout to save after 1 second of inactivity
-    savePendingRef.current = setTimeout(() => {
-      // Always save to localStorage for all users
-      const storageKey = user.subscription_tier === 'premium' 
-        ? `chat_messages_${user.id}`
-        : `chat_messages_${user.id}_${getSessionId()}`;
-        
-      localStorage.setItem(storageKey, JSON.stringify(messages));
+    const fetchHistory = async () => {
+      if (!user) return;
       
-      // For ALL users, sync the latest message to the database
-      if (messages.length > 0) {
-        const lastMessage = messages[messages.length - 1];
-        
-        // Only insert if message doesn't already have a DB ID (UUID format)
-        if (!lastMessage.id.includes('-')) return;
-        
-        supabase
-          .from('chat_messages')
-          .insert({
-            id: lastMessage.id,
-            content: lastMessage.content,
-            role: lastMessage.role,
-            user_id: user.id,
-            created_at: lastMessage.created_at
-          })
-          .then(({ error }) => {
-            if (error) {
-              console.error("Error saving chat message to database:", error);
-            }
-          });
+      const history = await loadChatHistory(user, messageLimit);
+      if (history.length > 0) {
+        setMessages(history);
       }
-    }, 1000);
+    };
     
-    return () => {
-      if (savePendingRef.current) {
-        clearTimeout(savePendingRef.current);
-      }
-    };
-  }, [messages, user, isLoadingHistory, getSessionId]);
+    fetchHistory();
+  }, [user, messageLimit, loadChatHistory]);
 
-  // Helper function to create a unique ID - memoized
-  const createId = useCallback(() => Math.random().toString(36).substring(2, 11), []);
+  // Save messages when they change
+  useEffect(() => {
+    saveMessages();
+  }, [messages, saveMessages]);
 
-  // Memoized message operations
+  // Add user message wrapper
   const addUserMessage = useCallback((content: string): string => {
-    const userMessage: ChatMessage = {
-      id: createId(),
-      content,
-      role: "user",
-      created_at: new Date().toISOString(),
-    };
-
+    const userMessage = createUserMessage(content);
     setMessages((prev) => [...prev, userMessage]);
     return userMessage.id;
-  }, [createId]);
+  }, [createUserMessage]);
 
+  // Add assistant message wrapper
   const addAssistantMessage = useCallback((content: string): string => {
-    const assistantMessage: ChatMessage = {
-      id: createId(),
-      content,
-      role: "assistant",
-      created_at: new Date().toISOString(),
-    };
-
+    const assistantMessage = createAssistantMessage(content);
     setMessages((prev) => [...prev, assistantMessage]);
     return assistantMessage.id;
-  }, [createId]);
+  }, [createAssistantMessage]);
 
-  // Function to update an existing message (for streaming) - memoized
+  // Update assistant message wrapper
   const updateAssistantMessage = useCallback((id: string, content: string): void => {
     setMessages((prev) => 
       prev.map((message) => 
@@ -194,41 +81,19 @@ export const useChatContextMessages = () => {
     );
   }, []);
 
+  // Clear messages wrapper
   const clearMessages = useCallback(() => {
     setMessages([]);
     
     // When clearing messages, mark in session storage
-    sessionStorage.setItem('chat_cleared_for_session', 'true');
+    markChatClearedForSession();
     console.log("Messages cleared, set chat_cleared_for_session flag");
-  }, []);
+  }, [markChatClearedForSession]);
 
-  // Check if user has reached their message limit
-  const checkMessageLimits = useCallback(() => {
-    const userTier = user?.subscription_tier || 'free';
-    const messagesToday = messages.filter(msg => {
-      const msgDate = new Date(msg.created_at);
-      const today = new Date();
-      return msgDate.toDateString() === today.toDateString() && msg.role === 'user';
-    }).length;
-    
-    const dailyLimits = {
-      'free': 20,
-      'basic': 50,
-      'premium': 200,
-      'trial': 30
-    };
-    
-    const limit = dailyLimits[userTier as keyof typeof dailyLimits] || dailyLimits.free;
-    
-    if (messagesToday >= limit) {
-      toast.error(`You've reached your daily limit of ${limit} messages for your ${userTier} plan.`, {
-        description: "Upgrade your plan to send more messages.",
-      });
-      return true; // Limit reached
-    }
-    
-    return false; // No limit reached
-  }, [messages, user]);
+  // Check message limits wrapper
+  const checkUserMessageLimits = useCallback(() => {
+    return checkMessageLimits(messages, user?.subscription_tier);
+  }, [messages, user?.subscription_tier, checkMessageLimits]);
 
   return {
     messages,
@@ -237,7 +102,7 @@ export const useChatContextMessages = () => {
     addAssistantMessage,
     updateAssistantMessage,
     clearMessages,
-    checkMessageLimits,
+    checkMessageLimits: checkUserMessageLimits,
     setMessages
   };
 };
