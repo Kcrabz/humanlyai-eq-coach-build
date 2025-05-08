@@ -7,18 +7,37 @@ import { ChatInput } from "@/components/chat/ChatInput";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { ARCHETYPES } from "@/lib/constants";
-import { ExternalLink, ClipboardCheck } from "lucide-react";
+import { ExternalLink, ClipboardCheck, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EQArchetype } from "@/types";
 import { SidebarProvider, LeftSidebarProvider, RightSidebarProvider } from "@/components/ui/sidebar";
 import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar, ChatRightSidebarTrigger } from "@/components/chat/sidebar/ChatRightSidebar";
 import { ChatLeftSidebarTrigger } from "@/components/chat/sidebar/ChatLeftSidebarTrigger";
+import { useChat } from "@/context/ChatContext";
 
 // Lazy load components that aren't immediately visible
 const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => ({ default: module.ChatList })));
 const ChatUsage = lazy(() => import("@/components/chat/ChatUsage").then(module => ({ default: module.ChatUsage })));
 const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
+
+// Start New Chat button component
+const StartNewChatButton = () => {
+  const { startNewChat, isLoading } = useChat();
+  
+  return (
+    <Button 
+      variant="outline" 
+      size="sm" 
+      onClick={startNewChat}
+      disabled={isLoading}
+      className="gap-2 text-muted-foreground hover:bg-humanly-pastel-lavender/20 hover:text-humanly-indigo"
+    >
+      <RefreshCw className="h-4 w-4" />
+      <span>New Chat</span>
+    </Button>
+  );
+};
 
 // Simplified header component specific for the chat page
 const ChatHeader = ({ hasCompletedAssessment, userArchetype }: { 
@@ -37,8 +56,12 @@ const ChatHeader = ({ hasCompletedAssessment, userArchetype }: {
         </p>
       </div>
       
-      {/* Right sidebar trigger button */}
-      <ChatRightSidebarTrigger />
+      <div className="flex items-center gap-2">
+        {/* Add Start New Chat button */}
+        <StartNewChatButton />
+        {/* Right sidebar trigger button */}
+        <ChatRightSidebarTrigger />
+      </div>
     </div>
   );
 };

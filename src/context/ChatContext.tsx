@@ -1,10 +1,12 @@
 
-import React, { createContext, useContext, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { ChatMessage } from "@/types";
 import { useChatContextMessages } from "@/hooks/chat/useChatContextMessages";
 import { useChatActions } from "@/hooks/chat/useChatActions";
 import { useAuth } from "@/context/AuthContext";
 import { getIntroductionMessage, shouldShowIntroduction, markIntroductionAsShown } from "@/lib/introductionMessages";
+import { getWelcomeMessage } from "@/lib/welcomeMessages";
+import { shouldShowFreshChat } from "@/utils/loginRedirectUtils";
 
 interface ChatContextType {
   messages: ChatMessage[];
@@ -45,6 +47,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   } = useChatActions();
 
   const { user } = useAuth();
+  
+  // State to track if we've shown a fresh chat welcome message
+  const [hasFreshChatRun, setHasFreshChatRun] = useState(false);
 
   // Check if we should show the introduction message for first-time users
   useEffect(() => {
@@ -73,6 +78,26 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAndSendIntroduction();
   }, [user, isLoading, messages.length]);
 
+  // Check for fresh login to display a clear chat experience
+  useEffect(() => {
+    if (!user || hasFreshChatRun) return;
+    
+    // Check if user has recently logged in and needs a fresh chat
+    if (shouldShowFreshChat()) {
+      console.log("Displaying fresh chat experience after login");
+      
+      // Clear the UI messages (but database records are preserved)
+      clearMessages();
+      
+      // Add a welcome message
+      const welcomeMessage = getWelcomeMessage();
+      addAssistantMessage(welcomeMessage);
+      
+      // Mark as done so we don't show again
+      setHasFreshChatRun(true);
+    }
+  }, [user, hasFreshChatRun]);
+
   // Wrapper for sending messages
   const sendMessage = async (content: string) => {
     if (!content.trim() || isLoading) return;
@@ -88,9 +113,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await retryChatMessage(addUserMessage, addAssistantMessage, updateAssistantMessage);
   };
 
-  // Wrapper for starting a new chat
+  // Enhanced wrapper for starting a new chat that shows welcome message
   const startNewChat = () => {
+    // First clear UI messages
+    clearMessages();
+    
+    // Then start new chat session
     startNewChatSession(clearMessages);
+    
+    // Show a welcome message
+    const welcomeMessage = getWelcomeMessage();
+    addAssistantMessage(welcomeMessage);
   };
 
   // New method to restore a conversation

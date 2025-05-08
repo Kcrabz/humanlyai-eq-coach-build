@@ -1,12 +1,21 @@
 
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getWelcomeMessage } from "@/lib/welcomeMessages";
+import { useEffect, useState } from "react";
 
 interface ChatWelcomeScreenProps {
   sendSuggestedMessage: (content: string) => void;
 }
 
 export function ChatWelcomeScreen({ sendSuggestedMessage }: ChatWelcomeScreenProps) {
+  const [welcomeMessage, setWelcomeMessage] = useState("");
+  
+  // Generate a welcome message when component mounts
+  useEffect(() => {
+    setWelcomeMessage(getWelcomeMessage());
+  }, []);
+  
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-4">
       <div className="mb-4">
@@ -16,7 +25,9 @@ export function ChatWelcomeScreen({ sendSuggestedMessage }: ChatWelcomeScreenPro
       </div>
       <h3 className="text-xl font-medium">Start a conversation</h3>
       <p className="text-muted-foreground mt-2 max-w-md">
-        Send a message to begin your conversation with Kai, your EQ coach.
+        {welcomeMessage || "Send a message to begin your conversation with Kai, your EQ coach."}
+      </p>
+      <p className="text-muted-foreground mt-1 max-w-md">
         Kai will ask questions to understand your situation before offering guidance.
       </p>
       <div className="mt-6 space-y-2">

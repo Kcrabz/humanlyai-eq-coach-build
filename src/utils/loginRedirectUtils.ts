@@ -12,6 +12,9 @@ export const markLoginSuccess = (): void => {
   
   // Also set a session storage flag which is cleared when browser closes
   sessionStorage.setItem('login_success', 'true');
+  
+  // Set a flag to indicate that the chat should be reset for fresh experience
+  sessionStorage.setItem('fresh_chat_needed', 'true');
 
   console.log("Login success marked with timestamp", { timestamp });
 };
@@ -51,4 +54,20 @@ export const wasLoginSuccessful = (): boolean => {
 export const forceRedirectToDashboard = (): void => {
   console.log("Forcing redirect to dashboard using window.location");
   window.location.href = '/dashboard';
+};
+
+/**
+ * Checks if a fresh chat experience is needed after login
+ * Returns true once, then clears the flag
+ */
+export const shouldShowFreshChat = (): boolean => {
+  const freshChatNeeded = sessionStorage.getItem('fresh_chat_needed') === 'true';
+  
+  // Clear the flag after checking so it only returns true once
+  if (freshChatNeeded) {
+    sessionStorage.removeItem('fresh_chat_needed');
+    console.log("Fresh chat experience triggered");
+  }
+  
+  return freshChatNeeded;
 };
