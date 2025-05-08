@@ -38,6 +38,14 @@ export function ChatWelcomeScreen({ sendSuggestedMessage }: ChatWelcomeScreenPro
           >
             "I get stressed when speaking in front of groups. Any tips?"
           </Button>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => sendSuggestedMessage("Help me manage my imposter syndrome.")}
+            className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30"
+          >
+            "Help me manage my imposter syndrome."
+          </Button>
         </div>
       </div>
     </div>

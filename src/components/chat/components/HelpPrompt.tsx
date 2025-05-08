@@ -34,6 +34,14 @@ export function HelpPrompt({ sendSuggestedMessage }: HelpPromptProps) {
             >
               "How can I be more confident in difficult conversations?"
             </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => sendSuggestedMessage("Help me manage my imposter syndrome.")}
+              className="text-xs bg-white/80"
+            >
+              "Help me manage my imposter syndrome."
+            </Button>
           </div>
         </div>
       </div>
