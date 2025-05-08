@@ -33,7 +33,7 @@
 
 /* Sidebar styling with improved transitions */
 .zen-sidebar {
-  @apply bg-white border-r border-gray-50 transition-transform duration-300 ease-in-out;
+  @apply bg-white border-r border-gray-50 transition-all duration-300 ease-in-out;
 }
 
 /* User sidebar styling */
@@ -41,9 +41,21 @@
   @apply bg-white border-l border-gray-50;
 }
 
-/* Main content area */
+/* Main content area with responsive width */
 .main-content {
   @apply flex-1 overflow-auto bg-gradient-to-br from-white to-humanly-pastel-lavender/10;
+  transition: width 0.3s ease, margin 0.3s ease;
+}
+
+/* Main content area that responds to right sidebar state */
+.main-content-with-right-sidebar-open {
+  width: calc(100% - 16rem);
+  transition: width 0.3s ease;
+}
+
+.main-content-with-right-sidebar-closed {
+  width: 100%;
+  transition: width 0.3s ease;
 }
 
 /* Footer styling */

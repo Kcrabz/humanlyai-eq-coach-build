@@ -1,14 +1,33 @@
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useChat } from "@/context/ChatContext";
 import { ChatBubble } from "./ChatBubble";
 import { EmptyChatState } from "./components/EmptyChatState";
 import { ChatLoadingIndicator } from "./components/ChatLoadingIndicator";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export function ChatList() {
   const { messages, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const firstRenderRef = useRef(true);
+  
+  // Get sidebar states to force re-render when they change
+  const { open: rightSidebarOpen } = useSidebar("right");
+  const { open: leftSidebarOpen } = useSidebar("left");
+  const [prevRightState, setPrevRightState] = useState(rightSidebarOpen);
+  const [prevLeftState, setPrevLeftState] = useState(leftSidebarOpen);
+
+  // Force scroll to bottom on sidebar state change
+  useEffect(() => {
+    if (prevRightState !== rightSidebarOpen || prevLeftState !== leftSidebarOpen) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 300); // Small delay to let transitions complete
+      
+      setPrevRightState(rightSidebarOpen);
+      setPrevLeftState(leftSidebarOpen);
+    }
+  }, [rightSidebarOpen, leftSidebarOpen, prevRightState, prevLeftState]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

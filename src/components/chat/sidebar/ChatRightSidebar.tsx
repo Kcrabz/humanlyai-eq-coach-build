@@ -22,13 +22,15 @@ import { LogoutButton } from "./right/LogoutButton";
 // Sidebar trigger button for the right sidebar
 export function ChatRightSidebarTrigger() {
   // Specifically use the right sidebar context
-  const { toggleSidebar } = useSidebar("right");
+  const { toggleSidebar, open } = useSidebar("right");
   
   return (
     <Button 
       variant="ghost" 
       size="icon" 
-      className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300" 
+      className={`h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300 ${
+        open ? 'bg-humanly-pastel-lavender/50' : ''
+      }`}
       aria-label="Toggle User Menu"
       onClick={() => toggleSidebar()}
     >
@@ -50,6 +52,7 @@ export function ChatRightSidebar() {
       variant="sidebar" 
       collapsible="offcanvas"
       className="user-sidebar"
+      data-state={open ? "open" : "closed"}
     >
       <SidebarHeader className="p-4">
         <UserProfile />

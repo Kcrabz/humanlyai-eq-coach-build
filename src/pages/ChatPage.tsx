@@ -1,3 +1,4 @@
+
 import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -137,40 +138,10 @@ const ChatPage = () => {
                 </Suspense>
                 
                 {/* Chat Area */}
-                <div className="flex-1 flex flex-col overflow-hidden main-content">
-                  <ChatHeader 
-                    hasCompletedAssessment={hasCompletedAssessment}
-                    userArchetype={userArchetype}
-                  />
-                  
-                  <div className="flex-1 overflow-hidden flex flex-col">
-                    {!hasCompletedAssessment && <Alert className="m-4 bg-humanly-pastel-lavender/20 border-humanly-indigo/30 rounded-xl shadow-soft">
-                        <ClipboardCheck className="h-4 w-4 text-humanly-indigo" />
-                        <AlertDescription className="text-sm">
-                          For more personalized coaching, consider{" "}
-                          <Button variant="link" size="sm" className="p-0 h-auto text-humanly-indigo hover:text-humanly-indigo-dark underline decoration-humanly-indigo/30" onClick={handleStartAssessment}>
-                            completing your EQ assessment
-                          </Button>
-                        </AlertDescription>
-                      </Alert>}
-                      
-                    <Suspense fallback={<div className="h-6 bg-humanly-pastel-lavender/10 animate-pulse m-4 rounded-md"></div>}>
-                      <ChatUsage />
-                    </Suspense>
-                    
-                    <Suspense fallback={
-                      <div className="flex-1 flex justify-center items-center">
-                        <div className="animate-breathe rounded-full h-14 w-14 border-2 border-humanly-indigo/30 flex items-center justify-center">
-                          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-humanly-indigo"></div>
-                        </div>
-                      </div>
-                    }>
-                      <ChatList />
-                    </Suspense>
-                    
-                    <ChatInput />
-                  </div>
-                </div>
+                <ResponsiveMainContent 
+                  hasCompletedAssessment={hasCompletedAssessment}
+                  userArchetype={userArchetype}
+                />
                 
                 {/* Right Sidebar (User Profile & Settings) */}
                 <ChatRightSidebar />
@@ -180,6 +151,60 @@ const ChatPage = () => {
         </LeftSidebarProvider>
       </SidebarProvider>
     </PageLayout>
+  );
+};
+
+// New component that responds to sidebar state
+const ResponsiveMainContent = ({ 
+  hasCompletedAssessment, 
+  userArchetype 
+}: { 
+  hasCompletedAssessment: boolean,
+  userArchetype: string | undefined 
+}) => {
+  // Get right sidebar state to adjust main content
+  const { open: rightSidebarOpen } = useSidebar("right");
+  const { open: leftSidebarOpen } = useSidebar("left");
+
+  return (
+    <div 
+      className={`flex-1 flex flex-col overflow-hidden main-content ${
+        rightSidebarOpen ? 'main-content-with-right-sidebar-open' : 'main-content-with-right-sidebar-closed'
+      }`}
+    >
+      <ChatHeader 
+        hasCompletedAssessment={hasCompletedAssessment}
+        userArchetype={userArchetype}
+      />
+      
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {!hasCompletedAssessment && <Alert className="m-4 bg-humanly-pastel-lavender/20 border-humanly-indigo/30 rounded-xl shadow-soft">
+            <ClipboardCheck className="h-4 w-4 text-humanly-indigo" />
+            <AlertDescription className="text-sm">
+              For more personalized coaching, consider{" "}
+              <Button variant="link" size="sm" className="p-0 h-auto text-humanly-indigo hover:text-humanly-indigo-dark underline decoration-humanly-indigo/30" onClick={handleStartAssessment}>
+                completing your EQ assessment
+              </Button>
+            </AlertDescription>
+          </Alert>}
+          
+        <Suspense fallback={<div className="h-6 bg-humanly-pastel-lavender/10 animate-pulse m-4 rounded-md"></div>}>
+          <ChatUsage />
+        </Suspense>
+        
+        <Suspense fallback={
+          <div className="flex-1 flex justify-center items-center">
+            <div className="animate-breathe rounded-full h-14 w-14 border-2 border-humanly-indigo/30 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-humanly-indigo"></div>
+            </div>
+          </div>
+        }>
+          <ChatList />
+        </Suspense>
+        
+        <ChatInput />
+      </div>
+    </div>
   );
 };
 
