@@ -45,16 +45,16 @@ export function validateResponse(response: string): string {
   }
   
   // Check for response length
-  if (response.length > 500) {
-    // Find a good sentence break point around 400 characters
-    const truncated = response.substring(0, 400);
+  if (response.length > 800) {
+    // Find a good sentence break point around 700 characters
+    const truncated = response.substring(0, 700);
     const lastSentenceBreak = Math.max(
       truncated.lastIndexOf('. '), 
       truncated.lastIndexOf('? '),
       truncated.lastIndexOf('! ')
     );
     
-    if (lastSentenceBreak > 200) {
+    if (lastSentenceBreak > 300) {
       const shortenedResponse = response.substring(0, lastSentenceBreak + 1);
       return `${shortenedResponse}\n\nWould you like me to continue or shall we explore this point first?`;
     }
