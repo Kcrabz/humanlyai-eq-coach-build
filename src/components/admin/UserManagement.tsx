@@ -45,9 +45,9 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
 
   // Handle refresh - this is a simple function that passes the active filters
   const handleRefresh = useCallback(() => {
+    // Updated to match the new function signature that accepts only one parameter
     const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
-    const chatFilter = activeFilter?.type === "chat" ? activeFilter.value : "all";
-    fetchUsers(onboardedFilter, chatFilter);
+    fetchUsers(onboardedFilter);
   }, [activeFilter, fetchUsers]);
 
   // Export users to CSV
