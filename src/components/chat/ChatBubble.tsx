@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { UserAvatar } from "./components/UserAvatar";
 import { AssistantAvatar } from "./components/AssistantAvatar"; 
-import { LoadingIndicator } from "./components/LoadingIndicator";
 import { MessageContent } from "./components/MessageContent";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TypingIndicator } from "./components/TypingIndicator";
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -16,7 +16,11 @@ interface ChatBubbleProps {
 export function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === "user";
   const isEmpty = !message.content || message.content.trim() === "";
-  const isLoading = isEmpty && !isUser && !message.content;
+  
+  // Only show loading indicator for assistant messages that are completely empty
+  // This ensures the indicator disappears as soon as content starts streaming in
+  const isLoading = message.role === "assistant" && message.content === "";
+  
   const isMobile = useIsMobile();
   
   // For debugging - log incomplete messages
@@ -51,6 +55,3 @@ export function ChatBubble({ message }: ChatBubbleProps) {
     </div>
   );
 }
-
-// Import and use the TypingIndicator component directly
-import { TypingIndicator } from "./components/TypingIndicator";
