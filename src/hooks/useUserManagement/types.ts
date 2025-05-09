@@ -9,7 +9,7 @@ export interface UserTableData {
   email: string;
   name?: string;
   subscription_tier?: string;
-  eq_archetype?: string;
+  eq_archetype?: string | "Not set";
   onboarded?: boolean;
   last_login?: string | { timestamp: string; relative: string };
   chat_time?: string;

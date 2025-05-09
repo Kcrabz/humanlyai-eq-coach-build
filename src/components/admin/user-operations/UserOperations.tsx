@@ -23,6 +23,16 @@ export const UserOperations = ({ user, onUpdateTier, onUserDeleted }: UserOperat
     }
   };
 
+  // Create a version of the user that conforms to the User type requirements
+  const userForDialogs = {
+    ...user,
+    // Ensure eq_archetype is treated as EQArchetype | "Not set"
+    eq_archetype: user.eq_archetype || "Not set",
+    // Add any other required fields that might be missing
+    subscription_tier: (user.subscription_tier || "free") as SubscriptionTier,
+    onboarded: user.onboarded || false
+  };
+
   return (
     <>
       <UserActionsMenu
@@ -35,19 +45,19 @@ export const UserOperations = ({ user, onUpdateTier, onUserDeleted }: UserOperat
       />
 
       <UserDetailsDialog 
-        user={user}
+        user={userForDialogs}
         open={showUserDetails}
         onOpenChange={setShowUserDetails}
       />
 
       <ResetPasswordDialog
-        user={user}
+        user={userForDialogs}
         open={isResetDialogOpen}
         onOpenChange={setIsResetDialogOpen}
       />
 
       <DeleteUserDialog
-        user={user}
+        user={userForDialogs}
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         onUserDeleted={onUserDeleted}
