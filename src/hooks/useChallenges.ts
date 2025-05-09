@@ -24,7 +24,9 @@ export function useChallenges() {
   // Get today's challenge based on the date
   useEffect(() => {
     if (user) {
-      const challenge = getTodaysChallenge(user.eq_archetype);
+      // Only pass the archetype to getTodaysChallenge if it's a valid EQ archetype (not "Not set")
+      const validArchetype = user.eq_archetype !== "Not set" ? user.eq_archetype : undefined;
+      const challenge = getTodaysChallenge(validArchetype);
       setTodaysChallenge(challenge);
       
       // Check if today's challenge is already completed
