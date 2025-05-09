@@ -12,12 +12,16 @@ import { FilterState, UserTableData } from "./types";
 import { SubscriptionTier } from "@/types";
 import { useAdminCheck } from "../useAdminCheck";
 
-export const useUserManagement = (initialFilter?: FilterState) => {
+export const useUserManagement = (initialFilter?: FilterState, mountingComplete = false) => {
   const [users, setUsers] = useState<UserTableData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [shouldFetch, setShouldFetch] = useState(false);
   const [tokenUsageData, setTokenUsageData] = useState<Record<string, { usage: number; limit: number }>>({});
   const { isAdmin } = useAdminCheck();
   const initialLoadRef = useRef(false);
+  const filtersStableRef = useRef(false);
+  const fetchInProgressRef = useRef(false);
+  const filtersChangedRef = useRef(false);
   
   // Use the hooks with correct function names
   const userData = useUserData();
@@ -33,6 +37,28 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     onboardedFilter, setOnboardedFilter,
     activeFilter, resetFilters
   } = useUserFilters(initialFilter);
+
+  // Stable version of the filters for dependency tracking
+  const stableFilters = useRef({
+    searchTerm,
+    tierFilter,
+    archetypeFilter,
+    onboardedFilter
+  });
+  
+  // Update stable filters reference when filters change
+  useEffect(() => {
+    if (filtersStableRef.current) {
+      filtersChangedRef.current = true;
+    }
+    
+    stableFilters.current = {
+      searchTerm,
+      tierFilter,
+      archetypeFilter,
+      onboardedFilter
+    };
+  }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter]);
   
   const handleUpdateTier = useCallback(async (userId: string, tier: SubscriptionTier) => {
     try {
@@ -90,9 +116,11 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     }
   }, []);
   
-  // Fixed fetchTokenUsageData to avoid dependency on tokenUsageData state
+  // Fixed fetchTokenUsageData with better error handling and async/await syntax
   const fetchTokenUsageData = useCallback(async (userIds: string[]) => {
     if (!userIds.length) return {};
+    
+    const usageMap: Record<string, { usage: number; limit: number }> = {};
     
     try {
       // Get the current month in YYYY-MM format for filtering
@@ -100,23 +128,20 @@ export const useUserManagement = (initialFilter?: FilterState) => {
       const currentMonthYear = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
       
       // Fetch token usage for the current month
-      const { data, error } = await supabase
+      const { data: usageData, error: usageError } = await supabase
         .from('usage_logs')
         .select('user_id, token_count')
         .eq('month_year', currentMonthYear)
         .in('user_id', userIds);
       
-      if (error) {
-        console.error("Error fetching token usage:", error);
-        return {};
+      if (usageError) {
+        console.error("Error fetching token usage:", usageError);
+        return usageMap; // Return empty map on error
       }
       
       // Calculate total usage per user
-      const usageMap: Record<string, { usage: number; limit: number }> = {};
-      
-      // Process usage data
-      if (data) {
-        data.forEach(log => {
+      if (usageData) {
+        usageData.forEach(log => {
           if (!usageMap[log.user_id]) {
             usageMap[log.user_id] = { usage: 0, limit: 0 };
           }
@@ -132,7 +157,7 @@ export const useUserManagement = (initialFilter?: FilterState) => {
       
       if (profilesError) {
         console.error("Error fetching profile tiers:", profilesError);
-        return {};
+        return usageMap; // Return partial map with just usage data
       }
       
       // Set limits based on subscription tier
@@ -156,39 +181,48 @@ export const useUserManagement = (initialFilter?: FilterState) => {
         });
       }
       
-      setTokenUsageData(usageMap);
+      setTokenUsageData(usageMap); // Update state with fetched data
       return usageMap;
     } catch (err) {
       console.error("Error processing token usage data:", err);
-      return {};
+      return usageMap; // Return whatever we have on error
     }
   }, []);
   
-  // Completely restructured fetchUsers to avoid dependency issues
+  // Completely rewritten fetchUsers to prevent dependency issues
   const fetchUsers = useCallback(async (onboardedValue = "all") => {
-    if (!isAdmin) return;
+    if (!isAdmin || fetchInProgressRef.current) return;
     
-    console.log("Fetching users with filters:", { searchTerm, tierFilter, archetypeFilter, onboardedValue });
+    fetchInProgressRef.current = true;
     setIsLoading(true);
     
     try {
-      // First, get all user IDs
+      console.log("Fetching users with filters:", { 
+        searchTerm: stableFilters.current.searchTerm, 
+        tierFilter: stableFilters.current.tierFilter, 
+        archetypeFilter: stableFilters.current.archetypeFilter, 
+        onboardedValue 
+      });
+      
+      // First, get all user IDs and data
       const { userIds, emailData } = await userData.fetchUserData();
       
       if (userIds.length === 0) {
         setUsers([]);
-        setIsLoading(false);
         return;
       }
       
-      // Then fetch token usage data for all users - now returns the data
-      const usageData = await fetchTokenUsageData(userIds);
+      // Then fetch token usage data for all users in parallel
+      const usagePromise = fetchTokenUsageData(userIds);
+      const loginPromise = lastLogins.fetchLastLogins(userIds);
+      const activityPromise = chatActivity.fetchChatActivity(userIds);
       
-      // Fetch last login data
-      const userLastLogins = await lastLogins.fetchLastLogins(userIds);
-      
-      // Fetch user activity data
-      const userChatActivity = await chatActivity.fetchChatActivity(userIds);
+      // Wait for all promises to resolve
+      const [usageData, userLastLogins, userChatActivity] = await Promise.all([
+        usagePromise,
+        loginPromise,
+        activityPromise
+      ]);
       
       // Combine all data to create the final user list
       let userList = emailData.map(user => {
@@ -210,21 +244,23 @@ export const useUserManagement = (initialFilter?: FilterState) => {
         };
       });
       
-      // Apply filters - moved these operations inside the function to remove dependencies
-      const searchTermLower = searchTerm.toLowerCase();
-      if (searchTerm) {
+      // Apply filters
+      const currentFilters = stableFilters.current;
+      const searchTermLower = currentFilters.searchTerm.toLowerCase();
+      
+      if (searchTermLower) {
         userList = userList.filter(user =>
           user.email.toLowerCase().includes(searchTermLower) ||
           (user.name && user.name.toLowerCase().includes(searchTermLower))
         );
       }
       
-      if (tierFilter && tierFilter !== "all") {
-        userList = userList.filter(user => user.subscription_tier === tierFilter);
+      if (currentFilters.tierFilter && currentFilters.tierFilter !== "all") {
+        userList = userList.filter(user => user.subscription_tier === currentFilters.tierFilter);
       }
       
-      if (archetypeFilter && archetypeFilter !== "all") {
-        userList = userList.filter(user => user.eq_archetype === archetypeFilter);
+      if (currentFilters.archetypeFilter && currentFilters.archetypeFilter !== "all") {
+        userList = userList.filter(user => user.eq_archetype === currentFilters.archetypeFilter);
       }
       
       if (onboardedValue !== "all") {
@@ -234,6 +270,9 @@ export const useUserManagement = (initialFilter?: FilterState) => {
       
       // Set the filtered user list
       setUsers(userList);
+      
+      // Reset the filters changed flag
+      filtersChangedRef.current = false;
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users", { 
@@ -241,31 +280,67 @@ export const useUserManagement = (initialFilter?: FilterState) => {
       });
     } finally {
       setIsLoading(false);
+      fetchInProgressRef.current = false;
+      
+      // Set flag to indicate filters are stable after first load
+      if (!filtersStableRef.current) {
+        filtersStableRef.current = true;
+      }
     }
-  }, [isAdmin, userData, lastLogins, chatActivity, fetchTokenUsageData]); // Removed filter dependencies
-
-  // Trigger filter changes
+  }, [isAdmin, userData, lastLogins, chatActivity, fetchTokenUsageData]);
+  
+  // Handle initial data fetch
   useEffect(() => {
-    if (isAdmin && initialLoadRef.current) {
-      console.log("Filters changed, fetching users with new filters");
-      fetchUsers(onboardedFilter);
-    }
-  }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter, fetchUsers, isAdmin]);
-
-  // Initial data fetch - separate from filter changes
-  useEffect(() => {
-    let isMounted = true;
+    // Skip effect during initial render and if not an admin or still mounting
+    if (!isAdmin || !mountingComplete) return;
     
-    if (isAdmin && !initialLoadRef.current) {
-      console.log("Initial data fetch for users");
-      fetchUsers(onboardedFilter);
-      initialLoadRef.current = true;
-    }
-    
-    return () => {
-      isMounted = false;
+    const loadInitialData = async () => {
+      if (!initialLoadRef.current) {
+        console.log("Initial data fetch for users");
+        initialLoadRef.current = true;
+        await fetchUsers(onboardedFilter);
+      }
     };
-  }, [fetchUsers, isAdmin, onboardedFilter]);
+    
+    loadInitialData();
+    
+    // No cleanup needed
+  }, [isAdmin, mountingComplete, fetchUsers, onboardedFilter]);
+  
+  // Trigger filter changes with debouncing
+  useEffect(() => {
+    if (!isAdmin || !initialLoadRef.current) return;
+    
+    // Skip if mounting is not complete
+    if (!mountingComplete) return;
+    
+    // Skip the first filter initialization
+    if (!filtersStableRef.current) return;
+    
+    console.log("Filters changed, setting fetch timer");
+    
+    // Set a flag to fetch data
+    setShouldFetch(true);
+    
+    // We're tracking filters changed in the effect above
+    
+    // No cleanup needed
+  }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter, isAdmin, mountingComplete]);
+  
+  // Handle delayed fetch after filters change
+  useEffect(() => {
+    if (!shouldFetch || !filtersChangedRef.current || !mountingComplete) return;
+    
+    console.log("Filters debounce timer triggered, fetching users");
+    
+    // Reset the flag
+    setShouldFetch(false);
+    
+    // Perform the fetch
+    fetchUsers(onboardedFilter);
+    
+    // No cleanup needed
+  }, [shouldFetch, fetchUsers, onboardedFilter, mountingComplete]);
 
   // Handle upgrading all users to premium
   const upgradeAllUsersToPremium = useCallback(async () => {
@@ -280,10 +355,10 @@ export const useUserManagement = (initialFilter?: FilterState) => {
         
       if (error) throw error;
       
-      // Refresh the user list
+      // Refresh the user list without changing the filters
       await fetchUsers(onboardedFilter);
       
-      toast.success(`Upgraded ${data.length} users to premium`);
+      toast.success(`Upgraded ${data?.length || 0} users to premium`);
       return true;
     } catch (err) {
       console.error("Error upgrading users:", err);

@@ -18,6 +18,7 @@ const AdminPage = () => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
   const [currentFilter, setCurrentFilter] = useState<FilterState | null>(null);
+  const [isUserMounted, setIsUserMounted] = useState(false);
 
   // Check if user is an admin and redirect if not
   useEffect(() => {
@@ -29,6 +30,13 @@ const AdminPage = () => {
       });
       navigate("/", { replace: true });
     }
+    
+    // Mark components as ready to mount after a short delay
+    const timer = setTimeout(() => {
+      setIsUserMounted(true);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [isAdmin, isAuthLoading, isAdminCheckLoading, navigate, toast]);
 
   // Handle filter changes from the overview components
@@ -71,10 +79,12 @@ const AdminPage = () => {
           </TabsContent>
 
           <TabsContent value="users" className="space-y-6">
-            <UserManagement 
-              initialFilter={currentFilter || undefined} 
-              onResetFilter={handleResetFilter}
-            />
+            {isUserMounted && (
+              <UserManagement 
+                initialFilter={currentFilter || undefined} 
+                onResetFilter={handleResetFilter}
+              />
+            )}
           </TabsContent>
         </Tabs>
       </div>

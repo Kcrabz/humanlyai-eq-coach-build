@@ -1,5 +1,5 @@
 
-import { useState, useCallback, memo, useEffect } from "react";
+import { useState, useCallback, memo, useEffect, useRef } from "react";
 import { ActiveFilter } from "./ActiveFilter";
 import { UserFilters } from "./UserFilters";
 import { UserTable } from "./UserTable";
@@ -15,6 +15,9 @@ interface UserManagementProps {
 }
 
 const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagementProps) => {
+  const isMountedRef = useRef(false);
+  const [mountingComplete, setMountingComplete] = useState(false);
+
   const {
     users,
     isLoading,
@@ -30,32 +33,52 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
     handleUpdateTier,
     handleUserDeleted,
     upgradeAllUsersToPremium
-  } = useUserManagement(initialFilter);
+  } = useUserManagement(initialFilter, mountingComplete);
 
   const [exportLoading, setExportLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
-
-  // Initial data load tracking with timeout safeguard
   const [initialLoadDone, setInitialLoadDone] = useState(false);
 
-  // Track initial load with a timeout safeguard
+  // One-time mounting effect
   useEffect(() => {
-    if (!initialLoadDone && !isLoading) {
-      // Set initial load as done when loading completes
+    console.log("UserManagement - Component mounted");
+    isMountedRef.current = true;
+    
+    // Signal mounting complete after a short delay
+    const timer = setTimeout(() => {
+      if (isMountedRef.current) {
+        console.log("UserManagement - Marking mounting as complete");
+        setMountingComplete(true);
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(timer);
+      isMountedRef.current = false;
+      console.log("UserManagement - Component unmounted");
+    };
+  }, []);
+
+  // Track initial load with a safety timeout
+  useEffect(() => {
+    if (!initialLoadDone && !isLoading && users.length > 0) {
+      console.log("UserManagement - Initial load complete with data");
+      setInitialLoadDone(true);
+    } else if (!initialLoadDone && !isLoading) {
+      console.log("UserManagement - Initial load complete without data");
       setInitialLoadDone(true);
     }
 
-    // Safety timeout - if loading takes too long, consider it done anyway
-    // This prevents infinite loading if there's an issue with the loading state
+    // Safety timeout
     const safetyTimeout = setTimeout(() => {
       if (!initialLoadDone) {
-        console.log("Safety timeout triggered for loading state");
+        console.log("UserManagement - Safety timeout triggered for loading state");
         setInitialLoadDone(true);
       }
-    }, 8000); // 8 seconds safety timeout
+    }, 5000); // 5 seconds safety timeout
 
     return () => clearTimeout(safetyTimeout);
-  }, [isLoading, initialLoadDone]);
+  }, [isLoading, users, initialLoadDone]);
 
   // Handle reset filter including parent component notification
   const handleResetFilters = useCallback(() => {
@@ -65,16 +88,17 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
     }
   }, [resetFilters, onResetFilter]);
 
-  // Handle refresh - this is a simple function that passes the active filters
+  // Handle refresh with stable dependencies
   const handleRefresh = useCallback(() => {
-    console.log("Manual refresh triggered");
-    // Updated to match the new function signature that accepts only one parameter
-    const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
-    fetchUsers(onboardedFilter);
+    console.log("UserManagement - Manual refresh triggered");
+    const onboardedValue = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
+    fetchUsers(onboardedValue);
   }, [activeFilter, fetchUsers]);
 
   // Export users to CSV
   const handleExportCsv = useCallback(async () => {
+    if (exportLoading) return;
+    
     try {
       setExportLoading(true);
       
@@ -138,24 +162,27 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
     } finally {
       setExportLoading(false);
     }
-  }, [searchTerm, tierFilter, archetypeFilter]);
+  }, [searchTerm, tierFilter, archetypeFilter, exportLoading]);
 
   // Handle the upgrade all users button click
   const handleUpgradeAllUsers = useCallback(async () => {
+    if (upgradeLoading) return;
+    
     try {
       setUpgradeLoading(true);
       await upgradeAllUsersToPremium();
     } finally {
       setUpgradeLoading(false);
     }
-  }, [upgradeAllUsersToPremium]);
+  }, [upgradeAllUsersToPremium, upgradeLoading]);
 
   // Debug render
   console.log("UserManagement rendering:", { 
     users: users.length, 
     isLoading, 
     initialLoadDone, 
-    effectiveLoadingState: !initialLoadDone || isLoading
+    effectiveLoadingState: !initialLoadDone || isLoading,
+    mountingComplete
   });
 
   return (
