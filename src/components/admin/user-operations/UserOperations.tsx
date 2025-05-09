@@ -1,49 +1,28 @@
 
-import { useState } from "react";
-import { SubscriptionTier, EQArchetype } from "@/types";
 import { UserOperationsProps } from "./types";
-import { UserDetailsDialog } from "./UserDetailsDialog";
-import { ResetPasswordDialog } from "./ResetPasswordDialog";
-import { DeleteUserDialog } from "./DeleteUserDialog";
-import { UserActionsMenu } from "./UserActionsMenu";
+import { UserDetailsDialog } from "./dialogs/UserDetailsDialog";
+import { ResetPasswordDialog } from "./dialogs/ResetPasswordDialog";
+import { DeleteUserDialog } from "./dialogs/DeleteUserDialog";
+import { UserActionsMenu } from "./menus/UserActionsMenu";
+import { useUserDetails } from "./hooks/useUserDetails";
+import { useResetPassword } from "./hooks/useResetPassword";
+import { useDeleteUser } from "./hooks/useDeleteUser";
+import { useSubscriptionUpdate } from "./hooks/useSubscriptionUpdate";
 
 export const UserOperations = ({ user, onUpdateTier, onUserDeleted }: UserOperationsProps) => {
-  const [showUserDetails, setShowUserDetails] = useState(false);
-  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
-
-  const handleUpdateTier = async (tier: SubscriptionTier) => {
-    if (!user.subscription_tier || tier === user.subscription_tier as SubscriptionTier) return;
-    setIsUpdating(true);
-    try {
-      await onUpdateTier(user.id, tier);
-    } finally {
-      setIsUpdating(false);
-    }
-  };
-
-  // Correctly type eq_archetype by validating it against valid EQArchetype values
-  const getValidEQArchetype = (archetype: string | undefined): EQArchetype | "Not set" => {
-    const validArchetypes: EQArchetype[] = ["reflector", "activator", "regulator", "connector", "observer"];
-    if (!archetype) return "Not set";
-    return validArchetypes.includes(archetype as EQArchetype) ? archetype as EQArchetype : "Not set";
-  };
-
-  // Create a version of the user that conforms to the User type requirements
-  const userForDialogs = {
-    ...user,
-    // Properly cast eq_archetype to the expected union type
-    eq_archetype: getValidEQArchetype(user.eq_archetype),
-    // Add any other required fields that might be missing
-    subscription_tier: (user.subscription_tier || "free") as SubscriptionTier,
-    onboarded: user.onboarded || false
-  };
+  const { showUserDetails, setShowUserDetails, userForDialogs } = useUserDetails(user);
+  const { isResetDialogOpen, setIsResetDialogOpen } = useResetPassword();
+  const { isDeleteDialogOpen, setIsDeleteDialogOpen } = useDeleteUser();
+  const { isUpdating, handleUpdateTier } = useSubscriptionUpdate(
+    onUpdateTier, 
+    user.id, 
+    user.subscription_tier
+  );
 
   return (
     <>
       <UserActionsMenu
-        userSubscriptionTier={user.subscription_tier as SubscriptionTier}
+        userSubscriptionTier={user.subscription_tier as any}
         isUpdating={isUpdating}
         onViewDetails={() => setShowUserDetails(true)}
         onResetPassword={() => setIsResetDialogOpen(true)}
