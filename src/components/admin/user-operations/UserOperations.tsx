@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { SubscriptionTier } from "@/types";
+import { SubscriptionTier, EQArchetype } from "@/types";
 import { UserOperationsProps } from "./types";
 import { UserDetailsDialog } from "./UserDetailsDialog";
 import { ResetPasswordDialog } from "./ResetPasswordDialog";
@@ -23,11 +23,18 @@ export const UserOperations = ({ user, onUpdateTier, onUserDeleted }: UserOperat
     }
   };
 
+  // Correctly type eq_archetype by validating it against valid EQArchetype values
+  const getValidEQArchetype = (archetype: string | undefined): EQArchetype | "Not set" => {
+    const validArchetypes: EQArchetype[] = ["reflector", "activator", "regulator", "connector", "observer"];
+    if (!archetype) return "Not set";
+    return validArchetypes.includes(archetype as EQArchetype) ? archetype as EQArchetype : "Not set";
+  };
+
   // Create a version of the user that conforms to the User type requirements
   const userForDialogs = {
     ...user,
-    // Ensure eq_archetype is treated as EQArchetype | "Not set"
-    eq_archetype: user.eq_archetype || "Not set",
+    // Properly cast eq_archetype to the expected union type
+    eq_archetype: getValidEQArchetype(user.eq_archetype),
     // Add any other required fields that might be missing
     subscription_tier: (user.subscription_tier || "free") as SubscriptionTier,
     onboarded: user.onboarded || false
