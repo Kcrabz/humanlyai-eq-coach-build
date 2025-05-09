@@ -16,6 +16,7 @@ import { Share2, Shield, LayoutDashboard } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useEffect } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { UserAvatar } from "@/components/chat/components/UserAvatar";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
