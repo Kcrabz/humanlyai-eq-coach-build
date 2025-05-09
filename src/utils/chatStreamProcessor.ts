@@ -73,8 +73,8 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
           }
           
           // Log progress for debugging
-          if (hasStartedResponse && fullResponse.length % 50 === 0) {
-            console.log(`Stream progress: ${fullResponse.length} chars received`);
+          if (hasStartedResponse && fullResponse.length % 100 === 0) {
+            console.log(`Stream progress: ${fullResponse.length} chars received for message ${assistantMessageId}`);
           }
         } catch (err) {
           // Just skip invalid JSON rather than logging errors
@@ -103,13 +103,19 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
       }
     }
     
-    // Ensure that even empty responses update the message to remove typing indicator
-    if (!hasStartedResponse || fullResponse === "") {
-      console.log("Stream completed with empty response, ensuring typing indicator is removed");
-      updateAssistantMessage(assistantMessageId, " "); // Space character to ensure it's not empty
+    // CRITICAL FIX: Ensure typing indicator is removed even for empty responses
+    if (fullResponse === "") {
+      console.log("Stream completed with empty response - ensuring typing indicator is removed");
+      // Use a non-empty space character to ensure the typing indicator is removed
+      updateAssistantMessage(assistantMessageId, " ");
+    } else if (!hasStartedResponse) {
+      // If we didn't get any content but the stream completed, ensure the typing indicator is removed
+      console.log("Stream completed without content - ensuring typing indicator is removed");
+      updateAssistantMessage(assistantMessageId, " ");
     }
     
     // Message completed successfully
+    console.log(`Stream completed for message ${assistantMessageId} with ${fullResponse.length} chars`);
     setLastSentMessage(null);
     
     // Return the full response
@@ -117,10 +123,8 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
   } catch (error) {
     console.error("Error in stream handler:", error);
     
-    // Even on error, ensure we remove the typing indicator
-    if (!hasStartedResponse) {
-      updateAssistantMessage(assistantMessageId, "Sorry, an error occurred while processing your request.");
-    }
+    // Even on error, ensure we remove the typing indicator by using a space
+    updateAssistantMessage(assistantMessageId, " ");
     
     throw error;
   }

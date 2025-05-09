@@ -12,6 +12,11 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
   // Ensure we have a valid string to avoid rendering issues
   const safeContent = content || "";
   
+  // If content is just whitespace or empty, render a non-breaking space to maintain height
+  if (!safeContent.trim()) {
+    return <span>&nbsp;</span>;
+  }
+  
   return (
     <div className={cn(
       "prose prose-sm max-w-none",
