@@ -16,7 +16,7 @@ import { EQJourneyTab } from "@/components/progress/EQJourneyTab";
 import { BadgesCertificatesTab } from "@/components/progress/BadgesCertificatesTab";
 
 // Import mock data
-import { MOCK_ACHIEVEMENTS, MOCK_CHALLENGE_HISTORY, MOCK_TIMELINE_ITEMS } from "@/data/mockProgressData";
+import { MOCK_ACHIEVEMENTS, MOCK_TIMELINE_ITEMS } from "@/data/mockProgressData";
 import { MOCK_BADGES_CERTIFICATES } from "@/data/mockBadgesCertificatesData";
 
 const UserProgressPage = () => {
@@ -89,10 +89,7 @@ const UserProgressPage = () => {
           
           {/* Challenges Tab */}
           <TabsContent value="challenges" className="animate-scale-fade-in">
-            <ChallengesTab 
-              challenges={MOCK_CHALLENGE_HISTORY} 
-              onChallengeClick={handleChallengeTakeToChatPage} 
-            />
+            <ChallengesTab onChallengeClick={handleChallengeTakeToChatPage} />
           </TabsContent>
           
           {/* EQ Journey Tab */}
