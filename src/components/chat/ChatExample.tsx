@@ -13,6 +13,7 @@ export function ChatExample() {
         </CardHeader>
         <CardContent className="h-[calc(100%-64px)] flex flex-col">
           <ChatProvider>
+            {/* Both components are now safely within ChatProvider */}
             <ChatUsage />
             <div className="flex-1 overflow-hidden">
               <EnhancedChatUI />

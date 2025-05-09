@@ -5,7 +5,16 @@ import { Progress } from "@/components/ui/progress";
 import { useNavigate } from "react-router-dom";
 
 export function ChatUsage() {
-  const { usageInfo } = useChat();
+  // Try to use the chat context, but gracefully handle when it's not available
+  let chatContext;
+  try {
+    chatContext = useChat();
+  } catch (error) {
+    console.log("ChatUsage: ChatContext not available, component will not render");
+    return null; // Return null if not within a ChatProvider
+  }
+
+  const { usageInfo } = chatContext || {};
   const { user } = useAuth();
   const navigate = useNavigate();
   

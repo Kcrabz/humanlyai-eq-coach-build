@@ -5,7 +5,8 @@ import { EQAssessmentAlert } from "./EQAssessmentAlert";
 
 // Lazy load components that aren't immediately visible
 const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => ({ default: module.ChatList })));
-const ChatUsage = lazy(() => import("@/components/chat/ChatUsage").then(module => ({ default: module.ChatUsage })));
+// Import ChatUsage directly instead of lazy loading it to ensure it's used within the ChatProvider
+import { ChatUsage } from "@/components/chat/ChatUsage";
 
 interface ChatContentProps {
   hasCompletedAssessment: boolean;
@@ -17,9 +18,8 @@ export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatC
     <div className="flex-1 overflow-hidden flex flex-col">
       {!hasCompletedAssessment && <EQAssessmentAlert onStartAssessment={onStartAssessment} />}
       
-      <Suspense fallback={<div className="h-6 bg-humanly-pastel-lavender/10 animate-pulse m-4 rounded-md"></div>}>
-        <ChatUsage />
-      </Suspense>
+      {/* Use ChatUsage directly, not in Suspense */}
+      <ChatUsage />
       
       <Suspense fallback={
         <div className="flex-1 flex justify-center items-center">
