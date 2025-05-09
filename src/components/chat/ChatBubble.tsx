@@ -15,16 +15,15 @@ interface ChatBubbleProps {
 
 export function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === "user";
-  const isEmpty = !message.content || message.content.trim() === "";
   
-  // Only show loading indicator for assistant messages that are completely empty
-  // This ensures the indicator disappears as soon as content starts streaming in
-  const isLoading = message.role === "assistant" && message.content === "";
+  // Only show typing indicator when message is completely empty
+  // This is specifically for initial loading state before any content arrives
+  const isTyping = message.role === "assistant" && message.content === "";
   
   const isMobile = useIsMobile();
   
   // For debugging - log incomplete messages
-  if (isLoading) {
+  if (isTyping) {
     console.log("Rendering loading bubble for assistant message", message.id);
   }
   
@@ -46,7 +45,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
             : "enhanced-chat-ai"
         )}
       >
-        {isLoading ? (
+        {isTyping ? (
           <TypingIndicator />
         ) : (
           <MessageContent content={message.content} isUser={isUser} />
