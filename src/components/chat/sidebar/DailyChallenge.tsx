@@ -66,7 +66,7 @@ export function DailyChallenge({ standaloneMode = false, onChallengeClick }: Dai
       <Button
         variant="outline"
         size="sm"
-        className={`w-full h-auto py-2 px-2 flex flex-col items-start gap-1 ${
+        className={`w-full h-auto py-2 px-3 flex flex-col items-start gap-1.5 ${
           isChallengeCompleted 
             ? 'border-green-200 bg-green-50 hover:bg-green-100' 
             : 'border-humanly-pastel-lavender/30 hover:bg-humanly-pastel-lavender/10'
@@ -83,7 +83,7 @@ export function DailyChallenge({ standaloneMode = false, onChallengeClick }: Dai
             <Check className="h-3 w-3 text-green-600" />
           )}
         </div>
-        <p className="text-xs text-left text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+        <p className="text-xs text-left text-muted-foreground line-clamp-2 min-h-[2.5rem] w-full break-words">
           {todaysChallenge.description}
         </p>
       </Button>
