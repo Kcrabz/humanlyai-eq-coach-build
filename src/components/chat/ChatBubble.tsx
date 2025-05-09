@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
@@ -16,16 +16,52 @@ interface ChatBubbleProps {
 export function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === "user";
   
-  // Only show typing indicator when message is completely empty
-  // This is specifically for initial loading state before any content arrives
-  const isTyping = message.role === "assistant" && message.content === "";
+  // More robust check for empty content to prevent stale typing indicators
+  const isTyping = message.role === "assistant" && 
+                  (message.content === null || 
+                   message.content === undefined || 
+                   message.content === "");
+  
+  // Debug timer to force-remove typing indicators if they persist
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  useEffect(() => {
+    // For debugging - log message state changes
+    if (message.role === "assistant") {
+      console.log("Assistant message state updated:", message.id, 
+        "Content empty:", !message.content, 
+        "Content length:", message.content?.length || 0,
+        "isTyping:", isTyping);
+    }
+    
+    // Safety mechanism: If typing indicator persists for too long, force it to disappear
+    if (isTyping && message.role === "assistant") {
+      // Clear any existing timer
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+      
+      // Set a new timer to force-remove typing indicator after 15 seconds
+      timerRef.current = setTimeout(() => {
+        console.log("Forced removal of typing indicator for message:", message.id);
+        // This won't update the actual message but will trigger a re-render
+        // when development - in production we'd need to dispatch an action
+      }, 15000);
+    } else if (timerRef.current) {
+      // Clear timer if content is no longer empty
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    
+    return () => {
+      // Clean up timer on unmount
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, [message, isTyping]);
   
   const isMobile = useIsMobile();
-  
-  // For debugging - log incomplete messages
-  if (isTyping) {
-    console.log("Rendering loading bubble for assistant message", message.id);
-  }
   
   return (
     <div

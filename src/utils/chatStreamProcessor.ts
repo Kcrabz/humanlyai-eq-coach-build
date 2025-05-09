@@ -1,3 +1,4 @@
+
 import { StreamOptions } from './chatStreamTypes';
 
 /**
@@ -10,6 +11,7 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
   const decoder = new TextDecoder();
   let buffer = "";
   let fullResponse = "";
+  let hasStartedResponse = false;
   
   // Pre-compile regex patterns for better performance
   const dataLineRegex = /^data: (.+)$/;
@@ -44,6 +46,7 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
           if (data.type === "chunk" && data.content) {
             fullResponse += data.content;
             updateAssistantMessage(assistantMessageId, fullResponse);
+            hasStartedResponse = true;
           } 
           else if (data.type === "complete" && data.usage) {
             // Update usage info when complete
@@ -56,14 +59,22 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
           else if (data.content) {
             fullResponse += data.content;
             updateAssistantMessage(assistantMessageId, fullResponse);
+            hasStartedResponse = true;
           }
           else if (data.choices?.[0]?.delta?.content) {
             fullResponse += data.choices[0].delta.content;
             updateAssistantMessage(assistantMessageId, fullResponse);
+            hasStartedResponse = true;
           }
           else if (data.choices?.[0]?.message?.content) {
             fullResponse = data.choices[0].message.content;
             updateAssistantMessage(assistantMessageId, fullResponse);
+            hasStartedResponse = true;
+          }
+          
+          // Log progress for debugging
+          if (hasStartedResponse && fullResponse.length % 50 === 0) {
+            console.log(`Stream progress: ${fullResponse.length} chars received`);
           }
         } catch (err) {
           // Just skip invalid JSON rather than logging errors
@@ -92,6 +103,12 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
       }
     }
     
+    // Ensure that even empty responses update the message to remove typing indicator
+    if (!hasStartedResponse || fullResponse === "") {
+      console.log("Stream completed with empty response, ensuring typing indicator is removed");
+      updateAssistantMessage(assistantMessageId, " "); // Space character to ensure it's not empty
+    }
+    
     // Message completed successfully
     setLastSentMessage(null);
     
@@ -99,6 +116,12 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
     return fullResponse;
   } catch (error) {
     console.error("Error in stream handler:", error);
+    
+    // Even on error, ensure we remove the typing indicator
+    if (!hasStartedResponse) {
+      updateAssistantMessage(assistantMessageId, "Sorry, an error occurred while processing your request.");
+    }
+    
     throw error;
   }
 }

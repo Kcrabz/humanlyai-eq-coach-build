@@ -9,6 +9,9 @@ interface MessageContentProps {
 }
 
 export function MessageContent({ content, isUser }: MessageContentProps) {
+  // Ensure we have a valid string to avoid rendering issues
+  const safeContent = content || "";
+  
   return (
     <div className={cn(
       "prose prose-sm max-w-none",
@@ -19,7 +22,7 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
       isUser ? "prose-blockquote:bg-humanly-teal-dark/50 prose-blockquote:border-l-4 prose-blockquote:border-white prose-blockquote:rounded-r prose-blockquote:pl-4 prose-blockquote:py-1" : "prose-blockquote:bg-humanly-pastel-lavender/30 prose-blockquote:border-l-4 prose-blockquote:border-humanly-teal prose-blockquote:rounded-r prose-blockquote:pl-4 prose-blockquote:py-1",
       "prose-li:mb-1"
     )}>
-      <ReactMarkdown>{content || "..."}</ReactMarkdown>
+      <ReactMarkdown>{safeContent}</ReactMarkdown>
     </div>
   );
 }
