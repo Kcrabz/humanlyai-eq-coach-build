@@ -102,6 +102,7 @@ export function Header() {
                 </Link>
               )}
               
+              {/* User Avatar Dropdown - The only account access point on desktop */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full transition-transform duration-300 hover:scale-110 hover:shadow-sm">
