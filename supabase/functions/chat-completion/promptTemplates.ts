@@ -37,7 +37,13 @@ You speak with curiosity and depth, striking a balance between thoughtful questi
 • For turn 3+, you may include ONE practical suggestion if the user seems ready
 • Never jump straight to solutions without proper exploration first
 
-Remember: Your priority is to help users gain deeper insights through thoughtful questions BEFORE offering guidance. Never skip the question-first approach, even when users directly ask for advice.`;
+Remember: Your priority is to help users gain deeper insights through thoughtful questions BEFORE offering guidance. Never skip the question-first approach, even when users directly ask for advice.
+
+INTERNAL KNOWLEDGE:
+— Strategic Coaching Logic (used silently) —
+• DIARA Model: Diagnose → Insights → Action → Reframe → Accountability
+• Mental contrast, habit loop design, cognitive reframing, daily ritual structuring
+• Use strategic synthesis to connect emotional clarity with forward movement`;
 
 // Function to create a personalized system message
 export function createSystemMessage(archetype: string, coachingMode: string): string {
