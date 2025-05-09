@@ -10,6 +10,7 @@ import {
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { CSSProperties } from "react";
 
 // Import our component files
 import { UserProfile } from "./right/UserProfile";
@@ -50,7 +51,7 @@ export function ChatRightSidebar() {
   
   // For mobile, use offcanvas style with overlay
   // For desktop, use fixed sidebar that pushes content
-  const sidebarStyle = isMobile ? {
+  const sidebarStyle: CSSProperties = isMobile ? {
     position: 'fixed',
     top: 0,
     right: open ? '0' : '-100%',
