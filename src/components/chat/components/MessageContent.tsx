@@ -9,12 +9,13 @@ interface MessageContentProps {
 }
 
 export function MessageContent({ content, isUser }: MessageContentProps) {
-  // Ensure we have a valid string to avoid rendering issues
-  const safeContent = content || "";
+  // Comprehensive safety check - treat even a single space as empty
+  const contentTrimmed = content?.trim() || "";
+  const isEmpty = contentTrimmed === "";
   
-  // If content is just whitespace or empty, render a non-breaking space to maintain height
-  if (!safeContent.trim()) {
-    return <span>&nbsp;</span>;
+  // If content is empty, render a non-breaking space to maintain height
+  if (isEmpty) {
+    return <span className="inline-block min-h-[1.5em]">&nbsp;</span>;
   }
   
   return (
@@ -27,7 +28,7 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
       isUser ? "prose-blockquote:bg-humanly-teal-dark/50 prose-blockquote:border-l-4 prose-blockquote:border-white prose-blockquote:rounded-r prose-blockquote:pl-4 prose-blockquote:py-1" : "prose-blockquote:bg-humanly-pastel-lavender/30 prose-blockquote:border-l-4 prose-blockquote:border-humanly-teal prose-blockquote:rounded-r prose-blockquote:pl-4 prose-blockquote:py-1",
       "prose-li:mb-1"
     )}>
-      <ReactMarkdown>{safeContent}</ReactMarkdown>
+      <ReactMarkdown>{content}</ReactMarkdown>
     </div>
   );
 }
