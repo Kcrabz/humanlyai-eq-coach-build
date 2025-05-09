@@ -14,7 +14,7 @@
 
 /* Chat markdown content styling with improved readability */
 .chat-md p {
-  @apply mb-3 leading-relaxed;
+  @apply mb-3 leading-relaxed break-words;
 }
 
 .chat-md h1, .chat-md h2, .chat-md h3 {
@@ -54,7 +54,7 @@
 }
 
 .chat-md code {
-  @apply bg-humanly-pastel-lavender/10 text-humanly-indigo-dark px-1 py-0.5 rounded;
+  @apply bg-humanly-pastel-lavender/10 text-humanly-indigo-dark px-1 py-0.5 rounded break-words;
 }
 
 .chat-md pre {
@@ -79,6 +79,20 @@
 
 .chat-md table th {
   @apply bg-humanly-pastel-lavender/10 text-humanly-indigo-dark;
+}
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .chat-md p, .chat-md li, .chat-md blockquote, .chat-md code {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .chat-md pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
 }
 
 /* User message specific styling with better contrast */
@@ -132,3 +146,4 @@
     transform: translateY(-3px);
   }
 }
+

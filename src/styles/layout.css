@@ -66,6 +66,27 @@
   transition: all 0.3s ease;
 }
 
+/* Mobile-specific styling */
+@media (max-width: 767px) {
+  .main-content,
+  .main-content-with-right-sidebar-open,
+  .main-content-with-right-sidebar-closed {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-basis: 100% !important;
+  }
+  
+  .enhanced-header {
+    padding: 0.75rem;
+  }
+  
+  /* Ensure text doesn't overflow on mobile */
+  .enhanced-chat-bubble {
+    max-width: 85% !important;
+    word-break: break-word;
+  }
+}
+
 /* Footer styling */
 .zen-footer {
   @apply border-t border-gray-50 py-3 px-4 text-xs text-gray-500 bg-white;

@@ -5,11 +5,13 @@ import { ChatBubble } from "./ChatBubble";
 import { EmptyChatState } from "./components/EmptyChatState";
 import { ChatLoadingIndicator } from "./components/ChatLoadingIndicator";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function ChatList() {
   const { messages, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const firstRenderRef = useRef(true);
+  const isMobile = useIsMobile();
   
   // Get sidebar states to force re-render when they change
   const { open: rightSidebarOpen } = useSidebar("right");
@@ -49,7 +51,7 @@ export function ChatList() {
   }, []);
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-6">
+    <div className={`flex-1 overflow-y-auto p-4 ${isMobile ? 'px-2' : 'px-4'} space-y-6`}>
       {messages.length === 0 ? (
         <EmptyChatState />
       ) : (

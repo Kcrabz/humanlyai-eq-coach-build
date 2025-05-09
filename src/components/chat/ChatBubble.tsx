@@ -7,6 +7,7 @@ import { UserAvatar } from "./components/UserAvatar";
 import { AssistantAvatar } from "./components/AssistantAvatar"; 
 import { LoadingIndicator } from "./components/LoadingIndicator";
 import { MessageContent } from "./components/MessageContent";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -16,6 +17,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === "user";
   const isEmpty = !message.content || message.content.trim() === "";
   const isLoading = isEmpty && !isUser;
+  const isMobile = useIsMobile();
   
   // For debugging - log incomplete messages
   if (isLoading) {
@@ -34,6 +36,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
       <Card
         className={cn(
           "p-4 max-w-[85%] text-left shadow-md rounded-2xl",
+          isMobile ? "p-3 text-sm" : "p-4",
           isUser
             ? "bg-humanly-teal text-white enhanced-chat-user"
             : "enhanced-chat-ai"
