@@ -30,7 +30,7 @@ export function ResponsiveMainContent({
     <div 
       className={`flex-1 flex flex-col overflow-hidden main-content ${
         rightSidebarOpen && !isMobile ? 'main-content-with-right-sidebar-open' : 'main-content-with-right-sidebar-closed'
-      }`}
+      } ${isMobile ? 'mobile-main-content' : ''}`}
       style={{ width: contentWidth }}
     >
       <ChatHeader 

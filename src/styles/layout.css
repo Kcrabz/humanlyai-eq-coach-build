@@ -66,6 +66,18 @@
   transition: all 0.3s ease;
 }
 
+/* Mobile chat menu specific styling */
+.mobile-chat-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.mobile-main-content {
+  padding-top: 3.5rem; /* Add space for the floating menu button */
+}
+
 /* Mobile-specific styling */
 @media (max-width: 767px) {
   .main-content,
@@ -84,6 +96,12 @@
   .enhanced-chat-bubble {
     max-width: 85% !important;
     word-break: break-word;
+  }
+
+  /* Collapsible menu improvements for mobile */
+  .enhanced-header .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }
 

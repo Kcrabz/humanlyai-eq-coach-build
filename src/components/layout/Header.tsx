@@ -15,6 +15,7 @@ import { generateAvatar } from "@/lib/utils";
 import { Share2, Shield, LayoutDashboard } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function Header() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -23,6 +24,7 @@ export function Header() {
   const isOnChatPage = location.pathname === "/chat";
   const isOnProgressPage = location.pathname === "/progress";
   const isOnDashboardPage = location.pathname === "/dashboard";
+  const isMobile = useIsMobile();
 
   // Add logging to debug admin status on dashboard
   useEffect(() => {
@@ -35,6 +37,11 @@ export function Header() {
     });
   }, [isAdmin, isAdminCheckLoading, user, location.pathname, isAuthenticated]);
 
+  // On mobile, we don't show the header on chat page as it's handled by CollapsibleMenu
+  if (isMobile && isOnChatPage) {
+    return null;
+  }
+
   return (
     <header className="enhanced-header py-4 px-4 sm:px-6 sticky top-0 z-50 bg-white shadow-md border-b border-gray-200 header-fade-in">
       <div className="container mx-auto flex items-center justify-between">
@@ -44,6 +51,7 @@ export function Header() {
           </span>
         </Link>
 
+        {/* Only show nav menu on non-mobile screens */}
         <nav className="hidden md:flex items-center gap-6">
           <Link to="/about" className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors hover:scale-105 duration-300">
             About
@@ -66,7 +74,7 @@ export function Header() {
           {isAuthenticated ? (
             <>
               {/* Dashboard Button - only show when not on dashboard page */}
-              {!isOnDashboardPage && (
+              {!isOnDashboardPage && !isMobile && (
                 <Link to="/dashboard">
                   <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
                     <LayoutDashboard className="h-4 w-4 mr-1" />
@@ -76,7 +84,7 @@ export function Header() {
               )}
             
               {/* Only show "Chat with Coach" button when not on the chat page */}
-              {!isOnChatPage && (
+              {!isOnChatPage && !isMobile && (
                 <Link to="/chat">
                   <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
                     Chat with Coach
@@ -85,7 +93,7 @@ export function Header() {
               )}
               
               {/* Only show "View Progress" button when not on the progress page */}
-              {!isOnProgressPage && !isOnChatPage && (
+              {!isOnProgressPage && !isOnChatPage && !isMobile && (
                 <Link to="/progress">
                   <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
                     View Progress
@@ -147,16 +155,27 @@ export function Header() {
             </>
           ) : (
             <>
-              <Link to="/login">
-                <Button variant="outline" size="sm" className="rounded-lg transition-all duration-300 hover:bg-humanly-pastel-blue/30 border-humanly-teal/20">
-                  Sign In
-                </Button>
-              </Link>
-              <Link to="/signup">
-                <Button size="sm" className="rounded-lg bg-gradient-to-r from-humanly-teal to-humanly-teal/90 transition-all duration-300 hover:shadow-md hover:scale-105">
-                  Get Started
-                </Button>
-              </Link>
+              {!isMobile && (
+                <>
+                  <Link to="/login">
+                    <Button variant="outline" size="sm" className="rounded-lg transition-all duration-300 hover:bg-humanly-pastel-blue/30 border-humanly-teal/20">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link to="/signup">
+                    <Button size="sm" className="rounded-lg bg-gradient-to-r from-humanly-teal to-humanly-teal/90 transition-all duration-300 hover:shadow-md hover:scale-105">
+                      Get Started
+                    </Button>
+                  </Link>
+                </>
+              )}
+              {isMobile && (
+                <Link to="/login">
+                  <Button size="sm" className="rounded-lg bg-gradient-to-r from-humanly-teal to-humanly-teal/90 transition-all duration-300 hover:shadow-md hover:scale-105">
+                    Sign In
+                  </Button>
+                </Link>
+              )}
             </>
           )}
         </div>

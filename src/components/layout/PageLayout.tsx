@@ -3,6 +3,7 @@ import React, { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { CollapsibleMenu } from "@/components/layout/CollapsibleMenu";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -12,9 +13,15 @@ interface PageLayoutProps {
 
 export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
   const location = useLocation();
+  const isMobile = useIsMobile();
   
-  // Don't show menu on onboarding pages and chat page
-  const shouldShowMenu = !location.pathname.includes("/onboarding") && location.pathname !== "/chat";
+  // Always show CollapsibleMenu on mobile chat page
+  const isOnChatPage = location.pathname === "/chat";
+  
+  // Don't show menu on onboarding pages
+  // On chat page, only show menu on mobile
+  const shouldShowMenu = !location.pathname.includes("/onboarding") && 
+                         (isMobile ? true : !isOnChatPage);
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
@@ -28,7 +35,7 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
       {/* Sonner toast provider - positioned at bottom only */}
       <Toaster position="bottom-right" richColors />
       
-      {/* Collapsible menu in the top right corner, only shown outside of onboarding/chat */}
+      {/* Collapsible menu in the top right corner, shown based on conditions */}
       {shouldShowMenu && (
         <CollapsibleMenu />
       )}

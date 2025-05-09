@@ -13,21 +13,31 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Shield, Share2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function CollapsibleMenu() {
   const { user, isAuthenticated, logout } = useAuth();
+  const { isAdmin } = useAdminCheck();
   const location = useLocation();
+  const isMobile = useIsMobile();
   const isOnChatPage = location.pathname === "/chat";
   const isOnProgressPage = location.pathname === "/progress";
+  const isOnDashboardPage = location.pathname === "/dashboard";
   const [isOpen, setIsOpen] = useState(false);
 
+  // Handle menu item click - closes the menu
+  const handleMenuItemClick = () => {
+    setIsOpen(false);
+  };
+
   return (
-    <div className="fixed top-0 right-0 z-50 w-full">
+    <div className={`fixed top-0 right-0 z-50 w-full ${isOnChatPage ? 'mobile-chat-menu' : ''}`}>
       <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
-        {/* Repositioned toggle button - moved to the right and separated from avatar */}
-        <div className="absolute top-4 right-8 z-[100]">
+        {/* Repositioned toggle button - moved to the right and visible on all screens */}
+        <div className="absolute top-4 right-4 z-[100]">
           <CollapsibleTrigger asChild>
             <Button 
               variant="outline" 
@@ -42,91 +52,176 @@ export function CollapsibleMenu() {
         
         <CollapsibleContent className="mt-2 enhanced-header animate-slide-up">
           <div className="container mx-auto py-4 px-4 sm:px-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               <Link 
                 to="/" 
-                className="flex items-center gap-2 transition-transform duration-300 hover:scale-[1.02]"
-                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2 transition-transform duration-300 hover:scale-[1.02] mb-4 md:mb-0"
+                onClick={handleMenuItemClick}
               >
                 <span className="bg-gradient-to-r from-humanly-teal to-humanly-teal-light bg-clip-text text-transparent text-2xl font-bold">
                   HumanlyAI
                 </span>
               </Link>
 
-              <nav className="flex items-center gap-6">
+              {/* Mobile-optimized menu navigation */}
+              <nav className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-4 md:mb-0">
                 <Link 
                   to="/about" 
-                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors hover:scale-105 duration-300"
-                  onClick={() => setIsOpen(false)}
+                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors py-2 md:py-0 border-b md:border-b-0 border-gray-100"
+                  onClick={handleMenuItemClick}
                 >
                   About
                 </Link>
                 <Link 
                   to="/pricing" 
-                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors hover:scale-105 duration-300"
-                  onClick={() => setIsOpen(false)}
+                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors py-2 md:py-0 border-b md:border-b-0 border-gray-100"
+                  onClick={handleMenuItemClick}
                 >
                   Pricing
                 </Link>
                 <Link 
                   to="/blog" 
-                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors hover:scale-105 duration-300"
-                  onClick={() => setIsOpen(false)}
+                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors py-2 md:py-0 border-b md:border-b-0 border-gray-100"
+                  onClick={handleMenuItemClick}
                 >
                   Blog
                 </Link>
                 <Link 
                   to="/help" 
-                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors hover:scale-105 duration-300"
-                  onClick={() => setIsOpen(false)}
+                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors py-2 md:py-0 border-b md:border-b-0 border-gray-100"
+                  onClick={handleMenuItemClick}
                 >
                   Help
                 </Link>
                 <Link 
                   to="/community" 
-                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors hover:scale-105 duration-300"
-                  onClick={() => setIsOpen(false)}
+                  className="text-sm font-medium text-foreground hover:text-humanly-teal-dark transition-colors py-2 md:py-0 border-b md:border-b-0 border-gray-100"
+                  onClick={handleMenuItemClick}
                 >
                   Community
                 </Link>
               </nav>
 
-              <div className="flex items-center gap-4">
+              {/* Auth-based actions */}
+              <div className="flex flex-col md:flex-row md:items-center gap-3">
                 {isAuthenticated ? (
                   <>
-                    {/* Only show "Chat with Coach" button when not on the chat page */}
+                    {/* Dashboard Button */}
+                    {!isOnDashboardPage && (
+                      <Link 
+                        to="/dashboard"
+                        onClick={handleMenuItemClick}
+                        className="w-full md:w-auto"
+                      >
+                        <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300 w-full md:w-auto">
+                          Dashboard
+                        </Button>
+                      </Link>
+                    )}
+                    
+                    {/* Chat with Coach button */}
                     {!isOnChatPage && (
                       <Link 
                         to="/chat"
-                        onClick={() => setIsOpen(false)}
+                        onClick={handleMenuItemClick}
+                        className="w-full md:w-auto"
                       >
-                        <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
+                        <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300 w-full md:w-auto">
                           Chat with Coach
                         </Button>
                       </Link>
                     )}
                     
-                    {/* Only show "View Progress" button when not on the progress page */}
+                    {/* View Progress button */}
                     {!isOnProgressPage && !isOnChatPage && (
                       <Link 
                         to="/progress"
-                        onClick={() => setIsOpen(false)}
+                        onClick={handleMenuItemClick}
+                        className="w-full md:w-auto"
                       >
-                        <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300">
+                        <Button variant="outline" size="sm" className="rounded-lg border-humanly-teal/20 hover:bg-humanly-teal/5 transition-all duration-300 w-full md:w-auto">
                           View Progress
                         </Button>
                       </Link>
                     )}
                     
-                    {/* Moved avatar dropdown further left with mr-10 to avoid overlap with toggle button */}
-                    <div className="mr-10">
+                    {/* User profile */}
+                    <div className="mt-4 md:mt-0">
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 md:bg-transparent">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user?.avatar_url || generateAvatar(user?.name || user?.email || "")} alt={user?.name || "User"} />
+                          <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="md:hidden">
+                          <p className="text-sm font-medium">{user?.name || "User"}</p>
+                          <p className="text-xs text-muted-foreground">{user?.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Settings and user options */}
+                    <div className="flex flex-col w-full mt-4 md:hidden">
+                      <Link 
+                        to="/progress"
+                        onClick={handleMenuItemClick}
+                        className="p-3 text-sm hover:bg-gray-100 rounded-md"
+                      >
+                        Your Progress
+                      </Link>
+                      <Link 
+                        to="/settings"
+                        onClick={handleMenuItemClick}
+                        className="p-3 text-sm hover:bg-gray-100 rounded-md"
+                      >
+                        Settings
+                      </Link>
+                      <Link 
+                        to="/subscription"
+                        onClick={handleMenuItemClick}
+                        className="p-3 text-sm hover:bg-gray-100 rounded-md"
+                      >
+                        Subscription
+                      </Link>
+                      
+                      {/* Admin link - only visible for admin users */}
+                      {isAdmin && (
+                        <Link 
+                          to="/admin" 
+                          onClick={handleMenuItemClick}
+                          className="p-3 text-sm hover:bg-gray-100 rounded-md flex items-center gap-2"
+                        >
+                          <Shield className="h-4 w-4" />
+                          <span>Admin Dashboard</span>
+                        </Link>
+                      )}
+                      
+                      {/* Refer a Friend link */}
+                      <Link 
+                        to="/refer" 
+                        onClick={handleMenuItemClick}
+                        className="p-3 text-sm hover:bg-gray-100 rounded-md flex items-center gap-2"
+                      >
+                        <Share2 className="h-4 w-4" />
+                        <span>Refer a Friend</span>
+                      </Link>
+                      
+                      <button 
+                        onClick={() => {
+                          logout();
+                          handleMenuItemClick();
+                        }}
+                        className="p-3 text-sm text-left text-red-500 hover:bg-red-50 rounded-md mt-2"
+                      >
+                        Log out
+                      </button>
+                    </div>
+                    
+                    {/* Desktop user menu dropdown */}
+                    <div className="hidden md:block">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="relative h-8 w-8 rounded-full transition-transform duration-300 hover:scale-110 hover:shadow-sm">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={user?.avatar_url || generateAvatar(user?.name || user?.email || "")} alt={user?.name || "User"} />
-                              <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
-                            </Avatar>
+                          <Button variant="ghost" size="sm" className="text-sm font-medium">
+                            Account
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-56 rounded-xl shadow-soft border border-gray-100 animate-scale-fade-in" align="end" forceMount>
@@ -138,16 +233,16 @@ export function CollapsibleMenu() {
                           </DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
-                            <Link to="/settings" onClick={() => setIsOpen(false)}>Settings</Link>
+                            <Link to="/settings" onClick={handleMenuItemClick}>Settings</Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
-                            <Link to="/subscription" onClick={() => setIsOpen(false)}>Subscription</Link>
+                            <Link to="/subscription" onClick={handleMenuItemClick}>Subscription</Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             onClick={() => {
                               logout();
-                              setIsOpen(false);
+                              handleMenuItemClick();
                             }} 
                             className="rounded-md text-red-500 hover:text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
                           >
@@ -161,17 +256,19 @@ export function CollapsibleMenu() {
                   <>
                     <Link 
                       to="/login"
-                      onClick={() => setIsOpen(false)}
+                      onClick={handleMenuItemClick}
+                      className="w-full md:w-auto"
                     >
-                      <Button variant="outline" size="sm" className="rounded-lg transition-all duration-300 hover:bg-humanly-pastel-blue/30 border-humanly-teal/20">
+                      <Button variant="outline" size="sm" className="rounded-lg transition-all duration-300 hover:bg-humanly-pastel-blue/30 border-humanly-teal/20 w-full md:w-auto">
                         Sign In
                       </Button>
                     </Link>
                     <Link 
                       to="/signup"
-                      onClick={() => setIsOpen(false)}
+                      onClick={handleMenuItemClick}
+                      className="w-full md:w-auto"
                     >
-                      <Button size="sm" className="rounded-lg bg-gradient-to-r from-humanly-teal to-humanly-teal/90 transition-all duration-300 hover:shadow-md hover:scale-105">
+                      <Button size="sm" className="rounded-lg bg-gradient-to-r from-humanly-teal to-humanly-teal/90 transition-all duration-300 hover:shadow-md hover:scale-105 w-full md:w-auto">
                         Get Started
                       </Button>
                     </Link>
