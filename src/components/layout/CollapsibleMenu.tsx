@@ -151,21 +151,83 @@ export function CollapsibleMenu() {
                       </Link>
                     )}
                     
-                    {/* User profile */}
+                    {/* User profile - Show avatar on desktop instead of "Account" text button */}
                     <div className="mt-4 md:mt-0">
-                      <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 md:bg-transparent">
+                      {/* Mobile avatar and user info */}
+                      <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 md:hidden">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={user?.avatar_url || generateAvatar(user?.name || user?.email || "")} alt={user?.name || "User"} />
                           <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
                         </Avatar>
-                        <div className="md:hidden">
+                        <div>
                           <p className="text-sm font-medium">{user?.name || "User"}</p>
                           <p className="text-xs text-muted-foreground">{user?.email}</p>
                         </div>
                       </div>
+                      
+                      {/* Desktop avatar dropdown - replaces "Account" text button */}
+                      <div className="hidden md:block">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="relative h-8 w-8 rounded-full transition-transform duration-300 hover:scale-110 hover:shadow-sm">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={user?.avatar_url || generateAvatar(user?.name || user?.email || "")} alt={user?.name || "User"} />
+                                <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-56 rounded-xl shadow-soft border border-gray-100 animate-scale-fade-in" align="end" forceMount>
+                            <DropdownMenuLabel className="font-normal">
+                              <div className="flex flex-col space-y-1">
+                                <p className="text-sm font-medium leading-none">{user?.name || "User"}</p>
+                                <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                              </div>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
+                              <Link to="/progress" onClick={handleMenuItemClick}>Your Progress</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
+                              <Link to="/settings" onClick={handleMenuItemClick}>Settings</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
+                              <Link to="/subscription" onClick={handleMenuItemClick}>Subscription</Link>
+                            </DropdownMenuItem>
+                            
+                            {/* Admin link - only visible for admin users */}
+                            {isAdmin && (
+                              <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
+                                <Link to="/admin" onClick={handleMenuItemClick} className="flex items-center gap-2">
+                                  <Shield className="h-4 w-4" />
+                                  <span>Admin Dashboard</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            )}
+                            
+                            {/* Refer a Friend link */}
+                            <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
+                              <Link to="/refer" onClick={handleMenuItemClick} className="flex items-center gap-2">
+                                <Share2 className="h-4 w-4" />
+                                <span>Refer a Friend</span>
+                              </Link>
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              onClick={() => {
+                                logout();
+                                handleMenuItemClick();
+                              }} 
+                              className="rounded-md text-red-500 hover:text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
+                            >
+                              Log out
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                     
-                    {/* Settings and user options */}
+                    {/* Settings and user options - Mobile Only */}
                     <div className="flex flex-col w-full mt-4 md:hidden">
                       <Link 
                         to="/progress"
@@ -221,42 +283,6 @@ export function CollapsibleMenu() {
                         Log out
                       </button>
                     </div>
-                    
-                    {/* Desktop user menu dropdown */}
-                    <div className="hidden md:block">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-sm font-medium">
-                            Account
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-56 rounded-xl shadow-soft border border-gray-100 animate-scale-fade-in" align="end" forceMount>
-                          <DropdownMenuLabel className="font-normal">
-                            <div className="flex flex-col space-y-1">
-                              <p className="text-sm font-medium leading-none">{user?.name || "User"}</p>
-                              <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
-                            </div>
-                          </DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
-                            <Link to="/settings" onClick={handleMenuItemClick}>Settings</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
-                            <Link to="/subscription" onClick={handleMenuItemClick}>Subscription</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem 
-                            onClick={() => {
-                              logout();
-                              handleMenuItemClick();
-                            }} 
-                            className="rounded-md text-red-500 hover:text-red-600 transition-colors hover:bg-red-50 cursor-pointer"
-                          >
-                            Log out
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
                   </>
                 ) : (
                   <>
@@ -288,3 +314,4 @@ export function CollapsibleMenu() {
     </div>
   );
 }
+
