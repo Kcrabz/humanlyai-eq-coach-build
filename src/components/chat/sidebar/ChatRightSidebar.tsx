@@ -43,18 +43,34 @@ export function ChatRightSidebarTrigger() {
 export function ChatRightSidebar() {
   const { user } = useAuth();
   // Specifically use the right sidebar context
-  const { open, setOpen } = useSidebar("right");
+  const { open, toggleSidebar } = useSidebar("right");
   const isMobile = useIsMobile();
   
   if (!user) return null;
   
+  // For mobile, use offcanvas style with overlay
+  // For desktop, use fixed sidebar that pushes content
+  const sidebarStyle = isMobile ? {
+    position: 'fixed',
+    top: 0,
+    right: open ? '0' : '-100%',
+    height: '100%',
+    zIndex: 50,
+    transition: 'right 0.3s ease',
+    boxShadow: open ? '0 0 10px rgba(0,0,0,0.1)' : 'none'
+  } : {
+    width: open ? '16rem' : '0',
+    minWidth: open ? '16rem' : '0',
+    transition: 'width 0.3s ease, min-width 0.3s ease'
+  };
+
   return (
     <Sidebar 
       side="right" 
       variant="sidebar" 
       collapsible="offcanvas"
-      className={`user-sidebar ${open ? 'w-64' : 'w-0'}`}
-      style={{ width: open ? '16rem' : '0', minWidth: open ? '16rem' : '0' }}
+      className={`user-sidebar`}
+      style={sidebarStyle}
       data-state={open ? "open" : "closed"}
       data-mobile={isMobile ? "true" : "false"}
     >

@@ -28,10 +28,8 @@ export function ResponsiveMainContent({
 
   return (
     <div 
-      className={`flex-1 flex flex-col overflow-hidden main-content ${
-        rightSidebarOpen && !isMobile ? 'main-content-with-right-sidebar-open' : 'main-content-with-right-sidebar-closed'
-      } ${isMobile ? 'mobile-main-content' : ''}`}
-      style={{ width: contentWidth }}
+      className={`flex-1 flex flex-col overflow-hidden main-content`}
+      style={{ width: contentWidth, transition: 'width 0.3s ease' }}
     >
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}
