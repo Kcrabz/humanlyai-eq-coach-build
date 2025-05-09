@@ -1,4 +1,3 @@
-
 import { SubscriptionTier } from "@/types";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -117,6 +116,46 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
     return "No activity";
   };
   
+  // New function to render the token usage cell
+  const renderTokenUsageCell = (user: UserTableData) => {
+    if (isLoading) {
+      return <Skeleton className="h-4 w-20" />;
+    }
+    
+    if (!user.tokenUsage && user.tokenUsage !== 0) {
+      return (
+        <span className="text-muted-foreground">No data</span>
+      );
+    }
+    
+    // Display token usage with percentage if limit is available
+    if (user.tokenUsageLimit) {
+      const usagePercentage = Math.round((user.tokenUsage / user.tokenUsageLimit) * 100);
+      const usageColor = usagePercentage > 90 ? 'text-red-500' : 
+                         usagePercentage > 70 ? 'text-amber-500' : 
+                         'text-green-500';
+      
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="flex items-center">
+              <span>{user.tokenUsage.toLocaleString()}</span>
+              <span className={`ml-2 ${usageColor}`}>({usagePercentage}%)</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{user.tokenUsage.toLocaleString()} / {user.tokenUsageLimit.toLocaleString()} tokens used this month</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    
+    // Just display the token count if no limit is available
+    return (
+      <span>{user.tokenUsage.toLocaleString()}</span>
+    );
+  };
+  
   return (
     <div className="rounded-md border">
       <Table>
@@ -128,6 +167,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
             <TableHead>Archetype</TableHead>
             <TableHead>Last Login</TableHead>
             <TableHead>Chat Activity</TableHead>
+            <TableHead>Token Usage</TableHead>
             <TableHead>Onboarded</TableHead>
             <TableHead>Actions</TableHead>
           </TableRow>
@@ -142,13 +182,14 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                 <TableCell><Skeleton className="h-4 w-10" /></TableCell>
                 <TableCell><Skeleton className="h-8 w-8 rounded-full" /></TableCell>
               </TableRow>
             ))
           ) : users.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={8} className="text-center py-6">
+              <TableCell colSpan={9} className="text-center py-6">
                 No users found
               </TableCell>
             </TableRow>
@@ -167,6 +208,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
                 <TableCell>{user.eq_archetype || "Not set"}</TableCell>
                 <TableCell>{renderLastLoginCell(user)}</TableCell>
                 <TableCell>{renderChatActivityCell(user)}</TableCell>
+                <TableCell>{renderTokenUsageCell(user)}</TableCell>
                 <TableCell>{user.onboarded ? "Yes" : "No"}</TableCell>
                 <TableCell>
                   <UserOperations 
