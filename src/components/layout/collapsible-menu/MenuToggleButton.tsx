@@ -9,7 +9,7 @@ interface MenuToggleButtonProps {
 
 export function MenuToggleButton({ isOpen }: MenuToggleButtonProps) {
   return (
-    <div className="absolute top-4 right-4 z-[100]">
+    <div className="absolute top-4 right-4 z-[100] md:right-6 lg:right-8">
       <CollapsibleTrigger asChild>
         <Button 
           variant="outline" 

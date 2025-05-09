@@ -76,7 +76,7 @@ export function AuthenticatedActions({
       )}
       
       {/* User profile - Show avatar on desktop instead of "Account" text button */}
-      <div className="mt-4 md:mt-0">
+      <div className="mt-4 md:mt-0 md:mr-12">
         {/* Mobile avatar and user info */}
         <div className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 md:hidden">
           <Avatar className="h-8 w-8">
