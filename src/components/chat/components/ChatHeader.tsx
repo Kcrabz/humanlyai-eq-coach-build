@@ -2,6 +2,7 @@
 import { ChatLeftSidebarTrigger } from "@/components/chat/sidebar/ChatLeftSidebarTrigger";
 import { ChatRightSidebarTrigger } from "@/components/chat/sidebar/ChatRightSidebarTrigger";
 import { StartNewChatButton } from "./StartNewChatButton";
+import { CoachingModeToggle } from "./CoachingModeToggle";
 
 interface ChatHeaderProps {
   hasCompletedAssessment: boolean;
@@ -17,14 +18,15 @@ export function ChatHeader({ hasCompletedAssessment, userArchetype, onStartAsses
         <h1 className="font-medium text-lg bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
           Kai | EQ Coach
         </h1>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          {hasCompletedAssessment ? `Personalized for ${userArchetype}` : "General EQ coaching available"}
-        </p>
       </div>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
+        {/* Add coaching mode toggle */}
+        <CoachingModeToggle />
+        
         {/* Add Start New Chat button */}
         <StartNewChatButton />
+        
         {/* Right sidebar trigger button */}
         <ChatRightSidebarTrigger />
       </div>
