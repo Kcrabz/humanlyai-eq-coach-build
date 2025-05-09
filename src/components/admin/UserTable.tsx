@@ -102,7 +102,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
           <Tooltip>
             <TooltipTrigger className={`flex items-center ${isFreeTier ? 'text-amber-500' : ''}`}>
               <span>{user.chat_time}</span>
-              {user.message_count > 0 && !isFreeTier && (
+              {user.message_count > 0 && (
                 <Badge variant="outline" className="ml-2 text-xs">
                   {user.message_count} msg
                 </Badge>
@@ -175,7 +175,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
                 <TableCell>{user.onboarded ? "Yes" : "No"}</TableCell>
                 <TableCell>
                   <UserOperations 
-                    user={user as any} // Type casting to fix the error
+                    user={user} 
                     onUpdateTier={onUpdateTier}
                     onUserDeleted={onUserDeleted}
                   />
