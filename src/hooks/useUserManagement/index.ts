@@ -15,7 +15,7 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     upgradeAllUsersToPremium
   } = useUserData();
   
-  // Initialize filters hook
+  // Initialize filters hook with users data
   const {
     searchTerm,
     setSearchTerm,
@@ -23,18 +23,18 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     setTierFilter,
     archetypeFilter,
     setArchetypeFilter,
-    activeFilter,
+    filteredUsers,
     resetFilters,
-  } = useUserFilters(fetchUsers, initialFilter);
+  } = useUserFilters(users);
+
+  // Track active filter for UI display
+  const [activeFilter, setActiveFilter] = useState<FilterState | null>(initialFilter || null);
 
   // Apply initial filter if provided
   const init = useCallback(async () => {
     if (initialFilter) {
-      if (initialFilter.type === 'onboarded') {
-        await fetchUsers(initialFilter.value, 'all');
-      } else if (initialFilter.type === 'chat') {
-        await fetchUsers('all', initialFilter.value);
-      }
+      setActiveFilter(initialFilter);
+      await fetchUsers();
     } else {
       await fetchUsers();
     }

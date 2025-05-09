@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserTableData } from "./types";
@@ -19,23 +20,12 @@ export const useUserData = () => {
   const { fetchUsersWithChatActivity } = useChatUserIds();
   
   // Fetch all users
-  const fetchUsers = useCallback(async (onboardedFilter: string = "all", chatFilter: string = "all") => {
+  const fetchUsers = useCallback(async (onboardedFilter: string = "all") => {
     setIsLoading(true);
     
     try {
-      console.log(`Fetching users with filters - onboarded: ${onboardedFilter}, chat: ${chatFilter}`);
+      console.log(`Fetching users with filters - onboarded: ${onboardedFilter}`);
       
-      // Only fetch users with chat activity if chat filter is active
-      let chatUserIds: string[] = [];
-      if (chatFilter === "true") {
-        chatUserIds = await fetchUsersWithChatActivity();
-        if (chatUserIds.length === 0) {
-          setUsers([]);
-          setIsLoading(false);
-          return;
-        }
-      }
-
       // Build query based on filters
       let query = supabase.from('profiles').select('*');
 
@@ -57,11 +47,6 @@ export const useUserData = () => {
         setUsers([]);
         setIsLoading(false);
         return;
-      }
-
-      // Filter by chat activity if needed
-      if (chatFilter === "true" && chatUserIds.length > 0) {
-        data = data.filter(profile => chatUserIds.includes(profile.id));
       }
       
       // Collect all user IDs to fetch emails
@@ -169,6 +154,6 @@ export const useUserData = () => {
     fetchUsers,
     handleUpdateTier,
     handleUserDeleted,
-    upgradeAllUsersToPremium // Expose the new function
+    upgradeAllUsersToPremium
   };
 };
