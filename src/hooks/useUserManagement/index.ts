@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,6 +88,7 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     }
   }, []);
   
+  // Fixed fetchUsers function to prevent infinite loop
   const fetchUsers = useCallback(async (onboardedValue = "all") => {
     if (!isAdmin) return;
     
@@ -162,8 +162,8 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin, searchTerm, tierFilter, archetypeFilter, onboardedFilter, tokenUsageData, userData, lastLogins, chatActivity, userEmails, chatUserIds]);
-
+  }, [isAdmin, searchTerm, tierFilter, archetypeFilter, userData, lastLogins, chatActivity]); // Removed tokenUsageData dependency
+  
   // Fetch token usage data from the usage_logs table
   const fetchTokenUsageData = useCallback(async (userIds: string[]) => {
     if (!userIds.length) return;
@@ -236,11 +236,17 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     }
   }, []);
 
-  // Initial load and the effect to respond to filter changes
+  // Fixed useEffect to prevent infinite loops
   useEffect(() => {
+    let isMounted = true;
+    
     if (isAdmin) {
       fetchUsers(onboardedFilter);
     }
+    
+    return () => {
+      isMounted = false;
+    };
   }, [fetchUsers, isAdmin, onboardedFilter]);
 
   // Handle upgrading all users to premium

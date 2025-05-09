@@ -1,5 +1,5 @@
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useEffect } from "react";
 import { ActiveFilter } from "./ActiveFilter";
 import { UserFilters } from "./UserFilters";
 import { UserTable } from "./UserTable";
@@ -34,6 +34,16 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
 
   const [exportLoading, setExportLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
+
+  // Initial data load tracking
+  const [initialLoadDone, setInitialLoadDone] = useState(false);
+
+  // Track initial load
+  useEffect(() => {
+    if (!initialLoadDone && !isLoading) {
+      setInitialLoadDone(true);
+    }
+  }, [isLoading, initialLoadDone]);
 
   // Handle reset filter including parent component notification
   const handleResetFilters = useCallback(() => {
@@ -172,7 +182,7 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
       {/* User table */}
       <UserTable 
         users={users}
-        isLoading={isLoading}
+        isLoading={!initialLoadDone || isLoading}
         onUpdateTier={handleUpdateTier}
         onUserDeleted={handleUserDeleted}
       />
