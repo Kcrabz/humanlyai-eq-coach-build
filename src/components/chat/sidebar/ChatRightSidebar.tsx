@@ -18,6 +18,7 @@ import { UserAccountLinks } from "./right/UserAccountLinks";
 import { UserEQArchetype } from "./right/UserEQArchetype";
 import { UserBio } from "./right/UserBio";
 import { LogoutButton } from "./right/LogoutButton";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Sidebar trigger button for the right sidebar
 export function ChatRightSidebarTrigger() {
@@ -42,7 +43,8 @@ export function ChatRightSidebarTrigger() {
 export function ChatRightSidebar() {
   const { user } = useAuth();
   // Specifically use the right sidebar context
-  const { open, setOpen, isMobile } = useSidebar("right");
+  const { open, setOpen } = useSidebar("right");
+  const isMobile = useIsMobile();
   
   if (!user) return null;
   
@@ -54,16 +56,17 @@ export function ChatRightSidebar() {
       className={`user-sidebar ${open ? 'w-64' : 'w-0'}`}
       style={{ width: open ? '16rem' : '0', minWidth: open ? '16rem' : '0' }}
       data-state={open ? "open" : "closed"}
+      data-mobile={isMobile ? "true" : "false"}
     >
       <SidebarHeader className="p-4">
         <UserProfile />
       </SidebarHeader>
       
       <SidebarContent className="p-3">
-        {/* Main Navigation Links */}
-        <MainNavigationLinks />
+        {/* Only show main navigation links on mobile, since desktop has the CollapsibleMenu */}
+        {isMobile && <MainNavigationLinks />}
         
-        <Separator className="my-3" />
+        {isMobile && <Separator className="my-3" />}
         
         {/* User Profile Links */}
         <UserAccountLinks />

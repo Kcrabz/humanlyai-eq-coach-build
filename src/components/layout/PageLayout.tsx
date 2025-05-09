@@ -15,13 +15,12 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
   const location = useLocation();
   const isMobile = useIsMobile();
   
-  // Always show CollapsibleMenu on mobile chat page
+  // On chat page, the sidebar handle the menu separately
   const isOnChatPage = location.pathname === "/chat";
   
   // Don't show menu on onboarding pages
-  // On chat page, only show menu on mobile
-  const shouldShowMenu = !location.pathname.includes("/onboarding") && 
-                         (isMobile ? true : !isOnChatPage);
+  // On chat page, don't show menu as it's handled by the chat sidebar
+  const shouldShowMenu = !location.pathname.includes("/onboarding") && !isOnChatPage;
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">

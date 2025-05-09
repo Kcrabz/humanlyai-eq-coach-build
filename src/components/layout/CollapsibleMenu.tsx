@@ -28,6 +28,12 @@ export function CollapsibleMenu() {
   const isOnDashboardPage = location.pathname === "/dashboard";
   const [isOpen, setIsOpen] = useState(false);
 
+  // Don't render this menu on the chat page on mobile devices
+  // as the chat page has its own right sidebar for mobile
+  if (isMobile && isOnChatPage) {
+    return null;
+  }
+
   // Handle menu item click - closes the menu
   const handleMenuItemClick = () => {
     setIsOpen(false);
