@@ -38,8 +38,10 @@ export const DailyChallengeCard = ({ onChallengeClick }: DailyChallengeCardProps
         ) : todaysChallenge ? (
           <div className="space-y-4">
             <div>
-              <h3 className="text-lg font-medium mb-1">{todaysChallenge.title}</h3>
-              <p className="text-sm text-muted-foreground">{todaysChallenge.description}</p>
+              <h3 className="text-lg font-medium mb-2">{todaysChallenge.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {todaysChallenge.description}
+              </p>
             </div>
             <div className="flex flex-col gap-2">
               <Button 

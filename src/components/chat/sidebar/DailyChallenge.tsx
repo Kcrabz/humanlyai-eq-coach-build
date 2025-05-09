@@ -83,7 +83,7 @@ export function DailyChallenge({ standaloneMode = false, onChallengeClick }: Dai
             <Check className="h-3 w-3 text-green-600" />
           )}
         </div>
-        <p className="text-xs text-left text-muted-foreground">
+        <p className="text-xs text-left text-muted-foreground line-clamp-2 min-h-[2.5rem]">
           {todaysChallenge.description}
         </p>
       </Button>
