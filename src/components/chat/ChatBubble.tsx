@@ -16,7 +16,7 @@ interface ChatBubbleProps {
 export function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === "user";
   const isEmpty = !message.content || message.content.trim() === "";
-  const isLoading = isEmpty && !isUser;
+  const isLoading = isEmpty && !isUser && !message.content;
   const isMobile = useIsMobile();
   
   // For debugging - log incomplete messages
@@ -43,7 +43,7 @@ export function ChatBubble({ message }: ChatBubbleProps) {
         )}
       >
         {isLoading ? (
-          <LoadingIndicator />
+          <TypingIndicator />
         ) : (
           <MessageContent content={message.content} isUser={isUser} />
         )}
@@ -51,3 +51,6 @@ export function ChatBubble({ message }: ChatBubbleProps) {
     </div>
   );
 }
+
+// Import and use the TypingIndicator component directly
+import { TypingIndicator } from "./components/TypingIndicator";
