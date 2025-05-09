@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { UserTableData } from "./types";
@@ -139,11 +138,37 @@ export const useUserData = () => {
     setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
   };
 
+  // New function to update all users to Premium tier
+  const upgradeAllUsersToPremium = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Update all profiles to premium tier
+      const { error } = await supabase
+        .from('profiles')
+        .update({ subscription_tier: 'premium' })
+        .not('id', 'is', null);
+
+      if (error) throw error;
+      
+      // Refresh user list after the update
+      await fetchUsers();
+      
+      toast.success("All users have been upgraded to Premium");
+    } catch (error) {
+      console.error("Error upgrading users:", error);
+      toast.error("Failed to upgrade all users");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return { 
     users, 
     isLoading, 
     fetchUsers,
     handleUpdateTier,
-    handleUserDeleted
+    handleUserDeleted,
+    upgradeAllUsersToPremium // Expose the new function
   };
 };

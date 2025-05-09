@@ -5,7 +5,7 @@ import { UserFilters } from "./UserFilters";
 import { UserTable } from "./UserTable";
 import { useUserManagement } from "@/hooks/useUserManagement";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -28,10 +28,12 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
     resetFilters,
     fetchUsers,
     handleUpdateTier,
-    handleUserDeleted
+    handleUserDeleted,
+    upgradeAllUsersToPremium
   } = useUserManagement(initialFilter);
 
   const [exportLoading, setExportLoading] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
 
   // Handle reset filter including parent component notification
   const handleResetFilters = useCallback(() => {
@@ -115,6 +117,16 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
     }
   }, [searchTerm, tierFilter, archetypeFilter]);
 
+  // Handle the upgrade all users button click
+  const handleUpgradeAllUsers = useCallback(async () => {
+    try {
+      setUpgradeLoading(true);
+      await upgradeAllUsersToPremium();
+    } finally {
+      setUpgradeLoading(false);
+    }
+  }, [upgradeAllUsersToPremium]);
+
   return (
     <div className="space-y-6">
       {/* Active filter indicator */}
@@ -134,15 +146,27 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
           />
         </div>
         
-        <Button 
-          variant="outline" 
-          className="whitespace-nowrap"
-          disabled={exportLoading}
-          onClick={handleExportCsv}
-        >
-          <Download className="h-4 w-4 mr-2" />
-          {exportLoading ? "Exporting..." : "Export CSV"}
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            className="whitespace-nowrap flex items-center"
+            disabled={upgradeLoading}
+            onClick={handleUpgradeAllUsers}
+          >
+            <Star className="h-4 w-4 mr-2 text-amber-500" />
+            {upgradeLoading ? "Upgrading..." : "Upgrade All to Premium"}
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            className="whitespace-nowrap"
+            disabled={exportLoading}
+            onClick={handleExportCsv}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            {exportLoading ? "Exporting..." : "Export CSV"}
+          </Button>
+        </div>
       </div>
 
       {/* User table */}
