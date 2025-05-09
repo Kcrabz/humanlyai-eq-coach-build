@@ -7,7 +7,7 @@ export function AssistantAvatar() {
     <Avatar className="h-8 w-8">
       <AvatarImage src="/images/kai-avatar.png" alt="Kai" />
       <AvatarFallback className="bg-humanly-green text-white">
-        Kai
+        K
       </AvatarFallback>
     </Avatar>
   );
