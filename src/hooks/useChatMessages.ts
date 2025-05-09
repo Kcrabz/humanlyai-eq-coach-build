@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { ChatMessage } from "@/types";
 import { useAuth } from "@/context/AuthContext";
@@ -92,27 +93,30 @@ export const useChatMessages = () => {
         
       localStorage.setItem(storageKey, JSON.stringify(messages));
       
+      // Filter out messages with null content before saving to database
+      const validMessages = messages.filter(msg => msg.content !== null);
+      
       // For ALL users, sync the latest message to the database
-      if (messages.length > 0) {
-        const lastMessage = messages[messages.length - 1];
+      if (validMessages.length > 0) {
+        const lastMessage = validMessages[validMessages.length - 1];
         
-        // Only insert if message doesn't already have a DB ID (UUID format)
-        if (!lastMessage.id.includes('-')) return;
-        
-        supabase
-          .from('chat_messages')
-          .insert({
-            id: lastMessage.id,
-            content: lastMessage.content,
-            role: lastMessage.role,
-            user_id: user.id,
-            created_at: lastMessage.created_at
-          })
-          .then(({ error }) => {
-            if (error) {
-              console.error("Error saving chat message to database:", error);
-            }
-          });
+        // Only insert if it's a valid UUID format
+        if (lastMessage.id.includes('-')) {
+          supabase
+            .from('chat_messages')
+            .insert({
+              id: lastMessage.id,
+              content: lastMessage.content,
+              role: lastMessage.role,
+              user_id: user.id,
+              created_at: lastMessage.created_at
+            })
+            .then(({ error }) => {
+              if (error) {
+                console.error("Error saving chat message to database:", error);
+              }
+            });
+        }
       }
     }, 1000);
     
@@ -152,7 +156,14 @@ export const useChatMessages = () => {
   }, [createId]);
 
   // Function to update an existing message (for streaming) - memoized
-  const updateAssistantMessage = useCallback((id: string, content: string): void => {
+  const updateAssistantMessage = useCallback((id: string, content: string | null): void => {
+    // If content is null, remove the message entirely
+    if (content === null) {
+      console.log(`Removing message ${id} with null content`);
+      setMessages((prev) => prev.filter(message => message.id !== id));
+      return;
+    }
+    
     setMessages((prev) => 
       prev.map((message) => 
         message.id === id 

@@ -18,6 +18,8 @@ export function ChatBubble({ message }: ChatBubbleProps) {
   
   // State to control typing indicator visibility
   const [showTypingIndicator, setShowTypingIndicator] = useState(false);
+  // State to control if we should render the bubble at all
+  const [shouldRenderBubble, setShouldRenderBubble] = useState(true);
   
   // Refs for managing timers and tracking content changes
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -51,18 +53,21 @@ export function ChatBubble({ message }: ChatBubbleProps) {
       if (!hasContent) {
         console.log(`Showing typing indicator for message: ${message.id}`);
         setShowTypingIndicator(true);
+        setShouldRenderBubble(true);
         
-        // Set safety timer to force remove typing indicator after max time
+        // Set safety timer to force hide empty bubbles after max time
         if (timerRef.current) clearTimeout(timerRef.current);
         
         timerRef.current = setTimeout(() => {
-          console.log(`Safety timeout: Force removing typing indicator for message ${message.id}`);
+          console.log(`Safety timeout: Hiding empty bubble for message ${message.id}`);
           setShowTypingIndicator(false);
-        }, 8000);
+          setShouldRenderBubble(false);
+        }, 5000);
       } else {
-        // Content is present, hide typing indicator
+        // Content is present, hide typing indicator and show bubble
         console.log(`Content received for message ${message.id}, removing typing indicator`);
         setShowTypingIndicator(false);
+        setShouldRenderBubble(true);
         
         // Clean up any pending timer
         if (timerRef.current) {
@@ -75,6 +80,16 @@ export function ChatBubble({ message }: ChatBubbleProps) {
     // On the first render, don't consider it an update
     if (initialRenderRef.current) {
       initialRenderRef.current = false;
+      
+      // For assistant messages with empty content on initial render,
+      // start the safety timer immediately
+      if (message.role === "assistant" && !hasContent) {
+        timerRef.current = setTimeout(() => {
+          console.log(`Initial render timeout: Hiding empty bubble for message ${message.id}`);
+          setShowTypingIndicator(false);
+          setShouldRenderBubble(false);
+        }, 5000);
+      }
     }
   }, [message, message.content, hasContent]);
   
@@ -86,6 +101,12 @@ export function ChatBubble({ message }: ChatBubbleProps) {
       }
     };
   }, []);
+
+  // Don't render anything if we shouldn't show the bubble
+  if (message.role === "assistant" && !shouldRenderBubble && !hasContent) {
+    console.log(`Not rendering bubble for empty message: ${message.id}`);
+    return null;
+  }
 
   return (
     <div

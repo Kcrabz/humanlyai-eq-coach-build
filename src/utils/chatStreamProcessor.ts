@@ -111,11 +111,12 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
     
     console.log(`Stream completed for message ${assistantMessageId}. Updated content ${messageUpdatedCount} times. Content length: ${fullResponse.length}`);
     
-    // CRITICAL: Always ensure we have content to force removal of typing indicator
-    if (fullResponse === "" || messageUpdatedCount === 0) {
-      console.log(`Stream completed with empty response - ensuring typing indicator is removed by setting non-empty content`);
-      // Use a visible space character to ensure the typing indicator is removed
-      updateAssistantMessage(assistantMessageId, " ");
+    // CRITICAL: If after all processing we still have no real content, 
+    // delete the message by sending null content
+    if (!fullResponse.trim() || messageUpdatedCount === 0) {
+      console.log(`Stream completed with empty response - removing empty bubble by sending null`);
+      // Use null to signal that the message should be removed completely
+      updateAssistantMessage(assistantMessageId, null);
     }
     
     // Message completed successfully
@@ -126,9 +127,9 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
   } catch (error) {
     console.error("Error in stream handler:", error);
     
-    // Even on error, ensure we remove the typing indicator by using a space
-    console.log(`Error in stream handler, ensuring typing indicator is removed by setting non-empty content`);
-    updateAssistantMessage(assistantMessageId, " Error during message processing.");
+    // On error, remove the bubble completely
+    console.log(`Error in stream handler, removing empty bubble`);
+    updateAssistantMessage(assistantMessageId, null);
     
     setLastSentMessage(null);
     
