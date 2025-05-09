@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { generateAvatar } from "@/lib/utils";
-import { Shield, Share2 } from "lucide-react";
 import { User } from "@/types";
 import { MobileUserOptions } from "./MobileUserOptions";
 
@@ -118,21 +117,19 @@ export function AuthenticatedActions({
                 <Link to="/subscription" onClick={handleMenuItemClick}>Subscription</Link>
               </DropdownMenuItem>
               
-              {/* Admin link - only visible for admin users */}
+              {/* Admin link - only visible for admin users - removed icon */}
               {isAdmin && (
                 <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
-                  <Link to="/admin" onClick={handleMenuItemClick} className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    <span>Admin Dashboard</span>
+                  <Link to="/admin" onClick={handleMenuItemClick}>
+                    Admin Dashboard
                   </Link>
                 </DropdownMenuItem>
               )}
               
-              {/* Refer a Friend link */}
+              {/* Refer a Friend link - removed icon */}
               <DropdownMenuItem asChild className="rounded-md transition-colors hover:bg-humanly-pastel-mint/50 cursor-pointer">
-                <Link to="/refer" onClick={handleMenuItemClick} className="flex items-center gap-2">
-                  <Share2 className="h-4 w-4" />
-                  <span>Refer a Friend</span>
+                <Link to="/refer" onClick={handleMenuItemClick}>
+                  Refer a Friend
                 </Link>
               </DropdownMenuItem>
               
