@@ -4,18 +4,20 @@ import { Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 
 export function ChatRightSidebarTrigger() {
-  const { open, setOpen } = useSidebar("right");
+  // Specifically use the right sidebar context
+  const { toggleSidebar, open } = useSidebar("right");
   
   return (
     <Button
-      variant="outline"
-      size="icon"
-      onClick={() => setOpen(!open)}
-      className="hover:bg-humanly-pastel-lavender/20 hover:text-humanly-indigo"
-      aria-label={open ? "Close user menu" : "Open user menu"}
-      title="Access dashboard and settings"
+      variant="ghost" 
+      size="icon" 
+      className={`h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300 ${
+        open ? 'bg-humanly-pastel-lavender/50' : ''
+      }`}
+      aria-label="Toggle User Menu"
+      onClick={() => toggleSidebar()}
     >
-      <Menu className="h-4 w-4" />
+      <Menu className="h-5 w-5" />
     </Button>
   );
 }
