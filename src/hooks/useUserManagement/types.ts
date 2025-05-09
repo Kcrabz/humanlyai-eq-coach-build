@@ -17,3 +17,10 @@ export interface UserTableData {
   tokenUsage?: number;
   tokenUsageLimit?: number;
 }
+
+export interface UserFilters {
+  searchTerm: string;
+  tierFilter: string;
+  archetypeFilter: string;
+  onboardedFilter?: string;
+}

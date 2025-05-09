@@ -31,6 +31,16 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
     );
   }
 
+  // Transform tier counts to array format required by SubscriptionPieChart
+  const subscriptionData = stats?.tierCounts
+    ? Object.entries(stats.tierCounts).map(([name, value]) => ({ name, value }))
+    : [];
+
+  // Transform archetype counts to array format required by ArchetypeBarChart
+  const archetypeData = stats?.archetypeCounts
+    ? Object.entries(stats.archetypeCounts).map(([name, value]) => ({ name, value }))
+    : [];
+
   return (
     <div className="space-y-6">
       <StatsOverview 
@@ -61,8 +71,8 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
           </CardHeader>
           <CardContent>
             <SubscriptionPieChart 
-              data={stats?.tierCounts || []}
-              onSegmentClick={(tier) => handleFilterClick('tier', tier)}
+              pieData={subscriptionData} 
+              onPieElementClick={(tier) => handleFilterClick('tier', tier)}
             />
           </CardContent>
         </Card>
@@ -82,15 +92,15 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
               
               <TabsContent value="subscriptions">
                 <SubscriptionPieChart 
-                  data={stats?.tierCounts || []}
-                  onSegmentClick={(tier) => handleFilterClick('tier', tier)}
+                  pieData={subscriptionData}
+                  onPieElementClick={(tier) => handleFilterClick('tier', tier)}
                 />
               </TabsContent>
               
               <TabsContent value="archetypes">
                 <ArchetypeBarChart 
-                  data={stats?.archetypeCounts || []}
-                  onBarClick={(archetype) => handleFilterClick('archetype', archetype)}
+                  barData={archetypeData}
+                  onBarElementClick={(archetype) => handleFilterClick('archetype', archetype)}
                 />
               </TabsContent>
             </Tabs>

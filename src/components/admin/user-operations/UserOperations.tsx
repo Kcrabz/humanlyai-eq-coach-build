@@ -14,7 +14,7 @@ export const UserOperations = ({ user, onUpdateTier, onUserDeleted }: UserOperat
   const [isUpdating, setIsUpdating] = useState(false);
 
   const handleUpdateTier = async (tier: SubscriptionTier) => {
-    if (tier === user.subscription_tier) return;
+    if (!user.subscription_tier || tier === user.subscription_tier as SubscriptionTier) return;
     setIsUpdating(true);
     try {
       await onUpdateTier(user.id, tier);
@@ -26,7 +26,7 @@ export const UserOperations = ({ user, onUpdateTier, onUserDeleted }: UserOperat
   return (
     <>
       <UserActionsMenu
-        userSubscriptionTier={user.subscription_tier}
+        userSubscriptionTier={user.subscription_tier as SubscriptionTier}
         isUpdating={isUpdating}
         onViewDetails={() => setShowUserDetails(true)}
         onResetPassword={() => setIsResetDialogOpen(true)}

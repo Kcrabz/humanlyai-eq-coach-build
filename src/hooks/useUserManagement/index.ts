@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,11 +18,12 @@ export const useUserManagement = (initialFilter?: FilterState) => {
   const [tokenUsageData, setTokenUsageData] = useState<Record<string, { usage: number; limit: number }>>({});
   const { isAdmin } = useAdminCheck();
   
-  const { getUserData } = useUserData();
-  const { getLastLogins } = useLastLogins();
-  const { getChatActivity } = useChatActivity();
-  const { userEmails } = useUserEmails();
-  const { chatUserIds } = useChatUserIds();
+  // Use the hooks with correct function names
+  const userData = useUserData();
+  const lastLogins = useLastLogins();
+  const chatActivity = useChatActivity();
+  const userEmails = useUserEmails();
+  const chatUserIds = useChatUserIds();
   
   const { 
     searchTerm, setSearchTerm, 
@@ -93,7 +95,7 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     setIsLoading(true);
     try {
       // First, get all user IDs
-      const { userIds, emailData } = await getUserData();
+      const { userIds, emailData } = await userData.fetchUserData();
       
       if (userIds.length === 0) {
         setUsers([]);
@@ -105,10 +107,10 @@ export const useUserManagement = (initialFilter?: FilterState) => {
       await fetchTokenUsageData(userIds);
       
       // Fetch last login data
-      const userLastLogins = await getLastLogins(userIds);
+      const userLastLogins = await lastLogins.fetchLastLogins(userIds);
       
       // Fetch user activity data
-      const userChatActivity = await getChatActivity(userIds);
+      const userChatActivity = await chatActivity.fetchChatActivity(userIds);
       
       // Combine all data to create the final user list
       let userList = emailData.map(user => {
@@ -122,9 +124,9 @@ export const useUserManagement = (initialFilter?: FilterState) => {
           subscription_tier: user.subscription_tier || "free",
           eq_archetype: user.eq_archetype || "",
           onboarded: user.onboarded || false,
-          last_login: userLastLogins[userId] || "No login data",
-          chat_time: userChatActivity[userId]?.time || "",
-          message_count: userChatActivity[userId]?.messages || 0,
+          last_login: userLastLogins.get(userId) || "No login data",
+          chat_time: userChatActivity.get(userId)?.chatTime || "",
+          message_count: userChatActivity.get(userId)?.count || 0,
           tokenUsage: tokenData.usage,
           tokenUsageLimit: tokenData.limit
         };
@@ -138,16 +140,16 @@ export const useUserManagement = (initialFilter?: FilterState) => {
         );
       }
       
-      if (tierFilter) {
+      if (tierFilter && tierFilter !== "all") {
         userList = userList.filter(user => user.subscription_tier === tierFilter);
       }
       
-      if (archetypeFilter) {
+      if (archetypeFilter && archetypeFilter !== "all") {
         userList = userList.filter(user => user.eq_archetype === archetypeFilter);
       }
       
       if (onboardedValue !== "all") {
-        const onboardedStatus = onboardedValue === "onboarded";
+        const onboardedStatus = onboardedValue === "true";
         userList = userList.filter(user => user.onboarded === onboardedStatus);
       }
       
@@ -160,7 +162,7 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin, searchTerm, tierFilter, archetypeFilter, onboardedFilter, tokenUsageData, getLastLogins, getChatActivity, getUserData]);
+  }, [isAdmin, searchTerm, tierFilter, archetypeFilter, onboardedFilter, tokenUsageData, userData, lastLogins, chatActivity, userEmails, chatUserIds]);
 
   // Fetch token usage data from the usage_logs table
   const fetchTokenUsageData = useCallback(async (userIds: string[]) => {
