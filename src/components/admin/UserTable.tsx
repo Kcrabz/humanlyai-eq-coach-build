@@ -95,24 +95,19 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
     }
     
     if (user.chat_time) {
-      const isFreeTier = user.chat_time.includes('free tier');
-      
       return (
         <TooltipProvider>
           <Tooltip>
-            <TooltipTrigger className={`flex items-center ${isFreeTier ? 'text-amber-500' : ''}`}>
+            <TooltipTrigger className="flex items-center">
               <span>{user.chat_time}</span>
               {user.message_count > 0 && (
                 <Badge variant="outline" className="ml-2 text-xs">
                   {user.message_count} msg
                 </Badge>
               )}
-              {isFreeTier && <InfoIcon className="ml-1 h-3 w-3" />}
             </TooltipTrigger>
             <TooltipContent>
-              {isFreeTier ? 
-                <p>Free tier users don't have chat data stored in the database</p> : 
-                <p>Total time spent chatting, based on {user.message_count} messages</p>}
+              <p>Total time spent chatting, based on {user.message_count || 0} messages</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -175,7 +170,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
                 <TableCell>{user.onboarded ? "Yes" : "No"}</TableCell>
                 <TableCell>
                   <UserOperations 
-                    user={user} 
+                    user={user}
                     onUpdateTier={onUpdateTier}
                     onUserDeleted={onUserDeleted}
                   />

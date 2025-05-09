@@ -78,10 +78,10 @@ export const useUserData = () => {
       // Fetch emails from the admin edge function
       const emailMap = await fetchUserEmails(userIds);
       
-      // Fetch chat activity data - pass actual user IDs to the function
+      // Fetch chat activity data
       const chatActivityMap = await fetchChatActivity(userIds);
       
-      // Fetch last login data - pass actual user IDs to the function
+      // Fetch last login data
       const lastLoginMap = await fetchLastLogins(userIds);
       
       // Add emails and activity data to the profiles
@@ -92,7 +92,7 @@ export const useUserData = () => {
           ...profile,
           email: emailMap.get(profile.id) || 'Unknown',
           last_login: lastLoginMap.get(profile.id) || 'Never',
-          chat_time: chatActivity?.chatTime || null,
+          chat_time: chatActivity?.chatTime || 'No activity',
           message_count: chatActivity?.count || 0
         };
       }) as UserTableData[];

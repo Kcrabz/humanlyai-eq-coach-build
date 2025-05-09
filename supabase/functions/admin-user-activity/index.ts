@@ -185,39 +185,43 @@ serve(async (req) => {
       });
     }
 
-    // Fetch chat activity data - try chat_messages first, then fall back to chat_logs if needed
-    let chatData = [];
+    // Fetch chat activity data from both chat_messages and chat_logs
+    const chatData = [];
+    
+    // First try fetching from chat_messages
     const { data: messagesData, error: messagesError } = await supabaseAdmin
       .from('chat_messages')
       .select('user_id, created_at')
       .in('user_id', userIds);
       
-    if (messagesError) {
-      console.error('Error fetching chat message data:', messagesError);
-      
-      // Fall back to chat_logs
-      const { data: logsData, error: logsError } = await supabaseAdmin
-        .from('chat_logs')
-        .select('user_id, created_at')
-        .in('user_id', userIds);
-        
-      if (logsError) {
-        console.error('Error fetching chat logs data:', logsError);
-      } else {
-        chatData = logsData || [];
-      }
+    if (!messagesError && messagesData) {
+      chatData.push(...messagesData);
     } else {
-      chatData = messagesData || [];
+      console.error('Error fetching chat message data:', messagesError);
+    }
+    
+    // Also fetch from chat_logs to ensure we get all chat activity
+    const { data: logsData, error: logsError } = await supabaseAdmin
+      .from('chat_logs')
+      .select('user_id, created_at')
+      .in('user_id', userIds);
+      
+    if (!logsError && logsData) {
+      chatData.push(...logsData);
+    } else {
+      console.error('Error fetching chat logs data:', logsError);
     }
 
     // Process chat data to calculate activity metrics
     const chatActivityMap = new Map();
     
-    if (chatData && chatData.length > 0) {
+    if (chatData.length > 0) {
       // Group messages by user
       const messagesByUser = {};
       chatData.forEach(message => {
         const userId = message.user_id;
+        if (!userId) return; // Skip if user_id is null
+        
         if (!messagesByUser[userId]) {
           messagesByUser[userId] = [];
         }
@@ -273,10 +277,9 @@ serve(async (req) => {
     // Fill in empty data for users with no chat activity
     userIds.forEach(userId => {
       if (!chatActivityMap.has(userId)) {
-        const tier = subscriptionTiers.get(userId);
         chatActivityMap.set(userId, {
           count: 0,
-          chatTime: tier === 'free' ? 'No data (free tier)' : 'No activity'
+          chatTime: 'No activity'
         });
       }
     });
