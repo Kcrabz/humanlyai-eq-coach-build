@@ -29,19 +29,60 @@ export async function updateUsageTracking(
   tokensUsed: number
 ) {
   try {
-    // Log usage
-    const { data: usageData, error: usageError } = await supabase
-      .from('usage_logs')
-      .insert({
-        user_id: userId,
-        month_year: monthYear,
-        tokens_used: tokensUsed,
-        service: 'chat'
-      })
-      .select('id');
+    console.log(`Updating usage tracking for user ${userId}: ${tokensUsed} tokens`);
     
-    if (usageError) {
-      console.error("Error logging usage:", usageError);
+    // First check if we have an entry for this month
+    const { data: existingEntry, error: checkError } = await supabase
+      .from('usage_logs')
+      .select('token_count')
+      .eq('user_id', userId)
+      .eq('month_year', monthYear)
+      .maybeSingle();
+    
+    let usageData;
+    
+    if (checkError) {
+      console.error("Error checking existing usage entry:", checkError);
+    }
+    
+    // If entry exists, update it, otherwise insert new
+    if (existingEntry) {
+      const newTotal = (existingEntry.token_count || 0) + tokensUsed;
+      console.log(`Updating existing entry: ${existingEntry.token_count} + ${tokensUsed} = ${newTotal}`);
+      
+      const { data, error } = await supabase
+        .from('usage_logs')
+        .update({ 
+          token_count: newTotal,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', userId)
+        .eq('month_year', monthYear)
+        .select('id');
+        
+      if (error) {
+        console.error("Error updating usage_logs:", error);
+      }
+      
+      usageData = data;
+    } else {
+      // Log usage as new entry
+      console.log(`Creating new usage entry: ${tokensUsed} tokens`);
+      const { data, error } = await supabase
+        .from('usage_logs')
+        .insert({
+          user_id: userId,
+          month_year: monthYear,
+          token_count: tokensUsed,
+          service: 'chat'
+        })
+        .select('id');
+      
+      if (error) {
+        console.error("Error logging usage:", error);
+      }
+      
+      usageData = data;
     }
     
     // Update user streaks if premium user

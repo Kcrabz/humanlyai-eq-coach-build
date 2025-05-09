@@ -83,41 +83,46 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
     // Calculate token usage
     const usage = calculateTokenUsage(messages, responseText);
     
-    // Update usage tracking in database
+    // Track token usage even for free users (but don't count against limits)
     const newUsage = currentUsage + usage.totalTokens;
+    console.log(`Tracking token usage: ${currentUsage} + ${usage.totalTokens} = ${newUsage}`);
+    
+    // Update usage tracking in database even for free users
+    // This ensures we have consistent usage data for all user types
     const { error: usageError } = await supabaseClient
       .from("usage_logs")
       .upsert({
         user_id: user.id,
         month_year: monthYear,
-        tokens_used: newUsage,
+        token_count: newUsage,
         updated_at: new Date().toISOString()
       });
     
     if (usageError) {
       console.error("Error updating usage:", usageError);
+    } else {
+      console.log(`Successfully updated usage for user ${user.id}`);
     }
     
-    // Store messages in database for premium users
-    if (effectiveSubscriptionTier === 'premium') {
-      const { error: msgError } = await supabaseClient
-        .from("chat_messages")
-        .insert([
-          {
-            user_id: user.id,
-            content: userMessage,
-            role: 'user',
-          },
-          {
-            user_id: user.id,
-            content: responseText,
-            role: 'assistant',
-          }
-        ]);
-      
-      if (msgError) {
-        console.error("Error storing messages:", msgError);
-      }
+    // Store messages in database for all users
+    // This helps us track message history regardless of subscription tier
+    const { error: msgError } = await supabaseClient
+      .from("chat_messages")
+      .insert([
+        {
+          user_id: user.id,
+          content: userMessage,
+          role: 'user',
+        },
+        {
+          user_id: user.id,
+          content: responseText,
+          role: 'assistant',
+        }
+      ]);
+    
+    if (msgError) {
+      console.error("Error storing messages:", msgError);
     }
     
     // Return the response

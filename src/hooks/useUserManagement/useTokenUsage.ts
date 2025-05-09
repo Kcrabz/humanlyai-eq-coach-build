@@ -6,7 +6,7 @@ import { toast } from "sonner";
 export const useTokenUsage = () => {
   const [tokenUsageData, setTokenUsageData] = useState<Record<string, { usage: number; limit: number }>>({});
   
-  // Fetch token usage data with better error handling
+  // Fetch token usage data with better error handling and timezone awareness
   const fetchTokenUsageData = async (userIds: string[]) => {
     if (!userIds.length) return {};
     
@@ -17,6 +17,13 @@ export const useTokenUsage = () => {
       const currentDate = new Date();
       const currentMonthYear = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
       
+      console.log(`Fetching token usage for month: ${currentMonthYear}`);
+      
+      // Initialize all users with zero usage to ensure everyone has a record
+      userIds.forEach(id => {
+        usageMap[id] = { usage: 0, limit: 0 };
+      });
+      
       // Fetch token usage for the current month
       const { data: usageData, error: usageError } = await supabase
         .from('usage_logs')
@@ -26,17 +33,16 @@ export const useTokenUsage = () => {
       
       if (usageError) {
         console.error("Error fetching token usage:", usageError);
-        return usageMap; // Return empty map on error
-      }
-      
-      // Calculate total usage per user
-      if (usageData) {
+      } else if (usageData) {
+        // Calculate total usage per user
         usageData.forEach(log => {
           if (!usageMap[log.user_id]) {
             usageMap[log.user_id] = { usage: 0, limit: 0 };
           }
           usageMap[log.user_id].usage += log.token_count || 0;
         });
+        
+        console.log(`Found token usage records for ${usageData.length} entries`);
       }
       
       // Now get the users' subscription tiers to determine their limits
@@ -47,11 +53,8 @@ export const useTokenUsage = () => {
       
       if (profilesError) {
         console.error("Error fetching profile tiers:", profilesError);
-        return usageMap; // Return partial map with just usage data
-      }
-      
-      // Set limits based on subscription tier
-      if (profiles) {
+      } else if (profiles) {
+        // Set limits based on subscription tier
         profiles.forEach(profile => {
           if (!usageMap[profile.id]) {
             usageMap[profile.id] = { usage: 0, limit: 0 };

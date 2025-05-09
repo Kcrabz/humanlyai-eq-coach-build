@@ -21,8 +21,13 @@ export const ChatActivityCell = ({ user }: UserTableCellProps) => {
               </Badge>
             )}
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className="max-w-xs">
             <p>Total time spent chatting, based on {user.message_count || 0} messages</p>
+            {user.message_count > 0 && user.tokenUsage === 0 && (
+              <p className="text-amber-500 text-xs mt-1">
+                User has chat activity but no token usage logged for this month
+              </p>
+            )}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

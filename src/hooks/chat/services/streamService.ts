@@ -49,7 +49,8 @@ export async function sendMessageStream(
       archetype: user?.eq_archetype || 'Not set',
       coachingMode: user?.coaching_mode || 'normal',
       userId: user?.id,
-      primaryTopic: primaryTopic // Pass the primary topic to the edge function
+      primaryTopic: primaryTopic, // Pass the primary topic to the edge function
+      forceTokenTracking: true    // Ensure tokens are tracked regardless of subscription tier
     };
     
     // Call the edge function with streaming enabled

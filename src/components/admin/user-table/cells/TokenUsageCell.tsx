@@ -27,9 +27,17 @@ export const TokenUsageCell = ({ user }: UserTableCellProps) => {
           <TooltipTrigger className="flex items-center">
             <span>{user.tokenUsage.toLocaleString()}</span>
             <span className={`ml-2 ${usageColor}`}>({usagePercentage}%)</span>
+            {user.tokenUsage === 0 && user.message_count > 0 && (
+              <span className="ml-2 text-amber-500 text-xs">!</span>
+            )}
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent className="max-w-xs">
             <p>{user.tokenUsage.toLocaleString()} / {user.tokenUsageLimit.toLocaleString()} tokens used this month</p>
+            {user.tokenUsage === 0 && user.message_count > 0 && (
+              <p className="text-amber-500 text-xs mt-1">
+                Missing token usage data. Possible issues with logging or user on a free plan.
+              </p>
+            )}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
