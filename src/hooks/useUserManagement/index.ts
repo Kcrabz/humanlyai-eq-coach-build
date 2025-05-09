@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
+
+import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserEmails } from "./useUserEmails";
@@ -16,6 +17,7 @@ export const useUserManagement = (initialFilter?: FilterState) => {
   const [isLoading, setIsLoading] = useState(true);
   const [tokenUsageData, setTokenUsageData] = useState<Record<string, { usage: number; limit: number }>>({});
   const { isAdmin } = useAdminCheck();
+  const initialLoadRef = useRef(false);
   
   // Use the hooks with correct function names
   const userData = useUserData();
@@ -88,85 +90,9 @@ export const useUserManagement = (initialFilter?: FilterState) => {
     }
   }, []);
   
-  // Fixed fetchUsers function to prevent infinite loop
-  const fetchUsers = useCallback(async (onboardedValue = "all") => {
-    if (!isAdmin) return;
-    
-    setIsLoading(true);
-    try {
-      // First, get all user IDs
-      const { userIds, emailData } = await userData.fetchUserData();
-      
-      if (userIds.length === 0) {
-        setUsers([]);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Then fetch token usage data for all users
-      await fetchTokenUsageData(userIds);
-      
-      // Fetch last login data
-      const userLastLogins = await lastLogins.fetchLastLogins(userIds);
-      
-      // Fetch user activity data
-      const userChatActivity = await chatActivity.fetchChatActivity(userIds);
-      
-      // Combine all data to create the final user list
-      let userList = emailData.map(user => {
-        const userId = user.id;
-        const tokenData = tokenUsageData[userId] || { usage: 0, limit: 0 };
-        
-        return {
-          id: userId,
-          email: user.email || "Unknown email",
-          name: user.name || user.first_name || "",
-          subscription_tier: user.subscription_tier || "free",
-          eq_archetype: user.eq_archetype || "",
-          onboarded: user.onboarded || false,
-          last_login: userLastLogins.get(userId) || "No login data",
-          chat_time: userChatActivity.get(userId)?.chatTime || "",
-          message_count: userChatActivity.get(userId)?.count || 0,
-          tokenUsage: tokenData.usage,
-          tokenUsageLimit: tokenData.limit
-        };
-      });
-      
-      // Apply filters
-      if (searchTerm) {
-        userList = userList.filter(user =>
-          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-      }
-      
-      if (tierFilter && tierFilter !== "all") {
-        userList = userList.filter(user => user.subscription_tier === tierFilter);
-      }
-      
-      if (archetypeFilter && archetypeFilter !== "all") {
-        userList = userList.filter(user => user.eq_archetype === archetypeFilter);
-      }
-      
-      if (onboardedValue !== "all") {
-        const onboardedStatus = onboardedValue === "true";
-        userList = userList.filter(user => user.onboarded === onboardedStatus);
-      }
-      
-      setUsers(userList);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error("Failed to load users", { 
-        description: "There was a problem fetching user data" 
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isAdmin, searchTerm, tierFilter, archetypeFilter, userData, lastLogins, chatActivity]); // Removed tokenUsageData dependency
-  
-  // Fetch token usage data from the usage_logs table
+  // Fixed fetchTokenUsageData to avoid dependency on tokenUsageData state
   const fetchTokenUsageData = useCallback(async (userIds: string[]) => {
-    if (!userIds.length) return;
+    if (!userIds.length) return {};
     
     try {
       // Get the current month in YYYY-MM format for filtering
@@ -182,7 +108,7 @@ export const useUserManagement = (initialFilter?: FilterState) => {
       
       if (error) {
         console.error("Error fetching token usage:", error);
-        return;
+        return {};
       }
       
       // Calculate total usage per user
@@ -206,7 +132,7 @@ export const useUserManagement = (initialFilter?: FilterState) => {
       
       if (profilesError) {
         console.error("Error fetching profile tiers:", profilesError);
-        return;
+        return {};
       }
       
       // Set limits based on subscription tier
@@ -231,17 +157,109 @@ export const useUserManagement = (initialFilter?: FilterState) => {
       }
       
       setTokenUsageData(usageMap);
+      return usageMap;
     } catch (err) {
       console.error("Error processing token usage data:", err);
+      return {};
     }
   }, []);
+  
+  // Completely restructured fetchUsers to avoid dependency issues
+  const fetchUsers = useCallback(async (onboardedValue = "all") => {
+    if (!isAdmin) return;
+    
+    console.log("Fetching users with filters:", { searchTerm, tierFilter, archetypeFilter, onboardedValue });
+    setIsLoading(true);
+    
+    try {
+      // First, get all user IDs
+      const { userIds, emailData } = await userData.fetchUserData();
+      
+      if (userIds.length === 0) {
+        setUsers([]);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Then fetch token usage data for all users - now returns the data
+      const usageData = await fetchTokenUsageData(userIds);
+      
+      // Fetch last login data
+      const userLastLogins = await lastLogins.fetchLastLogins(userIds);
+      
+      // Fetch user activity data
+      const userChatActivity = await chatActivity.fetchChatActivity(userIds);
+      
+      // Combine all data to create the final user list
+      let userList = emailData.map(user => {
+        const userId = user.id;
+        const tokenData = usageData[userId] || { usage: 0, limit: 0 };
+        
+        return {
+          id: userId,
+          email: user.email || "Unknown email",
+          name: user.name || user.first_name || "",
+          subscription_tier: user.subscription_tier || "free",
+          eq_archetype: user.eq_archetype || "",
+          onboarded: user.onboarded || false,
+          last_login: userLastLogins.get(userId) || "No login data",
+          chat_time: userChatActivity.get(userId)?.chatTime || "",
+          message_count: userChatActivity.get(userId)?.count || 0,
+          tokenUsage: tokenData.usage,
+          tokenUsageLimit: tokenData.limit
+        };
+      });
+      
+      // Apply filters - moved these operations inside the function to remove dependencies
+      const searchTermLower = searchTerm.toLowerCase();
+      if (searchTerm) {
+        userList = userList.filter(user =>
+          user.email.toLowerCase().includes(searchTermLower) ||
+          (user.name && user.name.toLowerCase().includes(searchTermLower))
+        );
+      }
+      
+      if (tierFilter && tierFilter !== "all") {
+        userList = userList.filter(user => user.subscription_tier === tierFilter);
+      }
+      
+      if (archetypeFilter && archetypeFilter !== "all") {
+        userList = userList.filter(user => user.eq_archetype === archetypeFilter);
+      }
+      
+      if (onboardedValue !== "all") {
+        const onboardedStatus = onboardedValue === "true";
+        userList = userList.filter(user => user.onboarded === onboardedStatus);
+      }
+      
+      // Set the filtered user list
+      setUsers(userList);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users", { 
+        description: "There was a problem fetching user data" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isAdmin, userData, lastLogins, chatActivity, fetchTokenUsageData]); // Removed filter dependencies
 
-  // Fixed useEffect to prevent infinite loops
+  // Trigger filter changes
+  useEffect(() => {
+    if (isAdmin && initialLoadRef.current) {
+      console.log("Filters changed, fetching users with new filters");
+      fetchUsers(onboardedFilter);
+    }
+  }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter, fetchUsers, isAdmin]);
+
+  // Initial data fetch - separate from filter changes
   useEffect(() => {
     let isMounted = true;
     
-    if (isAdmin) {
+    if (isAdmin && !initialLoadRef.current) {
+      console.log("Initial data fetch for users");
       fetchUsers(onboardedFilter);
+      initialLoadRef.current = true;
     }
     
     return () => {

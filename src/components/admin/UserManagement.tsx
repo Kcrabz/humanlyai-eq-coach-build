@@ -35,14 +35,26 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
   const [exportLoading, setExportLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
 
-  // Initial data load tracking
+  // Initial data load tracking with timeout safeguard
   const [initialLoadDone, setInitialLoadDone] = useState(false);
 
-  // Track initial load
+  // Track initial load with a timeout safeguard
   useEffect(() => {
     if (!initialLoadDone && !isLoading) {
+      // Set initial load as done when loading completes
       setInitialLoadDone(true);
     }
+
+    // Safety timeout - if loading takes too long, consider it done anyway
+    // This prevents infinite loading if there's an issue with the loading state
+    const safetyTimeout = setTimeout(() => {
+      if (!initialLoadDone) {
+        console.log("Safety timeout triggered for loading state");
+        setInitialLoadDone(true);
+      }
+    }, 8000); // 8 seconds safety timeout
+
+    return () => clearTimeout(safetyTimeout);
   }, [isLoading, initialLoadDone]);
 
   // Handle reset filter including parent component notification
@@ -55,6 +67,7 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
 
   // Handle refresh - this is a simple function that passes the active filters
   const handleRefresh = useCallback(() => {
+    console.log("Manual refresh triggered");
     // Updated to match the new function signature that accepts only one parameter
     const onboardedFilter = activeFilter?.type === "onboarded" ? activeFilter.value : "all";
     fetchUsers(onboardedFilter);
@@ -136,6 +149,14 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
       setUpgradeLoading(false);
     }
   }, [upgradeAllUsersToPremium]);
+
+  // Debug render
+  console.log("UserManagement rendering:", { 
+    users: users.length, 
+    isLoading, 
+    initialLoadDone, 
+    effectiveLoadingState: !initialLoadDone || isLoading
+  });
 
   return (
     <div className="space-y-6">
