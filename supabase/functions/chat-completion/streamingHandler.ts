@@ -21,7 +21,7 @@ export async function handleStreamingChatCompletion(req: Request, reqBody: any) 
     } = await prepareUserData(req, reqBody);
     
     // Extract message and history from request - using cached data if possible
-    const { userMessage, clientProvidedHistory } = extractUserMessage(reqBody);
+    const { userMessage, clientProvidedHistory } = await extractUserMessage(reqBody);
     
     // Get chat history based on subscription tier
     const chatHistory = await getChatHistory(

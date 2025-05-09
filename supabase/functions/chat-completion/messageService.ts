@@ -27,10 +27,10 @@ export async function extractUserMessage(reqBody: any) {
     throw new Error("Message content is required and cannot be empty");
   }
   
-  // Check for important topics in first message (for new conversations)
+  // Simplified topic detection - removed the dynamic import that was causing issues
   if (clientProvidedHistory.length <= 2) {
-    const { identifyImportantTopics } = await import("./conversationContext.ts");
-    const importantTopics = identifyImportantTopics(userMessage);
+    // Simple check for important topics without calling an external function
+    const importantTopics = detectImportantTopicsSimple(userMessage);
     
     if (importantTopics.length > 0) {
       console.log(`Detected important topic in initial message: ${importantTopics[0]}`);
@@ -38,6 +38,25 @@ export async function extractUserMessage(reqBody: any) {
   }
   
   return { userMessage, clientProvidedHistory };
+}
+
+// Simple topic detection function
+function detectImportantTopicsSimple(message: string): string[] {
+  const topics = [];
+  const importantPatterns = [
+    'anxiety', 'depression', 'stress', 'overwhelm', 'burnout', 
+    'confidence', 'self-doubt', 'impostor syndrome', 'relationship',
+    'career', 'work', 'balance', 'goal', 'motivation'
+  ];
+  
+  const messageLower = message.toLowerCase();
+  for (const pattern of importantPatterns) {
+    if (messageLower.includes(pattern)) {
+      topics.push(pattern);
+    }
+  }
+  
+  return topics;
 }
 
 // Prepare messages for OpenAI with proper context
