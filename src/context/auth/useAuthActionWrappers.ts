@@ -1,10 +1,13 @@
+
 import { useCallback } from "react";
 import { User, EQArchetype, CoachingMode } from "@/types";
 
 export const useAuthActionWrappers = (user, profileCore, profileActions, authCore) => {
   // Wrapper functions to ensure type compatibility and memoized to prevent unnecessary recreations
   const updateProfile = useCallback(async (data: Partial<User>): Promise<void> => {
-    await profileCore.updateProfile(user?.id || "", data);
+    if (user?.id) {
+      await profileCore.updateProfile(user.id, data);
+    }
   }, [profileCore, user?.id]);
 
   const forceUpdateProfile = useCallback(async (data: any): Promise<boolean> => {
@@ -37,9 +40,9 @@ export const useAuthActionWrappers = (user, profileCore, profileActions, authCor
   }, [profileActions]);
   
   // Create wrapper for resetPassword to adapt the return type
-  const resetPasswordWrapper = async (email: string): Promise<boolean> => {
-    return authCore.resetPassword(email);
-  };
+  const resetPasswordWrapper = useCallback(async (email: string): Promise<boolean> => {
+    return await authCore.resetPassword(email);
+  }, [authCore]);
   
   return {
     updateProfile,
