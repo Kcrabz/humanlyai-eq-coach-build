@@ -3,7 +3,7 @@ import { prepareMessages } from "./openaiService.ts";
 import { estimateTokenCount } from "./utils.ts";
 
 // Extract user message from request body
-export function extractUserMessage(reqBody: any) {
+export async function extractUserMessage(reqBody: any) {
   const { message, messages } = reqBody;
   let userMessage;
   let clientProvidedHistory = [];
