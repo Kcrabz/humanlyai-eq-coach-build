@@ -2,7 +2,7 @@
 import { memo, useCallback } from "react";
 import { ActiveFilter } from "../ActiveFilter";
 import { UserFilters } from "../UserFilters";
-import { UserTable } from "../UserTable";
+import { UserTable } from "../user-table";
 import { UserManagementActions } from "./UserManagementActions";
 import { useUserManagementContext } from "./UserManagementContext";
 
