@@ -48,13 +48,35 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
     }
     
     // Check if this is a creation date rather than login
-    const isCreationDate = user.last_login.includes('Created');
+    const isCreationDate = typeof user.last_login === 'string' && user.last_login.includes('Created');
     
+    // If we have a timestamp object with relative and full timestamp
+    if (typeof user.last_login === 'object' && user.last_login.timestamp) {
+      const timestamp = new Date(user.last_login.timestamp);
+      const formattedDate = timestamp.toLocaleDateString();
+      const formattedTime = timestamp.toLocaleTimeString();
+      
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger className="flex items-center">
+              <span>{user.last_login.relative}</span>
+              <InfoIcon className="ml-1 h-3 w-3" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs font-medium">{formattedDate} at {formattedTime}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+    
+    // Fallback for string-only data
     return (
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger className={`flex items-center ${isCreationDate ? 'text-amber-500' : ''}`}>
-            <span>{user.last_login}</span>
+            <span>{typeof user.last_login === 'string' ? user.last_login : 'Unknown'}</span>
             {isCreationDate && <InfoIcon className="ml-1 h-3 w-3" />}
           </TooltipTrigger>
           <TooltipContent>

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.33.1";
 
@@ -113,7 +112,7 @@ serve(async (req) => {
     
     // Process login data to get last login for each user
     const lastLoginMap = new Map();
-    
+
     // First populate with account creation dates (as fallback)
     userIds.forEach(userId => {
       const creationDate = userCreationDates.get(userId);
@@ -137,31 +136,51 @@ serve(async (req) => {
         lastLoginMap.set(userId, 'Unknown');
       }
     });
-    
+
     // Then override with actual login data if it exists
     if (loginHistory && loginHistory.length > 0) {
+      // Group login events by user and get the most recent one
+      const latestLoginByUser = new Map();
+      
       loginHistory.forEach(record => {
-        if (!lastLoginMap.has(record.user_id) || !lastLoginMap.get(record.user_id).includes('Created')) {
-          const lastLogin = new Date(record.created_at);
-          const now = new Date();
-          const diffDays = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
-          
-          let formatted = '';
-          if (diffDays === 0) {
-            formatted = 'Today';
-          } else if (diffDays === 1) {
-            formatted = 'Yesterday';
-          } else if (diffDays < 7) {
-            formatted = `${diffDays} days ago`;
-          } else if (diffDays < 30) {
-            const weeks = Math.floor(diffDays / 7);
-            formatted = `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
-          } else {
-            formatted = lastLogin.toLocaleDateString();
-          }
-          
-          lastLoginMap.set(record.user_id, formatted);
+        const userId = record.user_id;
+        const loginTime = new Date(record.created_at);
+        
+        if (!latestLoginByUser.has(userId) || loginTime > latestLoginByUser.get(userId).time) {
+          latestLoginByUser.set(userId, {
+            time: loginTime,
+            timestamp: record.created_at
+          });
         }
+      });
+      
+      // Format the timestamps for display
+      latestLoginByUser.forEach((login, userId) => {
+        // Store full timestamp for detailed display
+        const lastLogin = login.time;
+        const now = new Date();
+        const diffDays = Math.floor((now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60 * 24));
+        
+        let formatted = '';
+        // Short human-readable format
+        if (diffDays === 0) {
+          formatted = 'Today';
+        } else if (diffDays === 1) {
+          formatted = 'Yesterday';
+        } else if (diffDays < 7) {
+          formatted = `${diffDays} days ago`;
+        } else if (diffDays < 30) {
+          const weeks = Math.floor(diffDays / 7);
+          formatted = `${weeks} ${weeks === 1 ? 'week' : 'weeks'} ago`;
+        } else {
+          formatted = lastLogin.toLocaleDateString();
+        }
+        
+        // Use both relative time and full timestamp
+        lastLoginMap.set(userId, {
+          relative: formatted,
+          timestamp: login.timestamp // Store ISO timestamp for detailed view
+        });
       });
     }
 
@@ -259,7 +278,7 @@ serve(async (req) => {
           chatTime: tier === 'free' ? 'No data (free tier)' : 'No activity'
         });
       }
-    });
+    }
 
     return new Response(
       JSON.stringify({ 

@@ -7,7 +7,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- Insert the login record
+  -- Insert the login record with current timestamp
   INSERT INTO public.user_login_history (user_id, user_agent)
   VALUES (user_id_param, user_agent_param);
   

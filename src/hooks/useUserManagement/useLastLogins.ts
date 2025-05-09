@@ -2,9 +2,14 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
+export type LastLoginData = {
+  relative: string;
+  timestamp: string;
+};
+
 export const useLastLogins = () => {
   // Fetch last login time for users
-  const fetchLastLogins = async (userIds: string[]): Promise<Map<string, string>> => {
+  const fetchLastLogins = async (userIds: string[]): Promise<Map<string, string | LastLoginData>> => {
     try {
       if (!userIds || userIds.length === 0) {
         return new Map();
@@ -41,11 +46,11 @@ export const useLastLogins = () => {
       }
       
       // Convert the object to a Map
-      const loginMap = new Map<string, string>();
+      const loginMap = new Map<string, string | LastLoginData>();
       
       if (data && data.lastLogins) {
         Object.entries(data.lastLogins).forEach(([userId, lastLogin]) => {
-          loginMap.set(userId, lastLogin as string);
+          loginMap.set(userId, lastLogin as string | LastLoginData);
         });
       }
       

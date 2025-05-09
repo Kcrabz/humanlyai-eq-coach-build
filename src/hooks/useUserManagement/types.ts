@@ -1,22 +1,23 @@
 
-import { User, SubscriptionTier } from "@/types";
+import { SubscriptionTier, EQArchetype } from "@/types";
+import { LastLoginData } from "../useLastLogins";
 
-export interface UserTableData extends Omit<User, 'email'> {
+export interface UserTableData {
+  id: string;
   email: string;
-  created_at?: string;
-  updated_at?: string;
-  last_login?: string;
-  chat_time?: string;
-  message_count?: number;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+  avatar_url?: string;
+  subscription_tier?: SubscriptionTier;
+  onboarded: boolean;
+  eq_archetype?: EQArchetype;
+  last_login?: string | LastLoginData; // Updated to support the new structure
+  chat_time?: string | null;
+  message_count: number;
 }
 
 export interface FilterState {
   type: string;
   value: string;
-}
-
-export interface UserFilters {
-  searchTerm: string;
-  tierFilter: string;
-  archetypeFilter: string;
 }

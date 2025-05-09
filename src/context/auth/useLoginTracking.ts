@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { logSecurityEvent } from "@/services/securityLoggingService";
 
 export function useLoginTracking(user: User | null, authEvent: string | null) {
   useEffect(() => {
@@ -35,6 +36,20 @@ export function useLoginTracking(user: User | null, authEvent: string | null) {
           });
         } else {
           console.log("Login event recorded for user via RPC:", user.id);
+          
+          // Also log to security events if available
+          try {
+            logSecurityEvent({
+              userId: user.id,
+              eventType: 'login_success',
+              userAgent: navigator.userAgent,
+              details: { method: 'password' },
+              riskLevel: 'low'
+            });
+          } catch (err) {
+            // Silently fail as this is just additional logging
+            console.warn("Failed to record security event:", err);
+          }
         }
       });
     }
