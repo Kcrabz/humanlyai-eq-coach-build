@@ -1,8 +1,9 @@
 
-import { User, SubscriptionTier } from "@/types";
+import { SubscriptionTier } from "@/types";
+import { UserTableData } from "@/hooks/useUserManagement/types";
 
 export interface UserOperationsProps {
-  user: User;
+  user: UserTableData;
   onUpdateTier: (userId: string, tier: SubscriptionTier) => Promise<void>;
   onUserDeleted?: (userId: string) => void;
 }

@@ -175,7 +175,7 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
                 <TableCell>{user.onboarded ? "Yes" : "No"}</TableCell>
                 <TableCell>
                   <UserOperations 
-                    user={user} 
+                    user={user as any} // Type casting to fix the error
                     onUpdateTier={onUpdateTier}
                     onUserDeleted={onUserDeleted}
                   />

@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.33.1";
 
@@ -278,7 +279,7 @@ serve(async (req) => {
           chatTime: tier === 'free' ? 'No data (free tier)' : 'No activity'
         });
       }
-    }
+    });
 
     return new Response(
       JSON.stringify({ 

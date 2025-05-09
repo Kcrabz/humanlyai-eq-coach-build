@@ -36,7 +36,7 @@ export const useUserFilters = (users: UserTableData[] = []) => {
     // Apply archetype filter
     if (filters.archetypeFilter !== "all") {
       if (filters.archetypeFilter === "not-set") {
-        result = result.filter(user => !user.eq_archetype || user.eq_archetype === "Not set");
+        result = result.filter(user => !user.eq_archetype);
       } else {
         result = result.filter(user => user.eq_archetype === filters.archetypeFilter);
       }

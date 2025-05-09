@@ -1,6 +1,10 @@
 
 import { SubscriptionTier, EQArchetype } from "@/types";
-import { LastLoginData } from "../useLastLogins";
+
+export interface LastLoginData {
+  relative: string;
+  timestamp: string;
+}
 
 export interface UserTableData {
   id: string;
@@ -9,7 +13,7 @@ export interface UserTableData {
   first_name?: string;
   last_name?: string;
   avatar_url?: string;
-  subscription_tier?: SubscriptionTier;
+  subscription_tier: SubscriptionTier;
   onboarded: boolean;
   eq_archetype?: EQArchetype;
   last_login?: string | LastLoginData; // Updated to support the new structure
@@ -20,4 +24,11 @@ export interface UserTableData {
 export interface FilterState {
   type: string;
   value: string;
+}
+
+// Add missing UserFilters interface
+export interface UserFilters {
+  searchTerm: string;
+  tierFilter: string;
+  archetypeFilter: string;
 }
