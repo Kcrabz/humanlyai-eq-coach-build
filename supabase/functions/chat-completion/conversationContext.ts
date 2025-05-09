@@ -24,20 +24,55 @@ interface ConversationMemory {
   personalDetails: PersonalDetail[];
   emotionalStates: EmotionalState[];
   lastInteractionDate?: string;
+  primaryTopic?: string; // New field to track main conversation topic
 }
 
 // Helper function to detect if user is directly asking for help
-// Made more stringent to avoid false positives in early turns
+// Updated to be less stringent and catch more help requests
 function isUserRequestingDirectHelp(message: string): boolean {
-  // More specific patterns that clearly indicate a direct request for guidance
-  const explicitHelpRequestPatterns = [
-    /^(?:please |can you |could you )?(?:give|provide|share|tell) me (?:some|a few|the|your)? (?:advice|suggestions|tips|steps|guidance) /i,
-    /^what (?:are|is) (?:some|a few|the) (?:ways|steps|methods|techniques) to /i,
-    /^how (?:exactly|specifically) (?:can|should|would|could) I (?:deal with|handle|manage|approach)/i,
+  // More inclusive patterns that recognize various ways users ask for help
+  const helpRequestPatterns = [
+    // Explicit requests
+    /(?:please |can you |could you )?(?:give|provide|share|tell) me (?:some|a few|the|your)? (?:advice|suggestions|tips|steps|guidance)/i,
+    /what (?:are|is|should) (?:some|a few|the) (?:ways|steps|methods|techniques)/i,
+    /how (?:can|should|would|could|do|might) I (?:deal with|handle|manage|approach|overcome|address)/i,
+    
+    // Implicit requests
+    /(?:struggling|difficulty|trouble|challenge) with (?:my|this|the|a)/i,
+    /(?:help|advice|guidance) (?:with|on|for|about)/i,
+    /(?:need|want|looking for) (?:help|advice|guidance|direction|support)/i,
+    /(?:having|experiencing|feeling) (?:trouble|difficulty|problems|issues)/i,
+    /(?:any|some) (?:ideas|thoughts|suggestions|tips) (?:on|about|for)/i
   ];
   
-  // Check if any explicit patterns match
-  return explicitHelpRequestPatterns.some(pattern => pattern.test(message));
+  // Check if any patterns match
+  return helpRequestPatterns.some(pattern => pattern.test(message));
+}
+
+// Helper function to identify important topics in user messages
+function identifyImportantTopics(message: string): string[] {
+  // List of significant psychological/EQ topics to detect 
+  const significantTopics = [
+    'imposter syndrome', 'impostor syndrome', 'self-doubt', 'anxiety', 'depression',
+    'burnout', 'stress', 'confidence', 'relationships', 'communication',
+    'conflict', 'leadership', 'motivation', 'procrastination', 'fear', 
+    'perfectionism', 'work-life balance', 'boundaries', 'decision making',
+    'emotional regulation', 'mindfulness', 'purpose', 'meaning', 'values',
+    'self-awareness', 'empathy', 'social anxiety', 'rejection', 'criticism',
+    'anger management', 'grief', 'trauma', 'career change', 'personal growth'
+  ];
+  
+  // Check for each significant topic in the message
+  const foundTopics: string[] = [];
+  const lowerMessage = message.toLowerCase();
+  
+  for (const topic of significantTopics) {
+    if (lowerMessage.includes(topic.toLowerCase())) {
+      foundTopics.push(topic);
+    }
+  }
+  
+  return foundTopics;
 }
 
 // Helper function to extract conversation context from messages
@@ -47,6 +82,7 @@ export function extractConversationContext(messages: any[]): {
   userEmotions: string[];
   conversationTurnCount: number;
   isDirectHelpRequest: boolean;
+  primaryTopic: string | undefined; // New field for main conversation topic
 } {
   // Filter only user messages
   const userMessages = messages.filter(m => m.role === 'user');
@@ -54,15 +90,31 @@ export function extractConversationContext(messages: any[]): {
   // Count the number of user turns in the conversation
   const conversationTurnCount = userMessages.length;
   
-  // Check if current message is a direct help request, but only consider it
-  // for turns 3+ to ensure early messages still focus on exploration
+  // Check if current message is a direct help request
   const isLatestMessageDirectHelp = userMessages.length > 0 && 
     isUserRequestingDirectHelp(userMessages[userMessages.length - 1].content || '');
   
-  // Only allow direct help detection after turn 2 to ensure early exploration
-  const isDirectHelpRequest = conversationTurnCount >= 3 && isLatestMessageDirectHelp;
+  // Allow direct help detection earlier than before (not waiting until turn 3)
+  const isDirectHelpRequest = conversationTurnCount >= 2 && isLatestMessageDirectHelp;
   
-  // Simple topic extraction (this would be more sophisticated in a real implementation)
+  // Identify important topics from all user messages
+  const allImportantTopics: string[] = [];
+  userMessages.forEach(m => {
+    const contentTopics = identifyImportantTopics(m.content || '');
+    if (contentTopics.length > 0) {
+      allImportantTopics.push(...contentTopics);
+    }
+  });
+  
+  // Determine primary topic - prioritize the first important topic mentioned
+  // This ensures we maintain focus on the original issue the user brought up
+  let primaryTopic: string | undefined = undefined;
+  if (allImportantTopics.length > 0) {
+    // Use the first important topic detected in the conversation
+    primaryTopic = allImportantTopics[0];
+  }
+  
+  // Simple topic extraction from recent messages
   const recentTopics = userMessages.slice(-3).map(m => {
     const content = m.content || '';
     // Extract potential topics (simplified)
@@ -99,7 +151,8 @@ export function extractConversationContext(messages: any[]): {
     potentialPersonalDetails,
     userEmotions,
     conversationTurnCount,
-    isDirectHelpRequest
+    isDirectHelpRequest,
+    primaryTopic
   };
 }
 
@@ -113,6 +166,7 @@ export function enrichSystemMessageWithContext(
     userEmotions: string[];
     conversationTurnCount: number;
     isDirectHelpRequest: boolean;
+    primaryTopic: string | undefined; // Include primaryTopic in the context
   }
 ): string {
   // Add conversation turn count information
@@ -139,6 +193,12 @@ export function enrichSystemMessageWithContext(
   
   let contextSection = turnCountSection + turnInstruction;
   
+  // Add primary topic emphasis
+  if (conversationContext.primaryTopic) {
+    contextSection += `\n\n💡 PRIMARY TOPIC: ${conversationContext.primaryTopic}\n`;
+    contextSection += `IMPORTANT: Keep the conversation centered on this primary topic, which is the user's main concern. Relate your questions and guidance back to this topic, even as the conversation evolves. Do not lose focus on this core issue.`;
+  }
+  
   if (hasContext) {
     contextSection += "\n\n🧠 CONVERSATION MEMORY:\n";
     
@@ -164,7 +224,7 @@ export function enrichSystemMessageWithContext(
           .join("; ") + "\n";
     }
     
-    // Add response guidance based on turn count
+    // Add response guidance based on turn count and primary topic
     contextSection += "\n💡 RESPONSE GUIDANCE:\n";
     
     if (conversationContext.conversationTurnCount === 1) {
@@ -185,10 +245,16 @@ export function enrichSystemMessageWithContext(
         contextSection += "• Ask if they want practical suggestions or want to explore further\n";
       }
       
-      // If they've directly asked for help after turn 2, provide guidance
-      if (conversationContext.isDirectHelpRequest && conversationContext.conversationTurnCount > 2) {
+      // If they've directly asked for help provide guidance
+      if (conversationContext.isDirectHelpRequest) {
         contextSection += "• They're asking for guidance - provide specific, tailored advice AFTER asking at least one question\n";
       }
+    }
+    
+    // Topic continuity guidance
+    if (conversationContext.primaryTopic) {
+      contextSection += `• TOPIC CONTINUITY: Keep discussion focused on their primary concern (${conversationContext.primaryTopic}). If conversation drifts, gently steer back.\n`;
+      contextSection += `• When offering advice, make it SPECIFIC to ${conversationContext.primaryTopic}, not generic emotional intelligence tips.\n`;
     }
   }
   

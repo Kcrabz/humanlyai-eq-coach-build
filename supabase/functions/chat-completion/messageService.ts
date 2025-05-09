@@ -27,6 +27,16 @@ export function extractUserMessage(reqBody: any) {
     throw new Error("Message content is required and cannot be empty");
   }
   
+  // Check for important topics in first message (for new conversations)
+  if (clientProvidedHistory.length <= 2) {
+    const { identifyImportantTopics } = await import("./conversationContext.ts");
+    const importantTopics = identifyImportantTopics(userMessage);
+    
+    if (importantTopics.length > 0) {
+      console.log(`Detected important topic in initial message: ${importantTopics[0]}`);
+    }
+  }
+  
   return { userMessage, clientProvidedHistory };
 }
 

@@ -16,7 +16,8 @@ export async function prepareUserData(req: Request, reqBody: any) {
     subscriptionTier: clientSubscriptionTier,
     archetype: clientArchetype,
     coachingMode: clientCoachingMode,
-    userId: clientUserId
+    userId: clientUserId,
+    primaryTopic: clientPrimaryTopic // Accept primary topic from client
   } = reqBody;
   
   // Get OpenAI API key
@@ -35,8 +36,12 @@ export async function prepareUserData(req: Request, reqBody: any) {
   const effectiveArchetype = archetype || clientArchetype || 'unknown';
   const effectiveCoachingMode = coachingMode || clientCoachingMode || 'normal';
   const effectiveSubscriptionTier = subscriptionTier || clientSubscriptionTier || 'free';
+  const effectivePrimaryTopic = clientPrimaryTopic || undefined;
   
   console.log(`User settings: archetype=${effectiveArchetype}, coachingMode=${effectiveCoachingMode}, tier=${effectiveSubscriptionTier}`);
+  if (effectivePrimaryTopic) {
+    console.log(`Primary conversation topic: ${effectivePrimaryTopic}`);
+  }
   
   // Check usage limits - import from usageTracking.ts
   const tierLimit = checkUsageLimit(currentUsage, effectiveSubscriptionTier);
@@ -48,6 +53,7 @@ export async function prepareUserData(req: Request, reqBody: any) {
     effectiveArchetype,
     effectiveCoachingMode,
     effectiveSubscriptionTier,
+    effectivePrimaryTopic,
     currentUsage,
     tierLimit,
     monthYear

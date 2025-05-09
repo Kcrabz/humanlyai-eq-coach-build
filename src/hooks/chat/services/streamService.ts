@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { handleApiErrors } from "@/utils/chatErrorHandler";
 import { toast } from "sonner";
 import { processStreamResponse } from "./streamProcessor";
-import { prepareContextMessages } from "./contextService";
+import { prepareContextMessages, detectPrimaryTopic } from "./contextService";
 import { SendMessageOptions } from "../types";
 
 /**
@@ -37,12 +37,19 @@ export async function sendMessageStream(
     const contextMessages = prepareContextMessages(content, currentMessages, user?.subscription_tier);
     console.log(`Sending stream with ${contextMessages.length} context messages`);
     
+    // Detect primary topic from conversation
+    const primaryTopic = detectPrimaryTopic([...currentMessages, { id: 'temp', content, role: 'user', created_at: new Date().toISOString() }]);
+    if (primaryTopic) {
+      console.log(`Detected primary topic: ${primaryTopic}`);
+    }
+    
     // Prepare user context for personalization
     const userContext = {
       subscriptionTier: user?.subscription_tier || 'free',
       archetype: user?.eq_archetype || 'Not set',
       coachingMode: user?.coaching_mode || 'normal',
-      userId: user?.id
+      userId: user?.id,
+      primaryTopic: primaryTopic // Pass the primary topic to the edge function
     };
     
     // Call the edge function with streaming enabled
