@@ -34,6 +34,7 @@ const queryClient = new QueryClient();
 
 function App() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isUpdateAvailable, setIsUpdateAvailable] = useState(false);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -42,9 +43,15 @@ function App() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Listen for our custom event from the service worker
+    window.addEventListener('sw-update-available', () => {
+      setIsUpdateAvailable(true);
+    });
+
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
+      window.removeEventListener('sw-update-available', () => {});
     };
   }, []);
 

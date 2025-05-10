@@ -4,6 +4,8 @@ import { useLocation } from "react-router-dom";
 import { Toaster } from "sonner";
 import { CollapsibleMenu } from "@/components/layout/CollapsibleMenu";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { InstallPWA } from "@/components/pwa/InstallPWA";
+import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -33,6 +35,14 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
       
       {/* Sonner toast provider - positioned at bottom only */}
       <Toaster position="bottom-right" richColors />
+      
+      {/* PWA Install button - positioned top right */}
+      <div className="fixed top-4 right-16 z-50">
+        <InstallPWA />
+      </div>
+      
+      {/* Offline indicator */}
+      <OfflineIndicator />
       
       {/* Collapsible menu in the top right corner, shown based on conditions */}
       {shouldShowMenu && (
