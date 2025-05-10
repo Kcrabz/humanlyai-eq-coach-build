@@ -10,6 +10,7 @@ import { SidebarProvider, LeftSidebarProvider, RightSidebarProvider } from "@/co
 import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar } from "@/components/chat/sidebar/ChatRightSidebar";
 import { ResponsiveMainContent } from "@/components/chat/components/ResponsiveMainContent";
+import { UpdateNotification } from "@/components/pwa/UpdateNotification";
 
 // Lazy load components that aren't immediately visible
 const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
@@ -56,6 +57,11 @@ const ChatPage = () => {
       state: { retakingAssessment: true }
     });
   };
+  
+  // Handle reload for PWA updates
+  const handleReload = () => {
+    window.location.reload();
+  };
 
   if (isLoading || !isAuthenticated || !user?.onboarded) {
     return <PageLayout fullWidth>
@@ -77,8 +83,11 @@ const ChatPage = () => {
       {/* Add the default SidebarProvider at the top level */}
       <SidebarProvider>
         <LeftSidebarProvider>
-          <RightSidebarProvider>
+          <RightSidebarProvider defaultOpen={true}>
             <ChatProvider>
+              {/* PWA update notification */}
+              <UpdateNotification reloadPage={handleReload} />
+              
               <div className="flex h-screen overflow-hidden w-full">
                 {/* Left Sidebar */}
                 <Suspense fallback={<div className="w-64 zen-sidebar animate-pulse"></div>}>

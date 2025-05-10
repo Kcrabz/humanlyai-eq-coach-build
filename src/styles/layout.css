@@ -79,6 +79,34 @@
   }
 }
 
+/* PWA specific styling */
+@media all and (display-mode: standalone) {
+  /* Show sidebar by default in PWA mode */
+  .user-sidebar[data-pwa="true"] {
+    width: 16rem !important;
+    min-width: 16rem !important;
+  }
+  
+  /* Adjust content width when sidebar is open in PWA mode */
+  .user-sidebar[data-pwa="true"] + .main-content {
+    width: calc(100% - 16rem) !important;
+    margin-right: 16rem !important;
+  }
+  
+  /* Mobile PWA mode still needs overlay sidebar */
+  @media (max-width: 767px) {
+    .user-sidebar[data-pwa="true"][data-mobile="true"] {
+      width: 80% !important;
+      max-width: 300px !important;
+    }
+    
+    .user-sidebar[data-pwa="true"][data-mobile="true"] + .main-content {
+      width: 100% !important;
+      margin-right: 0 !important;
+    }
+  }
+}
+
 /* Mobile chat menu specific styling */
 .mobile-chat-menu {
   position: absolute;

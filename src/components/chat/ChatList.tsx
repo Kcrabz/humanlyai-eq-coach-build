@@ -12,12 +12,21 @@ export function ChatList() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const firstRenderRef = useRef(true);
   const isMobile = useIsMobile();
+  const [isPWA, setIsPWA] = useState(false);
   
   // Get sidebar states to force re-render when they change
   const { open: rightSidebarOpen } = useSidebar("right");
   const { open: leftSidebarOpen } = useSidebar("left");
   const [prevRightState, setPrevRightState] = useState(rightSidebarOpen);
   const [prevLeftState, setPrevLeftState] = useState(leftSidebarOpen);
+
+  // Detect if running in PWA mode
+  useEffect(() => {
+    setIsPWA(
+      window.matchMedia('(display-mode: standalone)').matches || 
+      (window.navigator as any).standalone === true
+    );
+  }, []);
 
   // Force scroll to bottom on sidebar state change
   useEffect(() => {
@@ -51,7 +60,7 @@ export function ChatList() {
   }, []);
 
   return (
-    <div className={`flex-1 overflow-y-auto p-4 ${isMobile ? 'px-2' : 'px-4'} space-y-6`}>
+    <div className={`flex-1 overflow-y-auto p-4 ${isMobile ? 'px-2' : 'px-4'} space-y-6`} data-pwa={isPWA ? "true" : "false"}>
       {messages.length === 0 ? (
         <EmptyChatState />
       ) : (

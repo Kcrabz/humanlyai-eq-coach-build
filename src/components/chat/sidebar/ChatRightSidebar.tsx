@@ -10,7 +10,7 @@ import {
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { CSSProperties } from "react";
+import { CSSProperties, useEffect } from "react";
 
 // Import our component files
 import { UserProfile } from "./right/UserProfile";
@@ -47,6 +47,22 @@ export function ChatRightSidebar() {
   const { open, toggleSidebar } = useSidebar("right");
   const isMobile = useIsMobile();
   
+  // Force open sidebar for PWA standalone mode on initial load
+  useEffect(() => {
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                 (window.navigator as any).standalone === true;
+    
+    // Only for PWA in standalone mode, ensure sidebar is visible initially
+    if (isPWA && !open) {
+      // Add a small delay to ensure the sidebar is loaded before opening
+      const timer = setTimeout(() => {
+        toggleSidebar();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [toggleSidebar, open]);
+  
   if (!user) return null;
   
   // For mobile, use offcanvas style with overlay
@@ -74,6 +90,7 @@ export function ChatRightSidebar() {
       style={sidebarStyle}
       data-state={open ? "open" : "closed"}
       data-mobile={isMobile ? "true" : "false"}
+      data-pwa={window.matchMedia('(display-mode: standalone)').matches ? "true" : "false"}
     >
       <SidebarHeader className="p-4">
         <UserProfile />
