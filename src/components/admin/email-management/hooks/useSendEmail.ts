@@ -108,7 +108,11 @@ export const useSendEmail = (users: User[], onSendSuccess: () => void, onClose: 
       // Send emails to each selected user
       for (const userId of selectedUsers) {
         const user = users.find(u => u.id === userId);
-        if (!user) continue;
+        if (!user) {
+          console.error(`User ${userId} not found in users list`);
+          results.push({ userId, email: "unknown", success: false, error: "User not found" });
+          continue;
+        }
 
         console.log(`Attempting to send email to user ${userId} (${user.email})`);
 
@@ -126,16 +130,21 @@ export const useSendEmail = (users: User[], onSendSuccess: () => void, onClose: 
 
         console.log("Email payload:", JSON.stringify(payload, null, 2));
 
-        const { data, error } = await supabase.functions.invoke('send-email', {
-          body: payload
-        });
+        try {
+          const { data, error } = await supabase.functions.invoke('send-email', {
+            body: payload
+          });
 
-        if (error) {
-          console.error(`Error sending email to ${user.email}:`, error);
-          results.push({ userId, email: user.email, success: false, error });
-        } else {
-          console.log(`Email sent successfully to ${user.email}:`, data);
-          results.push({ userId, email: user.email, success: true });
+          if (error) {
+            console.error(`Error sending email to ${user.email}:`, error);
+            results.push({ userId, email: user.email, success: false, error });
+          } else {
+            console.log(`Email sent successfully to ${user.email}:`, data);
+            results.push({ userId, email: user.email, success: true });
+          }
+        } catch (invocationError) {
+          console.error(`Exception during email function invocation for ${user.email}:`, invocationError);
+          results.push({ userId, email: user.email, success: false, error: invocationError });
         }
       }
 

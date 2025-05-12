@@ -437,8 +437,11 @@ function renderEmailTemplate(templateName: string, data: Record<string, any>) {
 
 // Main request handler
 serve(async (req) => {
+  console.log("Send-email function invoked");
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -455,32 +458,42 @@ serve(async (req) => {
   }
 
   try {
-    console.log("Received request to send-email function");
+    console.log("Processing email request");
     
     // Get the request body
     let payload: EmailPayload;
     
     try {
+      const contentType = req.headers.get('content-type') || '';
+      console.log("Request content type:", contentType);
+
       // Handle both stringified and direct JSON objects
-      const body = await req.text();
-      try {
-        payload = JSON.parse(body) as EmailPayload;
-      } catch (e) {
-        // If parsing fails, assume body was already a JS object (from invoke function)
+      if (contentType.includes('application/json')) {
+        console.log("Parsing JSON payload");
         payload = await req.json() as EmailPayload;
+      } else {
+        console.log("Parsing text payload");
+        const body = await req.text();
+        try {
+          payload = JSON.parse(body) as EmailPayload;
+        } catch (parseError) {
+          console.error("Failed to parse text as JSON:", parseError);
+          throw new Error("Invalid JSON format");
+        }
       }
       
       console.log("Parsed payload:", JSON.stringify(payload, null, 2));
       
       // Validate required fields
       if (!payload.userId || !payload.templateName || !payload.subject) {
-        throw new Error("Missing required fields in payload");
+        console.error("Missing required fields");
+        throw new Error("Missing required fields in payload: userId, templateName, and subject are required");
       }
       
     } catch (parseError) {
       console.error("Error parsing request body:", parseError);
       return new Response(
-        JSON.stringify({ error: "Invalid request format" }),
+        JSON.stringify({ error: "Invalid request format", details: parseError.message }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -489,59 +502,81 @@ serve(async (req) => {
     }
     
     // Create Supabase admin client
+    console.log("Creating Supabase client");
     const supabase = supabaseClient(req);
-    
-    // Check user email preferences before sending
-    const { data: preferences } = await supabase
-      .from('email_preferences')
-      .select('*')
-      .eq('user_id', payload.userId)
-      .single();
-    
-    console.log("Found preferences:", preferences);
-    
-    // If the user has opted out of this type of email, don't send it
-    if (preferences) {
-      if (payload.emailType === 'daily_nudge' && !preferences.daily_nudges ||
-          payload.emailType === 'weekly_summary' && !preferences.weekly_summary ||
-          payload.emailType === 'achievement' && !preferences.achievement_notifications ||
-          payload.emailType === 'challenge' && !preferences.challenge_reminders ||
-          payload.emailType === 're_engagement' && !preferences.inactivity_reminders) {
-        
-        console.log(`User ${payload.userId} has opted out of ${payload.emailType} emails`);
-        return new Response(
-          JSON.stringify({ message: "User has opted out of this email type" }),
-          {
-            status: 200,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-    }
     
     // Get recipient email - either from payload or from auth.users
     let recipientEmail = payload.to;
     
     if (!recipientEmail) {
-      console.log("No recipient email in payload, fetching from auth.users");
-      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(payload.userId);
-      
-      if (userError || !userData?.user?.email) {
-        console.error("Error fetching user email:", userError);
+      console.log(`No recipient email in payload, fetching from auth.users for userId: ${payload.userId}`);
+      try {
+        const { data: userData, error: userError } = await supabase.auth.admin.getUserById(payload.userId);
+        
+        if (userError) {
+          console.error("Error fetching user:", userError);
+          throw new Error(`User not found: ${userError.message}`);
+        }
+        
+        if (!userData?.user?.email) {
+          console.error("User has no email");
+          throw new Error("User has no email address");
+        }
+        
+        recipientEmail = userData.user.email;
+        console.log(`Found recipient email: ${recipientEmail}`);
+      } catch (userFetchError) {
+        console.error("Failed to fetch user email:", userFetchError);
         return new Response(
-          JSON.stringify({ error: "User not found or has no email" }),
+          JSON.stringify({ error: "Failed to fetch user email", details: userFetchError.message }),
           {
             status: 404,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         );
       }
+    }
+    
+    // Check user email preferences before sending
+    console.log(`Checking email preferences for user: ${payload.userId}`);
+    try {
+      const { data: preferences, error: prefError } = await supabase
+        .from('email_preferences')
+        .select('*')
+        .eq('user_id', payload.userId)
+        .single();
       
-      recipientEmail = userData.user.email;
-      console.log(`Found recipient email: ${recipientEmail}`);
+      if (prefError && prefError.code !== 'PGRST116') {
+        console.error("Error fetching email preferences:", prefError);
+      } else {
+        console.log("Found preferences:", preferences);
+        
+        // If the user has opted out of this type of email, don't send it
+        if (preferences) {
+          if (payload.emailType === 'daily_nudge' && !preferences.daily_nudges ||
+              payload.emailType === 'weekly_summary' && !preferences.weekly_summary ||
+              payload.emailType === 'achievement' && !preferences.achievement_notifications ||
+              payload.emailType === 'challenge' && !preferences.challenge_reminders ||
+              payload.emailType === 're_engagement' && !preferences.inactivity_reminders) {
+            
+            console.log(`User ${payload.userId} has opted out of ${payload.emailType} emails`);
+            return new Response(
+              JSON.stringify({ message: "User has opted out of this email type" }),
+              {
+                status: 200,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+              }
+            );
+          }
+        }
+      }
+    } catch (preferencesError) {
+      console.error("Error checking email preferences:", preferencesError);
+      // Continue with sending the email even if we can't check preferences
     }
     
     // Render the email HTML using the template
+    console.log("Generating email content with template:", payload.templateName);
     const htmlContent = renderEmailTemplate(payload.templateName, payload.data || {});
     
     console.log(`Sending email to: ${recipientEmail}`);
@@ -558,7 +593,12 @@ serve(async (req) => {
       console.log("Email sent:", emailResult);
       
       // Log the email in the database
-      await logEmailSent(supabase, payload);
+      try {
+        await logEmailSent(supabase, payload);
+      } catch (logError) {
+        console.error("Failed to log email to database:", logError);
+        // Continue even if logging fails
+      }
       
       // Return the result
       return new Response(
