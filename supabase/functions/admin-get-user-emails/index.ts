@@ -1,5 +1,5 @@
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.8";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,7 +13,6 @@ Deno.serve(async (req) => {
   }
   
   try {
-    // Create Supabase client with admin privileges
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
     
@@ -25,21 +24,17 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Create a client with the service role key for admin operations
-    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+    // Create service client for admin operations
+    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Create a client with the user's auth token to verify admin status
-    const authClient = createClient(
-      supabaseUrl, 
-      supabaseServiceKey,
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization') || '' },
-        },
-      }
-    );
+    // Create auth client with the user's auth token
+    const authClient = createClient(supabaseUrl, supabaseServiceKey, {
+      global: {
+        headers: { Authorization: req.headers.get('Authorization') || '' },
+      },
+    });
     
-    // Verify the request is from an admin user
+    // Verify the requesting user is an admin
     const {
       data: { user },
       error: authError,
@@ -53,7 +48,7 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Check if the user has admin access using the is_admin function
+    // Check if the user has admin access
     const { data: isAdmin, error: adminCheckError } = await authClient.rpc('is_admin');
     
     if (adminCheckError || !isAdmin) {
@@ -64,64 +59,25 @@ Deno.serve(async (req) => {
       );
     }
     
-    // Get the user IDs from the request
-    const { userIds } = await req.json();
+    // Get all users with their emails
+    const { data: authUsers, error: usersError } = await serviceClient.auth.admin.listUsers();
     
-    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+    if (usersError) {
+      console.error("Error fetching users:", usersError);
       return new Response(
-        JSON.stringify({ error: 'Invalid request: userIds array required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: usersError.message }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    console.log(`Fetching email addresses for ${userIds.length} users`);
+    // Format the user data to include only id and email
+    const users = authUsers.users.map(user => ({
+      id: user.id,
+      email: user.email
+    }));
     
-    // Fetch user emails directly from auth.users using the service role key
-    const userEmails = await Promise.all(
-      userIds.map(async (userId) => {
-        try {
-          const { data, error } = await supabaseAdmin
-            .from('auth.users')
-            .select('email')
-            .eq('id', userId)
-            .single();
-          
-          if (error) {
-            console.error(`Error fetching user ${userId}:`, error);
-            
-            // Fallback to admin API if direct query fails
-            try {
-              const { data: userData, error: adminError } = await supabaseAdmin.auth.admin.getUserById(userId);
-              
-              if (adminError) {
-                console.error(`Admin API error for user ${userId}:`, adminError);
-                return { id: userId, email: null, error: adminError.message };
-              }
-              
-              return { 
-                id: userId, 
-                email: userData.user?.email || null 
-              };
-            } catch (adminError) {
-              console.error(`Unexpected admin API error for user ${userId}:`, adminError);
-              return { id: userId, email: null, error: 'Admin API error' };
-            }
-          }
-          
-          return { 
-            id: userId, 
-            email: data?.email || null 
-          };
-        } catch (error) {
-          console.error(`Unexpected error for user ${userId}:`, error);
-          return { id: userId, email: null, error: 'Internal error' };
-        }
-      })
-    );
-    
-    // Return the emails to the client
     return new Response(
-      JSON.stringify({ data: userEmails }),
+      JSON.stringify(users),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

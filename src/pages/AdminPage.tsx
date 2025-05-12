@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -10,6 +9,7 @@ import { AdminOverview } from "@/components/admin/AdminOverview";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { Loading } from "@/components/ui/loading";
 import { FilterState } from "@/hooks/useUserManagement/types";
+import EmailManagement from '@/components/admin/email-management/EmailManagement';
 
 const AdminPage = () => {
   const { isAdmin, isLoading: isAdminCheckLoading } = useAdminCheck();
@@ -72,6 +72,7 @@ const AdminPage = () => {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="users">User Management</TabsTrigger>
+            <TabsTrigger value="emails">Email Management</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-6">
@@ -85,6 +86,10 @@ const AdminPage = () => {
                 onResetFilter={handleResetFilter}
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="emails" className="space-y-4">
+            <EmailManagement />
           </TabsContent>
         </Tabs>
       </div>
