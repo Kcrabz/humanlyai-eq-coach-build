@@ -20,7 +20,7 @@ export function useLoginTracking(user: User | null, authEvent: string | null) {
           .from("user_engagement_metrics")
           .update({
             last_login: new Date().toISOString(),
-            login_count: supabase.rpc("increment_login_count"),
+            login_count: supabase.rpc("record_user_login", { user_id_param: user.id })
           })
           .eq("user_id", user.id);
 

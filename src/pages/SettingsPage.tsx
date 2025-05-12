@@ -1,9 +1,10 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { TwoFactorSetup } from "@/components/settings/TwoFactorSetup";
-import { BioEditor } from "@/components/settings/BioEditor";
+import TwoFactorSetup from "@/components/settings/TwoFactorSetup";
+import BioEditor from "@/components/settings/BioEditor";
 import { EmailPreferences } from "@/components/settings/EmailPreferences";
 import { useAuth } from "@/context/AuthContext";
 
