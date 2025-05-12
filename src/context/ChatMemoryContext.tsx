@@ -45,7 +45,7 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       try {
         // Free users don't have memory features
-        if (user.subscription_tier === 'free') {
+        if (user.subscription_tier === SubscriptionTier.Free) {
           setMemoryEnabled(false);
           setSmartInsightsEnabled(false);
           setMemoryStats(defaultMemoryStats);
@@ -66,13 +66,13 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           
           // Enable smart insights by default for premium users if not explicitly disabled
           setSmartInsightsEnabled(
-            user.subscription_tier === 'premium' && prefData.smart_insights_enabled !== false
+            user.subscription_tier === SubscriptionTier.Premium && prefData.smart_insights_enabled !== false
           );
         } else {
           // Default values if no preferences found
-          // Fix: Use proper type comparison by ensuring matching types
-          const isFree = user.subscription_tier === 'free';
-          const isPremium = user.subscription_tier === 'premium';
+          // Use enum values for proper type checking
+          const isFree = user.subscription_tier === SubscriptionTier.Free;
+          const isPremium = user.subscription_tier === SubscriptionTier.Premium;
           
           setMemoryEnabled(!isFree);
           setSmartInsightsEnabled(isPremium);
@@ -106,7 +106,7 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     
     try {
       // Free users can't enable memory
-      if (user.subscription_tier === 'free' && enabled) {
+      if (user.subscription_tier === SubscriptionTier.Free && enabled) {
         return false;
       }
       
@@ -133,7 +133,7 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Toggle smart insights feature (premium only)
   const toggleSmartInsights = async (enabled: boolean): Promise<boolean> => {
-    if (!user || user.subscription_tier !== 'premium') return false;
+    if (!user || user.subscription_tier !== SubscriptionTier.Premium) return false;
     
     try {
       const { error } = await supabase
@@ -159,7 +159,7 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Refresh memory statistics
   const refreshMemoryStats = async (): Promise<void> => {
-    if (!user || user.subscription_tier === 'free') {
+    if (!user || user.subscription_tier === SubscriptionTier.Free) {
       setMemoryStats(defaultMemoryStats);
       return;
     }
