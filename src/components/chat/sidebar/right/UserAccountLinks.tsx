@@ -1,72 +1,91 @@
 
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, Shield, User, CreditCard, Settings, Brain } from "lucide-react";
-import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { 
+  Settings, 
+  UserCircle, 
+  CreditCard, 
+  MemoryStick,
+  Bell
+} from "lucide-react";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog";
+import { MemorySettings } from "@/components/chat/memory/MemorySettings";
 
 export function UserAccountLinks() {
-  const navigate = useNavigate();
-  const { isAdmin } = useAdminCheck();
-  
   return (
-    <div className="space-y-2">
-      <h4 className="text-xs font-medium text-muted-foreground px-2 py-1">Your Account</h4>
-      <Button
-        variant="ghost"
-        className="w-full justify-start gap-2 rounded-lg h-10"
-        onClick={() => navigate("/dashboard")}
-      >
-        <LayoutDashboard className="h-4 w-4" />
-        Dashboard
-      </Button>
+    <div className="space-y-1">
+      <h3 className="text-sm font-medium mb-2">Your account</h3>
       
-      {/* Admin link - only visible for admin users */}
-      {isAdmin && (
+      <div className="space-y-1">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-2 rounded-lg h-10"
-          onClick={() => navigate("/admin")}
+          className="w-full justify-start text-sm"
+          asChild
         >
-          <Shield className="h-4 w-4" />
-          Admin
+          <Link to="/settings">
+            <UserCircle className="h-4 w-4 mr-2" />
+            Profile
+          </Link>
         </Button>
-      )}
-      
-      <Button
-        variant="ghost"
-        className="w-full justify-start gap-2 rounded-lg h-10"
-        onClick={() => navigate("/settings")}
-      >
-        <User className="h-4 w-4" />
-        Your Bio
-      </Button>
-      
-      <Button
-        variant="ghost"
-        className="w-full justify-start gap-2 rounded-lg h-10"
-        onClick={() => navigate("/subscription")}
-      >
-        <CreditCard className="h-4 w-4" />
-        Your Plan
-      </Button>
-      
-      <Button
-        variant="ghost"
-        className="w-full justify-start gap-2 rounded-lg h-10"
-        onClick={() => navigate("/settings")}
-      >
-        <Settings className="h-4 w-4" />
-        Settings
-      </Button>
+        
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-sm"
+          asChild
+        >
+          <Link to="/settings?tab=preferences">
+            <Settings className="h-4 w-4 mr-2" />
+            Preferences
+          </Link>
+        </Button>
 
-      <Button
-        variant="ghost"
-        className="w-full justify-start gap-2 rounded-lg h-10"
-        onClick={() => navigate("/chat?memory=true")}
-      >
-        <Brain className="h-4 w-4" />
-        Memory
-      </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-sm"
+          asChild
+        >
+          <Link to="/settings?tab=notifications">
+            <Bell className="h-4 w-4 mr-2" />
+            Notifications
+          </Link>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          className="w-full justify-start text-sm"
+          asChild
+        >
+          <Link to="/settings?tab=billing">
+            <CreditCard className="h-4 w-4 mr-2" />
+            Subscription
+          </Link>
+        </Button>
+        
+        {/* Memory Button with Dialog */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm"
+            >
+              <MemoryStick className="h-4 w-4 mr-2" />
+              Memory
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Memory Settings</DialogTitle>
+            </DialogHeader>
+            <MemorySettings />
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }
