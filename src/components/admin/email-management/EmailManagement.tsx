@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,7 +40,7 @@ export default function EmailManagement() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [templateFilter, setTemplateFilter] = useState("all");
   const [dateRange, setDateRange] = useState<{ from: Date; to?: Date }>({ from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) });
-  const [templates, setTemplates] = useState<string[]>([]);
+  const [templates, setTemplates] = useState<string[]>(['daily-nudge', 'weekly-summary', 're-engagement']);
   const [selectedEmail, setSelectedEmail] = useState<EmailLog | null>(null);
   const [showSendDialog, setShowSendDialog] = useState(false);
   const [showTemplatePreview, setShowTemplatePreview] = useState(false);
@@ -76,7 +75,12 @@ export default function EmailManagement() {
       const uniqueTemplates = Array.from(
         new Set(data?.map(item => item.template_name) || [])
       );
-      setTemplates(uniqueTemplates);
+      
+      // Make sure we always have our default templates in the list
+      const defaultTemplates = ['daily-nudge', 'weekly-summary', 're-engagement'];
+      const allTemplates = [...new Set([...uniqueTemplates, ...defaultTemplates])];
+      
+      setTemplates(allTemplates);
       
     } catch (error) {
       console.error("Error loading emails:", error);

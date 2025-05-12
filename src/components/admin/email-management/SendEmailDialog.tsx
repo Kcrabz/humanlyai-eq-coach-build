@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +40,11 @@ export default function SendEmailDialog({
   templates,
   onSendSuccess,
 }: SendEmailDialogProps) {
+  // Define default available templates if none are provided
+  const availableTemplates = templates.length > 0 
+    ? templates 
+    : ['daily-nudge', 'weekly-summary', 're-engagement'];
+  
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   const [subject, setSubject] = useState("");
@@ -207,7 +211,7 @@ export default function SendEmailDialog({
                 <SelectValue placeholder="Select a template" />
               </SelectTrigger>
               <SelectContent>
-                {templates.map((template) => (
+                {availableTemplates.map((template) => (
                   <SelectItem key={template} value={template}>
                     {template.replace(/-/g, ' ')}
                   </SelectItem>
