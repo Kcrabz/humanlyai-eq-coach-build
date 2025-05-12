@@ -45,7 +45,8 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       
       try {
         // Free users don't have memory features
-        if (user.subscription_tier === "free") {
+        const isFree = user.subscription_tier === "free";
+        if (isFree) {
           setMemoryEnabled(false);
           setSmartInsightsEnabled(false);
           setMemoryStats(defaultMemoryStats);
@@ -65,8 +66,9 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           setMemoryEnabled(prefData.memory_enabled !== false);
           
           // Enable smart insights by default for premium users if not explicitly disabled
+          const isPremium = user.subscription_tier === "premium";
           setSmartInsightsEnabled(
-            user.subscription_tier === "premium" && prefData.smart_insights_enabled !== false
+            isPremium && prefData.smart_insights_enabled !== false
           );
         } else {
           // Default values if no preferences found
@@ -106,7 +108,8 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     
     try {
       // Free users can't enable memory
-      if (user.subscription_tier === "free" && enabled) {
+      const isFree = user.subscription_tier === "free";
+      if (isFree && enabled) {
         return false;
       }
       
@@ -133,7 +136,10 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Toggle smart insights feature (premium only)
   const toggleSmartInsights = async (enabled: boolean): Promise<boolean> => {
-    if (!user || user.subscription_tier !== "premium") return false;
+    if (!user) return false;
+    
+    const isPremium = user.subscription_tier === "premium";
+    if (!isPremium) return false;
     
     try {
       const { error } = await supabase
@@ -159,7 +165,13 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Refresh memory statistics
   const refreshMemoryStats = async (): Promise<void> => {
-    if (!user || user.subscription_tier === "free") {
+    if (!user) {
+      setMemoryStats(defaultMemoryStats);
+      return;
+    }
+    
+    const isFree = user.subscription_tier === "free";
+    if (isFree) {
       setMemoryStats(defaultMemoryStats);
       return;
     }
