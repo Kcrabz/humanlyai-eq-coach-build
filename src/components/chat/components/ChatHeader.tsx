@@ -2,7 +2,6 @@
 import { ChatLeftSidebarTrigger } from "@/components/chat/sidebar/ChatLeftSidebarTrigger";
 import { ChatRightSidebarTrigger } from "@/components/chat/sidebar/ChatRightSidebarTrigger";
 import { StartNewChatButton } from "./StartNewChatButton";
-import { CoachingModeToggle } from "./CoachingModeToggle";
 
 interface ChatHeaderProps {
   hasCompletedAssessment: boolean;
@@ -21,9 +20,6 @@ export function ChatHeader({ hasCompletedAssessment, userArchetype, onStartAsses
       </div>
       
       <div className="flex items-center gap-4">
-        {/* Add coaching mode toggle */}
-        <CoachingModeToggle />
-        
         {/* Add Start New Chat button */}
         <StartNewChatButton />
         

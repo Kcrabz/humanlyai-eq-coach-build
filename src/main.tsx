@@ -26,9 +26,6 @@ const updateSW = registerSW({
   onRegisterError(error) {
     console.error('Service worker registration error:', error);
   },
-  onUpdateFound() {
-    console.log('New content is downloading...');
-  },
   onSuccess() {
     // Dispatch custom event when update is available
     window.dispatchEvent(new CustomEvent('pwa-update-available'));
