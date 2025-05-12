@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Loader2, Search, Send, Filter, RefreshCw } from "lucide-react";
+import { Loader2, Search, Send, Filter, RefreshCw, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
@@ -13,6 +14,7 @@ import { format } from "date-fns";
 import EmailDetailsDialog from "./EmailDetailsDialog";
 import SendEmailDialog from "./SendEmailDialog";
 import { Badge } from "@/components/ui/badge";
+import EmailTemplatePreview from "./EmailTemplatePreview";
 
 interface EmailLog {
   id: string;
@@ -42,6 +44,7 @@ export default function EmailManagement() {
   const [templates, setTemplates] = useState<string[]>([]);
   const [selectedEmail, setSelectedEmail] = useState<EmailLog | null>(null);
   const [showSendDialog, setShowSendDialog] = useState(false);
+  const [showTemplatePreview, setShowTemplatePreview] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [activeTab, setActiveTab] = useState("all");
 
@@ -217,6 +220,10 @@ export default function EmailManagement() {
               <CardDescription>Manage and monitor all system emails</CardDescription>
             </div>
             <div className="flex space-x-2">
+              <Button onClick={() => setShowTemplatePreview(true)} variant="outline" className="flex items-center">
+                <Eye className="mr-2 h-4 w-4" />
+                View Templates
+              </Button>
               <Button onClick={() => setShowSendDialog(true)} className="flex items-center">
                 <Send className="mr-2 h-4 w-4" />
                 Send Email
@@ -364,6 +371,13 @@ export default function EmailManagement() {
           users={users}
           templates={templates}
           onSendSuccess={loadEmails}
+        />
+      )}
+
+      {showTemplatePreview && (
+        <EmailTemplatePreview 
+          open={showTemplatePreview}
+          onClose={() => setShowTemplatePreview(false)}
         />
       )}
     </div>

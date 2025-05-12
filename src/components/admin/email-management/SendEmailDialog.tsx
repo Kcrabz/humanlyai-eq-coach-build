@@ -68,6 +68,57 @@ export default function SendEmailDialog({
     }
   };
 
+  // Generate email template data based on the selected template
+  const generateTemplateData = () => {
+    const baseData = { message: customMessage };
+    
+    switch(selectedTemplate) {
+      case 'daily-nudge':
+        return {
+          ...baseData,
+          challengeText: "Practice active listening in your next conversation. Focus entirely on understanding the speaker without planning your response while they're talking.",
+          currentStreak: 5,
+        };
+      case 'weekly-summary':
+        return {
+          ...baseData,
+          sessionsCompleted: 8,
+          challengesCompleted: 5,
+          breakthroughsCount: 2,
+          personalisedInsight: "You're showing great progress in self-awareness. Try focusing on recognizing emotions in others this week.",
+        };
+      case 're-engagement':
+        return {
+          ...baseData,
+          daysSinceLastLogin: 12,
+          personalisedPrompt: "Emotional intelligence is like a muscle - regular practice leads to meaningful growth. Even a few minutes each day can make a significant difference.",
+        };
+      default:
+        return baseData;
+    }
+  };
+
+  // Generate a subject line based on the selected template
+  const generateSubject = (template: string) => {
+    switch(template) {
+      case 'daily-nudge':
+        return "Your Daily EQ Challenge";
+      case 'weekly-summary':
+        return "Your Weekly EQ Progress Report";
+      case 're-engagement':
+        return "We Miss You! Continue Your EQ Journey";
+      default:
+        return "Message from Humanly AI";
+    }
+  };
+
+  const handleTemplateChange = (template: string) => {
+    setSelectedTemplate(template);
+    if (subject === "" || subject === generateSubject(selectedTemplate)) {
+      setSubject(generateSubject(template));
+    }
+  };
+
   const sendEmails = async () => {
     if (!selectedTemplate || selectedUsers.length === 0 || !subject) {
       toast.error("Please complete all required fields");
@@ -80,6 +131,9 @@ export default function SendEmailDialog({
 
       const emailType = selectedTemplate.replace(/-/g, '_');
       const results = [];
+      
+      // Generate template-specific data
+      const templateData = generateTemplateData();
 
       // Send emails to each selected user
       for (const userId of selectedUsers) {
@@ -94,7 +148,7 @@ export default function SendEmailDialog({
             subject: subject,
             to: user.email,
             data: {
-              message: customMessage,
+              ...templateData,
               name: "User" // Default name if we don't have it
             }
           }
@@ -147,7 +201,7 @@ export default function SendEmailDialog({
             <label className="text-sm font-medium mb-1 block">Email Template</label>
             <Select
               value={selectedTemplate}
-              onValueChange={setSelectedTemplate}
+              onValueChange={handleTemplateChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a template" />
@@ -160,6 +214,11 @@ export default function SendEmailDialog({
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground mt-1">
+              {selectedTemplate === 'daily-nudge' && "Sends a daily EQ challenge to users"}
+              {selectedTemplate === 'weekly-summary' && "Sends a weekly progress report with user's achievements"}
+              {selectedTemplate === 're-engagement' && "Re-engages users who haven't logged in recently"}
+            </p>
           </div>
 
           <div>
