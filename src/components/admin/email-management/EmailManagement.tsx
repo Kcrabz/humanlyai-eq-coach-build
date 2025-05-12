@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import EmailDetailsDialog from "./email-details/EmailDetailsDialog";
-import SendEmailDialog from "./send-email/SendEmailDialog";
+import { SendEmailDialog } from "./send-email";
 import EmailTemplatePreview from "./EmailTemplatePreview";
 import { useEmailManagement } from "./hooks/useEmailManagement";
 import { EmailFilters } from "./components/EmailFilters";

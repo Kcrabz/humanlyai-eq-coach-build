@@ -1,6 +1,7 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 
 interface EmailDetailsContentProps {
   recipient: { id: string; email: string } | undefined;
