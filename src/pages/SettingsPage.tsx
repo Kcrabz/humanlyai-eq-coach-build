@@ -1,116 +1,73 @@
-
-import { PageLayout } from "@/components/layout/PageLayout";
-import { useAuth } from "@/context/AuthContext";
-import { Separator } from "@/components/ui/separator";
-import AvatarSelector from "@/components/settings/avatar/AvatarSelector";
-import BioEditor from "@/components/settings/BioEditor";
-import TwoFactorSetup from "@/components/settings/TwoFactorSetup";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, User, Bell, Lock } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageLayout } from "@/components/layout/PageLayout";
+import { TwoFactorSetup } from "@/components/settings/TwoFactorSetup";
+import { BioEditor } from "@/components/settings/BioEditor";
+import { EmailPreferences } from "@/components/settings/EmailPreferences";
+import { useAuth } from "@/context/AuthContext";
 
-const SettingsPage = () => {
-  const { user } = useAuth();
+export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState("profile");
+  const { isAuthenticated } = useAuth();
+
+  // If user is not authenticated, show login prompt
+  if (!isAuthenticated) {
+    return (
+      <PageLayout>
+        <div className="flex flex-col items-center justify-center min-h-[70vh]">
+          <Card className="w-full max-w-md">
+            <CardHeader>
+              <CardTitle>Settings</CardTitle>
+              <CardDescription>
+                Please log in to access your settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-center py-4">
+                You need to be logged in to view and edit your settings.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout>
-      <div className="max-w-4xl mx-auto p-4 md:p-6">
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-muted-foreground mb-6">Manage your profile and preferences</p>
+      <div className="container py-8">
+        <h1 className="text-4xl font-bold mb-6">Settings</h1>
         
-        <Tabs defaultValue="profile" className="space-y-8">
-          <TabsList className="mb-4">
-            <TabsTrigger value="profile" className="flex items-center gap-1">
-              <User className="h-4 w-4" />
-              <span>Profile</span>
-            </TabsTrigger>
-            <TabsTrigger value="security" className="flex items-center gap-1">
-              <Shield className="h-4 w-4" />
-              <span>Security</span>
-            </TabsTrigger>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          <TabsList className="grid grid-cols-3 lg:w-[400px]">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="profile" className="space-y-8">
-            {/* Profile Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Profile Settings</CardTitle>
-                <CardDescription>
-                  Customize how you appear to Kai and personalize your experience
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <AvatarSelector />
-                <Separator className="my-4" />
-                <BioEditor />
-              </CardContent>
-            </Card>
+          {/* Profile Settings */}
+          <TabsContent value="profile" className="space-y-4">
+            <BioEditor className="mb-6" />
             
-            {/* App Configuration Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle>App Configuration</CardTitle>
-                <CardDescription>
-                  View your subscription and account details
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {user && (
-                  <div className="p-4 bg-muted rounded-md space-y-2">
-                    <p className="text-sm">
-                      Logged in as: <span className="font-medium">{user.email}</span>
-                    </p>
-                    <p className="text-sm">
-                      Subscription tier: <span className="font-medium">{user.subscription_tier || "free"}</span>
-                    </p>
-                    {user.name && (
-                      <p className="text-sm">
-                        Name: <span className="font-medium">{user.name}</span>
-                      </p>
-                    )}
-                    {user.eq_archetype && (
-                      <p className="text-sm">
-                        EQ Archetype: <span className="font-medium">{user.eq_archetype}</span>
-                      </p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {/* Other profile settings would go here */}
           </TabsContent>
           
-          <TabsContent value="security" className="space-y-8">
-            {/* Two-Factor Authentication */}
+          {/* Security Settings */}
+          <TabsContent value="security" className="space-y-4">
             <TwoFactorSetup />
             
-            {/* Password Section */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Lock className="h-5 w-5 text-humanly-teal" />
-                  Password Settings
-                </CardTitle>
-                <CardDescription>
-                  Update your password or recovery options
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm">Passwords should be at least 8 characters and include a mix of letters, numbers, and symbols.</p>
-                <div className="flex justify-start">
-                  <a href="/reset-password">
-                    <Button className="bg-humanly-teal hover:bg-humanly-teal-dark">
-                      Change Password
-                    </Button>
-                  </a>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Other security settings would go here */}
+          </TabsContent>
+          
+          {/* Notification Settings */}
+          <TabsContent value="notifications" className="space-y-4">
+            <EmailPreferences />
+            
+            {/* Other notification settings would go here */}
           </TabsContent>
         </Tabs>
       </div>
     </PageLayout>
   );
-};
-
-export default SettingsPage;
+}

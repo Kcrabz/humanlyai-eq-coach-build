@@ -77,3 +77,9 @@ url = ""
 verify_jwt = true
 [functions.restore-memory]
 verify_jwt = true
+[functions.send-email]
+verify_jwt = true
+[functions.analyze-engagement]
+verify_jwt = true
+[functions.send-scheduled-emails]
+verify_jwt = false

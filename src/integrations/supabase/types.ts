@@ -114,6 +114,78 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          clicked_at: string | null
+          email_data: Json | null
+          email_type: string
+          id: string
+          opened_at: string | null
+          sent_at: string
+          status: string | null
+          template_name: string
+          user_id: string
+        }
+        Insert: {
+          clicked_at?: string | null
+          email_data?: Json | null
+          email_type: string
+          id?: string
+          opened_at?: string | null
+          sent_at?: string
+          status?: string | null
+          template_name: string
+          user_id: string
+        }
+        Update: {
+          clicked_at?: string | null
+          email_data?: Json | null
+          email_type?: string
+          id?: string
+          opened_at?: string | null
+          sent_at?: string
+          status?: string | null
+          template_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      email_preferences: {
+        Row: {
+          achievement_notifications: boolean
+          challenge_reminders: boolean
+          created_at: string
+          daily_nudges: boolean
+          id: string
+          inactivity_reminders: boolean
+          updated_at: string
+          user_id: string
+          weekly_summary: boolean
+        }
+        Insert: {
+          achievement_notifications?: boolean
+          challenge_reminders?: boolean
+          created_at?: string
+          daily_nudges?: boolean
+          id?: string
+          inactivity_reminders?: boolean
+          updated_at?: string
+          user_id: string
+          weekly_summary?: boolean
+        }
+        Update: {
+          achievement_notifications?: boolean
+          challenge_reminders?: boolean
+          created_at?: string
+          daily_nudges?: boolean
+          id?: string
+          inactivity_reminders?: boolean
+          updated_at?: string
+          user_id?: string
+          weekly_summary?: boolean
+        }
+        Relationships: []
+      }
       eq_breakthroughs: {
         Row: {
           category: string
@@ -369,6 +441,54 @@ export type Database = {
           metadata?: Json | null
           original_created_at?: string | null
           original_memory_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_engagement_metrics: {
+        Row: {
+          challenge_completion_count: number | null
+          chat_message_count: number | null
+          created_at: string
+          current_streak: number | null
+          engagement_phase: string | null
+          engagement_score: number | null
+          id: string
+          last_calculated_at: string
+          last_login: string | null
+          login_count: number | null
+          registration_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_completion_count?: number | null
+          chat_message_count?: number | null
+          created_at?: string
+          current_streak?: number | null
+          engagement_phase?: string | null
+          engagement_score?: number | null
+          id?: string
+          last_calculated_at?: string
+          last_login?: string | null
+          login_count?: number | null
+          registration_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_completion_count?: number | null
+          chat_message_count?: number | null
+          created_at?: string
+          current_streak?: number | null
+          engagement_phase?: string | null
+          engagement_score?: number | null
+          id?: string
+          last_calculated_at?: string
+          last_login?: string | null
+          login_count?: number | null
+          registration_date?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
