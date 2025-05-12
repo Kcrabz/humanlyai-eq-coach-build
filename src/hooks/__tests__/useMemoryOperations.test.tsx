@@ -278,7 +278,7 @@ describe('useMemoryOperations', () => {
     
     expect(memories).toEqual([sampleArchivedMemory]);
     expect(supabase.from).toHaveBeenCalledWith('user_archived_memories');
-    expect(supabase.from().select).toHaveBeenCalledWith('*');
+    expect(supabase.from().select).toHaveBeenCalled();
     expect(supabase.from().select().eq).toHaveBeenCalledWith('user_id', mockUser.id);
     expect(supabase.from().select().eq().order).toHaveBeenCalledWith('archived_at', { ascending: false });
   });

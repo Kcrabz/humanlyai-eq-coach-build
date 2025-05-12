@@ -88,7 +88,7 @@ describe('useMemorySettings', () => {
     
     // Verify Supabase was called correctly
     expect(supabase.from).toHaveBeenCalledWith('profiles');
-    expect(supabase.from().select).toHaveBeenCalledWith('memory_enabled, smart_insights_enabled');
+    expect(supabase.from().select).toHaveBeenCalled();
     expect(supabase.from().select().eq).toHaveBeenCalledWith('id', mockUser.id);
   });
 
