@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { SubscriptionTier } from "@/types";
 
 interface MemoryContextType {
   memoryEnabled: boolean;
@@ -69,16 +70,19 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           );
         } else {
           // Default values if no preferences found
-          // Fix: Use proper type comparison with subscription_tier
-          setMemoryEnabled(user.subscription_tier !== 'free');
-          setSmartInsightsEnabled(user.subscription_tier === 'premium');
+          // Fix: Use proper type comparison by ensuring matching types
+          const isFree = user.subscription_tier === 'free';
+          const isPremium = user.subscription_tier === 'premium';
+          
+          setMemoryEnabled(!isFree);
+          setSmartInsightsEnabled(isPremium);
           
           // Create default preferences in profiles table
           await supabase
             .from('profiles')
             .update({
-              memory_enabled: user.subscription_tier !== 'free',
-              smart_insights_enabled: user.subscription_tier === 'premium',
+              memory_enabled: !isFree,
+              smart_insights_enabled: isPremium,
               updated_at: new Date().toISOString()
             })
             .eq('id', user.id);
