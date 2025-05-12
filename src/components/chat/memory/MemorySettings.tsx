@@ -1,275 +1,189 @@
 
-import React, { useState, useEffect } from "react";
-import { Switch } from "@/components/ui/switch";
+import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Brain, Trash2, RotateCw, AlertCircle } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Trash2, AlertCircle } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { useChatMemory } from "@/context/ChatMemoryContext";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
-interface MemorySettingsProps {
-  onClose?: () => void;
-}
-
-export function MemorySettings({ onClose }: MemorySettingsProps) {
+export const MemorySettings = () => {
   const { user } = useAuth();
-  const { 
-    memoryEnabled, 
-    smartInsightsEnabled, 
+  const {
+    memoryEnabled,
+    smartInsightsEnabled,
     memoryStats,
+    isLoading,
     toggleMemory,
     toggleSmartInsights,
     refreshMemoryStats,
     clearAllMemories
   } = useChatMemory();
-  
-  const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [isFree, setIsFree] = useState(true);
-  const [isBasic, setIsBasic] = useState(false);
-  const [isPremium, setIsPremium] = useState(false);
 
-  // Set user tier flags
+  // Determine if user is on premium plan
+  const isPremium = user?.subscription_tier === 'premium';
+  
+  // Load memory stats on component mount
   useEffect(() => {
-    if (user) {
-      setIsFree(user.subscription_tier === 'free');
-      setIsBasic(user.subscription_tier === 'basic');
-      setIsPremium(user.subscription_tier === 'premium');
+    if (user && user.subscription_tier !== 'free') {
+      refreshMemoryStats();
     }
-  }, [user]);
+  }, [user, refreshMemoryStats]);
 
   // Handle memory toggle
-  const handleToggleMemory = async (checked: boolean) => {
-    if (user?.subscription_tier === 'free') {
-      toast.error("Memory features are not available on the free tier");
-      return;
-    }
-    
-    setIsLoading(true);
+  const handleMemoryToggle = async (checked: boolean) => {
     const success = await toggleMemory(checked);
-    setIsLoading(false);
-    
     if (success) {
-      toast.success(`Memory features ${checked ? 'enabled' : 'disabled'}`);
+      toast.success(checked ? "Memory enabled" : "Memory disabled");
     } else {
       toast.error("Failed to update memory settings");
     }
   };
 
-  // Handle smart insights toggle (premium only)
-  const handleToggleSmartInsights = async (checked: boolean) => {
-    if (user?.subscription_tier !== 'premium') {
-      toast.error("Smart insights are a premium feature");
-      return;
-    }
-    
-    setIsLoading(true);
+  // Handle smart insights toggle
+  const handleInsightsToggle = async (checked: boolean) => {
     const success = await toggleSmartInsights(checked);
-    setIsLoading(false);
-    
     if (success) {
-      toast.success(`Smart insights ${checked ? 'enabled' : 'disabled'}`);
+      toast.success(checked ? "Smart insights enabled" : "Smart insights disabled");
     } else {
-      toast.error("Failed to update insight settings");
+      toast.error("Failed to update smart insights settings");
     }
   };
 
-  // Handle deleting all memories
-  const handleDeleteAllMemories = async () => {
-    if (!user) return;
-    
-    setIsDeleting(true);
+  // Handle memory clearing
+  const handleClearMemories = async () => {
     const success = await clearAllMemories();
-    setIsDeleting(false);
-    
     if (success) {
-      toast.success("All memories have been deleted");
+      toast.success("All memories cleared");
     } else {
-      toast.error("Failed to delete memories");
+      toast.error("Failed to clear memories");
     }
   };
 
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    if (!dateString) return '';
-    
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString();
-    } catch (e) {
-      return '';
-    }
-  };
-  
-  // If free tier, show upgrade prompt
-  if (isFree) {
+  // If user is on free plan, show upgrade message
+  if (user?.subscription_tier === 'free') {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-humanly-indigo" />
-            Memory Features
-          </CardTitle>
-          <CardDescription>
-            Kai can remember your past conversations and insights to provide more personalized coaching.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-center py-6">
-            <div className="text-center space-y-2">
-              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto opacity-60" />
-              <h3 className="font-medium">Feature not available</h3>
-              <p className="text-sm text-muted-foreground">
-                Memory features are available on our Basic and Premium plans.
-              </p>
-              <Button 
-                className="mt-4" 
-                onClick={() => window.location.href = '/pricing'}
-              >
-                Upgrade to unlock
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center py-8">
+        <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
+        <h3 className="text-lg font-medium mb-2">Memory features unavailable</h3>
+        <p className="text-sm text-muted-foreground text-center mb-4">
+          Upgrade to Basic or Premium to enable conversation memory and insights.
+        </p>
+        <Button className="w-full" onClick={() => window.location.href = "/pricing"}>
+          Upgrade Now
+        </Button>
+      </div>
+    );
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <p className="text-sm text-muted-foreground">Loading memory settings...</p>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-humanly-indigo" />
-          Memory Settings
-        </CardTitle>
-        <CardDescription>
-          Control how Kai remembers and utilizes your past conversations
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        {/* Enable/Disable Memory */}
+    <div className="space-y-6">
+      {/* Memory toggle section */}
+      <div>
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium">Enable Memory</h3>
+          <div className="space-y-0.5">
+            <Label htmlFor="memory-toggle">Conversation Memory</Label>
             <p className="text-sm text-muted-foreground">
-              Allow Kai to use information from your past conversations to provide more personalized coaching.
+              Allow Kai to remember your previous conversations
             </p>
           </div>
-          <Switch checked={memoryEnabled} onCheckedChange={handleToggleMemory} />
+          <Switch 
+            id="memory-toggle"
+            checked={memoryEnabled}
+            onCheckedChange={handleMemoryToggle}
+          />
         </div>
-        
-        {/* Smart Insights (Premium only) */}
-        {isPremium && (
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Smart Insights</h3>
-              <p className="text-sm text-muted-foreground">
-                Extract and remember key insights from your conversations to enhance future coaching.
-              </p>
-            </div>
-            <Switch checked={smartInsightsEnabled} onCheckedChange={handleToggleSmartInsights} />
+      </div>
+
+      <Separator />
+
+      {/* Smart Insights toggle (Premium only) */}
+      <div>
+        <div className="flex items-center justify-between">
+          <div className="space-y-0.5">
+            <Label htmlFor="insights-toggle">Smart Insights</Label>
+            <p className="text-sm text-muted-foreground">
+              {isPremium 
+                ? "Enable advanced analysis of conversation patterns"
+                : "Upgrade to Premium to enable this feature"}
+            </p>
           </div>
-        )}
-        
-        {/* Memory Stats */}
-        {memoryEnabled && (
-          <>
-            <div className="space-y-2 pt-2">
-              <h3 className="font-medium">Memory Statistics</h3>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="p-2 bg-muted rounded-lg">
-                  <div className="text-muted-foreground">Total Memories</div>
-                  <div className="font-medium">{memoryStats.totalMemories}</div>
-                </div>
-                <div className="p-2 bg-muted rounded-lg">
-                  <div className="text-muted-foreground">Insights</div>
-                  <div className="font-medium">{memoryStats.insightCount}</div>
-                </div>
-                {isPremium && (
-                  <>
-                    <div className="p-2 bg-muted rounded-lg">
-                      <div className="text-muted-foreground">Messages</div>
-                      <div className="font-medium">{memoryStats.messageCount}</div>
-                    </div>
-                    <div className="p-2 bg-muted rounded-lg">
-                      <div className="text-muted-foreground">Topics</div>
-                      <div className="font-medium">{memoryStats.topicCount}</div>
-                    </div>
-                  </>
-                )}
+          <Switch 
+            id="insights-toggle"
+            checked={smartInsightsEnabled}
+            onCheckedChange={handleInsightsToggle}
+            disabled={!isPremium}
+          />
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Memory stats card */}
+      {memoryEnabled && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Memory Statistics</CardTitle>
+            <CardDescription>Overview of your conversation memory</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2 pt-0">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-muted p-2 rounded">
+                <p className="text-xs text-muted-foreground">Total memories</p>
+                <p className="text-lg font-medium">{memoryStats.totalMemories}</p>
+              </div>
+              <div className="bg-muted p-2 rounded">
+                <p className="text-xs text-muted-foreground">Messages</p>
+                <p className="text-lg font-medium">{memoryStats.messageCount}</p>
+              </div>
+              <div className="bg-muted p-2 rounded">
+                <p className="text-xs text-muted-foreground">Insights</p>
+                <p className="text-lg font-medium">{memoryStats.insightCount}</p>
+              </div>
+              <div className="bg-muted p-2 rounded">
+                <p className="text-xs text-muted-foreground">Topics</p>
+                <p className="text-lg font-medium">{memoryStats.topicCount}</p>
               </div>
             </div>
-            
-            {/* Memory Management */}
-            <div className="space-y-2 pt-2">
-              <h3 className="font-medium">Memory Management</h3>
-              <p className="text-sm text-muted-foreground">
-                Manage your stored conversation memories.
-              </p>
-              
-              <div className="flex space-x-2 mt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => {
-                    setIsLoading(true);
-                    refreshMemoryStats().finally(() => setIsLoading(false));
-                    toast.info("Refreshing memories...");
-                  }}
-                  disabled={isLoading}
-                >
-                  <RotateCw className="h-4 w-4 mr-2" />
-                  Refresh
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="w-full mt-2">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Clear All Memories
                 </Button>
-                
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      className="flex-1"
-                      disabled={isDeleting || memoryStats.totalMemories === 0}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Clear All
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Clear All Memories</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will delete all of Kai's memories about your past conversations.
-                        This action cannot be undone.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleDeleteAllMemories}>
-                        Delete All
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Clear all memories?</DialogTitle>
+                  <DialogDescription>
+                    This will permanently delete all conversation memories and cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => {}}>Cancel</Button>
+                  <Button variant="destructive" onClick={handleClearMemories}>
+                    Delete All Memories
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
-}
+};

@@ -1,121 +1,86 @@
 
 import React from "react";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
-import { User, UserPlus, Mail, Save } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router-dom";
 
-export function UserProfileSettings() {
-  const { user, updateProfile } = useAuth();
-  const [name, setName] = React.useState(user?.name || '');
-  const [bio, setBio] = React.useState(user?.bio || '');
-  const [isUpdating, setIsUpdating] = React.useState(false);
+export const UserProfileSettings = () => {
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSaveProfile = async () => {
-    if (!user) return;
-    
-    setIsUpdating(true);
-    try {
-      await updateProfile({ 
-        name,
-        bio
-      });
-      toast.success("Profile updated successfully");
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
-    } finally {
-      setIsUpdating(false);
-    }
+  // Navigate to settings page
+  const handleEditProfile = () => {
+    navigate("/settings");
   };
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  if (!user) return null;
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>
-            Manage your personal information
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarImage src={user?.avatar_url || "/images/default-avatar.png"} alt={user?.name || "User"} />
-              <AvatarFallback>
-                {user?.name?.[0] || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <Button variant="outline" size="sm">
-              Change Avatar
-            </Button>
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="name" className="text-sm font-medium">
-              Name
-            </label>
-            <div className="flex">
-              <div className="bg-muted flex items-center px-3 rounded-l-md border border-r-0 border-input">
-                <User className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <Input 
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="rounded-l-none"
-              />
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <div className="flex">
-              <div className="bg-muted flex items-center px-3 rounded-l-md border border-r-0 border-input">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <Input 
-                id="email"
-                value={user?.email || ''}
-                disabled
-                className="rounded-l-none bg-muted"
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Email cannot be changed
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="bio" className="text-sm font-medium">
-              Bio
-            </label>
-            <Textarea 
-              id="bio"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell us a bit about yourself..."
-              className="resize-none"
-              rows={4}
-            />
-          </div>
+      <div className="flex items-center">
+        <Avatar className="h-16 w-16 mr-4">
+          <AvatarImage src={user.avatar_url || "/images/default-avatar.png"} alt="User avatar" />
+          <AvatarFallback>{user.name?.[0] || "U"}</AvatarFallback>
+        </Avatar>
+        <div>
+          <h3 className="font-medium">{user.name || "User"}</h3>
+          <p className="text-sm text-muted-foreground">{user.email}</p>
+          <p className="text-xs text-muted-foreground capitalize">
+            {user.subscription_tier || "Free"} Plan
+          </p>
+        </div>
+      </div>
+
+      <Separator />
+
+      {user.eq_archetype && (
+        <div>
+          <h4 className="text-sm font-medium mb-1">Your EQ Archetype</h4>
+          <p className="text-sm bg-primary/10 p-2 rounded">
+            {user.eq_archetype}
+          </p>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <h4 className="text-sm font-medium mb-1">Account actions</h4>
+        <div className="flex flex-col gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleEditProfile}
+            className="justify-start"
+          >
+            Edit Profile
+          </Button>
+
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate("/progress")}
+            className="justify-start"
+          >
+            View Progress
+          </Button>
           
           <Button 
-            onClick={handleSaveProfile} 
-            disabled={isUpdating}
-            className="w-full"
+            variant="outline" 
+            size="sm" 
+            onClick={handleSignOut}
+            className="justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
           >
-            <Save className="mr-2 h-4 w-4" />
-            Save Changes
+            Sign out
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
-}
+};

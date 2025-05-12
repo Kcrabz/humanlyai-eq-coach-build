@@ -1,130 +1,89 @@
 
 import React from "react";
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/context/ThemeContext";
-import { Moon, Sun, MonitorSmartphone, Bell, BellOff, Volume2, VolumeX } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+import { Sun, Moon, Monitor, Volume2, VolumeX } from "lucide-react";
 
-export function GeneralSettings() {
+export const GeneralSettings = () => {
   const { theme, setTheme } = useTheme();
-  const [notifications, setNotifications] = React.useState(true);
-  const [sound, setSound] = React.useState(true);
-  const [volume, setVolume] = React.useState(80);
-  
+  const [isSoundEnabled, setIsSoundEnabled] = React.useState(true);
+
+  const toggleSound = () => {
+    setIsSoundEnabled(!isSoundEnabled);
+    // In a real app, you'd save this preference
+  };
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-          <CardDescription>
-            Customize how Kai looks on your device
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sun className="h-4 w-4" />
-              <span>Light Mode</span>
-            </div>
-            <Switch 
-              checked={theme === "dark"} 
-              onCheckedChange={() => setTheme(theme === "dark" ? "light" : "dark")}
-            />
-            <div className="flex items-center gap-2">
-              <Moon className="h-4 w-4" />
-              <span>Dark Mode</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-2 pt-2">
-            <Button 
-              variant={theme === "light" ? "default" : "outline"} 
-              size="sm" 
-              className="flex-1"
-              onClick={() => setTheme("light")}
-            >
-              <Sun className="mr-2 h-4 w-4" />
-              Light
-            </Button>
-            <Button 
-              variant={theme === "dark" ? "default" : "outline"} 
-              size="sm" 
-              className="flex-1"
-              onClick={() => setTheme("dark")}
-            >
-              <Moon className="mr-2 h-4 w-4" />
-              Dark
-            </Button>
-            <Button 
-              variant={theme === "system" ? "default" : "outline"} 
-              size="sm" 
-              className="flex-1"
-              onClick={() => setTheme("system")}
-            >
-              <MonitorSmartphone className="mr-2 h-4 w-4" />
-              System
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>
-            Control notifications and alerts
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Enable Notifications</h3>
-              <p className="text-sm text-muted-foreground">
-                Receive alerts about new messages and updates
-              </p>
-            </div>
-            <Switch 
-              checked={notifications} 
-              onCheckedChange={setNotifications} 
-            />
-          </div>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">Sound</h3>
-              <p className="text-sm text-muted-foreground">
-                Play sounds for new messages and notifications
-              </p>
-            </div>
-            <Switch 
-              checked={sound} 
-              onCheckedChange={setSound} 
-              disabled={!notifications}
-            />
-          </div>
-          
-          {sound && notifications && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium">Volume</h4>
-                <span className="text-sm text-muted-foreground">{volume}%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <VolumeX className="h-4 w-4 text-muted-foreground" />
-                <Slider
-                  value={[volume]}
-                  onValueChange={(vals) => setVolume(vals[0])}
-                  max={100}
-                  step={1}
-                />
-                <Volume2 className="h-4 w-4 text-muted-foreground" />
-              </div>
-            </div>
+      <div>
+        <h3 className="font-medium mb-4">Appearance</h3>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={theme === "light" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTheme("light")}
+            className="flex items-center"
+          >
+            <Sun className="h-4 w-4 mr-1" />
+            Light
+          </Button>
+          <Button
+            variant={theme === "dark" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTheme("dark")}
+            className="flex items-center"
+          >
+            <Moon className="h-4 w-4 mr-1" />
+            Dark
+          </Button>
+          <Button
+            variant={theme === "system" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setTheme("system")}
+            className="flex items-center"
+          >
+            <Monitor className="h-4 w-4 mr-1" />
+            System
+          </Button>
+        </div>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="font-medium mb-4">Sound</h3>
+        <Button
+          variant={isSoundEnabled ? "default" : "outline"}
+          size="sm"
+          onClick={toggleSound}
+          className="flex items-center"
+        >
+          {isSoundEnabled ? (
+            <>
+              <Volume2 className="h-4 w-4 mr-1" />
+              Sound On
+            </>
+          ) : (
+            <>
+              <VolumeX className="h-4 w-4 mr-1" />
+              Sound Off
+            </>
           )}
-        </CardContent>
-      </Card>
+        </Button>
+      </div>
+
+      <Separator />
+
+      <div>
+        <h3 className="font-medium mb-2">About</h3>
+        <p className="text-sm text-muted-foreground mb-2">
+          Humanly - EQ Coach
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Version 1.0.0
+        </p>
+      </div>
     </div>
   );
-}
+};

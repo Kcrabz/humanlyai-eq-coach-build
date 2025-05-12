@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { ChatMessage } from "@/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -74,9 +73,6 @@ export function ChatBubble({
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               rehypePlugins={[rehypeHighlight]}
-              className={`prose max-w-none ${
-                isUserMessage ? "prose-invert" : ""
-              }`}
               components={{
                 a: ({ node, ...props }) => (
                   <a {...props} className="text-blue-500 hover:underline" />

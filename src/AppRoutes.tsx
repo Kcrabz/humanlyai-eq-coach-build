@@ -1,20 +1,20 @@
 
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { LandingPage } from "./pages/LandingPage";
-import { ChatPage } from "./pages/ChatPage";
-import { LoginPage } from "./pages/LoginPage";
-import { SignupPage } from "./pages/SignupPage";
-import { NotFound } from "./pages/NotFound";
-import { OnboardingPage } from "./pages/OnboardingPage";
-import { SettingsPage } from "./pages/SettingsPage";
-import { DashboardPage } from "./pages/DashboardPage";
-import { PricingPage } from "./pages/PricingPage";
+import LandingPage from "./pages/LandingPage";
+import ChatPage from "./pages/ChatPage";
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import NotFound from "./pages/NotFound";
+import OnboardingPage from "./pages/OnboardingPage";
+import SettingsPage from "./pages/SettingsPage";
+import DashboardPage from "./pages/DashboardPage";
+import PricingPage from "./pages/PricingPage";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { ResetPasswordPage } from "./pages/ResetPasswordPage";
-import { UpdatePasswordPage } from "./pages/UpdatePasswordPage";
-import { UserProgressPage } from "./pages/UserProgressPage";
-import { AdminPage } from "./pages/AdminPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
+import UpdatePasswordPage from "./pages/UpdatePasswordPage";
+import UserProgressPage from "./pages/UserProgressPage";
+import AdminPage from "./pages/AdminPage";
 
 const AppRoutes = () => {
   return (

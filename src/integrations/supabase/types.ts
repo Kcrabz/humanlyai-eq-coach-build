@@ -154,10 +154,12 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          memory_enabled: boolean | null
           name: string | null
           onboarded: boolean | null
           security_answer: string | null
           security_question_id: string | null
+          smart_insights_enabled: boolean | null
           subscription_tier: string | null
           updated_at: string | null
         }
@@ -170,10 +172,12 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          memory_enabled?: boolean | null
           name?: string | null
           onboarded?: boolean | null
           security_answer?: string | null
           security_question_id?: string | null
+          smart_insights_enabled?: boolean | null
           subscription_tier?: string | null
           updated_at?: string | null
         }
@@ -186,10 +190,12 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          memory_enabled?: boolean | null
           name?: string | null
           onboarded?: boolean | null
           security_answer?: string | null
           security_question_id?: string | null
+          smart_insights_enabled?: boolean | null
           subscription_tier?: string | null
           updated_at?: string | null
         }

@@ -48,6 +48,7 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           setMemoryEnabled(false);
           setSmartInsightsEnabled(false);
           setMemoryStats(defaultMemoryStats);
+          setIsLoading(false);
           return;
         }
         
@@ -76,7 +77,8 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             .from('profiles')
             .update({
               memory_enabled: user.subscription_tier !== 'free',
-              smart_insights_enabled: user.subscription_tier === 'premium'
+              smart_insights_enabled: user.subscription_tier === 'premium',
+              updated_at: new Date().toISOString()
             })
             .eq('id', user.id);
         }
