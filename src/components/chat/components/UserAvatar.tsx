@@ -1,16 +1,30 @@
 
 import React from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
+import { generateAvatarUrl } from "@/lib/avatar-options";
 
-export function UserAvatar() {
-  const { user } = useAuth();
+interface UserAvatarProps {
+  userId?: string;
+  name?: string;
+  avatarUrl?: string;
+  className?: string;
+}
+
+export function UserAvatar({ userId, name, avatarUrl, className }: UserAvatarProps) {
+  const { user: authUser } = useAuth();
   
-  // Get user initials for avatar
+  // If no props are provided, use data from auth context
+  const effectiveUserId = userId || authUser?.id;
+  const effectiveName = name || authUser?.name || 'User';
+  const effectiveAvatarUrl = avatarUrl || authUser?.avatar_url;
+  
+  // Get user initials for avatar fallback
   const getUserInitials = () => {
-    if (!user?.name) return "You";
+    const username = effectiveName;
+    if (!username) return "U";
     
-    const nameParts = user.name.trim().split(/\s+/);
+    const nameParts = username.trim().split(/\s+/);
     if (nameParts.length === 1) {
       return nameParts[0].substring(0, 2).toUpperCase();
     }
@@ -18,7 +32,16 @@ export function UserAvatar() {
   };
 
   return (
-    <Avatar className="h-8 w-8">
+    <Avatar className={className || "h-8 w-8"}>
+      {effectiveAvatarUrl && (
+        <AvatarImage 
+          src={effectiveAvatarUrl.includes('://') 
+            ? effectiveAvatarUrl 
+            : generateAvatarUrl(effectiveAvatarUrl)
+          } 
+          alt={effectiveName} 
+        />
+      )}
       <AvatarFallback className="bg-humanly-teal text-white">
         {getUserInitials()}
       </AvatarFallback>
