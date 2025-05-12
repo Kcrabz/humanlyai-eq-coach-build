@@ -4,12 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash2, AlertCircle } from "lucide-react";
+import { Trash2, AlertCircle, Archive } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useChatMemory } from "@/context/ChatMemoryContext";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArchivedMemories } from "./ArchivedMemories";
 
 export const MemorySettings = () => {
   const { user } = useAuth();
@@ -38,9 +40,15 @@ export const MemorySettings = () => {
   const handleMemoryToggle = async (checked: boolean) => {
     const success = await toggleMemory(checked);
     if (success) {
-      toast.success(checked ? "Memory enabled" : "Memory disabled");
+      toast({
+        title: checked ? "Memory enabled" : "Memory disabled",
+      });
     } else {
-      toast.error("Failed to update memory settings");
+      toast({
+        title: "Error",
+        description: "Failed to update memory settings",
+        variant: "destructive"
+      });
     }
   };
 
@@ -48,19 +56,32 @@ export const MemorySettings = () => {
   const handleInsightsToggle = async (checked: boolean) => {
     const success = await toggleSmartInsights(checked);
     if (success) {
-      toast.success(checked ? "Smart insights enabled" : "Smart insights disabled");
+      toast({
+        title: checked ? "Smart insights enabled" : "Smart insights disabled",
+      });
     } else {
-      toast.error("Failed to update smart insights settings");
+      toast({
+        title: "Error",
+        description: "Failed to update smart insights settings",
+        variant: "destructive"
+      });
     }
   };
 
   // Handle memory clearing
-  const handleClearMemories = async () => {
-    const success = await clearAllMemories();
+  const handleClearMemories = async (shouldArchive: boolean) => {
+    const success = await clearAllMemories(shouldArchive);
     if (success) {
-      toast.success("All memories cleared");
+      toast({
+        title: "Memories cleared",
+        description: shouldArchive ? "All memories have been archived and cleared" : "All memories cleared",
+      });
     } else {
-      toast.error("Failed to clear memories");
+      toast({
+        title: "Error",
+        description: "Failed to clear memories",
+        variant: "destructive"
+      });
     }
   };
 
@@ -90,100 +111,142 @@ export const MemorySettings = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Memory toggle section */}
-      <div>
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="memory-toggle">Conversation Memory</Label>
-            <p className="text-sm text-muted-foreground">
-              Allow Kai to remember your previous conversations
-            </p>
-          </div>
-          <Switch 
-            id="memory-toggle"
-            checked={memoryEnabled}
-            onCheckedChange={handleMemoryToggle}
-          />
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Smart Insights toggle (Premium only) */}
-      <div>
-        <div className="flex items-center justify-between">
-          <div className="space-y-0.5">
-            <Label htmlFor="insights-toggle">Smart Insights</Label>
-            <p className="text-sm text-muted-foreground">
-              {isPremium 
-                ? "Enable advanced analysis of conversation patterns"
-                : "Upgrade to Premium to enable this feature"}
-            </p>
-          </div>
-          <Switch 
-            id="insights-toggle"
-            checked={smartInsightsEnabled}
-            onCheckedChange={handleInsightsToggle}
-            disabled={!isPremium}
-          />
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Memory stats card */}
-      {memoryEnabled && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Memory Statistics</CardTitle>
-            <CardDescription>Overview of your conversation memory</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-2 pt-0">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-muted p-2 rounded">
-                <p className="text-xs text-muted-foreground">Total memories</p>
-                <p className="text-lg font-medium">{memoryStats.totalMemories}</p>
-              </div>
-              <div className="bg-muted p-2 rounded">
-                <p className="text-xs text-muted-foreground">Messages</p>
-                <p className="text-lg font-medium">{memoryStats.messageCount}</p>
-              </div>
-              <div className="bg-muted p-2 rounded">
-                <p className="text-xs text-muted-foreground">Insights</p>
-                <p className="text-lg font-medium">{memoryStats.insightCount}</p>
-              </div>
-              <div className="bg-muted p-2 rounded">
-                <p className="text-xs text-muted-foreground">Topics</p>
-                <p className="text-lg font-medium">{memoryStats.topicCount}</p>
-              </div>
+    <Tabs defaultValue="settings">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="settings">Settings</TabsTrigger>
+        <TabsTrigger value="archive">Archive</TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="settings" className="space-y-6 mt-4">
+        {/* Memory toggle section */}
+        <div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="memory-toggle">Conversation Memory</Label>
+              <p className="text-sm text-muted-foreground">
+                Allow Kai to remember your previous conversations
+              </p>
             </div>
+            <Switch 
+              id="memory-toggle"
+              checked={memoryEnabled}
+              onCheckedChange={handleMemoryToggle}
+            />
+          </div>
+        </div>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="destructive" size="sm" className="w-full mt-2">
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear All Memories
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Clear all memories?</DialogTitle>
-                  <DialogDescription>
-                    This will permanently delete all conversation memories and cannot be undone.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => {}}>Cancel</Button>
-                  <Button variant="destructive" onClick={handleClearMemories}>
-                    Delete All Memories
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+        <Separator />
+
+        {/* Smart Insights toggle (Premium only) */}
+        <div>
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="insights-toggle">Smart Insights</Label>
+              <p className="text-sm text-muted-foreground">
+                {isPremium 
+                  ? "Enable advanced analysis of conversation patterns"
+                  : "Upgrade to Premium to enable this feature"}
+              </p>
+            </div>
+            <Switch 
+              id="insights-toggle"
+              checked={smartInsightsEnabled}
+              onCheckedChange={handleInsightsToggle}
+              disabled={!isPremium}
+            />
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Memory stats card */}
+        {memoryEnabled && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Memory Statistics</CardTitle>
+              <CardDescription>Overview of your conversation memory</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2 pt-0">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-muted p-2 rounded">
+                  <p className="text-xs text-muted-foreground">Total memories</p>
+                  <p className="text-lg font-medium">{memoryStats.totalMemories}</p>
+                </div>
+                <div className="bg-muted p-2 rounded">
+                  <p className="text-xs text-muted-foreground">Messages</p>
+                  <p className="text-lg font-medium">{memoryStats.messageCount}</p>
+                </div>
+                <div className="bg-muted p-2 rounded">
+                  <p className="text-xs text-muted-foreground">Insights</p>
+                  <p className="text-lg font-medium">{memoryStats.insightCount}</p>
+                </div>
+                <div className="bg-muted p-2 rounded">
+                  <p className="text-xs text-muted-foreground">Topics</p>
+                  <p className="text-lg font-medium">{memoryStats.topicCount}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="w-full">
+                      <Archive className="h-4 w-4 mr-2" />
+                      Archive & Clear
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Archive and clear all memories?</DialogTitle>
+                      <DialogDescription>
+                        This will archive your memories and then clear them. You can access archived memories later.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => {}}>Cancel</Button>
+                      <Button 
+                        variant="default"
+                        onClick={() => handleClearMemories(true)}
+                      >
+                        Archive & Clear
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="destructive" size="sm" className="w-full">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Clear Only
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Clear all memories?</DialogTitle>
+                      <DialogDescription>
+                        This will permanently delete all conversation memories without archiving and cannot be undone.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => {}}>Cancel</Button>
+                      <Button 
+                        variant="destructive"
+                        onClick={() => handleClearMemories(false)}
+                      >
+                        Delete All Memories
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+      
+      <TabsContent value="archive" className="mt-4">
+        <ArchivedMemories />
+      </TabsContent>
+    </Tabs>
   );
 };

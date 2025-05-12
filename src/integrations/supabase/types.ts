@@ -340,6 +340,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_archived_memories: {
+        Row: {
+          archived_at: string
+          content: string
+          id: string
+          memory_type: string
+          metadata: Json | null
+          original_created_at: string | null
+          original_memory_id: string | null
+          user_id: string
+        }
+        Insert: {
+          archived_at?: string
+          content: string
+          id?: string
+          memory_type: string
+          metadata?: Json | null
+          original_created_at?: string | null
+          original_memory_id?: string | null
+          user_id: string
+        }
+        Update: {
+          archived_at?: string
+          content?: string
+          id?: string
+          memory_type?: string
+          metadata?: Json | null
+          original_created_at?: string | null
+          original_memory_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_login_history: {
         Row: {
           created_at: string
