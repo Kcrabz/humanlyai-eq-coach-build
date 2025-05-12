@@ -8,11 +8,10 @@ export function MainNavigationLinks() {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-3">
       <Button
-        variant={isActive("/") ? "default" : "ghost"}
-        className="w-full justify-start"
-        size="sm"
+        variant={isActive("/") ? "secondary" : "ghost"}
+        className="w-full justify-start px-4 py-2 h-10"
         asChild
       >
         <Link to="/">
@@ -21,9 +20,8 @@ export function MainNavigationLinks() {
       </Button>
 
       <Button
-        variant={isActive("/chat") ? "default" : "ghost"}
-        className="w-full justify-start"
-        size="sm"
+        variant={isActive("/chat") ? "secondary" : "ghost"}
+        className="w-full justify-start px-4 py-2 h-10 bg-humanly-indigo/10 text-humanly-indigo"
         asChild
       >
         <Link to="/chat">
@@ -32,9 +30,8 @@ export function MainNavigationLinks() {
       </Button>
       
       <Button
-        variant={isActive("/progress") ? "default" : "ghost"}
-        className="w-full justify-start bg-humanly-teal/10"
-        size="sm"
+        variant={isActive("/progress") ? "secondary" : "ghost"}
+        className="w-full justify-start px-4 py-2 h-10 bg-humanly-teal/10"
         asChild
       >
         <Link to="/progress">
@@ -43,9 +40,8 @@ export function MainNavigationLinks() {
       </Button>
       
       <Button
-        variant={isActive("/blog") ? "default" : "ghost"}
-        className="w-full justify-start"
-        size="sm"
+        variant={isActive("/blog") ? "secondary" : "ghost"}
+        className="w-full justify-start px-4 py-2 h-10"
         asChild
       >
         <Link to="/blog">
@@ -54,9 +50,8 @@ export function MainNavigationLinks() {
       </Button>
       
       <Button
-        variant={isActive("/help") ? "default" : "ghost"}
-        className="w-full justify-start"
-        size="sm"
+        variant={isActive("/help") ? "secondary" : "ghost"}
+        className="w-full justify-start px-4 py-2 h-10"
         asChild
       >
         <Link to="/help">
@@ -65,9 +60,8 @@ export function MainNavigationLinks() {
       </Button>
       
       <Button
-        variant={isActive("/community") ? "default" : "ghost"}
-        className="w-full justify-start"
-        size="sm"
+        variant={isActive("/community") ? "secondary" : "ghost"}
+        className="w-full justify-start px-4 py-2 h-10"
         asChild
       >
         <Link to="/community">
