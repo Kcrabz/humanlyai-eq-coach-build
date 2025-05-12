@@ -1,8 +1,8 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import EmailDetailsDialog from "./EmailDetailsDialog";
-import SendEmailDialog from "./SendEmailDialog";
+import EmailDetailsDialog from "./email-details/EmailDetailsDialog";
+import SendEmailDialog from "./send-email/SendEmailDialog";
 import EmailTemplatePreview from "./EmailTemplatePreview";
 import { useEmailManagement } from "./hooks/useEmailManagement";
 import { EmailFilters } from "./components/EmailFilters";
