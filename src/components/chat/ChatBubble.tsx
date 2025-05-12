@@ -7,8 +7,11 @@ import { MemoryIndicator } from "./components/MemoryIndicator";
 import { useMemoryIndicator } from "@/hooks/useMemoryIndicator";
 import { useAuth } from "@/context/AuthContext";
 import ReactMarkdown from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
+// Import highlight.js styles - we'll use this instead of rehype-highlight
+import "highlight.js/styles/github.css";
+// Import the highlight function from highlight.js
+import hljs from "highlight.js";
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -32,6 +35,15 @@ export function ChatBubble({
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Add highlight.js effect for code blocks
+  useEffect(() => {
+    if (isClient) {
+      document.querySelectorAll('pre code').forEach((block) => {
+        hljs.highlightElement(block as HTMLElement);
+      });
+    }
+  }, [isClient, message.content]);
   
   // Check if the assistant message has relevant memories (for basic/premium users only)
   useEffect(() => {
@@ -73,7 +85,6 @@ export function ChatBubble({
           {isClient && (
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
-              rehypePlugins={[rehypeHighlight]}
               components={{
                 a: ({ node, ...props }) => (
                   <a {...props} className="text-blue-500 hover:underline" />
@@ -82,6 +93,20 @@ export function ChatBubble({
                 ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-6 mb-4" />,
                 ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-6 mb-4" />,
                 li: ({ node, ...props }) => <li {...props} className="mb-1" />,
+                code: ({ node, inline, className, children, ...props }) => {
+                  const match = /language-(\w+)/.exec(className || '');
+                  return !inline ? (
+                    <pre className="p-4 rounded bg-gray-800 text-white overflow-auto mb-4">
+                      <code className={match ? `language-${match[1]}` : ''} {...props}>
+                        {String(children).replace(/\n$/, '')}
+                      </code>
+                    </pre>
+                  ) : (
+                    <code className="bg-gray-100 rounded px-1 py-0.5 text-gray-800" {...props}>
+                      {children}
+                    </code>
+                  );
+                }
               }}
             >
               {message.content || ""}
