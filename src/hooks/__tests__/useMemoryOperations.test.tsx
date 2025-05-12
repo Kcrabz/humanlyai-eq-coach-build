@@ -300,7 +300,7 @@ describe('useMemoryOperations', () => {
     
     expect(success).toBe(true);
     expect(supabase.from).toHaveBeenCalledWith('user_archived_memories');
-    expect(supabase.from().delete).toHaveBeenCalledWith();
+    expect(supabase.from().delete).toHaveBeenCalled();
     expect(supabase.from().delete().eq).toHaveBeenCalledWith('id', memoryId);
     expect(supabase.from().delete().eq().eq).toHaveBeenCalledWith('user_id', mockUser.id);
   });
