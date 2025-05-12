@@ -93,9 +93,14 @@ export function ChatBubble({
                 ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-6 mb-4" />,
                 ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-6 mb-4" />,
                 li: ({ node, ...props }) => <li {...props} className="mb-1" />,
-                code: ({ node, inline, className, children, ...props }) => {
+                code: ({ className, children, ...props }) => {
+                  // Fix: Remove the inline prop that was causing the TypeScript error
                   const match = /language-(\w+)/.exec(className || '');
-                  return !inline ? (
+                  
+                  // Check if this is an inline code block based on parent element
+                  const isInlineCode = !props.node?.position?.start.line;
+                  
+                  return !isInlineCode ? (
                     <pre className="p-4 rounded bg-gray-800 text-white overflow-auto mb-4">
                       <code className={match ? `language-${match[1]}` : ''} {...props}>
                         {String(children).replace(/\n$/, '')}

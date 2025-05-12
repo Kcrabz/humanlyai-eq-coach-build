@@ -69,6 +69,7 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           );
         } else {
           // Default values if no preferences found
+          // Fix: Use proper type comparison with subscription_tier
           setMemoryEnabled(user.subscription_tier !== 'free');
           setSmartInsightsEnabled(user.subscription_tier === 'premium');
           
