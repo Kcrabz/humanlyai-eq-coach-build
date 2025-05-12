@@ -144,6 +144,7 @@ export default defineConfig(({ mode }) => ({
       devOptions: {
         enabled: true,
         type: 'module',
+        navigateFallback: 'index.html',
       }
     }),
   ].filter(Boolean),
@@ -152,4 +153,28 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    sourcemap: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['@radix-ui/react-tooltip', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+        }
+      }
+    }
+  },
+  optimizeDeps: {
+    include: [
+      'react', 
+      'react-dom', 
+      'react-router-dom',
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu'
+    ],
+    esbuildOptions: {
+      target: 'esnext'
+    }
+  }
 }));
