@@ -25,8 +25,13 @@ const registerServiceWorker = async () => {
           // Dispatch event on registration to handle PWA-specific UI adjustments
           window.dispatchEvent(new CustomEvent('pwa-registered'));
           
-          // Dispatch the update event
-          window.dispatchEvent(new CustomEvent('pwa-update-available'));
+          // Check if we need to redirect after PWA installation
+          const redirectPath = localStorage.getItem('pwa_redirect_after_login');
+          if (redirectPath) {
+            console.log('Found pending PWA redirect after login to:', redirectPath);
+            window.location.href = redirectPath;
+            localStorage.removeItem('pwa_redirect_after_login');
+          }
         }
       },
       onRegisterError(error) {
@@ -48,8 +53,16 @@ const initPwaFeatures = () => {
       document.body.classList.add('pwa-mode');
       console.log('Running as installed PWA');
       
+      // Store current path in sessionStorage if we're on a path that requires login
+      // This helps post-login navigation in PWA environments
+      if (window.location.pathname !== '/' && 
+          window.location.pathname !== '/login' && 
+          window.location.pathname !== '/signup') {
+        sessionStorage.setItem('pwa_desired_path', window.location.pathname);
+        console.log('Stored desired path for PWA:', window.location.pathname);
+      }
+      
       // Force a load to the intended page when in PWA mode
-      // This helps with navigation issues specific to PWA environments
       const desiredPath = sessionStorage.getItem('pwa_desired_path');
       if (desiredPath && window.location.pathname === '/') {
         console.log('Redirecting to desired path in PWA:', desiredPath);
@@ -87,7 +100,15 @@ const initializeApp = () => {
     registerServiceWorker();
     
     // Initialize PWA features
-    window.addEventListener('DOMContentLoaded', initPwaFeatures);
+    initPwaFeatures();
+    
+    // Add additional PWA detection for login flow
+    window.addEventListener('DOMContentLoaded', () => {
+      console.log('DOM loaded, PWA status:', window.isPwaMode());
+      if (window.isPwaMode()) {
+        console.log('PWA detected on DOMContentLoaded, current path:', window.location.pathname);
+      }
+    });
     
   } catch (err) {
     console.error('Failed to initialize application:', err);

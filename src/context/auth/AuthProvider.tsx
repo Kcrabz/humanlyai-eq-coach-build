@@ -69,10 +69,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (isAuthenticated && isRunningAsPWA()) {
       console.log("Authenticated in PWA, current path:", location.pathname);
       
+      // Store current path for PWA after successful authentication
+      // This helps with navigation after login in PWA mode
+      if (location.pathname !== '/login' && location.pathname !== '/signup') {
+        sessionStorage.setItem('pwa_last_path', location.pathname);
+        console.log("Stored last path for PWA:", location.pathname);
+      }
+      
       // Store desired path for PWA after successful authentication
-      if (user?.onboarded && location.pathname === '/login') {
-        console.log("Storing dashboard as desired path for PWA");
-        sessionStorage.setItem('pwa_desired_path', '/dashboard');
+      if (user?.onboarded) {
+        if (location.pathname === '/login' || location.pathname === '/signup') {
+          // After login/signup in PWA mode, direct to dashboard or last stored path
+          const lastPath = sessionStorage.getItem('pwa_last_path') || '/dashboard';
+          console.log("Storing redirect target for PWA post-auth:", lastPath);
+          sessionStorage.setItem('pwa_desired_path', lastPath);
+        }
       }
     }
   }, [isAuthenticated, user, location.pathname]);

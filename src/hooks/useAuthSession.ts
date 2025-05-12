@@ -38,16 +38,20 @@ export const useAuthSession = () => {
         const isPWA = isRunningAsPWA();
         console.log("Login success marked for fresh chat experience", { isPWA });
         
-        // For PWA environments, we might need more aggressive handling
+        // For PWA environments, we need more aggressive handling
         if (isPWA) {
           // Give a little time for state to update before redirect
           setTimeout(() => {
             if (data.session?.user.id) {
-              // Check if we should redirect to dashboard directly
-              // This is a backup for PWA environments where React Router might have issues
-              console.log("PWA environment detected during login, preparing special handling");
+              // Store current timestamp in localStorage to help with PWA redirects
+              localStorage.setItem('pwa_auth_timestamp', Date.now().toString());
+              console.log("PWA login successful, setting redirect flag");
+              
+              // Set a delayed redirect to dashboard for PWA mode
+              // This is picked up by the service worker registration handler
+              localStorage.setItem('pwa_redirect_after_login', '/dashboard');
             }
-          }, 500);
+          }, 300);
         }
       } catch (error) {
         console.error("Error updating session after sign in:", error);
@@ -58,6 +62,10 @@ export const useAuthSession = () => {
       setAuthEvent('SIGN_OUT_COMPLETE');
       setProfileLoaded(false);
       localStorage.removeItem('login_success_timestamp');
+      // Also clear PWA-specific values
+      localStorage.removeItem('pwa_auth_timestamp');
+      localStorage.removeItem('pwa_redirect_after_login');
+      sessionStorage.removeItem('pwa_desired_path');
     }
   }, []);
 
@@ -73,6 +81,15 @@ export const useAuthSession = () => {
       } else {
         // Clear expired login timestamp
         localStorage.removeItem('login_success_timestamp');
+      }
+    }
+    
+    // Check for PWA auth timestamp as additional fallback
+    const pwaAuthTimestamp = localStorage.getItem('pwa_auth_timestamp');
+    if (pwaAuthTimestamp && isRunningAsPWA()) {
+      const timestamp = parseInt(pwaAuthTimestamp);
+      if (Date.now() - timestamp < 5 * 60 * 1000) {
+        console.log("Found recent PWA auth timestamp - may need to redirect", { timestamp });
       }
     }
   }, [loginTimestamp]);
@@ -112,6 +129,22 @@ export const useAuthSession = () => {
         if (existingSession) {
           setAuthEvent('RESTORED_SESSION');
           setProfileLoaded(true); // Assume profile is loaded for existing sessions
+          
+          // For PWA mode, check if we need to handle redirects
+          if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
+            console.log("PWA session restored, may need to handle redirects");
+            localStorage.setItem('pwa_session_restored', 'true');
+            
+            // Check for stored redirect path
+            const desiredPath = sessionStorage.getItem('pwa_desired_path');
+            if (desiredPath && window.location.pathname === '/' || window.location.pathname === '/login') {
+              console.log("Found stored redirect path for PWA:", desiredPath);
+              // Add slight delay to allow context to initialize
+              setTimeout(() => {
+                window.location.href = desiredPath;
+              }, 300);
+            }
+          }
         }
         
         // Make sure to set isLoading to false once session is checked

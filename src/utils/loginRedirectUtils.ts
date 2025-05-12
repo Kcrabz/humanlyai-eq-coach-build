@@ -20,6 +20,16 @@ export const markLoginSuccess = (): void => {
   sessionStorage.removeItem('chat_cleared_for_session');
 
   console.log("Login success marked with timestamp", { timestamp });
+  
+  // Special handling for PWA mode
+  if (window.isPwaMode()) {
+    console.log("Login success detected in PWA mode");
+    
+    // Store dashboard as the default redirect path if nothing else is specified
+    if (!sessionStorage.getItem('pwa_desired_path')) {
+      sessionStorage.setItem('pwa_desired_path', '/dashboard');
+    }
+  }
 };
 
 /**
@@ -57,7 +67,20 @@ export const wasLoginSuccessful = (): boolean => {
  */
 export const forceRedirectToDashboard = (): void => {
   console.log("Forcing redirect to dashboard using window.location");
-  window.location.href = '/dashboard';
+  
+  // If in PWA mode, use a slight delay to ensure state is properly updated
+  if (window.isPwaMode()) {
+    // For PWA, store the redirect in localStorage to persist across page loads
+    localStorage.setItem('pwa_redirect_after_login', '/dashboard');
+    console.log("Set localStorage redirect for PWA");
+    
+    // Use timeout to give a chance for other processes to complete
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 100);
+  } else {
+    window.location.href = '/dashboard';
+  }
 };
 
 /**

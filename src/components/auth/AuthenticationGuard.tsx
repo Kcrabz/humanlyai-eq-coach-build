@@ -15,6 +15,7 @@ export const AuthenticationGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
+  const isPWA = isRunningAsPWA();
   
   // Debug logging for session state
   useEffect(() => {
@@ -24,15 +25,20 @@ export const AuthenticationGuard = () => {
       userOnboarded: user?.onboarded,
       authEvent,
       profileLoaded,
-      isPWA: isRunningAsPWA(),
+      isPWA,
       timestamp: new Date().toISOString()
     });
-  }, [user, pathname, authEvent, profileLoaded]);
+    
+    // For PWA environments, store info about current path if authenticated
+    if (isPWA && user && user.onboarded) {
+      console.log("AuthGuard: Authenticated in PWA, may need to store path:", pathname);
+    }
+  }, [user, pathname, authEvent, profileLoaded, isPWA]);
 
   // Skip redirects for password reset/update pages
   const isPasswordResetPage = pathname === "/reset-password" || pathname === "/update-password";
   
-  // Handle redirects based on authentication status - with loop protection
+  // Handle redirects based on authentication status - with loop protection and PWA awareness
   useEffect(() => {
     // Only proceed when auth is fully ready
     if (isLoading) {
@@ -57,7 +63,6 @@ export const AuthenticationGuard = () => {
     const shouldGoToOnboarding = user && !user.onboarded && pathname !== "/onboarding";
     const shouldGoToDashboard = user && user.onboarded && isCurrentlyOnAuth;
     const shouldGoToLogin = !user && pathname !== "/" && !isCurrentlyOnAuth;
-    const isPWA = isRunningAsPWA();
     
     console.log("AuthGuard: Navigation logic check", {
       isCurrentlyOnAuth,
@@ -79,14 +84,9 @@ export const AuthenticationGuard = () => {
           
           // For PWA, use a more direct approach to avoid navigation issues
           if (isPWA) {
-            setTimeout(() => {
-              window.location.href = "/onboarding";
-            }, 100);
+            window.location.href = "/onboarding";
           } else {
-            // Regular navigation for non-PWA
-            setTimeout(() => {
-              navigate("/onboarding", { replace: true });
-            }, 50);
+            navigate("/onboarding", { replace: true });
           }
         }
       } else if (isCurrentlyOnAuth) {
@@ -96,16 +96,13 @@ export const AuthenticationGuard = () => {
           
           // Use direct window.location for PWA to avoid React Router issues
           if (isPWA) {
-            setTimeout(() => {
-              forceRedirectToDashboard();
-              toast.success(`Welcome back, ${user.name || 'Friend'}!`);
-            }, 100);
+            // For PWA, we'll save the desired path and use forceRedirectToDashboard
+            // which implements additional PWA-specific handling
+            forceRedirectToDashboard();
+            toast.success(`Welcome back, ${user.name || 'Friend'}!`);
           } else {
-            // Regular navigation for non-PWA
-            setTimeout(() => {
-              navigate("/dashboard", { replace: true });
-              toast.success(`Welcome back, ${user.name || 'Friend'}!`);
-            }, 50);
+            navigate("/dashboard", { replace: true });
+            toast.success(`Welcome back, ${user.name || 'Friend'}!`);
           }
         }
       }
@@ -137,7 +134,7 @@ export const AuthenticationGuard = () => {
         navigate("/dashboard", { replace: true });
       }
     }
-  }, [user, isLoading, pathname, navigate, authEvent, profileLoaded, isPasswordResetPage]);
+  }, [user, isLoading, pathname, navigate, authEvent, profileLoaded, isPasswordResetPage, isPWA]);
 
   // This component doesn't render anything, just handles redirects
   return null;
