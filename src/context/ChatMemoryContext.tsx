@@ -51,11 +51,11 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           return;
         }
         
-        // Get user preferences
+        // Get user preferences from profiles table
         const { data: prefData, error: prefError } = await supabase
-          .from('user_preferences')
+          .from('profiles')
           .select('memory_enabled, smart_insights_enabled')
-          .eq('user_id', user.id)
+          .eq('id', user.id)
           .single();
           
         if (!prefError && prefData) {
@@ -71,14 +71,14 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           setMemoryEnabled(user.subscription_tier !== 'free');
           setSmartInsightsEnabled(user.subscription_tier === 'premium');
           
-          // Create default preferences
+          // Create default preferences in profiles table
           await supabase
-            .from('user_preferences')
-            .upsert({
-              user_id: user.id,
+            .from('profiles')
+            .update({
               memory_enabled: user.subscription_tier !== 'free',
               smart_insights_enabled: user.subscription_tier === 'premium'
-            });
+            })
+            .eq('id', user.id);
         }
         
         // Fetch memory stats
@@ -104,12 +104,12 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       }
       
       const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
+        .from('profiles')
+        .update({
           memory_enabled: enabled,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('id', user.id);
         
       if (error) {
         console.error("Error updating memory setting:", error);
@@ -130,12 +130,12 @@ export const ChatMemoryProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     
     try {
       const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
+        .from('profiles')
+        .update({
           smart_insights_enabled: enabled,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('id', user.id);
         
       if (error) {
         console.error("Error updating smart insights setting:", error);

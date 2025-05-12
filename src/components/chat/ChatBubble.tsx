@@ -3,12 +3,12 @@ import React, { useState, useEffect } from "react";
 import { ChatMessage } from "@/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import ReactMarkdown from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
-import remarkGfm from "remark-gfm";
 import { MemoryIndicator } from "./components/MemoryIndicator";
 import { useMemoryIndicator } from "@/hooks/useMemoryIndicator";
 import { useAuth } from "@/context/AuthContext";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -38,7 +38,7 @@ export function ChatBubble({
     if (!isUserMessage && user && user.subscription_tier !== 'free' && message.content) {
       checkForRelevantMemories(message.content);
     }
-  }, [isUserMessage, message.content, user]);
+  }, [isUserMessage, message.content, user, checkForRelevantMemories]);
   
   // Render the message with different styles for user and assistant
   return (
@@ -76,7 +76,7 @@ export function ChatBubble({
               rehypePlugins={[rehypeHighlight]}
               className={`prose max-w-none ${
                 isUserMessage ? "prose-invert" : ""
-              } ${isClient ? "opacity-100" : "opacity-0"}`}
+              }`}
               components={{
                 a: ({ node, ...props }) => (
                   <a {...props} className="text-blue-500 hover:underline" />

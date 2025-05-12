@@ -34,7 +34,7 @@ export function ChatRightSidebar() {
   const hasMemoryFeatures = user?.subscription_tier !== 'free';
 
   return (
-    <Sidebar side="right" sizeClass="w-80">
+    <Sidebar side="right" className="w-80">
       <SidebarContent className="flex flex-col h-full divide-y">
         {/* Header with close button */}
         <div className="flex items-center justify-between p-4">

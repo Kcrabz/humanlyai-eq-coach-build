@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useChatMemory } from "@/context/ChatMemoryContext";
 
 interface MemorySettingsProps {
   onClose?: () => void;
@@ -26,17 +27,16 @@ interface MemorySettingsProps {
 
 export function MemorySettings({ onClose }: MemorySettingsProps) {
   const { user } = useAuth();
-  const [memoryEnabled, setMemoryEnabled] = useState(true);
-  const [smartInsights, setSmartInsights] = useState(true);
-  const [relevanceThreshold, setRelevanceThreshold] = useState(70);
-  const [memoryStats, setMemoryStats] = useState({
-    totalMemories: 0,
-    insightCount: 0,
-    messageCount: 0,
-    topicCount: 0,
-    oldestMemory: '',
-    newestMemory: ''
-  });
+  const { 
+    memoryEnabled, 
+    smartInsightsEnabled, 
+    memoryStats,
+    toggleMemory,
+    toggleSmartInsights,
+    refreshMemoryStats,
+    clearAllMemories
+  } = useChatMemory();
+  
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isFree, setIsFree] = useState(true);
@@ -48,44 +48,8 @@ export function MemorySettings({ onClose }: MemorySettingsProps) {
     if (user) {
       setIsFree(user.subscription_tier === 'free');
       setIsBasic(user.subscription_tier === 'basic');
-      setPremium(user.subscription_tier === 'premium');
-      
-      // Free users don't have memory features
-      if (user.subscription_tier === 'free') {
-        setMemoryEnabled(false);
-      }
+      setIsPremium(user.subscription_tier === 'premium');
     }
-  }, [user]);
-
-  // Fetch memory stats
-  useEffect(() => {
-    if (!user || user.subscription_tier === 'free') return;
-    
-    const fetchStats = async () => {
-      setIsLoading(true);
-      
-      try {
-        const { data, error } = await supabase.functions.invoke('memory-stats', {
-          body: { userId: user.id }
-        });
-        
-        if (error) {
-          console.error("Error fetching memory stats:", error);
-          toast.error("Failed to fetch memory statistics");
-          return;
-        }
-        
-        if (data) {
-          setMemoryStats(data);
-        }
-      } catch (error) {
-        console.error("Exception fetching memory stats:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchStats();
   }, [user]);
 
   // Handle memory toggle
@@ -95,26 +59,14 @@ export function MemorySettings({ onClose }: MemorySettingsProps) {
       return;
     }
     
-    setMemoryEnabled(checked);
+    setIsLoading(true);
+    const success = await toggleMemory(checked);
+    setIsLoading(false);
     
-    // Update user preferences
-    try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user?.id,
-          memory_enabled: checked,
-          updated_at: new Date().toISOString()
-        });
-        
-      if (error) {
-        console.error("Error updating memory preferences:", error);
-        toast.error("Failed to update memory settings");
-      } else {
-        toast.success(`Memory features ${checked ? 'enabled' : 'disabled'}`);
-      }
-    } catch (error) {
-      console.error("Exception updating memory preferences:", error);
+    if (success) {
+      toast.success(`Memory features ${checked ? 'enabled' : 'disabled'}`);
+    } else {
+      toast.error("Failed to update memory settings");
     }
   };
 
@@ -125,26 +77,14 @@ export function MemorySettings({ onClose }: MemorySettingsProps) {
       return;
     }
     
-    setSmartInsights(checked);
+    setIsLoading(true);
+    const success = await toggleSmartInsights(checked);
+    setIsLoading(false);
     
-    // Update user preferences
-    try {
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user?.id,
-          smart_insights_enabled: checked,
-          updated_at: new Date().toISOString()
-        });
-        
-      if (error) {
-        console.error("Error updating insight preferences:", error);
-        toast.error("Failed to update insight settings");
-      } else {
-        toast.success(`Smart insights ${checked ? 'enabled' : 'disabled'}`);
-      }
-    } catch (error) {
-      console.error("Exception updating insight preferences:", error);
+    if (success) {
+      toast.success(`Smart insights ${checked ? 'enabled' : 'disabled'}`);
+    } else {
+      toast.error("Failed to update insight settings");
     }
   };
 
@@ -153,34 +93,13 @@ export function MemorySettings({ onClose }: MemorySettingsProps) {
     if (!user) return;
     
     setIsDeleting(true);
+    const success = await clearAllMemories();
+    setIsDeleting(false);
     
-    try {
-      const { error } = await supabase.functions.invoke('delete-memories', {
-        body: { userId: user.id }
-      });
-      
-      if (error) {
-        console.error("Error deleting memories:", error);
-        toast.error("Failed to delete memories");
-        return;
-      }
-      
-      // Update stats
-      setMemoryStats({
-        totalMemories: 0,
-        insightCount: 0,
-        messageCount: 0,
-        topicCount: 0,
-        oldestMemory: '',
-        newestMemory: ''
-      });
-      
+    if (success) {
       toast.success("All memories have been deleted");
-    } catch (error) {
-      console.error("Exception deleting memories:", error);
-      toast.error("An error occurred while deleting memories");
-    } finally {
-      setIsDeleting(false);
+    } else {
+      toast.error("Failed to delete memories");
     }
   };
 
@@ -262,7 +181,7 @@ export function MemorySettings({ onClose }: MemorySettingsProps) {
                 Extract and remember key insights from your conversations to enhance future coaching.
               </p>
             </div>
-            <Switch checked={smartInsights} onCheckedChange={handleToggleSmartInsights} />
+            <Switch checked={smartInsightsEnabled} onCheckedChange={handleToggleSmartInsights} />
           </div>
         )}
         
@@ -293,11 +212,6 @@ export function MemorySettings({ onClose }: MemorySettingsProps) {
                   </>
                 )}
               </div>
-              {memoryStats.oldestMemory && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Memory range: {formatDate(memoryStats.oldestMemory)} - {formatDate(memoryStats.newestMemory)}
-                </p>
-              )}
             </div>
             
             {/* Memory Management */}
@@ -312,7 +226,11 @@ export function MemorySettings({ onClose }: MemorySettingsProps) {
                   variant="outline" 
                   size="sm" 
                   className="flex-1"
-                  onClick={() => toast.info("Refreshing memories...")}
+                  onClick={() => {
+                    setIsLoading(true);
+                    refreshMemoryStats().finally(() => setIsLoading(false));
+                    toast.info("Refreshing memories...");
+                  }}
                   disabled={isLoading}
                 >
                   <RotateCw className="h-4 w-4 mr-2" />
