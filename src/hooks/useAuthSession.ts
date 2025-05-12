@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { markLoginSuccess } from '@/utils/loginRedirectUtils';
+import { markLoginSuccess, forceRedirectToDashboard, isRunningAsPWA } from '@/utils/loginRedirectUtils';
 
 /**
  * Hook for managing authentication session state with improved initialization and sign-in handling
@@ -34,7 +34,21 @@ export const useAuthSession = () => {
         // Mark login success to trigger fresh chat experience
         markLoginSuccess();
         
-        console.log("Login success marked for fresh chat experience");
+        // Check if this is a PWA and handle redirects more aggressively
+        const isPWA = isRunningAsPWA();
+        console.log("Login success marked for fresh chat experience", { isPWA });
+        
+        // For PWA environments, we might need more aggressive handling
+        if (isPWA) {
+          // Give a little time for state to update before redirect
+          setTimeout(() => {
+            if (data.session?.user.id) {
+              // Check if we should redirect to dashboard directly
+              // This is a backup for PWA environments where React Router might have issues
+              console.log("PWA environment detected during login, preparing special handling");
+            }
+          }, 500);
+        }
       } catch (error) {
         console.error("Error updating session after sign in:", error);
       }

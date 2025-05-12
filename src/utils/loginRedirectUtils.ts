@@ -75,3 +75,11 @@ export const shouldShowFreshChat = (): boolean => {
   
   return freshChatNeeded;
 };
+
+/**
+ * Detect if the app is running as a PWA (standalone mode)
+ */
+export const isRunningAsPWA = (): boolean => {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         (window.navigator as any).standalone === true;
+};

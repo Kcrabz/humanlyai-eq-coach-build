@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import AuthContext from "./AuthContext";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import useAuthActions from "@/hooks/useAuthActions";
@@ -14,10 +14,13 @@ import { usePremiumFeatures } from "./usePremiumFeatures";
 import { useAuthLoadingState } from "./useAuthLoadingState";
 import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthActionWrappers } from "./useAuthActionWrappers";
+import { isRunningAsPWA } from "@/utils/loginRedirectUtils";
+import { useLocation } from "react-router-dom";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // State for auth error handling
   const [error, setError] = useState<string | null>(null);
+  const location = useLocation();
   
   // Auth session
   const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading, authEvent, profileLoaded, setProfileLoaded } = useAuthSession();
@@ -60,6 +63,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOnboardedWrapper, 
     resetPasswordWrapper 
   } = useAuthActionWrappers(user, profileCore, profileActions, authCore);
+  
+  // Special handling for PWA navigation
+  useEffect(() => {
+    if (isAuthenticated && isRunningAsPWA()) {
+      console.log("Authenticated in PWA, current path:", location.pathname);
+      
+      // Store desired path for PWA after successful authentication
+      if (user?.onboarded && location.pathname === '/login') {
+        console.log("Storing dashboard as desired path for PWA");
+        sessionStorage.setItem('pwa_desired_path', '/dashboard');
+      }
+    }
+  }, [isAuthenticated, user, location.pathname]);
   
   // Memoize the context value to prevent unnecessary rerenders
   const contextValue: AuthContextType = useMemo(() => ({

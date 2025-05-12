@@ -47,10 +47,25 @@ const initPwaFeatures = () => {
     if (isRunningAsPWA) {
       document.body.classList.add('pwa-mode');
       console.log('Running as installed PWA');
+      
+      // Force a load to the intended page when in PWA mode
+      // This helps with navigation issues specific to PWA environments
+      const desiredPath = sessionStorage.getItem('pwa_desired_path');
+      if (desiredPath && window.location.pathname === '/') {
+        console.log('Redirecting to desired path in PWA:', desiredPath);
+        window.location.href = desiredPath;
+        sessionStorage.removeItem('pwa_desired_path');
+      }
     }
   } catch (err) {
     console.error('Error detecting PWA mode:', err);
   }
+};
+
+// Utility function to detect if app is in PWA mode
+window.isPwaMode = () => {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         (window.navigator as any).standalone === true;
 };
 
 // Initialize the application with error handling
