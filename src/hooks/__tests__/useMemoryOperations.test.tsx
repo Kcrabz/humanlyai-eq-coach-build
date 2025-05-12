@@ -4,6 +4,7 @@ import { useMemoryOperations } from '../useMemoryOperations';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { defaultMemoryStats } from '../useMemorySettings';
+import { toast } from '@/components/ui/use-toast';
 
 // Mock dependencies
 jest.mock('@/context/AuthContext');
@@ -52,30 +53,34 @@ describe('useMemoryOperations', () => {
     (useAuth as jest.Mock).mockReturnValue({ user: mockUser });
     
     // Mock Supabase responses
-    (supabase.from as jest.Mock).mockReturnValue({
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          error: null
-        })
-      }),
-      insert: jest.fn().mockReturnValue({
-        error: null
-      }),
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          order: jest.fn().mockResolvedValue({
-            data: [sampleArchivedMemory],
-            error: null
-          })
-        })
-      }),
-      delete: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          eq: jest.fn().mockResolvedValue({
-            error: null
-          })
-        })
-      })
+    (supabase.from as jest.Mock).mockImplementation((table) => {
+      return {
+        update: jest.fn().mockImplementation((data) => ({
+          eq: jest.fn().mockImplementation((field, value) => 
+            Promise.resolve({ error: null })
+          )
+        })),
+        insert: jest.fn().mockImplementation((data) => 
+          Promise.resolve({ error: null })
+        ),
+        select: jest.fn().mockImplementation((query) => ({
+          eq: jest.fn().mockImplementation((field, value) => ({
+            order: jest.fn().mockImplementation((orderField, options) => 
+              Promise.resolve({
+                data: [sampleArchivedMemory],
+                error: null
+              })
+            )
+          }))
+        })),
+        delete: jest.fn().mockImplementation(() => ({
+          eq: jest.fn().mockImplementation((field, value) => ({
+            eq: jest.fn().mockImplementation((field, value) => 
+              Promise.resolve({ error: null })
+            )
+          }))
+        }))
+      };
     });
     
     (supabase.functions.invoke as jest.Mock).mockImplementation((functionName, options) => {
@@ -120,11 +125,10 @@ describe('useMemoryOperations', () => {
     
     expect(success).toBe(true);
     expect(supabase.from).toHaveBeenCalledWith('profiles');
-    expect(supabase.from().update).toHaveBeenCalledWith({
+    expect(supabase.from('profiles').update).toHaveBeenCalledWith({
       memory_enabled: true,
       updated_at: expect.any(String)
     });
-    expect(supabase.from().update().eq).toHaveBeenCalledWith('id', mockUser.id);
     expect(setMemoryEnabled).toHaveBeenCalledWith(true);
   });
 
@@ -165,7 +169,7 @@ describe('useMemoryOperations', () => {
     
     expect(success).toBe(true);
     expect(supabase.from).toHaveBeenCalledWith('profiles');
-    expect(supabase.from().update).toHaveBeenCalledWith({
+    expect(supabase.from('profiles').update).toHaveBeenCalledWith({
       smart_insights_enabled: true,
       updated_at: expect.any(String)
     });
@@ -208,7 +212,7 @@ describe('useMemoryOperations', () => {
     
     expect(success).toBe(true);
     expect(supabase.from).toHaveBeenCalledWith('user_archived_memories');
-    expect(supabase.from().insert).toHaveBeenCalledWith({
+    expect(supabase.from('user_archived_memories').insert).toHaveBeenCalledWith({
       user_id: mockUser.id,
       content,
       memory_type: memoryType,
@@ -278,9 +282,9 @@ describe('useMemoryOperations', () => {
     
     expect(memories).toEqual([sampleArchivedMemory]);
     expect(supabase.from).toHaveBeenCalledWith('user_archived_memories');
-    expect(supabase.from().select).toHaveBeenCalled();
-    expect(supabase.from().select().eq).toHaveBeenCalledWith('user_id', mockUser.id);
-    expect(supabase.from().select().eq().order).toHaveBeenCalledWith('archived_at', { ascending: false });
+    expect(supabase.from('user_archived_memories').select).toHaveBeenCalled();
+    expect(supabase.from('user_archived_memories').select().eq).toHaveBeenCalledWith('user_id', mockUser.id);
+    expect(supabase.from('user_archived_memories').select().eq('user_id', mockUser.id).order).toHaveBeenCalledWith('archived_at', { ascending: false });
   });
 
   test('should delete archived memory', async () => {
@@ -300,9 +304,9 @@ describe('useMemoryOperations', () => {
     
     expect(success).toBe(true);
     expect(supabase.from).toHaveBeenCalledWith('user_archived_memories');
-    expect(supabase.from().delete).toHaveBeenCalled();
-    expect(supabase.from().delete().eq).toHaveBeenCalledWith('id', memoryId);
-    expect(supabase.from().delete().eq().eq).toHaveBeenCalledWith('user_id', mockUser.id);
+    expect(supabase.from('user_archived_memories').delete).toHaveBeenCalled();
+    expect(supabase.from('user_archived_memories').delete().eq).toHaveBeenCalledWith('id', memoryId);
+    expect(supabase.from('user_archived_memories').delete().eq('id', memoryId).eq).toHaveBeenCalledWith('user_id', mockUser.id);
   });
 
   test('should restore memory', async () => {

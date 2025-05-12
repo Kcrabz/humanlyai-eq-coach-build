@@ -33,33 +33,39 @@ describe('useMemorySettings', () => {
     (useAuth as jest.Mock).mockReturnValue({ user: mockUser });
     
     // Mock Supabase responses
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: {
-              memory_enabled: true,
-              smart_insights_enabled: false
-            },
-            error: null
-          })
-        })
-      }),
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          error: null
-        })
-      })
+    (supabase.from as jest.Mock).mockImplementation((table) => {
+      return {
+        select: jest.fn().mockImplementation((columns) => ({
+          eq: jest.fn().mockImplementation((field, value) => ({
+            single: jest.fn().mockImplementation(() => 
+              Promise.resolve({
+                data: {
+                  memory_enabled: true,
+                  smart_insights_enabled: false
+                },
+                error: null
+              })
+            )
+          }))
+        })),
+        update: jest.fn().mockImplementation((data) => ({
+          eq: jest.fn().mockImplementation((field, value) => 
+            Promise.resolve({ error: null })
+          )
+        }))
+      };
     });
     
-    (supabase.functions.invoke as jest.Mock).mockResolvedValue({
-      data: {
-        totalMemories: 10,
-        insightCount: 3,
-        messageCount: 5,
-        topicCount: 2
-      },
-      error: null
+    (supabase.functions.invoke as jest.Mock).mockImplementation((functionName, options) => {
+      return Promise.resolve({
+        data: {
+          totalMemories: 10,
+          insightCount: 3,
+          messageCount: 5,
+          topicCount: 2
+        },
+        error: null
+      });
     });
   });
 
@@ -88,8 +94,8 @@ describe('useMemorySettings', () => {
     
     // Verify Supabase was called correctly
     expect(supabase.from).toHaveBeenCalledWith('profiles');
-    expect(supabase.from().select).toHaveBeenCalled();
-    expect(supabase.from().select().eq).toHaveBeenCalledWith('id', mockUser.id);
+    expect(supabase.from('profiles').select).toHaveBeenCalled();
+    expect(supabase.from('profiles').select().eq).toHaveBeenCalledWith('id', mockUser.id);
   });
 
   test('should disable all features for free users', async () => {
@@ -108,20 +114,24 @@ describe('useMemorySettings', () => {
     (useAuth as jest.Mock).mockReturnValue({ user: mockPremiumUser });
     
     // Mock no existing preferences
-    (supabase.from as jest.Mock).mockReturnValue({
-      select: jest.fn().mockReturnValue({
-        eq: jest.fn().mockReturnValue({
-          single: jest.fn().mockResolvedValue({
-            data: null,
-            error: { message: 'No data found' }
-          })
-        })
-      }),
-      update: jest.fn().mockReturnValue({
-        eq: jest.fn().mockResolvedValue({
-          error: null
-        })
-      })
+    (supabase.from as jest.Mock).mockImplementation((table) => {
+      return {
+        select: jest.fn().mockImplementation((columns) => ({
+          eq: jest.fn().mockImplementation((field, value) => ({
+            single: jest.fn().mockImplementation(() => 
+              Promise.resolve({
+                data: null,
+                error: { message: 'No data found' }
+              })
+            )
+          }))
+        })),
+        update: jest.fn().mockImplementation((data) => ({
+          eq: jest.fn().mockImplementation((field, value) => 
+            Promise.resolve({ error: null })
+          )
+        }))
+      };
     });
     
     const { result, waitForNextUpdate } = renderHook(() => useMemorySettings());
