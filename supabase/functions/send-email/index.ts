@@ -24,6 +24,12 @@ interface EmailPayload {
 // Helper to log email sending to database
 async function logEmailSent(supabase, payload: EmailPayload) {
   try {
+    console.log("Logging email to database:", {
+      user_id: payload.userId,
+      email_type: payload.emailType,
+      template_name: payload.templateName
+    });
+    
     const { data, error } = await supabase
       .from('email_logs')
       .insert({
@@ -438,6 +444,7 @@ serve(async (req) => {
 
   // Check if Resend API key is configured
   if (!resendApiKey) {
+    console.error("Resend API key is not configured");
     return new Response(
       JSON.stringify({ error: "Resend API key is not configured" }),
       {
@@ -448,8 +455,38 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Received request to send-email function");
+    
     // Get the request body
-    const payload = await req.json() as EmailPayload;
+    let payload: EmailPayload;
+    
+    try {
+      // Handle both stringified and direct JSON objects
+      const body = await req.text();
+      try {
+        payload = JSON.parse(body) as EmailPayload;
+      } catch (e) {
+        // If parsing fails, assume body was already a JS object (from invoke function)
+        payload = await req.json() as EmailPayload;
+      }
+      
+      console.log("Parsed payload:", JSON.stringify(payload, null, 2));
+      
+      // Validate required fields
+      if (!payload.userId || !payload.templateName || !payload.subject) {
+        throw new Error("Missing required fields in payload");
+      }
+      
+    } catch (parseError) {
+      console.error("Error parsing request body:", parseError);
+      return new Response(
+        JSON.stringify({ error: "Invalid request format" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
     
     // Create Supabase admin client
     const supabase = supabaseClient(req);
@@ -461,6 +498,8 @@ serve(async (req) => {
       .eq('user_id', payload.userId)
       .single();
     
+    console.log("Found preferences:", preferences);
+    
     // If the user has opted out of this type of email, don't send it
     if (preferences) {
       if (payload.emailType === 'daily_nudge' && !preferences.daily_nudges ||
@@ -468,6 +507,8 @@ serve(async (req) => {
           payload.emailType === 'achievement' && !preferences.achievement_notifications ||
           payload.emailType === 'challenge' && !preferences.challenge_reminders ||
           payload.emailType === 're_engagement' && !preferences.inactivity_reminders) {
+        
+        console.log(`User ${payload.userId} has opted out of ${payload.emailType} emails`);
         return new Response(
           JSON.stringify({ message: "User has opted out of this email type" }),
           {
@@ -478,41 +519,65 @@ serve(async (req) => {
       }
     }
     
-    // Get the user's email from the auth.users table
-    const { data: userData } = await supabase.auth.admin.getUserById(payload.userId);
+    // Get recipient email - either from payload or from auth.users
+    let recipientEmail = payload.to;
     
-    if (!userData?.user) {
-      return new Response(
-        JSON.stringify({ error: "User not found" }),
-        {
-          status: 404,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
+    if (!recipientEmail) {
+      console.log("No recipient email in payload, fetching from auth.users");
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById(payload.userId);
+      
+      if (userError || !userData?.user?.email) {
+        console.error("Error fetching user email:", userError);
+        return new Response(
+          JSON.stringify({ error: "User not found or has no email" }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+      
+      recipientEmail = userData.user.email;
+      console.log(`Found recipient email: ${recipientEmail}`);
     }
     
     // Render the email HTML using the template
     const htmlContent = renderEmailTemplate(payload.templateName, payload.data || {});
     
+    console.log(`Sending email to: ${recipientEmail}`);
+    
     // Send the email
-    const emailResult = await resend.emails.send({
-      from: "Humanly <notifications@humanly.ai>",
-      to: [payload.to || userData.user.email],
-      subject: payload.subject,
-      html: htmlContent,
-    });
-    
-    // Log the email in the database
-    await logEmailSent(supabase, payload);
-    
-    // Return the result
-    return new Response(
-      JSON.stringify(emailResult),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    try {
+      const emailResult = await resend.emails.send({
+        from: "Humanly <notifications@humanly.ai>",
+        to: [recipientEmail],
+        subject: payload.subject,
+        html: htmlContent,
+      });
+      
+      console.log("Email sent:", emailResult);
+      
+      // Log the email in the database
+      await logEmailSent(supabase, payload);
+      
+      // Return the result
+      return new Response(
+        JSON.stringify({ success: true, data: emailResult }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    } catch (sendError) {
+      console.error("Error sending email via Resend:", sendError);
+      return new Response(
+        JSON.stringify({ error: "Failed to send email", details: sendError.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
   } catch (error) {
     // Log and return any errors
     console.error("Error in send-email function:", error);

@@ -103,29 +103,38 @@ export const useSendEmail = (users: User[], onSendSuccess: () => void, onClose: 
       // Generate template-specific data
       const templateData = generateTemplateData();
 
+      console.log("Sending emails with template data:", templateData);
+
       // Send emails to each selected user
       for (const userId of selectedUsers) {
         const user = users.find(u => u.id === userId);
         if (!user) continue;
 
-        const { data, error } = await supabase.functions.invoke('send-email', {
-          body: {
-            userId: userId,
-            emailType: emailType,
-            templateName: selectedTemplate,
-            subject: subject,
-            to: user.email,
-            data: {
-              ...templateData,
-              name: "User" // Default name if we don't have it
-            }
+        console.log(`Attempting to send email to user ${userId} (${user.email})`);
+
+        const payload = {
+          userId: userId,
+          emailType: emailType,
+          templateName: selectedTemplate,
+          subject: subject,
+          to: user.email,
+          data: {
+            ...templateData,
+            name: "User" // Default name if we don't have it
           }
+        };
+
+        console.log("Email payload:", JSON.stringify(payload, null, 2));
+
+        const { data, error } = await supabase.functions.invoke('send-email', {
+          body: payload
         });
 
         if (error) {
           console.error(`Error sending email to ${user.email}:`, error);
           results.push({ userId, email: user.email, success: false, error });
         } else {
+          console.log(`Email sent successfully to ${user.email}:`, data);
           results.push({ userId, email: user.email, success: true });
         }
       }
@@ -143,8 +152,10 @@ export const useSendEmail = (users: User[], onSendSuccess: () => void, onClose: 
         toast.warning(`Sent ${successCount} email${successCount !== 1 ? 's' : ''}, ${failCount} failed`);
       }
 
-      onSendSuccess();
-      onClose();
+      if (successCount > 0) {
+        onSendSuccess();
+        onClose();
+      }
     } catch (error) {
       console.error("Error in sending emails:", error);
       toast.dismiss("sending-emails");
