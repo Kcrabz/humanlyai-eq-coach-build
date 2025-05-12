@@ -1,137 +1,105 @@
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ChatMessage } from "@/types";
-import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
-import { UserAvatar } from "./components/UserAvatar";
-import { AssistantAvatar } from "./components/AssistantAvatar"; 
-import { MessageContent } from "./components/MessageContent";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { TypingIndicator } from "./components/TypingIndicator";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
+import { MemoryIndicator } from "./components/MemoryIndicator";
+import { useMemoryIndicator } from "@/hooks/useMemoryIndicator";
+import { useAuth } from "@/context/AuthContext";
 
 interface ChatBubbleProps {
   message: ChatMessage;
+  showAvatar?: boolean;
+  className?: string;
 }
 
-export function ChatBubble({ message }: ChatBubbleProps) {
-  const isUser = message.role === "user";
+export function ChatBubble({ 
+  message, 
+  showAvatar = true, 
+  className = "" 
+}: ChatBubbleProps) {
+  const [isClient, setIsClient] = useState(false);
+  const { user } = useAuth();
+  const { checkForRelevantMemories, hasRelevantMemories, memoryStats } = useMemoryIndicator();
   
-  // State to control typing indicator visibility
-  const [showTypingIndicator, setShowTypingIndicator] = useState(false);
-  // State to control if we should render the bubble at all
-  const [shouldRenderBubble, setShouldRenderBubble] = useState(true);
+  // Check if this is a user message
+  const isUserMessage = message.role === "user";
   
-  // Refs for managing timers and tracking content changes
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const contentRef = useRef<string | null>(message.content);
-  const initialRenderRef = useRef(true);
-  
-  const isMobile = useIsMobile();
-  
-  // Comprehensive check for empty content
-  const hasContent = message.content != null && 
-                    message.content !== undefined && 
-                    message.content !== "" && 
-                    message.content !== " ";
-                   
-  // Synchronize state with props
+  // Use effect to set client-side rendering flag
   useEffect(() => {
-    // For assistant messages, handle typing indicator logic
-    if (message.role === "assistant") {
-      // Log every content change for debugging
-      console.log(`Message [${message.id}] content updated:`, {
-        oldContent: contentRef.current,
-        newContent: message.content,
-        contentLength: message.content?.length || 0,
-        hasContent
-      });
-      
-      // Update our ref to track content changes
-      contentRef.current = message.content;
-      
-      // Determine if we should show typing indicator based on content
-      if (!hasContent) {
-        console.log(`Showing typing indicator for message: ${message.id}`);
-        setShowTypingIndicator(true);
-        setShouldRenderBubble(true);
-        
-        // Set safety timer to force hide empty bubbles after max time
-        if (timerRef.current) clearTimeout(timerRef.current);
-        
-        timerRef.current = setTimeout(() => {
-          console.log(`Safety timeout: Hiding empty bubble for message ${message.id}`);
-          setShowTypingIndicator(false);
-          setShouldRenderBubble(false);
-        }, 5000);
-      } else {
-        // Content is present, hide typing indicator and show bubble
-        console.log(`Content received for message ${message.id}, removing typing indicator`);
-        setShowTypingIndicator(false);
-        setShouldRenderBubble(true);
-        
-        // Clean up any pending timer
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-          timerRef.current = null;
-        }
-      }
-    }
-    
-    // On the first render, don't consider it an update
-    if (initialRenderRef.current) {
-      initialRenderRef.current = false;
-      
-      // For assistant messages with empty content on initial render,
-      // start the safety timer immediately
-      if (message.role === "assistant" && !hasContent) {
-        timerRef.current = setTimeout(() => {
-          console.log(`Initial render timeout: Hiding empty bubble for message ${message.id}`);
-          setShowTypingIndicator(false);
-          setShouldRenderBubble(false);
-        }, 5000);
-      }
-    }
-  }, [message, message.content, hasContent]);
-  
-  // Clean up timers on unmount
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-      }
-    };
+    setIsClient(true);
   }, []);
-
-  // Don't render anything if we shouldn't show the bubble
-  if (message.role === "assistant" && !shouldRenderBubble && !hasContent) {
-    console.log(`Not rendering bubble for empty message: ${message.id}`);
-    return null;
-  }
-
+  
+  // Check if the assistant message has relevant memories (for basic/premium users only)
+  useEffect(() => {
+    if (!isUserMessage && user && user.subscription_tier !== 'free' && message.content) {
+      checkForRelevantMemories(message.content);
+    }
+  }, [isUserMessage, message.content, user]);
+  
+  // Render the message with different styles for user and assistant
   return (
-    <div
-      className={cn(
-        "flex gap-3 items-start mb-6 animate-slide-up",
-        isUser ? "flex-row-reverse" : "flex-row"
+    <div className={`flex gap-3 ${isUserMessage ? "justify-end" : "justify-start"} ${className}`}>
+      {/* Assistant Avatar - only show for assistant messages if showAvatar is true */}
+      {!isUserMessage && showAvatar && (
+        <Avatar className="h-8 w-8">
+          <AvatarImage src="/images/kai-avatar.jpg" alt="Kai" />
+          <AvatarFallback>K</AvatarFallback>
+        </Avatar>
       )}
-    >
-      {isUser ? <UserAvatar /> : <AssistantAvatar />}
-
-      <Card
-        className={cn(
-          "p-4 max-w-[85%] text-left shadow-md rounded-2xl",
-          isMobile ? "p-3 text-sm" : "p-4",
-          isUser
-            ? "bg-humanly-teal text-white enhanced-chat-user"
-            : "enhanced-chat-ai"
+      
+      {/* Message Content */}
+      <div className={`max-w-[80%] space-y-1 ${isUserMessage ? "items-end" : "items-start"}`}>
+        {/* Memory Indicator (for assistant messages only) */}
+        {!isUserMessage && hasRelevantMemories && user?.subscription_tier !== 'free' && (
+          <MemoryIndicator 
+            hasMemories={hasRelevantMemories}
+            memoryStats={memoryStats}
+            className="mb-1"
+          />
         )}
-      >
-        {message.role === "assistant" && showTypingIndicator ? (
-          <TypingIndicator />
-        ) : (
-          <MessageContent content={message.content || ""} isUser={isUser} />
-        )}
-      </Card>
+        
+        {/* Message Card */}
+        <Card
+          className={`px-4 py-3 ${
+            isUserMessage
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted"
+          } ${isClient ? "opacity-100" : "opacity-0"}`}
+        >
+          {isClient && (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeHighlight]}
+              className={`prose max-w-none ${
+                isUserMessage ? "prose-invert" : ""
+              } ${isClient ? "opacity-100" : "opacity-0"}`}
+              components={{
+                a: ({ node, ...props }) => (
+                  <a {...props} className="text-blue-500 hover:underline" />
+                ),
+                p: ({ node, ...props }) => <p {...props} className="mb-4 last:mb-0" />,
+                ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-6 mb-4" />,
+                ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-6 mb-4" />,
+                li: ({ node, ...props }) => <li {...props} className="mb-1" />,
+              }}
+            >
+              {message.content || ""}
+            </ReactMarkdown>
+          )}
+        </Card>
+      </div>
+      
+      {/* User Avatar - only show for user messages if showAvatar is true */}
+      {isUserMessage && showAvatar && (
+        <Avatar className="h-8 w-8">
+          <AvatarImage src="/images/default-avatar.png" alt="User" />
+          <AvatarFallback>U</AvatarFallback>
+        </Avatar>
+      )}
     </div>
   );
 }

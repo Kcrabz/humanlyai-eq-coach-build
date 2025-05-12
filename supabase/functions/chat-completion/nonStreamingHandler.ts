@@ -3,6 +3,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders, createErrorResponse } from "./utils.ts";
 import { prepareUserData, getChatHistory } from "./userService.ts";
 import { extractUserMessage, prepareMessagesForAI, calculateTokenUsage } from "./messageService.ts";
+import { 
+  retrieveRelevantMemories, 
+  formatMemoriesForContext, 
+  storeMemory, 
+  extractInsightsFromMessages,
+  pruneOldMemories
+} from "./memoryService.ts";
 
 // Handler for non-streaming chat completion
 export async function handleChatCompletion(req: Request, reqBody: any) {
@@ -31,9 +38,25 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
       effectiveSubscriptionTier,
       clientProvidedHistory
     );
-    
+
     console.log(`Using ${effectiveArchetype} archetype and ${effectiveCoachingMode} coaching mode`);
     console.log(`User has used ${currentUsage} out of ${tierLimit} tokens this month`);
+    
+    // Retrieve relevant memories based on user's subscription tier
+    let relevantMemories = [];
+    if (effectiveSubscriptionTier !== 'free') {
+      console.log(`Retrieving memories for ${effectiveSubscriptionTier} tier user`);
+      relevantMemories = await retrieveRelevantMemories(
+        supabaseClient,
+        user.id,
+        userMessage,
+        effectiveSubscriptionTier
+      );
+      console.log(`Retrieved ${relevantMemories.length} relevant memories`);
+    }
+    
+    // Prepare memories context string
+    const memoriesContext = formatMemoriesForContext(relevantMemories);
     
     // Prepare messages for OpenAI
     const messages = prepareMessagesForAI(
@@ -44,6 +67,16 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
       user.id
     );
     
+    // If we have relevant memories, add them to the system message
+    if (memoriesContext) {
+      // Find the system message
+      const systemMessageIndex = messages.findIndex(m => m.role === 'system');
+      if (systemMessageIndex >= 0) {
+        // Append memories context to the system message
+        messages[systemMessageIndex].content += memoriesContext;
+      }
+    }
+    
     // Call OpenAI API
     const openAIResponse = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -52,7 +85,7 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
         Authorization: `Bearer ${openAiApiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4-turbo",
+        model: "gpt-4o-mini",
         messages,
       }),
     });
@@ -123,6 +156,36 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
     
     if (msgError) {
       console.error("Error storing messages:", msgError);
+    }
+    
+    // For basic and premium tiers, store message in memory system for RAG
+    if (effectiveSubscriptionTier !== 'free') {
+      try {
+        // Store user message
+        await storeMemory(
+          supabaseClient, 
+          user.id, 
+          userMessage, 
+          'message'
+        );
+        
+        // For premium users, also extract insights
+        if (effectiveSubscriptionTier === 'premium') {
+          // Extract and store insights in the background
+          // This won't block the response
+          extractInsightsFromMessages(
+            supabaseClient, 
+            user.id, 
+            [...chatHistory, {role: 'user', content: userMessage}, {role: 'assistant', content: responseText}]
+          );
+          
+          // Periodically clean up old memories
+          pruneOldMemories(supabaseClient, user.id, effectiveSubscriptionTier);
+        }
+      } catch (memoryError) {
+        console.error("Error storing memory:", memoryError);
+        // Don't fail the request if memory storage fails
+      }
     }
     
     // Return the response

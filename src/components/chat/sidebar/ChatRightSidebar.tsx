@@ -1,120 +1,104 @@
 
-import { useAuth } from "@/context/AuthContext";
-import { 
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  useSidebar
-} from "@/components/ui/sidebar";
-import { Menu } from "lucide-react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { CSSProperties, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
+import { ChevronRight, User, Settings, Brain } from "lucide-react";
+import { UserProfileSettings } from "@/components/chat/sidebar/UserProfileSettings";
+import { GeneralSettings } from "@/components/chat/sidebar/GeneralSettings";
+import { MemorySettings } from "@/components/chat/memory/MemorySettings";
 
-// Import our component files
-import { UserProfile } from "./right/UserProfile";
-import { MainNavigationLinks } from "./right/MainNavigationLinks";
-import { UserAccountLinks } from "./right/UserAccountLinks";
-import { UserEQArchetype } from "./right/UserEQArchetype";
-import { UserBio } from "./right/UserBio";
-import { LogoutButton } from "./right/LogoutButton";
-import { useIsMobile } from "@/hooks/use-mobile";
-
-// Sidebar trigger button for the right sidebar
-export function ChatRightSidebarTrigger() {
-  // Specifically use the right sidebar context
-  const { toggleSidebar, open } = useSidebar("right");
-  
-  return (
-    <Button 
-      variant="ghost" 
-      size="icon" 
-      className={`h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300 ${
-        open ? 'bg-humanly-pastel-lavender/50' : ''
-      }`}
-      aria-label="Toggle User Menu"
-      onClick={() => toggleSidebar()}
-    >
-      <Menu className="h-5 w-5" />
-    </Button>
-  );
+// Tabs enum for section navigation
+enum SidebarTab {
+  PROFILE = "profile",
+  SETTINGS = "settings",
+  MEMORY = "memory"
 }
 
 export function ChatRightSidebar() {
   const { user } = useAuth();
-  // Specifically use the right sidebar context
-  const { open, toggleSidebar } = useSidebar("right");
-  const isMobile = useIsMobile();
-  
-  // Force open sidebar for PWA standalone mode on initial load
-  useEffect(() => {
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                 (window.navigator as any).standalone === true;
-    
-    // Only for PWA in standalone mode, ensure sidebar is visible initially
-    if (isPWA && !open) {
-      // Add a small delay to ensure the sidebar is loaded before opening
-      const timer = setTimeout(() => {
-        toggleSidebar();
-      }, 500);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [toggleSidebar, open]);
-  
-  if (!user) return null;
-  
-  // For mobile, use offcanvas style with overlay
-  // For desktop, use fixed sidebar that pushes content
-  const sidebarStyle: CSSProperties = isMobile ? {
-    position: 'fixed',
-    top: 0,
-    right: open ? '0' : '-100%',
-    height: '100%',
-    zIndex: 50,
-    transition: 'right 0.3s ease',
-    boxShadow: open ? '0 0 10px rgba(0,0,0,0.1)' : 'none'
-  } : {
-    width: open ? '16rem' : '0',
-    minWidth: open ? '16rem' : '0',
-    transition: 'width 0.3s ease, min-width 0.3s ease'
+  const { open, setOpen } = useSidebar("right");
+  const [activeTab, setActiveTab] = useState<SidebarTab>(SidebarTab.PROFILE);
+
+  // Toggle sidebar on narrow screens
+  const toggleSidebar = () => {
+    setOpen(!open);
   };
+  
+  // Function to change active tab
+  const changeTab = (tab: SidebarTab) => {
+    setActiveTab(tab);
+  };
+  
+  // Check if memory features are available based on subscription tier
+  const hasMemoryFeatures = user?.subscription_tier !== 'free';
 
   return (
-    <Sidebar 
-      side="right" 
-      variant="sidebar" 
-      collapsible="offcanvas"
-      className={`user-sidebar`}
-      style={sidebarStyle}
-      data-state={open ? "open" : "closed"}
-      data-mobile={isMobile ? "true" : "false"}
-      data-pwa={window.matchMedia('(display-mode: standalone)').matches ? "true" : "false"}
-    >
-      <SidebarHeader className="p-4">
-        <UserProfile />
-      </SidebarHeader>
-      
-      <SidebarContent className="p-3">
-        {/* Only show main navigation links on mobile, since desktop has the CollapsibleMenu */}
-        {isMobile && <MainNavigationLinks />}
-        
-        {isMobile && <Separator className="my-3" />}
-        
-        {/* User Profile Links */}
-        <UserAccountLinks />
-        
-        <Separator className="my-3" />
-        
-        <UserEQArchetype />
-        
-        <UserBio />
+    <Sidebar side="right" sizeClass="w-80">
+      <SidebarContent className="flex flex-col h-full divide-y">
+        {/* Header with close button */}
+        <div className="flex items-center justify-between p-4">
+          <h2 className="font-medium">Settings</h2>
+          <Button variant="ghost" size="sm" onClick={toggleSidebar}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Tab navigation */}
+        <div className="border-b">
+          <div className="flex">
+            <Button
+              variant="ghost"
+              className={`flex-1 rounded-none ${
+                activeTab === SidebarTab.PROFILE
+                  ? "border-b-2 border-primary"
+                  : ""
+              }`}
+              onClick={() => changeTab(SidebarTab.PROFILE)}
+            >
+              <User className="h-4 w-4 mr-2" />
+              Profile
+            </Button>
+            <Button
+              variant="ghost"
+              className={`flex-1 rounded-none ${
+                activeTab === SidebarTab.SETTINGS
+                  ? "border-b-2 border-primary"
+                  : ""
+              }`}
+              onClick={() => changeTab(SidebarTab.SETTINGS)}
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+            <Button
+              variant="ghost"
+              className={`flex-1 rounded-none ${
+                activeTab === SidebarTab.MEMORY
+                  ? "border-b-2 border-primary"
+                  : ""
+              }`}
+              onClick={() => changeTab(SidebarTab.MEMORY)}
+            >
+              <Brain className="h-4 w-4 mr-2" />
+              Memory
+            </Button>
+          </div>
+        </div>
+
+        {/* Content area */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {activeTab === SidebarTab.PROFILE && (
+            <UserProfileSettings />
+          )}
+          {activeTab === SidebarTab.SETTINGS && (
+            <GeneralSettings />
+          )}
+          {activeTab === SidebarTab.MEMORY && (
+            <MemorySettings />
+          )}
+        </div>
       </SidebarContent>
-      
-      <SidebarFooter className="p-3">
-        <LogoutButton />
-      </SidebarFooter>
     </Sidebar>
   );
 }
