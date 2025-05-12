@@ -1,5 +1,4 @@
 
-import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
@@ -18,8 +17,9 @@ export function RightSidebarContent() {
       {/* User Profile Header */}
       <div className="p-4 flex flex-col items-center">
         <UserAvatar 
-          user={user} 
-          size="xl"
+          userId={user?.id}
+          name={user?.name || 'User'}
+          avatarUrl={user?.avatar_url}
           className="h-16 w-16 mb-3"
         />
         <h3 className="font-medium text-base">{user?.name || 'User'}</h3>
