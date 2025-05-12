@@ -21,14 +21,13 @@ const updateSW = registerSW({
       
       // Dispatch event on registration to handle PWA-specific UI adjustments
       window.dispatchEvent(new CustomEvent('pwa-registered'));
+      
+      // Since onSuccess doesn't exist, dispatch the update event here instead
+      window.dispatchEvent(new CustomEvent('pwa-update-available'));
     }
   },
   onRegisterError(error) {
     console.error('Service worker registration error:', error);
-  },
-  onSuccess() {
-    // Dispatch custom event when update is available
-    window.dispatchEvent(new CustomEvent('pwa-update-available'));
   }
 });
 
