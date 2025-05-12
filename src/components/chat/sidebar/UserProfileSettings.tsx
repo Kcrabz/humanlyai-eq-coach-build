@@ -7,7 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "react-router-dom";
 
 export const UserProfileSettings = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   // Navigate to settings page
@@ -17,7 +17,7 @@ export const UserProfileSettings = () => {
 
   // Handle sign out
   const handleSignOut = async () => {
-    await signOut();
+    await logout();
     navigate("/");
   };
 
