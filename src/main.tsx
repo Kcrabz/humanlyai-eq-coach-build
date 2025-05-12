@@ -62,8 +62,8 @@ const initPwaFeatures = () => {
   }
 };
 
-// Utility function to detect if app is in PWA mode
-window.isPwaMode = () => {
+// Utility function to detect if app is in PWA mode - properly defined as a window property
+window.isPwaMode = function(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches || 
          (window.navigator as any).standalone === true;
 };

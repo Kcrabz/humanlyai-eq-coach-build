@@ -4,4 +4,5 @@
 
 interface Window {
   deferredPrompt: any;
+  isPwaMode: () => boolean;
 }
