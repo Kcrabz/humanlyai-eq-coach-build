@@ -15,32 +15,41 @@ export function useLoginTracking(user: User | null, authEvent: string | null) {
 
     const trackLogin = async () => {
       try {
-        // Update last_login in user_engagement_metrics
-        const { error: updateError } = await supabase
-          .from("user_engagement_metrics")
-          .update({
-            last_login: new Date().toISOString(),
-            login_count: supabase.rpc("record_user_login", { user_id_param: user.id })
-          })
-          .eq("user_id", user.id);
-
-        if (updateError) {
-          console.error("Error updating login metrics:", updateError);
-        }
-
-        // Record the login in user_login_history
-        const { error: recordError } = await supabase.functions.invoke(
-          "record-user-login",
-          {
-            body: {
-              user_id: user.id,
-              user_agent: navigator.userAgent,
-            },
-          }
-        );
+        // First, record the login event
+        const { error: recordError } = await supabase.rpc("record_user_login", { 
+          user_id_param: user.id,
+          user_agent_param: navigator.userAgent
+        });
 
         if (recordError) {
           console.error("Error recording login:", recordError);
+          
+          // Fallback: Update metrics directly if the RPC fails
+          const { error: updateError } = await supabase
+            .from("user_engagement_metrics")
+            .update({
+              last_login: new Date().toISOString(),
+              // We'll increment login_count in a separate query if RPC failed
+            })
+            .eq("user_id", user.id);
+            
+          if (updateError) {
+            console.error("Error updating login metrics:", updateError);
+          }
+        } else {
+          console.log("Login event recorded for user:", user.id);
+        }
+
+        // Record the login in user_login_history
+        const { error: historyError } = await supabase
+          .from("user_login_history")
+          .insert({
+            user_id: user.id,
+            user_agent: navigator.userAgent
+          });
+
+        if (historyError) {
+          console.error("Error recording login history:", historyError);
         }
       } catch (err) {
         console.error("Error tracking login:", err);

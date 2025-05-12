@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -49,7 +48,7 @@ export default function SettingsPage() {
           
           {/* Profile Settings */}
           <TabsContent value="profile" className="space-y-4">
-            <BioEditor className="mb-6" />
+            <BioEditor />
             
             {/* Other profile settings would go here */}
           </TabsContent>

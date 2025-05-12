@@ -7,7 +7,11 @@ import { toast } from "sonner";
 
 const MAX_BIO_LENGTH = 250;
 
-const BioEditor = () => {
+interface BioEditorProps {
+  className?: string;
+}
+
+const BioEditor = ({ className }: BioEditorProps) => {
   const { user, updateProfile } = useAuth();
   const [bio, setBio] = useState<string>(user?.bio || "");
   const [isSaving, setIsSaving] = useState(false);
@@ -35,7 +39,7 @@ const BioEditor = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${className || ""}`}>
       <div>
         <h3 className="text-lg font-medium">Your Bio</h3>
         <p className="text-sm text-muted-foreground">
