@@ -1,3 +1,4 @@
+
 import { useSidebar } from "@/components/ui/sidebar";
 import { ChatHeader } from "./ChatHeader";
 import { ChatContent } from "./ChatContent";
