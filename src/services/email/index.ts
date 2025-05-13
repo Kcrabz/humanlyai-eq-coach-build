@@ -1,5 +1,5 @@
 
-import { updatePreferences, optOutAll } from './preferences';
+import { updatePreferences, optOutAll, getEmailPreferences } from './preferences';
 import { getEmailLogs, refreshEmailLogs } from './logs';
 import { triggerEmail, resendEmail, generateTestEmailTemplate, sendTestEmail } from './sender';
 import { EmailPreference, EmailLog, TriggerEmailOptions } from './types';
@@ -15,6 +15,7 @@ export const emailService = {
   // Email preferences
   updatePreferences,
   optOutAll,
+  getEmailPreferences,
   
   // Email logs
   getEmailLogs,

@@ -1,32 +1,26 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { emailService } from "@/services/email";
 
 interface EmailPreferencesProps {
   className?: string;
 }
 
-interface EmailPreferences {
-  id: string;
-  user_id: string;
-  daily_nudges: boolean;
-  weekly_summary: boolean;
-  achievement_notifications: boolean;
-  challenge_reminders: boolean;
-  inactivity_reminders: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
 export function EmailPreferences({ className }: EmailPreferencesProps) {
   const { user } = useAuth();
-  const [preferences, setPreferences] = useState<EmailPreferences | null>(null);
+  const [preferences, setPreferences] = useState({
+    daily_nudges: true,
+    weekly_summary: true,
+    achievement_notifications: true,
+    challenge_reminders: true,
+    inactivity_reminders: true
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -37,15 +31,23 @@ export function EmailPreferences({ className }: EmailPreferencesProps) {
 
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from("email_preferences")
-          .select("*")
-          .eq("user_id", user.id)
-          .single();
+        const { data, error } = await emailService.getEmailPreferences(user.id);
 
         if (error) {
           console.error("Error loading email preferences:", error);
-          toast.error("Failed to load email preferences");
+          
+          // Create default preferences if none exist
+          if (error.code === "PGRST116") {
+            console.log("No preferences found, creating default preferences");
+            await createDefaultPreferences();
+            return;
+          }
+          
+          toast({
+            title: "Error",
+            description: "Failed to load email preferences",
+            variant: "destructive"
+          });
           return;
         }
 
@@ -60,41 +62,75 @@ export function EmailPreferences({ className }: EmailPreferencesProps) {
     loadPreferences();
   }, [user?.id]);
 
+  // Create default preferences
+  const createDefaultPreferences = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const defaultPrefs = {
+        daily_nudges: true,
+        weekly_summary: true,
+        achievement_notifications: true,
+        challenge_reminders: true,
+        inactivity_reminders: true
+      };
+      
+      const success = await emailService.updatePreferences(defaultPrefs);
+      
+      if (success) {
+        setPreferences(defaultPrefs);
+        setLoading(false);
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create default preferences",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error("Error creating default preferences:", err);
+      toast({
+        title: "Error",
+        description: "Failed to create default preferences",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Save preferences changes
   const savePreferences = async () => {
-    if (!user?.id || !preferences) return;
+    if (!user?.id) return;
 
     try {
       setSaving(true);
-      const { error } = await supabase
-        .from("email_preferences")
-        .update({
-          daily_nudges: preferences.daily_nudges,
-          weekly_summary: preferences.weekly_summary,
-          achievement_notifications: preferences.achievement_notifications,
-          challenge_reminders: preferences.challenge_reminders,
-          inactivity_reminders: preferences.inactivity_reminders,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
+      const success = await emailService.updatePreferences(preferences);
 
-      if (error) {
-        console.error("Error saving email preferences:", error);
-        toast.error("Failed to save email preferences");
-        return;
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Email preferences saved successfully"
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to save email preferences",
+          variant: "destructive"
+        });
       }
-
-      toast.success("Email preferences saved successfully");
     } catch (err) {
       console.error("Error in savePreferences:", err);
-      toast.error("An error occurred while saving preferences");
+      toast({
+        title: "Error",
+        description: "An error occurred while saving preferences",
+        variant: "destructive"
+      });
     } finally {
       setSaving(false);
     }
   };
 
   // Handle preference toggle
-  const handleToggle = (key: keyof EmailPreferences, value: boolean) => {
+  const handleToggle = (key: keyof typeof preferences, value: boolean) => {
     if (!preferences) return;
     setPreferences({ ...preferences, [key]: value });
   };
@@ -108,20 +144,6 @@ export function EmailPreferences({ className }: EmailPreferencesProps) {
         </CardHeader>
         <CardContent className="flex justify-center py-6">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!preferences) {
-    return (
-      <Card className={className}>
-        <CardHeader>
-          <CardTitle>Email Preferences</CardTitle>
-          <CardDescription>There was an issue loading your preferences.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button onClick={() => setLoading(true)}>Try Again</Button>
         </CardContent>
       </Card>
     );
