@@ -25,7 +25,7 @@ export function ChatRightSidebar() {
       <SidebarContent className="flex flex-col h-full">
         {/* Header with close button - Improved alignment */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h2 className="font-medium">Your Account</h2>
+          <div className="w-4"></div> {/* Empty space to maintain alignment */}
           <Button 
             variant="ghost" 
             size="icon" 
