@@ -21,7 +21,7 @@ const ToggleGroup = React.forwardRef<
   <ToggleGroupPrimitive.Root
     ref={ref}
     className={cn(
-      "flex items-center justify-center gap-1 rounded-md", 
+      "flex items-center justify-center gap-0 rounded-md", 
       className
     )}
     {...props}
@@ -49,7 +49,7 @@ const ToggleGroupItem = React.forwardRef<
           variant: context.variant || variant,
           size: context.size || size,
         }),
-        "rounded-md transition-colors transition-shadow duration-200",
+        "rounded-md transition-colors transition-shadow duration-200 min-w-0",
         className
       )}
       {...props}

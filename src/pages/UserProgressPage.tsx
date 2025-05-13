@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,7 +23,7 @@ const navigationTabs = [
   { value: "overview", label: "Overview", shortLabel: "Overview" },
   { value: "achievements", label: "Achievements", shortLabel: "Achieve" },
   { value: "badges", label: "Badges & Certificates", shortLabel: "Badges" },
-  { value: "challenges", label: "Daily Challenges", shortLabel: "Challenges" },
+  { value: "challenges", label: "Daily Challenges", shortLabel: "Tasks" },
   { value: "journey", label: "EQ Journey", shortLabel: "Journey" }
 ];
 

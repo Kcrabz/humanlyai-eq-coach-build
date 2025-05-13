@@ -32,16 +32,17 @@ export const ProgressNavigation: React.FC<ProgressNavigationProps> = ({
           onValueChange={(value) => {
             if (value) onChange(value);
           }}
-          className="w-full rounded-lg border border-humanly-teal/20 p-1 bg-white/80 backdrop-blur-sm shadow-sm"
+          className="w-full rounded-lg border border-humanly-teal/20 p-0.5 bg-white/80 backdrop-blur-sm shadow-sm"
         >
           {tabs.map((tab) => (
             <ToggleGroupItem
               key={tab.value}
               value={tab.value}
-              className="flex-1 text-xs md:text-sm font-medium data-[state=on]:bg-humanly-teal/10 data-[state=on]:text-humanly-teal data-[state=on]:shadow-sm transition-all duration-200"
+              size="compact"
+              className="flex-1 py-1.5 text-xs font-medium data-[state=on]:bg-humanly-teal/10 data-[state=on]:text-humanly-teal data-[state=on]:shadow-sm transition-all duration-200"
               aria-label={tab.label}
             >
-              {tab.shortLabel || tab.label}
+              <span className="truncate block max-w-full">{tab.shortLabel || tab.label}</span>
             </ToggleGroupItem>
           ))}
         </ToggleGroup>
