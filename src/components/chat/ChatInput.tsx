@@ -1,16 +1,13 @@
 
-// Updating the ChatInput component to include the history button
+// Updating the ChatInput component to remove the history button
 import React, { useState, useRef, useEffect } from "react";
 import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
-import { HistoryButton } from "./components/HistoryButton";
-import { ChatHistoryPanel } from "./ChatHistoryPanel";
 
 export function ChatInput() {
   const [message, setMessage] = useState("");
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { sendMessage, isLoading } = useChat();
 
@@ -45,35 +42,29 @@ export function ChatInput() {
   };
 
   return (
-    <>
-      <form 
-        className="p-3 border-t flex items-end gap-2 pr-6" 
-        onSubmit={handleSubmit}
-      >
-        <HistoryButton onClick={() => setIsHistoryOpen(true)} />
-        
-        <Textarea
-          ref={textareaRef}
-          className="flex-1 resize-none max-h-24 py-2 text-sm"
-          placeholder="Type a message..."
-          rows={1}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isLoading}
-        />
-        
-        <Button 
-          type="submit" 
-          size="sm"
-          className="h-8 w-8"
-          disabled={!message.trim() || isLoading}
-        >
-          <Send className="h-3.5 w-3.5" />
-        </Button>
-      </form>
+    <form 
+      className="p-3 border-t flex items-end gap-2 pr-6" 
+      onSubmit={handleSubmit}
+    >
+      <Textarea
+        ref={textareaRef}
+        className="flex-1 resize-none max-h-24 py-2 text-sm"
+        placeholder="Type a message..."
+        rows={1}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyDown={handleKeyDown}
+        disabled={isLoading}
+      />
       
-      <ChatHistoryPanel open={isHistoryOpen} onOpenChange={setIsHistoryOpen} />
-    </>
+      <Button 
+        type="submit" 
+        size="sm"
+        className="h-8 w-8"
+        disabled={!message.trim() || isLoading}
+      >
+        <Send className="h-3.5 w-3.5" />
+      </Button>
+    </form>
   );
 }
