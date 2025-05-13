@@ -26,7 +26,7 @@ export async function getEmailPreferences(userId?: string): Promise<{ data: Emai
       .from("email_preferences")
       .select("*")
       .eq("user_id", currentUserId)
-      .single();
+      .maybeSingle();
     
     return { data, error };
   } catch (error) {
@@ -45,9 +45,9 @@ export async function getEmailPreferences(userId?: string): Promise<{ data: Emai
 export async function updatePreferences(preferences: Record<string, boolean>): Promise<boolean> {
   const [result, error] = await withEmailErrorHandling(
     async () => {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!userId) {
+      if (!user) {
         throw new Error("No authenticated user");
       }
       
@@ -55,7 +55,7 @@ export async function updatePreferences(preferences: Record<string, boolean>): P
       const { data: existingPrefs } = await supabase
         .from("email_preferences")
         .select("id")
-        .eq("user_id", userId)
+        .eq("user_id", user.id)
         .maybeSingle();
       
       if (existingPrefs) {
@@ -66,9 +66,10 @@ export async function updatePreferences(preferences: Record<string, boolean>): P
             ...preferences,
             updated_at: new Date().toISOString(),
           })
-          .eq("user_id", userId);
+          .eq("user_id", user.id);
 
         if (error) {
+          console.error("Error updating preferences:", error);
           throw error;
         }
       } else {
@@ -76,12 +77,13 @@ export async function updatePreferences(preferences: Record<string, boolean>): P
         const { error } = await supabase
           .from("email_preferences")
           .insert({
-            user_id: userId,
+            user_id: user.id,
             ...preferences,
             updated_at: new Date().toISOString(),
           });
 
         if (error) {
+          console.error("Error inserting preferences:", error);
           throw error;
         }
       }
@@ -101,9 +103,9 @@ export async function updatePreferences(preferences: Record<string, boolean>): P
 export async function optOutAll(): Promise<boolean> {
   const [result, error] = await withEmailErrorHandling(
     async () => {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!userId) {
+      if (!user) {
         throw new Error("No authenticated user");
       }
       
@@ -111,7 +113,7 @@ export async function optOutAll(): Promise<boolean> {
       const { data: existingPrefs } = await supabase
         .from("email_preferences")
         .select("id")
-        .eq("user_id", userId)
+        .eq("user_id", user.id)
         .maybeSingle();
         
       if (existingPrefs) {
@@ -126,9 +128,10 @@ export async function optOutAll(): Promise<boolean> {
             inactivity_reminders: false,
             updated_at: new Date().toISOString(),
           })
-          .eq("user_id", userId);
+          .eq("user_id", user.id);
 
         if (error) {
+          console.error("Error updating preferences for opt-out:", error);
           throw error;
         }
       } else {
@@ -136,7 +139,7 @@ export async function optOutAll(): Promise<boolean> {
         const { error } = await supabase
           .from("email_preferences")
           .insert({
-            user_id: userId,
+            user_id: user.id,
             daily_nudges: false,
             weekly_summary: false,
             achievement_notifications: false,
@@ -146,6 +149,7 @@ export async function optOutAll(): Promise<boolean> {
           });
 
         if (error) {
+          console.error("Error inserting preferences for opt-out:", error);
           throw error;
         }
       }

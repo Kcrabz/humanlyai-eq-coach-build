@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,103 +13,65 @@ interface EmailPreferencesProps {
   className?: string;
 }
 
-export function EmailPreferences({ className }: EmailPreferencesProps) {
+const defaultPreferences = {
+  daily_nudges: true,
+  weekly_summary: true,
+  achievement_notifications: true,
+  challenge_reminders: true,
+  inactivity_reminders: true
+};
+
+export const EmailPreferences: React.FC<EmailPreferencesProps> = ({ className }) => {
   const { user } = useAuth();
-  const [preferences, setPreferences] = useState({
-    daily_nudges: true,
-    weekly_summary: true,
-    achievement_notifications: true,
-    challenge_reminders: true,
-    inactivity_reminders: true
-  });
+  const [preferences, setPreferences] = useState(defaultPreferences);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   // Load email preferences
   useEffect(() => {
-    async function loadPreferences() {
-      if (!user?.id) return;
-
-      try {
-        setLoading(true);
-        const { data, error } = await emailService.getEmailPreferences(user.id);
-
-        if (error) {
-          console.error("Error loading email preferences:", error);
-          
-          // Create default preferences if none exist
-          if (error.code === "PGRST116") {
-            console.log("No preferences found, creating default preferences");
-            await createDefaultPreferences();
-            return;
-          }
-          
-          toast({
-            title: "Error",
-            description: "Failed to load email preferences",
-            variant: "destructive"
-          });
-          return;
-        }
-
-        // Ensure we have values for all required properties by merging with defaults
-        const safeData = {
-          daily_nudges: data?.daily_nudges ?? true,
-          weekly_summary: data?.weekly_summary ?? true,
-          achievement_notifications: data?.achievement_notifications ?? true,
-          challenge_reminders: data?.challenge_reminders ?? true,
-          inactivity_reminders: data?.inactivity_reminders ?? true
-        };
-        
-        setPreferences(safeData);
-      } catch (err) {
-        console.error("Error in loadPreferences:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadPreferences();
-  }, [user?.id]);
+  }, [user]);
 
-  // Create default preferences
-  const createDefaultPreferences = async () => {
-    if (!user?.id) return;
-    
+  const loadPreferences = async () => {
+    if (!user) return;
+
     try {
-      const defaultPrefs = {
-        daily_nudges: true,
-        weekly_summary: true,
-        achievement_notifications: true,
-        challenge_reminders: true,
-        inactivity_reminders: true
+      setLoading(true);
+      const { data, error } = await emailService.getEmailPreferences();
+
+      if (error) {
+        console.error("Error loading preferences:", error);
+        toast({
+          title: "Error loading preferences",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Ensure we have values for all required properties by merging with defaults
+      const safeData = {
+        ...defaultPreferences,
+        ...(data || {})
       };
       
-      const success = await emailService.updatePreferences(defaultPrefs);
-      
-      if (success) {
-        setPreferences(defaultPrefs);
-        setLoading(false);
-      } else {
-        toast({
-          title: "Error",
-          description: "Failed to create default preferences",
-          variant: "destructive"
-        });
-      }
+      setPreferences(safeData);
     } catch (err) {
-      console.error("Error creating default preferences:", err);
-      toast({
-        title: "Error",
-        description: "Failed to create default preferences",
-        variant: "destructive"
-      });
+      console.error("Error in loadPreferences:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Save preferences changes
+  const handleToggle = (key: keyof typeof preferences) => {
+    setPreferences((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
   const savePreferences = async () => {
-    if (!user?.id) return;
+    if (!user) return;
 
     try {
       setSaving(true);
@@ -116,32 +79,66 @@ export function EmailPreferences({ className }: EmailPreferencesProps) {
 
       if (success) {
         toast({
-          title: "Success",
-          description: "Email preferences saved successfully"
+          title: "Preferences updated",
+          description: "Your email preferences have been saved",
         });
       } else {
         toast({
-          title: "Error",
-          description: "Failed to save email preferences",
-          variant: "destructive"
+          title: "Error saving preferences",
+          description: "Please try again later",
+          variant: "destructive",
         });
       }
     } catch (err) {
-      console.error("Error in savePreferences:", err);
+      console.error("Error saving preferences:", err);
       toast({
-        title: "Error",
-        description: "An error occurred while saving preferences",
-        variant: "destructive"
+        title: "Error saving preferences",
+        description: "Please try again later",
+        variant: "destructive",
       });
     } finally {
       setSaving(false);
     }
   };
 
-  // Handle preference toggle
-  const handleToggle = (key: keyof typeof preferences, value: boolean) => {
-    if (!preferences) return;
-    setPreferences({ ...preferences, [key]: value });
+  const handleOptOut = async () => {
+    if (!user) return;
+
+    try {
+      setSaving(true);
+      const success = await emailService.optOutAll();
+
+      if (success) {
+        // Update local state to reflect all options being disabled
+        setPreferences({
+          daily_nudges: false,
+          weekly_summary: false,
+          achievement_notifications: false,
+          challenge_reminders: false,
+          inactivity_reminders: false,
+        });
+
+        toast({
+          title: "Opted out successfully",
+          description: "You've been unsubscribed from all emails",
+        });
+      } else {
+        toast({
+          title: "Error opting out",
+          description: "Please try again later",
+          variant: "destructive",
+        });
+      }
+    } catch (err) {
+      console.error("Error opting out:", err);
+      toast({
+        title: "Error opting out",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -149,10 +146,10 @@ export function EmailPreferences({ className }: EmailPreferencesProps) {
       <Card className={className}>
         <CardHeader>
           <CardTitle>Email Preferences</CardTitle>
-          <CardDescription>Loading your email preferences...</CardDescription>
+          <CardDescription>Manage the emails you receive</CardDescription>
         </CardHeader>
-        <CardContent className="flex justify-center py-6">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <CardContent className="flex justify-center items-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </CardContent>
       </Card>
     );
@@ -162,91 +159,96 @@ export function EmailPreferences({ className }: EmailPreferencesProps) {
     <Card className={className}>
       <CardHeader>
         <CardTitle>Email Preferences</CardTitle>
-        <CardDescription>
-          Manage what types of emails you receive from us
-        </CardDescription>
+        <CardDescription>Manage the emails you receive</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium">Daily Nudges</h3>
-            <p className="text-sm text-muted-foreground">
-              Daily reminders and challenges to keep you engaged
-            </p>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Daily Nudges</h4>
+              <p className="text-sm text-muted-foreground">
+                Receive daily prompts to continue your EQ journey
+              </p>
+            </div>
+            <Switch 
+              checked={preferences.daily_nudges} 
+              onCheckedChange={() => handleToggle("daily_nudges")} 
+            />
           </div>
-          <Switch
-            checked={preferences.daily_nudges}
-            onCheckedChange={(value) => handleToggle("daily_nudges", value)}
-          />
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Weekly Summary</h4>
+              <p className="text-sm text-muted-foreground">
+                Get a weekly report on your progress and achievements
+              </p>
+            </div>
+            <Switch 
+              checked={preferences.weekly_summary} 
+              onCheckedChange={() => handleToggle("weekly_summary")} 
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Achievement Notifications</h4>
+              <p className="text-sm text-muted-foreground">
+                Get notified when you unlock new achievements
+              </p>
+            </div>
+            <Switch 
+              checked={preferences.achievement_notifications} 
+              onCheckedChange={() => handleToggle("achievement_notifications")} 
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Challenge Reminders</h4>
+              <p className="text-sm text-muted-foreground">
+                Receive reminders about pending challenges
+              </p>
+            </div>
+            <Switch 
+              checked={preferences.challenge_reminders} 
+              onCheckedChange={() => handleToggle("challenge_reminders")} 
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium">Inactivity Reminders</h4>
+              <p className="text-sm text-muted-foreground">
+                Get gentle reminders if you haven't logged in for a while
+              </p>
+            </div>
+            <Switch 
+              checked={preferences.inactivity_reminders} 
+              onCheckedChange={() => handleToggle("inactivity_reminders")} 
+            />
+          </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium">Weekly Summary</h3>
-            <p className="text-sm text-muted-foreground">
-              A weekly report of your progress and achievements
-            </p>
-          </div>
-          <Switch
-            checked={preferences.weekly_summary}
-            onCheckedChange={(value) => handleToggle("weekly_summary", value)}
-          />
+        <div className="flex justify-between pt-4">
+          <Button 
+            variant="outline" 
+            onClick={handleOptOut}
+            disabled={saving}
+          >
+            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Opt out of all
+          </Button>
+          <Button 
+            onClick={savePreferences}
+            disabled={saving}
+          >
+            {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Save preferences
+          </Button>
         </div>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium">Achievement Notifications</h3>
-            <p className="text-sm text-muted-foreground">
-              Get notified when you earn new achievements
-            </p>
-          </div>
-          <Switch
-            checked={preferences.achievement_notifications}
-            onCheckedChange={(value) => handleToggle("achievement_notifications", value)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium">Challenge Reminders</h3>
-            <p className="text-sm text-muted-foreground">
-              Reminders about new EQ challenges
-            </p>
-          </div>
-          <Switch
-            checked={preferences.challenge_reminders}
-            onCheckedChange={(value) => handleToggle("challenge_reminders", value)}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-medium">Inactivity Reminders</h3>
-            <p className="text-sm text-muted-foreground">
-              Gentle nudges when you've been away for a while
-            </p>
-          </div>
-          <Switch
-            checked={preferences.inactivity_reminders}
-            onCheckedChange={(value) => handleToggle("inactivity_reminders", value)}
-          />
-        </div>
-
-        <Button 
-          onClick={savePreferences} 
-          disabled={saving} 
-          className="w-full mt-6"
-        >
-          {saving ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Saving...
-            </>
-          ) : (
-            "Save Preferences"
-          )}
-        </Button>
       </CardContent>
     </Card>
   );
-}
+};
+
+export default EmailPreferences;

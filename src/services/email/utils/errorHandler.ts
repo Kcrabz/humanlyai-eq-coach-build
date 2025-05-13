@@ -1,123 +1,46 @@
 
-import { toast } from "sonner";
-
-/**
- * Error types for email operations
- */
 export enum EmailErrorType {
-  SEND_FAILURE = "send_failure",
-  FETCH_FAILURE = "fetch_failure",
-  UPDATE_FAILURE = "update_failure",
-  CONNECTION_ERROR = "connection_error",
-  INVALID_DATA = "invalid_data",
-  UNKNOWN = "unknown"
+  FETCH_FAILURE = "FETCH_FAILURE",
+  UPDATE_FAILURE = "UPDATE_FAILURE",
+  SEND_FAILURE = "SEND_FAILURE",
+  UNKNOWN = "UNKNOWN"
 }
 
-/**
- * Interface for structured email errors
- */
 export interface EmailError {
   type: EmailErrorType;
   message: string;
-  details?: any;
-  timestamp: Date;
+  originalError?: any;
 }
 
 /**
- * Creates a standardized error object for email operations
+ * Handle email-related errors in a consistent way
  */
-export function createEmailError(
-  type: EmailErrorType,
-  message: string,
-  details?: any
-): EmailError {
+export function handleEmailError(error: any, type: EmailErrorType = EmailErrorType.UNKNOWN, message?: string): EmailError {
+  console.error(`Email error (${type}):`, error);
+  
   return {
     type,
-    message,
-    details,
-    timestamp: new Date()
+    message: message || "An error occurred with email operations",
+    originalError: error
   };
 }
 
 /**
- * Log email errors to console with consistent formatting
- */
-export function logEmailError(error: EmailError): void {
-  console.error(
-    `[Email Service Error] [${error.type}] ${error.timestamp.toISOString()}:`,
-    error.message,
-    error.details || ""
-  );
-}
-
-/**
- * Show a toast notification for email errors
- */
-export function notifyEmailError(error: EmailError, customMessage?: string): void {
-  const displayMessage = customMessage || getDefaultErrorMessage(error.type);
-  
-  toast.error(displayMessage, {
-    description: error.message,
-  });
-}
-
-/**
- * Get a user-friendly error message based on error type
- */
-function getDefaultErrorMessage(errorType: EmailErrorType): string {
-  switch (errorType) {
-    case EmailErrorType.SEND_FAILURE:
-      return "Failed to send email";
-    case EmailErrorType.FETCH_FAILURE:
-      return "Failed to fetch email data";
-    case EmailErrorType.UPDATE_FAILURE:
-      return "Failed to update email preferences";
-    case EmailErrorType.CONNECTION_ERROR:
-      return "Connection error occurred";
-    case EmailErrorType.INVALID_DATA:
-      return "Invalid email data provided";
-    default:
-      return "An error occurred with the email service";
-  }
-}
-
-/**
- * Handle email operation errors with standardized logging and notification
- */
-export function handleEmailError(
-  error: any,
-  type: EmailErrorType = EmailErrorType.UNKNOWN,
-  customMessage?: string
-): EmailError {
-  // Create structured error object
-  const emailError = createEmailError(
-    type,
-    error?.message || "Unknown error occurred",
-    error
-  );
-  
-  // Log to console
-  logEmailError(emailError);
-  
-  // Show toast notification
-  notifyEmailError(emailError, customMessage);
-  
-  return emailError;
-}
-
-/**
- * Wrapper for try/catch blocks in email operations
+ * Higher-order function to handle errors in email operations
+ * @param fn Async function to execute
+ * @param errorType Type of error if the function fails
+ * @param errorMessage Custom error message
+ * @returns Tuple with [result, error]
  */
 export async function withEmailErrorHandling<T>(
-  operation: () => Promise<T>,
-  errorType: EmailErrorType,
-  errorMessage: string
+  fn: () => Promise<T>,
+  errorType: EmailErrorType = EmailErrorType.UNKNOWN,
+  errorMessage?: string
 ): Promise<[T | null, EmailError | null]> {
   try {
-    const result = await operation();
+    const result = await fn();
     return [result, null];
   } catch (error) {
-    const emailError = handleEmailError(error, errorType, errorMessage);
-    return [null, emailError];
+    return [null, handleEmailError(error, errorType, errorMessage)];
   }
 }

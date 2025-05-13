@@ -1,12 +1,13 @@
 
-// Define types for email service
 export interface EmailPreference {
+  id?: string;
   user_id?: string;
-  daily_nudges?: boolean;
-  weekly_summary?: boolean;
-  achievement_notifications?: boolean;
-  challenge_reminders?: boolean;
-  inactivity_reminders?: boolean;
+  daily_nudges: boolean;
+  weekly_summary: boolean;
+  achievement_notifications: boolean;
+  challenge_reminders: boolean;
+  inactivity_reminders: boolean;
+  created_at?: string;
   updated_at?: string;
 }
 
@@ -15,16 +16,16 @@ export interface EmailLog {
   user_id: string;
   email_type: string;
   template_name: string;
-  email_data: any;
   sent_at: string;
-  status: string;
+  opened_at?: string;
+  clicked_at?: string;
+  status?: string;
+  email_data?: Record<string, any>;
 }
 
 export interface TriggerEmailOptions {
-  userId: string; 
-  emailType: string; 
+  toEmail: string;
   templateName: string;
   subject: string;
-  to?: string;
   data?: Record<string, any>;
 }
