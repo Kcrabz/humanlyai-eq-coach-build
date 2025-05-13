@@ -1,12 +1,13 @@
 
 import { useCallback } from "react";
 import { useMemoryToggle } from "./useMemoryToggle";
-import { useMemoryArchive, ArchivedMemory } from "./useMemoryArchive";
+import { useMemoryArchive, type ArchivedMemory } from "./useMemoryArchive";
 import { useMemoryClear } from "./useMemoryClear";
 import { useMemoryInsights } from "./useMemoryInsights";
 import { MemoryStats } from "@/hooks/useMemorySettings";
 
-export { ArchivedMemory };
+// Use the "export type" syntax for re-exporting types when isolatedModules is enabled
+export type { ArchivedMemory };
 
 export const useMemoryOperations = (
   setMemoryEnabled: (enabled: boolean) => void,
