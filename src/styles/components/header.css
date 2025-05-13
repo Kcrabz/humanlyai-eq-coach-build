@@ -26,7 +26,6 @@
   display: flex !important;
   visibility: visible !important;
   opacity: 1 !important;
-  margin-right: 1rem; /* Add margin on the right side */
 }
 
 /* Additional class to ensure the trigger button itself is always visible */
@@ -35,5 +34,4 @@
   visibility: visible !important;
   opacity: 1 !important;
   z-index: 100 !important;
-  margin-right: 0.75rem; /* Add additional right margin to the button itself */
 }

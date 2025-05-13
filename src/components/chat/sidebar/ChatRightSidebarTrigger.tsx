@@ -21,7 +21,7 @@ export function ChatRightSidebarTrigger() {
     <Button
       variant="ghost" 
       size="icon" 
-      className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300 sidebar-trigger right-sidebar-trigger mr-1"
+      className="h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300 sidebar-trigger right-sidebar-trigger"
       aria-label="Toggle Right Sidebar"
       onClick={() => toggleSidebar()}
       style={{
