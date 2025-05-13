@@ -1,8 +1,9 @@
 
 import { useEffect } from "react";
+import { User } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useLoginTracking(isAuthenticated: boolean, user: any | null) {
+export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
   useEffect(() => {
     const recordLogin = async () => {
       if (!isAuthenticated || !user?.id) return;

@@ -28,8 +28,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Profile state with unified loading
   const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
   
-  // Track login events
-  useLoginTracking(user, authEvent);
+  // Track login events - Fix: Pass isAuthenticated boolean and user object
+  const isAuthenticated = !!user;
+  useLoginTracking(isAuthenticated, user);
   
   // Handle loading state
   const { isLoading } = useAuthLoadingState(isSessionLoading, user, authEvent, profileLoaded);
@@ -51,7 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { isPremiumMember, userStreakData, userAchievements } = usePremiumFeatures(user);
   
   // Derived state
-  const { userHasArchetype, isAuthenticated, getUserSubscription } = useAuthDerivedState(user);
+  const { userHasArchetype, isAuthenticated: derivedIsAuthenticated, getUserSubscription } = useAuthDerivedState(user);
   
   // Action wrappers
   const { 
