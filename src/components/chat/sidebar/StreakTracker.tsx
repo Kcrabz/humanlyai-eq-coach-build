@@ -3,10 +3,28 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { cn } from "@/lib/utils";
 import { CheckCircle2, Circle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function StreakTracker() {
-  const { userStreakData } = useAuth();
+  const { user, userStreakData } = useAuth();
   const [days, setDays] = useState<{ day: string; isActive: boolean; date: Date }[]>([]);
+  
+  // Initialize or update streak on component mount
+  useEffect(() => {
+    const updateStreak = async () => {
+      if (user?.id) {
+        try {
+          await supabase.functions.invoke('increment-streak', {
+            body: { user_id: user.id }
+          });
+        } catch (error) {
+          console.error("Error updating streak:", error);
+        }
+      }
+    };
+    
+    updateStreak();
+  }, [user?.id]);
   
   useEffect(() => {
     const generateDays = () => {
@@ -26,14 +44,19 @@ export function StreakTracker() {
         let isActive = false;
         
         if (lastActiveDate) {
-          // If today or yesterday was active
+          // Convert dates to YYYY-MM-DD format for comparison
+          const dateStr = date.toISOString().split('T')[0];
+          const lastActiveDateStr = lastActiveDate.toISOString().split('T')[0];
+          
+          // If this is today and today is the last active date
           if (i === 0) {
-            // Today is active if it's the last active date
-            isActive = lastActiveDate.setHours(0, 0, 0, 0) === date.setHours(0, 0, 0, 0);
+            isActive = lastActiveDateStr === dateStr;
           } else {
-            // Previous days are active if they're part of the streak
-            const dayDiff = Math.round((today.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-            isActive = dayDiff < userStreakData?.currentStreak;
+            // For previous days, they're active if they're within the streak range
+            // Calculate how many days ago this day was
+            const dayDiff = i;
+            // Day is active if it's within current streak days
+            isActive = dayDiff < (userStreakData?.currentStreak || 0);
           }
         }
         
@@ -49,6 +72,8 @@ export function StreakTracker() {
     
     setDays(generateDays());
   }, [userStreakData]);
+  
+  console.log("Streak data in component:", userStreakData);
   
   return (
     <div className="space-y-2">

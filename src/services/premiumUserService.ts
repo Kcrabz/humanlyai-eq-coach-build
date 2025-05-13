@@ -4,25 +4,47 @@ import { UserStreakData, UserAchievement } from "@/types/auth";
 
 export const fetchUserStreakData = async (userId: string): Promise<UserStreakData | null> => {
   try {
-    // Using a direct query instead of RPC since RPC is not working correctly
+    // Query user_streaks table directly
     const { data, error } = await supabase
       .from('user_streaks')
       .select('*')
       .eq('user_id', userId)
-      .single();
+      .maybeSingle();
     
-    if (error) throw error;
-    
-    if (data) {
-      return {
-        currentStreak: data.current_streak || 0,
-        longestStreak: data.longest_streak || 0,
-        lastActiveDate: data.last_active_date,
-        totalActiveDays: data.total_active_days || 0
-      };
+    if (error) {
+      console.error("Error fetching user streak data:", error);
+      return null;
     }
     
-    return null;
+    // If no data, try to initialize streak data
+    if (!data) {
+      try {
+        // Initialize user streak by calling the increment-streak function
+        const { data: streakResponse } = await supabase.functions.invoke('increment-streak', {
+          body: { user_id: userId }
+        });
+        
+        if (streakResponse?.streak) {
+          return {
+            currentStreak: streakResponse.streak.current_streak || 1,
+            longestStreak: streakResponse.streak.longest_streak || 1,
+            lastActiveDate: streakResponse.streak.last_active_date,
+            totalActiveDays: streakResponse.streak.total_active_days || 1
+          };
+        }
+      } catch (initError) {
+        console.error("Error initializing user streak:", initError);
+      }
+      return null;
+    }
+    
+    // Return formatted streak data
+    return {
+      currentStreak: data.current_streak || 0,
+      longestStreak: data.longest_streak || 0,
+      lastActiveDate: data.last_active_date,
+      totalActiveDays: data.total_active_days || 0
+    };
   } catch (error) {
     console.error("Error fetching user streak data:", error);
     return null;
