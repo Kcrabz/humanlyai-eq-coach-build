@@ -597,7 +597,7 @@ serve(async (req) => {
       await logEmailSent(supabase, payload, 'sending');
       
       const emailResult = await resend.emails.send({
-        from: "Humanly <notifications@humanly.ai>",
+        from: "Humanly <onboarding@resend.dev>", // Changed from humanly.ai to resend.dev
         to: [recipientEmail],
         subject: payload.subject,
         html: htmlContent,
