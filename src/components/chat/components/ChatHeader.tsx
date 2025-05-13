@@ -19,7 +19,7 @@ export function ChatHeader({ hasCompletedAssessment, userArchetype, onStartAsses
         </h1>
       </div>
       
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-6">
         {/* Add Start New Chat button */}
         <StartNewChatButton />
         
