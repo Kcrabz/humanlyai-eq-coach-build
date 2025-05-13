@@ -162,13 +162,32 @@ export const emailService = {
         return false;
       }
       
-      // Now resend with the same data
-      // Fix the type issue by safely accessing email_data as an object
-      const emailData = typeof emailLog.email_data === 'object' && emailLog.email_data !== null 
-        ? emailLog.email_data 
-        : {};
+      // Handle different possible types of email_data properly
+      let emailData: Record<string, any> = {};
       
-      const originalSubject = emailData.subject || 'Notification from Humanly';
+      // Check if email_data exists and determine its type
+      if (emailLog.email_data) {
+        if (typeof emailLog.email_data === 'object' && !Array.isArray(emailLog.email_data)) {
+          // It's an object, we can use it directly
+          emailData = emailLog.email_data as Record<string, any>;
+        } else if (Array.isArray(emailLog.email_data)) {
+          // It's an array, we can't use it directly for properties
+          console.warn("email_data is an array, cannot extract subject");
+        } else if (typeof emailLog.email_data === 'string') {
+          // It's a string, try to parse it as JSON
+          try {
+            const parsed = JSON.parse(emailLog.email_data);
+            if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+              emailData = parsed;
+            }
+          } catch (e) {
+            console.warn("Could not parse email_data as JSON:", e);
+          }
+        }
+      }
+      
+      // Get subject with safe fallback
+      const originalSubject = emailData?.subject || 'Notification from Humanly';
       
       return await this.triggerEmail({
         userId: emailLog.user_id,
