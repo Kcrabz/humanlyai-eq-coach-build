@@ -53,11 +53,32 @@ async function logEmailSent(supabase, payload: EmailPayload, status = 'sent', er
   }
 }
 
+// Fetch user's first name from profiles table
+async function getUserName(supabase, userId: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('first_name')
+      .eq('id', userId)
+      .single();
+    
+    if (error || !data) {
+      console.warn("Could not fetch user profile:", error);
+      return null;
+    }
+    
+    return data.first_name || null;
+  } catch (err) {
+    console.error("Error fetching user name:", err);
+    return null;
+  }
+}
+
 // Template renderer function with improved templates
 function renderEmailTemplate(templateName: string, data: Record<string, any>) {
   // Default values for templates
-  const userName = data.name || 'there';
-  const appUrl = 'https://humanly.ai';
+  const userName = data.name || data.firstName || 'there';
+  const appUrl = data.appUrl || 'https://humanly.ai';
   const brandColor = '#4F46E5'; // Primary brand color
   const backgroundColor = '#F7F7F9'; // Light background color
   const textColor = '#1F2937'; // Main text color
@@ -584,6 +605,33 @@ serve(async (req) => {
       console.error("Error checking email preferences:", preferencesError);
       // Continue with sending the email even if we can't check preferences
     }
+
+    // Get user's first name if available
+    let userName = "there";
+    try {
+      const firstName = await getUserName(supabase, payload.userId);
+      if (firstName) {
+        userName = firstName;
+        console.log(`Using user's first name: ${userName}`);
+        
+        // Update the data with the user's name
+        payload.data = {
+          ...(payload.data || {}),
+          firstName: firstName,
+          name: firstName
+        };
+      }
+    } catch (nameError) {
+      console.error("Error getting user's name:", nameError);
+      // Continue with default name if there's an error
+    }
+    
+    // Set the correct application URL
+    const appBaseUrl = "https://humanly.ai";
+    payload.data = {
+      ...(payload.data || {}),
+      appUrl: appBaseUrl
+    };
     
     // Render the email HTML using the template
     console.log("Generating email content with template:", payload.templateName);

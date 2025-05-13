@@ -82,6 +82,12 @@ export const emailService = {
       
       toast.info("Sending email...");
       
+      // Ensure the appUrl is set in the data
+      const emailData = {
+        ...data,
+        appUrl: 'https://humanly.ai' // Set the correct base URL
+      };
+      
       const { error } = await supabase.functions.invoke("send-email", {
         body: {
           userId,
@@ -89,7 +95,7 @@ export const emailService = {
           templateName,
           subject,
           to, // Optional, if not provided the function will fetch from auth.users
-          data,
+          data: emailData,
         },
       });
 
@@ -197,7 +203,8 @@ export const emailService = {
         data: {
           ...emailData,
           isResend: true,
-          originalSentAt: emailLog.sent_at
+          originalSentAt: emailLog.sent_at,
+          appUrl: 'https://humanly.ai' // Ensure the correct base URL is set
         }
       });
     } catch (err) {

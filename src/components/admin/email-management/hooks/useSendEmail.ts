@@ -38,7 +38,10 @@ export const useSendEmail = (users: User[], onSendSuccess: () => void, onClose: 
 
   // Generate email template data based on the selected template
   const generateTemplateData = () => {
-    const baseData = { message: customMessage };
+    const baseData = { 
+      message: customMessage,
+      appUrl: 'https://humanly.ai'  // Ensure correct base URL is set
+    };
     
     switch(selectedTemplate) {
       case 'daily-nudge':
@@ -141,8 +144,8 @@ export const useSendEmail = (users: User[], onSendSuccess: () => void, onClose: 
           subject: subject,
           to: user.email,
           data: {
-            ...templateData,
-            name: "User" // Default name if we don't have it
+            ...templateData
+            // The firstName will be fetched by the edge function
           }
         };
 
