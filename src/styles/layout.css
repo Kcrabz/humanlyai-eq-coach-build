@@ -1,4 +1,3 @@
-
 /* Enhanced header styling */
 .enhanced-header {
   @apply border-b border-gray-100 bg-white/90 backdrop-blur-md;
@@ -150,6 +149,16 @@
   .sidebar-trigger {
     position: relative;
     z-index: 60;
+  }
+  
+  /* Make sure the right sidebar toggle is visible on mobile */
+  .enhanced-header .ChatRightSidebarTrigger,
+  .enhanced-header button[aria-label="Toggle User Menu"] {
+    position: relative;
+    z-index: 60;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 }
 
