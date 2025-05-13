@@ -28,6 +28,20 @@
   }
 }
 
+/* Segmented control for mobile progress navigation */
+@media (max-width: 767px) {
+  .progress-navigation-segmented {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 0.5rem 0;
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}
+
 /* Explicit styling for right sidebar trigger with highest priority */
 .right-sidebar-trigger-wrapper {
   position: relative;

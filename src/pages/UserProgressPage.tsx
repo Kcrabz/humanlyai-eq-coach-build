@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useUserProgress } from "@/hooks/useUserProgress";
@@ -10,6 +10,7 @@ import { EQArchetype } from "@/types";
 import { Loader } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEQProgress } from "@/hooks/useEQProgress";
+import { ProgressNavigation } from "@/components/progress/ProgressNavigation";
 
 // Import tabs
 import { OverviewTab } from "@/components/progress/OverviewTab";
@@ -21,6 +22,15 @@ import { BadgesCertificatesTab } from "@/components/progress/BadgesCertificatesT
 // Import mock data
 import { MOCK_ACHIEVEMENTS, MOCK_TIMELINE_ITEMS } from "@/data/mockProgressData";
 import { MOCK_BADGES_CERTIFICATES } from "@/data/mockBadgesCertificatesData";
+
+// Define the navigation tabs
+const navigationTabs = [
+  { value: "overview", label: "Overview", shortLabel: "Overview" },
+  { value: "achievements", label: "Achievements", shortLabel: "Achievements" },
+  { value: "badges", label: "Badges & Certificates", shortLabel: "Badges" },
+  { value: "challenges", label: "Daily Challenges", shortLabel: "Challenges" },
+  { value: "journey", label: "EQ Journey", shortLabel: "Journey" }
+];
 
 const UserProgressPage = () => {
   const { user, stats, userArchetype, isLoading } = useUserProgress();
@@ -137,15 +147,11 @@ const UserProgressPage = () => {
         </div>
         
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="animate-scale-fade-in">
-          <div className="overflow-x-auto pb-2">
-            <TabsList className="inline-flex min-w-full sm:grid sm:grid-cols-5 mb-8">
-              <TabsTrigger value="overview" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Overview</TabsTrigger>
-              <TabsTrigger value="achievements" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Achievements</TabsTrigger>
-              <TabsTrigger value="badges" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Badges & Certificates</TabsTrigger>
-              <TabsTrigger value="challenges" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Daily Challenges</TabsTrigger>
-              <TabsTrigger value="journey" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">EQ Journey</TabsTrigger>
-            </TabsList>
-          </div>
+          <ProgressNavigation 
+            tabs={navigationTabs} 
+            activeTab={activeTab} 
+            onChange={setActiveTab} 
+          />
           
           {/* Overview Tab */}
           <TabsContent value="overview" className="animate-scale-fade-in">
