@@ -1,4 +1,3 @@
-
 import { useSidebar } from "@/components/ui/sidebar";
 import { ChatHeader } from "./ChatHeader";
 import { ChatContent } from "./ChatContent";
@@ -66,8 +65,8 @@ export function ResponsiveMainContent({
 
   const contentStyle = {
     width: contentWidth,
-    transition: 'width 0.3s ease, margin-right 0.3s ease',
-    marginRight: isMobile ? '0' : rightSidebarOpen ? '0' : '0'
+    transition: 'width 0.3s ease',
+    marginRight: '0'
   };
 
   return (

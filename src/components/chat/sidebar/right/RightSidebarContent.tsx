@@ -1,4 +1,5 @@
 
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
@@ -6,13 +7,11 @@ import { UserAvatar } from "@/components/chat/components/UserAvatar";
 import { Link } from "react-router-dom";
 import { 
   Settings, 
-  UserCircle, 
-  CreditCard, 
-  MemoryStick,
-  Bell,
-  LayoutDashboard,
-  Share2,
-  Shield
+  LayoutDashboard, 
+  CreditCard,
+  Brain,
+  Shield,
+  LogOut
 } from "lucide-react";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { 
@@ -23,16 +22,23 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { MemorySettings } from "@/components/chat/memory/MemorySettings";
-import { LogoutButton } from "./LogoutButton";
+import { useChatMemory } from "@/context/ChatMemoryContext";
+import { Card } from "@/components/ui/card";
 
 export function RightSidebarContent() {
   const { user, logout } = useAuth();
   const { isAdmin } = useAdminCheck();
+  const { memoryStats, toggleMemory } = useChatMemory();
+  const [showMemoryDialog, setShowMemoryDialog] = useState(false);
+
+  const openMemoryDialog = () => {
+    setShowMemoryDialog(true);
+  };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white p-4">
       {/* User Profile Header */}
-      <div className="p-4 flex flex-col items-center">
+      <div className="flex flex-col items-center mb-4">
         <UserAvatar 
           userId={user?.id}
           name={user?.name || 'User'}
@@ -51,15 +57,70 @@ export function RightSidebarContent() {
         )}
       </div>
 
-      <Separator />
+      <Separator className="mb-4" />
       
-      {/* Main Navigation */}
-      <div className="px-4 py-3 space-y-1">
-        <h3 className="text-sm font-medium mb-2">Your Account</h3>
-        
+      {/* Memory Card */}
+      <Card 
+        className="p-3 mb-4 bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-humanly-pastel-lavender/60 cursor-pointer transition-all"
+        onClick={openMemoryDialog}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Brain className="h-4 w-4 mr-2 text-humanly-indigo" />
+            <h3 className="font-medium text-sm text-humanly-indigo">Memory</h3>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-5 w-5 p-0 rounded-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              openMemoryDialog();
+            }}
+          >
+            <span className="text-xs">→</span>
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {memoryStats.totalMemories > 0 
+            ? `${memoryStats.totalMemories} memories saved` 
+            : "No memories saved"}
+        </p>
+      </Card>
+      
+      {/* Memory Dialog */}
+      <Dialog open={showMemoryDialog} onOpenChange={setShowMemoryDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Memory Settings</DialogTitle>
+          </DialogHeader>
+          <MemorySettings />
+        </DialogContent>
+      </Dialog>
+      
+      {/* EQ Archetype Section - Styled as shown in image */}
+      {user?.eq_archetype && (
+        <div 
+          className="bg-humanly-pastel-lavender/30 rounded-lg p-3 mb-4 cursor-pointer"
+          onClick={() => window.location.href = "/progress?tab=eq-journey"}
+        >
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-humanly-indigo/20 flex items-center justify-center text-humanly-indigo">
+              {user.eq_archetype.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h3 className="font-medium text-sm">{user.eq_archetype.charAt(0).toUpperCase() + user.eq_archetype.slice(1)}</h3>
+              <p className="text-xs text-muted-foreground">EQ Archetype</p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Navigation Links - Styled as shown in image */}
+      <div className="space-y-1 mb-4">
         <Button
           variant="ghost"
-          className="w-full justify-start text-sm"
+          className="w-full justify-start text-sm h-9"
           asChild
         >
           <Link to="/dashboard">
@@ -71,7 +132,7 @@ export function RightSidebarContent() {
         {isAdmin && (
           <Button
             variant="ghost"
-            className="w-full justify-start text-sm"
+            className="w-full justify-start text-sm h-9"
             asChild
           >
             <Link to="/admin">
@@ -81,27 +142,9 @@ export function RightSidebarContent() {
           </Button>
         )}
         
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-sm"
-            >
-              <MemoryStick className="h-4 w-4 mr-2" />
-              Memory
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Memory Settings</DialogTitle>
-            </DialogHeader>
-            <MemorySettings />
-          </DialogContent>
-        </Dialog>
-        
         <Button
           variant="ghost"
-          className="w-full justify-start text-sm"
+          className="w-full justify-start text-sm h-9"
           asChild
         >
           <Link to="/subscription">
@@ -112,7 +155,7 @@ export function RightSidebarContent() {
         
         <Button
           variant="ghost"
-          className="w-full justify-start text-sm"
+          className="w-full justify-start text-sm h-9"
           asChild
         >
           <Link to="/settings">
@@ -124,28 +167,16 @@ export function RightSidebarContent() {
       
       <Separator />
       
-      {/* EQ Archetype Section */}
-      {user?.eq_archetype && (
-        <div className="px-4 py-3">
-          <Link to="/progress?tab=eq-journey" className="group">
-            <h3 className="text-sm font-medium text-humanly-indigo mb-2 group-hover:text-humanly-indigo-dark">Your EQ Archetype</h3>
-            <div className="flex items-center gap-2 p-2 rounded-md bg-humanly-pastel-lavender/20">
-              <div className="h-8 w-8 rounded-full bg-humanly-indigo/20 flex items-center justify-center text-humanly-indigo">
-                {user.eq_archetype.charAt(0).toUpperCase()}
-              </div>
-              <span className="font-medium text-sm">{user.eq_archetype.charAt(0).toUpperCase() + user.eq_archetype.slice(1)}</span>
-            </div>
-          </Link>
-        </div>
-      )}
-      
-      {/* Removed the duplicate Memory section that was here */}
-      
-      <Separator />
-      
-      {/* Logout Button */}
-      <div className="mt-auto px-4 py-3">
-        <LogoutButton />
+      {/* Logout Button - Styled as shown in image */}
+      <div className="mt-auto pt-4">
+        <Button
+          variant="outline"
+          className="w-full justify-start h-9 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+          onClick={logout}
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Log out
+        </Button>
       </div>
     </div>
   );

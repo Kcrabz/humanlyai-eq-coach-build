@@ -11,20 +11,12 @@ export function ChatRightSidebar() {
   return (
     <Sidebar 
       side="right" 
-      className={`w-80 transition-all duration-300 ${open ? 'translate-x-0' : 'translate-x-full'}`}
+      className={`w-80 transition-all duration-300 ${open ? 'translate-x-0' : 'translate-x-full'} bg-white border-l border-gray-100`}
       data-state={open ? "open" : "closed"}
       data-mobile={isMobile ? "true" : "false"}
     >
-      <SidebarContent className="flex flex-col h-full">
-        {/* Header without close button */}
-        <div className="border-b border-gray-100">
-          {/* Empty header - no content */}
-        </div>
-
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto">
-          <RightSidebarContent />
-        </div>
+      <SidebarContent className="flex flex-col h-full p-0">
+        <RightSidebarContent />
       </SidebarContent>
     </Sidebar>
   );
