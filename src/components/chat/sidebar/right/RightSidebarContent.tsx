@@ -88,7 +88,7 @@ export function RightSidebarContent() {
         >
           <Link to="/settings">
             <UserCircle className="h-4 w-4 mr-2" />
-            Your Bio
+            Memory
           </Link>
         </Button>
         
