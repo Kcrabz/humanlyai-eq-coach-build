@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -42,10 +41,7 @@ export const MemorySettings = () => {
     if (success) {
       toast(checked ? "Memory enabled" : "Memory disabled");
     } else {
-      toast("Error", {
-        description: "Failed to update memory settings",
-        variant: "destructive"
-      });
+      toast.error("Failed to update memory settings");
     }
   };
 
@@ -55,10 +51,7 @@ export const MemorySettings = () => {
     if (success) {
       toast(checked ? "Smart insights enabled" : "Smart insights disabled");
     } else {
-      toast("Error", {
-        description: "Failed to update smart insights settings",
-        variant: "destructive"
-      });
+      toast.error("Failed to update smart insights settings");
     }
   };
 
@@ -70,10 +63,7 @@ export const MemorySettings = () => {
         description: shouldArchive ? "All memories have been archived and cleared" : "All memories cleared",
       });
     } else {
-      toast("Error", {
-        description: "Failed to clear memories",
-        variant: "destructive"
-      });
+      toast.error("Failed to clear memories");
     }
   };
 

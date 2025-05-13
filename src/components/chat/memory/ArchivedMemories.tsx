@@ -1,4 +1,3 @@
-
 import React, { useEffect } from "react";
 import { useChatMemory } from "@/context/ChatMemoryContext";
 import { Button } from "@/components/ui/button";
@@ -47,10 +46,7 @@ export const ArchivedMemories = () => {
         description: "The archived memory has been permanently deleted",
       });
     } else {
-      toast("Error", {
-        description: "Failed to delete memory",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete memory");
     }
   };
 
@@ -62,10 +58,7 @@ export const ArchivedMemories = () => {
         description: "The memory has been restored to your active memories",
       });
     } else {
-      toast("Error", {
-        description: "Failed to restore memory",
-        variant: "destructive"
-      });
+      toast.error("Failed to restore memory");
     }
   };
 

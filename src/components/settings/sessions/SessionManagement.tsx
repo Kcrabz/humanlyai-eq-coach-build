@@ -43,10 +43,7 @@ export const SessionManagement: React.FC = () => {
       setSessions(formattedSessions);
     } catch (error) {
       console.error("Error loading sessions:", error);
-      toast("Error", {
-        description: "Failed to load sessions",
-        variant: "destructive"
-      });
+      toast.error("Failed to load sessions");
     } finally {
       setLoading(false);
     }
@@ -68,10 +65,7 @@ export const SessionManagement: React.FC = () => {
       });
     } catch (error) {
       console.error("Error terminating session:", error);
-      toast("Error", {
-        description: "Failed to terminate session",
-        variant: "destructive"
-      });
+      toast.error("Failed to terminate session");
     } finally {
       setTerminatingSession(null);
     }
@@ -93,10 +87,7 @@ export const SessionManagement: React.FC = () => {
       });
     } catch (error) {
       console.error("Error terminating all sessions:", error);
-      toast("Error", {
-        description: "Failed to terminate sessions",
-        variant: "destructive"
-      });
+      toast.error("Failed to terminate sessions");
     } finally {
       setTerminatingSession(null);
     }

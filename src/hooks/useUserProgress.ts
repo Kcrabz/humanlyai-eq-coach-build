@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { EQArchetype } from "@/types";
@@ -86,10 +85,7 @@ export const useUserProgress = () => {
         
       } catch (error) {
         console.error("Error fetching user progress:", error);
-        toast("Error loading progress data", {
-          description: "There was a problem fetching your progress data.",
-          variant: "destructive"
-        });
+        toast.error("There was a problem fetching your progress data.");
         
         // Fallback to basic stats if there's an error
         setStats({
