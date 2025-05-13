@@ -1,3 +1,4 @@
+
 import * as React from "react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { useSidebar } from "./sidebar-provider";
 
 const SIDEBAR_WIDTH = "16rem";
-const SIDEBAR_WIDTH_MOBILE = "18rem";
+const SIDEBAR_WIDTH_MOBILE = "16.5rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 
 export const Sidebar = React.forwardRef<
