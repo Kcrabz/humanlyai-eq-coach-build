@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogOut, Laptop, Smartphone, Clock, Loader2 } from "lucide-react";
 
 interface Session {
-  id: string;
+  id: string; // Ensuring this property exists
   user_agent: string;
   created_at: string;
   is_current: boolean;

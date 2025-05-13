@@ -14,13 +14,13 @@ interface CoachingPreferencesProps {
 
 export function CoachingPreferences({ className }: CoachingPreferencesProps) {
   const { user, setCoachingMode } = useAuth();
-  const [selectedMode, setSelectedMode] = useState(user?.coaching_mode || "normal");
+  const [selectedMode, setSelectedMode] = useState<"normal" | "tough">(user?.coaching_mode as "normal" | "tough" || "normal");
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSavePreferences = async () => {
     setIsSaving(true);
     try {
-      await setCoachingMode(selectedMode as "normal" | "tough");
+      await setCoachingMode(selectedMode);
       toast.success("Coaching preferences updated successfully");
     } catch (error) {
       console.error("Error saving coaching preferences:", error);
@@ -28,6 +28,11 @@ export function CoachingPreferences({ className }: CoachingPreferencesProps) {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleValueChange = (value: string) => {
+    // Explicitly cast the string to the correct type
+    setSelectedMode(value as "normal" | "tough");
   };
 
   return (
@@ -44,7 +49,7 @@ export function CoachingPreferences({ className }: CoachingPreferencesProps) {
       <CardContent className="space-y-6">
         <RadioGroup
           value={selectedMode}
-          onValueChange={setSelectedMode}
+          onValueChange={handleValueChange}
           className="grid gap-4"
         >
           <div className="flex items-start space-x-3">
