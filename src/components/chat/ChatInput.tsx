@@ -43,7 +43,7 @@ export function ChatInput() {
 
   return (
     <form 
-      className="p-3 border-t flex items-end gap-2 pr-6" 
+      className="p-3 border-t flex items-end gap-2 pr-10" 
       onSubmit={handleSubmit}
     >
       <Textarea
