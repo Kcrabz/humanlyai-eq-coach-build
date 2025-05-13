@@ -22,12 +22,13 @@ interface EmailPayload {
 }
 
 // Helper to log email sending to database
-async function logEmailSent(supabase, payload: EmailPayload) {
+async function logEmailSent(supabase, payload: EmailPayload, status = 'sent', errorDetails = null) {
   try {
     console.log("Logging email to database:", {
       user_id: payload.userId,
       email_type: payload.emailType,
-      template_name: payload.templateName
+      template_name: payload.templateName,
+      status: status
     });
     
     const { data, error } = await supabase
@@ -37,16 +38,18 @@ async function logEmailSent(supabase, payload: EmailPayload) {
         email_type: payload.emailType,
         template_name: payload.templateName,
         email_data: payload.data || {},
+        status: status
       });
     
     if (error) {
       console.error("Error logging email:", error);
+      return { success: false, error };
     }
     
-    return { data, error };
+    return { success: true, data };
   } catch (err) {
     console.error("Failed to log email:", err);
-    return { data: null, error: err };
+    return { success: false, error: err };
   }
 }
 
@@ -515,11 +518,15 @@ serve(async (req) => {
         
         if (userError) {
           console.error("Error fetching user:", userError);
+          // Still log the attempt with failure status
+          await logEmailSent(supabase, payload, 'failed', `User not found: ${userError.message}`);
           throw new Error(`User not found: ${userError.message}`);
         }
         
         if (!userData?.user?.email) {
           console.error("User has no email");
+          // Still log the attempt with failure status
+          await logEmailSent(supabase, payload, 'failed', "User has no email address");
           throw new Error("User has no email address");
         }
         
@@ -527,6 +534,7 @@ serve(async (req) => {
         console.log(`Found recipient email: ${recipientEmail}`);
       } catch (userFetchError) {
         console.error("Failed to fetch user email:", userFetchError);
+        await logEmailSent(supabase, payload, 'failed', `Failed to fetch user email: ${userFetchError.message}`);
         return new Response(
           JSON.stringify({ error: "Failed to fetch user email", details: userFetchError.message }),
           {
@@ -544,7 +552,7 @@ serve(async (req) => {
         .from('email_preferences')
         .select('*')
         .eq('user_id', payload.userId)
-        .single();
+        .maybeSingle();
       
       if (prefError && prefError.code !== 'PGRST116') {
         console.error("Error fetching email preferences:", prefError);
@@ -560,6 +568,8 @@ serve(async (req) => {
               payload.emailType === 're_engagement' && !preferences.inactivity_reminders) {
             
             console.log(`User ${payload.userId} has opted out of ${payload.emailType} emails`);
+            // Log the opt-out as a "skipped" status
+            await logEmailSent(supabase, payload, 'skipped', "User opted out of this email type");
             return new Response(
               JSON.stringify({ message: "User has opted out of this email type" }),
               {
@@ -583,6 +593,9 @@ serve(async (req) => {
     
     // Send the email
     try {
+      // First log that we're attempting to send the email
+      await logEmailSent(supabase, payload, 'sending');
+      
       const emailResult = await resend.emails.send({
         from: "Humanly <notifications@humanly.ai>",
         to: [recipientEmail],
@@ -590,15 +603,26 @@ serve(async (req) => {
         html: htmlContent,
       });
       
-      console.log("Email sent:", emailResult);
+      console.log("Email API response:", emailResult);
       
-      // Log the email in the database
-      try {
-        await logEmailSent(supabase, payload);
-      } catch (logError) {
-        console.error("Failed to log email to database:", logError);
-        // Continue even if logging fails
+      // Check for errors in the response
+      if (emailResult.error) {
+        console.error("Error from Resend API:", emailResult.error);
+        
+        // Update the log with failure status
+        await logEmailSent(supabase, payload, 'failed', emailResult.error);
+        
+        return new Response(
+          JSON.stringify({ error: "Failed to send email", details: emailResult.error }),
+          {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
       }
+      
+      // Update the log with success status
+      await logEmailSent(supabase, payload, 'sent');
       
       // Return the result
       return new Response(
@@ -609,7 +633,11 @@ serve(async (req) => {
         }
       );
     } catch (sendError) {
-      console.error("Error sending email via Resend:", sendError);
+      console.error("Exception sending email via Resend:", sendError);
+      
+      // Update the log with failure status
+      await logEmailSent(supabase, payload, 'failed', sendError.message);
+      
       return new Response(
         JSON.stringify({ error: "Failed to send email", details: sendError.message }),
         {

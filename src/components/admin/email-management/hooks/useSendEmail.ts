@@ -87,9 +87,27 @@ export const useSendEmail = (users: User[], onSendSuccess: () => void, onClose: 
     }
   };
 
+  const validateEmailData = () => {
+    if (!selectedTemplate) {
+      toast.error("Please select an email template");
+      return false;
+    }
+    
+    if (selectedUsers.length === 0) {
+      toast.error("Please select at least one recipient");
+      return false;
+    }
+    
+    if (!subject.trim()) {
+      toast.error("Please enter an email subject");
+      return false;
+    }
+    
+    return true;
+  };
+
   const sendEmails = async () => {
-    if (!selectedTemplate || selectedUsers.length === 0 || !subject) {
-      toast.error("Please complete all required fields");
+    if (!validateEmailData()) {
       return;
     }
 
@@ -139,8 +157,14 @@ export const useSendEmail = (users: User[], onSendSuccess: () => void, onClose: 
             console.error(`Error sending email to ${user.email}:`, error);
             results.push({ userId, email: user.email, success: false, error });
           } else {
-            console.log(`Email sent successfully to ${user.email}:`, data);
-            results.push({ userId, email: user.email, success: true });
+            // Check for nested error in the response 
+            if (data && data.error) {
+              console.error(`API error sending email to ${user.email}:`, data.error);
+              results.push({ userId, email: user.email, success: false, error: data.error });
+            } else {
+              console.log(`Email sent successfully to ${user.email}:`, data);
+              results.push({ userId, email: user.email, success: true });
+            }
           }
         } catch (invocationError) {
           console.error(`Exception during email function invocation for ${user.email}:`, invocationError);
