@@ -3,7 +3,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { useChat } from "@/context/ChatContext";
 import { ChatBubble } from "./ChatBubble";
 import { EmptyChatState } from "./components/EmptyChatState";
-import { ChatLoadingIndicator } from "./components/ChatLoadingIndicator";
 import { useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -40,13 +39,10 @@ export function ChatList() {
     }
   }, [rightSidebarOpen, leftSidebarOpen, prevRightState, prevLeftState]);
 
-  // Auto-scroll to bottom when messages change or loading state changes
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    
-    // Log the loading state for debugging
-    console.log("Loading state changed:", isLoading);
-  }, [messages, isLoading]);
+  }, [messages]);
 
   // If there are messages and this is the first render, scroll to the most recent message
   useEffect(() => {
@@ -73,9 +69,6 @@ export function ChatList() {
       ) : (
         messages.map((message) => <ChatBubble key={message.id} message={message} />)
       )}
-      
-      {/* Only show loading indicator when isLoading is true */}
-      {isLoading && <ChatLoadingIndicator key={`loading-${Date.now()}`} />}
       
       <div ref={messagesEndRef} />
     </div>

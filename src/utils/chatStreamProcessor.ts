@@ -1,4 +1,3 @@
-
 import { StreamOptions } from './chatStreamTypes';
 
 /**
@@ -92,11 +91,6 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
             // This is likely a completion message
             isCompleted = true;
           }
-          
-          // Log progress for debugging
-          if (hasStartedResponse && fullResponse.length % 100 === 0) {
-            console.log(`Stream progress: ${fullResponse.length} chars received for message ${assistantMessageId}`);
-          }
         } catch (err) {
           // Just skip invalid JSON rather than logging errors
           continue;
@@ -136,7 +130,6 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
     }
     
     // Message completed successfully - very important to signal completion
-    // This is crucial for removing the typing indicator
     console.log("Setting lastSentMessage to null to indicate completion");
     setLastSentMessage(null);
     
