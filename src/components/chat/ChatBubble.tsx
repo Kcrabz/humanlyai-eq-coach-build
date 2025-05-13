@@ -10,6 +10,7 @@ import remarkGfm from "remark-gfm";
 import "highlight.js/styles/github.css";
 import hljs from "highlight.js";
 import { UserAvatar } from "./components/UserAvatar";
+import { AssistantAvatar } from "./components/AssistantAvatar";
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -55,7 +56,7 @@ export function ChatBubble({
     <div className={`flex gap-3 ${isUserMessage ? "justify-end" : "justify-start"} ${className}`}>
       {/* Assistant Avatar - only show for assistant messages if showAvatar is true */}
       {!isUserMessage && showAvatar && (
-        <UserAvatar name="Kai" avatarUrl="/images/kai-avatar.jpg" className="h-8 w-8" />
+        <AssistantAvatar />
       )}
       
       {/* Message Content */}
