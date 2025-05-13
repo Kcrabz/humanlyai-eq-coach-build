@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +5,6 @@ import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useUserProgress } from "@/hooks/useUserProgress";
-import { EQArchetype } from "@/types";
 import { Loader } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useEQProgress } from "@/hooks/useEQProgress";
@@ -19,14 +17,10 @@ import { ChallengesTab } from "@/components/progress/ChallengesTab";
 import { EQJourneyTab } from "@/components/progress/EQJourneyTab";
 import { BadgesCertificatesTab } from "@/components/progress/BadgesCertificatesTab";
 
-// Import mock data
-import { MOCK_ACHIEVEMENTS, MOCK_TIMELINE_ITEMS } from "@/data/mockProgressData";
-import { MOCK_BADGES_CERTIFICATES } from "@/data/mockBadgesCertificatesData";
-
 // Define the navigation tabs
 const navigationTabs = [
   { value: "overview", label: "Overview", shortLabel: "Overview" },
-  { value: "achievements", label: "Achievements", shortLabel: "Achievements" },
+  { value: "achievements", label: "Achievements", shortLabel: "Achieve" },
   { value: "badges", label: "Badges & Certificates", shortLabel: "Badges" },
   { value: "challenges", label: "Daily Challenges", shortLabel: "Challenges" },
   { value: "journey", label: "EQ Journey", shortLabel: "Journey" }

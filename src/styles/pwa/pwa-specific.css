@@ -52,13 +52,19 @@ body.pwa {
   .pwa .TabsList::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Edge */
   }
-}
-
-/* Additional style for the main PWA container */
-[data-pwa="true"] .main-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
+  
+  /* Segmented control improvements for Progress page */
+  .pwa .ToggleGroup {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  .pwa .ToggleGroupItem {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
 }
 
 /* Update notification styling */
@@ -96,5 +102,22 @@ body.pwa {
     background: linear-gradient(to right, transparent, white);
     pointer-events: none;
     z-index: 10;
+  }
+  
+  /* Segmented control specific styles */
+  .ToggleGroup {
+    display: flex;
+    width: 100%;
+  }
+  
+  .ToggleGroupItem {
+    padding-left: 2px;
+    padding-right: 2px;
+    font-size: 0.75rem; /* text-xs equivalent */
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
