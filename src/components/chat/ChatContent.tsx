@@ -1,7 +1,7 @@
 
 import { lazy, Suspense } from "react";
 import { ChatInput } from "@/components/chat/ChatInput";
-import { EQAssessmentAlert } from "./EQAssessmentAlert";
+import { EQAssessmentAlert } from "@/components/chat/components/EQAssessmentAlert";
 
 // Lazy load components that aren't immediately visible
 const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => ({ default: module.ChatList })));
