@@ -3,7 +3,8 @@ export enum EmailErrorType {
   FETCH_FAILURE = "FETCH_FAILURE",
   UPDATE_FAILURE = "UPDATE_FAILURE",
   SEND_FAILURE = "SEND_FAILURE",
-  UNKNOWN = "UNKNOWN"
+  UNKNOWN = "UNKNOWN",
+  INVALID_DATA = "INVALID_DATA"
 }
 
 export interface EmailError {

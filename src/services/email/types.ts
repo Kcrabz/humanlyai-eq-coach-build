@@ -17,15 +17,17 @@ export interface EmailLog {
   email_type: string;
   template_name: string;
   sent_at: string;
-  opened_at?: string;
-  clicked_at?: string;
-  status?: string;
-  email_data?: Record<string, any>;
+  opened_at?: string | null;
+  clicked_at?: string | null;
+  status?: string | null;
+  email_data?: Record<string, any> | null;
 }
 
 export interface TriggerEmailOptions {
-  toEmail: string;
+  userId: string;
+  emailType: string;
   templateName: string;
   subject: string;
+  to?: string;
   data?: Record<string, any>;
 }

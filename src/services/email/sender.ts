@@ -97,7 +97,7 @@ export async function resendEmail(emailLogId: string): Promise<boolean> {
         } catch (e) {
           handleEmailError(
             e, 
-            EmailErrorType.INVALID_DATA, 
+            EmailErrorType.UNKNOWN, 
             "Could not parse email data"
           );
         }

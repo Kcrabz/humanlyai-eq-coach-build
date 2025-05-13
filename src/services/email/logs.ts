@@ -32,7 +32,11 @@ export async function getEmailLogs(limit = 50, forAllUsers = false): Promise<Ema
         throw error;
       }
 
-      return data || [];
+      // Transform the data to match our EmailLog type
+      return data?.map(log => ({
+        ...log,
+        email_data: log.email_data as Record<string, any> | null
+      })) || [];
     },
     EmailErrorType.FETCH_FAILURE,
     "Failed to fetch email logs"
