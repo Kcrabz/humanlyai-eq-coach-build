@@ -42,6 +42,16 @@ body.pwa {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
+  
+  /* Progress page tabs improvements for PWA */
+  .pwa .TabsList {
+    overflow-x: auto;
+    scrollbar-width: none; /* Firefox */
+  }
+  
+  .pwa .TabsList::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Edge */
+  }
 }
 
 /* Additional style for the main PWA container */
@@ -60,4 +70,31 @@ body.pwa {
   z-index: 100;
   width: 90%;
   max-width: 360px;
+}
+
+/* Additional styles for progress page tabs on mobile */
+@media (max-width: 767px) {
+  /* Make tabs container scrollable horizontally */
+  .overflow-x-auto::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .overflow-x-auto {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding-bottom: 5px;
+  }
+  
+  /* Add a little fade effect to indicate more content */
+  .overflow-x-auto::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 12px;
+    width: 24px;
+    background: linear-gradient(to right, transparent, white);
+    pointer-events: none;
+    z-index: 10;
+  }
 }

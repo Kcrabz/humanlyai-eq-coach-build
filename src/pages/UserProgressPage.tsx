@@ -137,13 +137,15 @@ const UserProgressPage = () => {
         </div>
         
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="animate-scale-fade-in">
-          <TabsList className="grid grid-cols-5 mb-8">
-            <TabsTrigger value="overview" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Overview</TabsTrigger>
-            <TabsTrigger value="achievements" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Achievements</TabsTrigger>
-            <TabsTrigger value="badges" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Badges & Certificates</TabsTrigger>
-            <TabsTrigger value="challenges" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Daily Challenges</TabsTrigger>
-            <TabsTrigger value="journey" className="transition-all duration-300 hover:bg-humanly-pastel-lavender/30">EQ Journey</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="inline-flex min-w-full sm:grid sm:grid-cols-5 mb-8">
+              <TabsTrigger value="overview" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Overview</TabsTrigger>
+              <TabsTrigger value="achievements" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Achievements</TabsTrigger>
+              <TabsTrigger value="badges" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Badges & Certificates</TabsTrigger>
+              <TabsTrigger value="challenges" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">Daily Challenges</TabsTrigger>
+              <TabsTrigger value="journey" className="flex-shrink-0 transition-all duration-300 hover:bg-humanly-pastel-lavender/30">EQ Journey</TabsTrigger>
+            </TabsList>
+          </div>
           
           {/* Overview Tab */}
           <TabsContent value="overview" className="animate-scale-fade-in">
