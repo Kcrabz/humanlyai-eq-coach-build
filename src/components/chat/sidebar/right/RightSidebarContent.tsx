@@ -81,16 +81,23 @@ export function RightSidebarContent() {
           </Button>
         )}
         
-        <Button
-          variant="ghost"
-          className="w-full justify-start text-sm"
-          asChild
-        >
-          <Link to="/settings">
-            <UserCircle className="h-4 w-4 mr-2" />
-            Memory
-          </Link>
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              className="w-full justify-start text-sm"
+            >
+              <MemoryStick className="h-4 w-4 mr-2" />
+              Memory
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Memory Settings</DialogTitle>
+            </DialogHeader>
+            <MemorySettings />
+          </DialogContent>
+        </Dialog>
         
         <Button
           variant="ghost"
@@ -132,41 +139,7 @@ export function RightSidebarContent() {
         </div>
       )}
       
-      {/* User Bio if available */}
-      {user?.bio && (
-        <>
-          <Separator />
-          <div className="px-4 py-3">
-            <Link to="/settings?tab=profile" className="group">
-              <h3 className="text-sm font-medium text-humanly-indigo mb-2 group-hover:text-humanly-indigo-dark">Your Bio</h3>
-              <p className="text-sm text-muted-foreground line-clamp-2">{user.bio}</p>
-            </Link>
-          </div>
-        </>
-      )}
-      
-      <Separator />
-      
-      {/* Memory Button with Dialog */}
-      <div className="px-4 py-3">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-sm"
-            >
-              <MemoryStick className="h-4 w-4 mr-2" />
-              Memory
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
-            <DialogHeader>
-              <DialogTitle>Memory Settings</DialogTitle>
-            </DialogHeader>
-            <MemorySettings />
-          </DialogContent>
-        </Dialog>
-      </div>
+      {/* Removed the duplicate Memory section that was here */}
       
       <Separator />
       
