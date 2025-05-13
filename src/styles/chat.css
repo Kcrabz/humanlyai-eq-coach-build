@@ -12,6 +12,26 @@
   @apply bg-gradient-to-br from-white to-humanly-pastel-lavender/20 text-gray-800 border border-humanly-pastel-lavender/20;
 }
 
+/* New chat button styling */
+.enhanced-header .gap-2 {
+  @apply rounded-lg transform transition-transform duration-300 ease-in-out;
+}
+
+.enhanced-header .gap-2:hover {
+  @apply shadow-md translate-y-[-1px];
+}
+
+/* Mobile optimization for new chat button */
+@media (max-width: 640px) {
+  .enhanced-header .gap-2 {
+    @apply text-xs px-2 py-1;
+  }
+  
+  .enhanced-header .gap-2 svg {
+    @apply h-3.5 w-3.5;
+  }
+}
+
 /* Chat markdown content styling with improved readability */
 .chat-md p {
   @apply mb-3 leading-relaxed break-words;

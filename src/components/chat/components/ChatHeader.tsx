@@ -19,13 +19,13 @@ export function ChatHeader({ hasCompletedAssessment, userArchetype, onStartAsses
         </h1>
       </div>
       
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         {/* Add Start New Chat button */}
         <StartNewChatButton />
         
-        {/* Right sidebar trigger button pushed to the edge */}
+        {/* Right sidebar trigger button at the edge */}
         <div 
-          className="right-sidebar-trigger-wrapper ml-2" 
+          className="right-sidebar-trigger-wrapper" 
           style={{
             position: 'relative',
             zIndex: 100,
