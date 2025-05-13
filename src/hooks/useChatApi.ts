@@ -44,14 +44,24 @@ export const useChatApi = () => {
     assistantMessageId: string,
     updateAssistantMessage?: (id: string, content: string) => void
   ) => {
-    await apiSendMessageStream(
-      { content, userMessageId, assistantMessageId, updateAssistantMessage },
-      user,
-      errorOptions,
-      setLastSentMessage,
-      setIsLoading,
-      setUsageInfo
-    );
+    try {
+      // Set loading state at the beginning
+      setIsLoading(true);
+      
+      await apiSendMessageStream(
+        { content, userMessageId, assistantMessageId, updateAssistantMessage },
+        user,
+        errorOptions,
+        setLastSentMessage,
+        setIsLoading,
+        setUsageInfo
+      );
+    } catch (error) {
+      console.error("Error in sendMessageStream:", error);
+      // Make sure loading is set to false
+      setIsLoading(false);
+      throw error;
+    }
   };
 
   const retryLastMessage = async (

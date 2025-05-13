@@ -40,9 +40,13 @@ export function ChatList() {
     }
   }, [rightSidebarOpen, leftSidebarOpen, prevRightState, prevLeftState]);
 
+  // Auto-scroll to bottom when messages change or loading state changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isLoading]); // Add isLoading to dependencies to scroll when loading state changes
+    
+    // Log the loading state for debugging
+    console.log("Loading state changed:", isLoading);
+  }, [messages, isLoading]);
 
   // If there are messages and this is the first render, scroll to the most recent message
   useEffect(() => {
@@ -70,7 +74,8 @@ export function ChatList() {
         messages.map((message) => <ChatBubble key={message.id} message={message} />)
       )}
       
-      {isLoading && <ChatLoadingIndicator />}
+      {/* Only show loading indicator when isLoading is true */}
+      {isLoading && <ChatLoadingIndicator key={`loading-${Date.now()}`} />}
       
       <div ref={messagesEndRef} />
     </div>
