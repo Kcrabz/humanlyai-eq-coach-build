@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { emailService } from "@/services/email";
+import { EmailPreference } from "@/services/email/types";
 
 interface EmailPreferencesProps {
   className?: string;
@@ -51,7 +51,16 @@ export function EmailPreferences({ className }: EmailPreferencesProps) {
           return;
         }
 
-        setPreferences(data);
+        // Ensure we have values for all required properties by merging with defaults
+        const safeData = {
+          daily_nudges: data?.daily_nudges ?? true,
+          weekly_summary: data?.weekly_summary ?? true,
+          achievement_notifications: data?.achievement_notifications ?? true,
+          challenge_reminders: data?.challenge_reminders ?? true,
+          inactivity_reminders: data?.inactivity_reminders ?? true
+        };
+        
+        setPreferences(safeData);
       } catch (err) {
         console.error("Error in loadPreferences:", err);
       } finally {
