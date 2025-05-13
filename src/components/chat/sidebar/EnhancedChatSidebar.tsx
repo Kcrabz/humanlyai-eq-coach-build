@@ -22,9 +22,6 @@ export function EnhancedChatSidebar() {
   const { user } = useAuth();
   const { open } = useSidebar("left");
   
-  // Remove the effect that forces the sidebar to collapse by default
-  // This allows the sidebar to respond to user interactions properly
-  
   if (!user) return null;
   
   return (
