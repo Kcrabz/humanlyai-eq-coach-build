@@ -59,9 +59,9 @@ export function ResponsiveMainContent({
   const contentWidth = isMobile 
     ? '100%' 
     : (rightSidebarOpen && !isPWA)
-      ? 'calc(100% - 16rem)'
+      ? 'calc(100% - 18rem)'
       : (rightSidebarOpen && isPWA)
-        ? 'calc(100% - 14rem)'
+        ? 'calc(100% - 16rem)'
         : '100%';
 
   const contentStyle = {
