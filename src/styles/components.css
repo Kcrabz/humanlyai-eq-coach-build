@@ -1,5 +1,5 @@
 
-@layer base {
+@layer components {
   .gradient-bg {
     @apply bg-gradient-to-r from-humanly-indigo to-humanly-teal;
   }
