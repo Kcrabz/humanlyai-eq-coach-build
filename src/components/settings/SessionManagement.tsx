@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { LogOut, Laptop, Smartphone, Clock, Loader2 } from "lucide-react";
 
@@ -44,13 +44,17 @@ export default function SessionManagement() {
         id: session.id,
         user_agent: session.user_agent || "Unknown device",
         created_at: session.created_at,
-        is_current: currentSession?.id === session.id
+        is_current: currentSession?.user?.id === session.user_id
       })) || [];
       
       setSessions(formattedSessions);
     } catch (error) {
       console.error("Error loading sessions:", error);
-      toast.error("Failed to load sessions");
+      toast({
+        title: "Error",
+        description: "Failed to load sessions",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -67,10 +71,17 @@ export default function SessionManagement() {
       // Remove from the list
       setSessions(sessions.filter(s => s.id !== sessionId));
       
-      toast.success("Session terminated successfully");
+      toast({
+        title: "Success",
+        description: "Session terminated successfully"
+      });
     } catch (error) {
       console.error("Error terminating session:", error);
-      toast.error("Failed to terminate session");
+      toast({
+        title: "Error",
+        description: "Failed to terminate session",
+        variant: "destructive"
+      });
     } finally {
       setTerminatingSession(null);
     }
@@ -87,10 +98,17 @@ export default function SessionManagement() {
       // Keep only current session in the list
       setSessions(sessions.filter(s => s.is_current));
       
-      toast.success("All other sessions terminated successfully");
+      toast({
+        title: "Success",
+        description: "All other sessions terminated successfully"
+      });
     } catch (error) {
       console.error("Error terminating all sessions:", error);
-      toast.error("Failed to terminate sessions");
+      toast({
+        title: "Error",
+        description: "Failed to terminate sessions",
+        variant: "destructive"
+      });
     } finally {
       setTerminatingSession(null);
     }
