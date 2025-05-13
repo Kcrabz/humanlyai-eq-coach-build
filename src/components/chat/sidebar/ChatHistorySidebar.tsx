@@ -58,7 +58,8 @@ export function ChatHistorySidebar() {
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-end px-1 mb-1">
+      <div className="flex items-center justify-between px-1">
+        <h3 className="text-xs font-medium text-muted-foreground uppercase">Recent Conversations</h3>
         <Button 
           variant="ghost" 
           size="icon" 
@@ -71,20 +72,20 @@ export function ChatHistorySidebar() {
         </Button>
       </div>
       
-      <ScrollArea className="h-[140px]">
+      <ScrollArea className="h-[120px]">
         <div className="space-y-0.5">
           {conversations.slice(0, 5).map((conversation) => (
             <div 
               key={conversation.id}
-              className="group flex items-center justify-between rounded-md px-2 py-1 text-sm hover:bg-humanly-pastel-lavender/10 transition-colors cursor-pointer"
+              className="group flex items-center justify-between rounded-md px-2 py-1 text-sm hover:bg-accent transition-colors cursor-pointer"
               title={conversation.title}
             >
               <div 
                 className="flex-1 truncate"
                 onClick={() => handleRestoreConversation(conversation)}
               >
-                <p className="text-xs font-medium truncate">{conversation.title}</p>
-                <p className="text-xs text-muted-foreground truncate">{conversation.preview}</p>
+                <p className="text-sm font-medium truncate">{conversation.title}</p>
+                <p className="text-xs text-muted-foreground truncate">{conversation.preview.split('•')[0]}</p>
               </div>
               <Button 
                 variant="ghost" 

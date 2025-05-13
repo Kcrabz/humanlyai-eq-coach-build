@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { UserAvatar } from "@/components/chat/components/UserAvatar";
@@ -21,14 +21,12 @@ import {
 } from "@/components/ui/dialog";
 import { MemorySettings } from "@/components/chat/memory/MemorySettings";
 import { useChatMemory } from "@/context/ChatMemoryContext";
-import { ChatHistorySidebar } from "../ChatHistorySidebar";
-import { Separator } from "@/components/ui/separator";
 
 export function RightSidebarContent() {
   const { user, logout } = useAuth();
   const { isAdmin } = useAdminCheck();
   const { memoryStats, toggleMemory } = useChatMemory();
-  const [showMemoryDialog, setShowMemoryDialog] = useState(false);
+  const [showMemoryDialog, setShowMemoryDialog] = React.useState(false);
 
   const openMemoryDialog = () => {
     setShowMemoryDialog(true);
@@ -55,32 +53,6 @@ export function RightSidebarContent() {
           </div>
         )}
       </div>
-      
-      {/* EQ Archetype Section - More compact styling */}
-      {user?.eq_archetype && (
-        <div 
-          className="bg-humanly-pastel-lavender/30 rounded-lg p-2.5 mb-4 cursor-pointer"
-          onClick={() => window.location.href = "/progress?tab=eq-journey"}
-        >
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-humanly-indigo flex items-center justify-center text-white text-xs">
-              {user.eq_archetype.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h3 className="font-medium text-xs">{user.eq_archetype.charAt(0).toUpperCase() + user.eq_archetype.slice(1)}</h3>
-              <p className="text-xs text-gray-500">EQ Archetype</p>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Recent Conversations Section (newly added) */}
-      <div className="mb-4">
-        <h3 className="text-xs font-medium text-muted-foreground uppercase mb-2">Recent Conversations</h3>
-        <ChatHistorySidebar />
-      </div>
-      
-      <Separator className="my-3" />
       
       {/* Navigation Links - More compact styling */}
       <div className="space-y-0.5 mb-4">
@@ -140,6 +112,24 @@ export function RightSidebarContent() {
           </Link>
         </Button>
       </div>
+      
+      {/* EQ Archetype Section - More compact styling */}
+      {user?.eq_archetype && (
+        <div 
+          className="bg-humanly-pastel-lavender/30 rounded-lg p-2.5 mb-4 cursor-pointer"
+          onClick={() => window.location.href = "/progress?tab=eq-journey"}
+        >
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-humanly-indigo flex items-center justify-center text-white text-xs">
+              {user.eq_archetype.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h3 className="font-medium text-xs">{user.eq_archetype.charAt(0).toUpperCase() + user.eq_archetype.slice(1)}</h3>
+              <p className="text-xs text-gray-500">EQ Archetype</p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Memory Dialog */}
       <Dialog open={showMemoryDialog} onOpenChange={setShowMemoryDialog}>
