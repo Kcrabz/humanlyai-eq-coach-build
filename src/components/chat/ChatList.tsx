@@ -60,7 +60,10 @@ export function ChatList() {
   }, []);
 
   return (
-    <div className={`flex-1 overflow-y-auto p-4 ${isMobile ? 'px-2' : 'px-4'} space-y-6`} data-pwa={isPWA ? "true" : "false"}>
+    <div 
+      className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-4'} space-y-6`} 
+      data-pwa={isPWA ? "true" : "false"}
+    >
       {messages.length === 0 ? (
         <EmptyChatState />
       ) : (

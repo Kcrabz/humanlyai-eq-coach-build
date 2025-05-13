@@ -1,5 +1,5 @@
 
-// Updating the ChatInput component to remove the history button
+// Updating the ChatInput component with improved mobile spacing
 import React, { useState, useRef, useEffect } from "react";
 import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
@@ -43,12 +43,12 @@ export function ChatInput() {
 
   return (
     <form 
-      className="p-3 border-t flex items-end gap-2 pr-10" 
+      className="p-3 border-t flex items-end gap-2 relative" 
       onSubmit={handleSubmit}
     >
       <Textarea
         ref={textareaRef}
-        className="flex-1 resize-none max-h-24 py-2 text-sm"
+        className="flex-1 resize-none max-h-24 py-2 text-sm pr-12 rounded-lg"
         placeholder="Type a message..."
         rows={1}
         value={message}
@@ -60,7 +60,7 @@ export function ChatInput() {
       <Button 
         type="submit" 
         size="sm"
-        className="h-8 w-8"
+        className="absolute right-5 bottom-5 h-8 w-8 rounded-full flex items-center justify-center"
         disabled={!message.trim() || isLoading}
       >
         <Send className="h-3.5 w-3.5" />

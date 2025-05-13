@@ -1,28 +1,63 @@
 
-/* PWA specific styling */
-@media all and (display-mode: standalone) {
-  /* Show sidebar by default in PWA mode */
-  .user-sidebar[data-pwa="true"] {
-    width: 14rem !important;
-    min-width: 14rem !important;
+/* Base PWA styles */
+html.pwa {
+  overscroll-behavior-y: none;
+}
+
+body.pwa {
+  overscroll-behavior-y: none;
+  -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* PWA-specific mobile optimizations */
+@media (max-width: 767px) {
+  .pwa .enhanced-header {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: 8px;
+    padding-left: 16px;
+    padding-right: 16px;
   }
   
-  /* Adjust content width when sidebar is open in PWA mode */
-  .user-sidebar[data-pwa="true"] + .main-content {
-    width: calc(100% - 14rem) !important;
-    margin-right: 14rem !important;
+  .pwa form.p-3 {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+    padding-left: 16px;
+    padding-right: 16px;
   }
   
-  /* Mobile PWA mode still needs overlay sidebar */
-  @media (max-width: 767px) {
-    .user-sidebar[data-pwa="true"][data-mobile="true"] {
-      width: 80% !important;
-      max-width: 280px !important;
-    }
-    
-    .user-sidebar[data-pwa="true"][data-mobile="true"] + .main-content {
-      width: 100% !important;
-      margin-right: 0 !important;
-    }
+  /* Better spacing for PWA send button */
+  .pwa .send-button-mobile {
+    bottom: calc(env(safe-area-inset-bottom, 16px) + 10px);
+    right: 20px;
   }
+  
+  /* Content area adjustments for PWA */
+  .pwa .main-content {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  
+  /* Better right sidebar positioning for PWA */
+  .pwa .user-sidebar[data-mobile="true"] {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Additional style for the main PWA container */
+[data-pwa="true"] .main-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Update notification styling */
+.pwa-update-notification {
+  position: fixed;
+  bottom: env(safe-area-inset-bottom, 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  width: 90%;
+  max-width: 360px;
 }

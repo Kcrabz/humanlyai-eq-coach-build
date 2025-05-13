@@ -42,6 +42,22 @@
     max-width: 85% !important;
     word-break: break-word;
   }
+
+  /* Mobile-specific spacing for chat UI */
+  .enhanced-header {
+    padding: 12px 16px;
+  }
+  
+  /* Better positioning for the mobile send button */
+  form .absolute.right-5 {
+    right: 12px;
+    bottom: 12px;
+  }
+  
+  /* Ensure the chat input has proper spacing */
+  form textarea {
+    padding-right: 40px;
+  }
 }
 
 /* Footer styling */
