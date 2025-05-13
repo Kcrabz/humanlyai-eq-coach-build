@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -162,10 +163,22 @@ const UserProgressPage = () => {
           {/* Badges & Certificates Tab */}
           <TabsContent value="badges" className="animate-scale-fade-in">
             <BadgesCertificatesTab 
-              badges={userAchievements?.filter(a => a.type === "badge" || a.type === "certificate")
+              badges={userAchievements?.filter(a => {
+                // Map achievements to badge/certificate format based on their properties
+                // Using a broader approach instead of direct type comparison
+                return a.achieved && (
+                  a.title.toLowerCase().includes('badge') || 
+                  a.title.toLowerCase().includes('certificate') ||
+                  a.description.toLowerCase().includes('badge') || 
+                  a.description.toLowerCase().includes('certificate')
+                );
+              })
                 .map(a => ({
                   id: a.id,
-                  type: a.type === "certificate" ? "certificate" : "badge",
+                  // Determine type based on title/description
+                  type: a.title.toLowerCase().includes('certificate') || 
+                        a.description.toLowerCase().includes('certificate') ? 
+                        "certificate" as const : "badge" as const,
                   name: a.title,
                   description: a.description,
                   dateEarned: a.achievedAt ? new Date(a.achievedAt).toLocaleDateString('en-US', 

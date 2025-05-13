@@ -40,7 +40,7 @@ export interface UserAchievement {
   description: string;
   achieved: boolean;
   achievedAt: string | null;
-  type: 'streak' | 'breakthrough' | 'milestone' | 'challenge';
+  type: 'streak' | 'breakthrough' | 'milestone' | 'challenge' | 'badge' | 'certificate';
   icon: string;
 }
 
