@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { LogOut, Laptop, Smartphone, Clock, Loader2 } from "lucide-react";
 
-interface Session {
+// Rename the interface to avoid conflicts with Supabase's Session type
+interface SessionInfo {
   id: string; // Ensuring this property exists
   user_agent: string;
   created_at: string;
@@ -13,7 +14,7 @@ interface Session {
 }
 
 export default function SessionManagement() {
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [terminatingSession, setTerminatingSession] = useState<string | null>(null);
   
