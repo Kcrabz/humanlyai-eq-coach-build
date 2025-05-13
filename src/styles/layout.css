@@ -1,4 +1,3 @@
-
 /* Enhanced header styling */
 .enhanced-header {
   @apply border-b border-gray-100 bg-white/90 backdrop-blur-md;
@@ -86,6 +85,16 @@
   .user-sidebar[data-mobile="true"] {
     z-index: 50;
   }
+  
+  /* Always ensure the right sidebar trigger is visible */
+  .right-sidebar-trigger-wrapper, 
+  .right-sidebar-trigger {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 100 !important;
+  }
 }
 
 /* PWA specific styling */
@@ -149,18 +158,21 @@
   /* Ensure sidebar trigger is above the sidebar on mobile */
   .sidebar-trigger {
     position: relative;
-    z-index: 60;
+    z-index: 100 !important;
   }
   
-  /* Make sure the right sidebar toggle is visible on mobile */
+  /* Explicit styles to guarantee the right sidebar toggle is visible on mobile */
   .enhanced-header .ChatRightSidebarTrigger,
+  .enhanced-header button[aria-label="Toggle Right Sidebar"],
   .enhanced-header button[aria-label="Toggle User Menu"],
-  .right-sidebar-trigger-wrapper {
+  .right-sidebar-trigger-wrapper,
+  .right-sidebar-trigger {
     position: relative;
-    z-index: 60;
+    z-index: 100 !important;
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
+    pointer-events: auto !important;
   }
 }
 
@@ -174,9 +186,19 @@
   @apply bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-50 overflow-hidden;
 }
 
-/* Explicit styling for right sidebar trigger */
+/* Explicit styling for right sidebar trigger with highest priority */
 .right-sidebar-trigger-wrapper {
   position: relative;
-  z-index: 70;
+  z-index: 100 !important;
   display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Additional class to ensure the trigger button itself is always visible */
+.right-sidebar-trigger {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 100 !important;
 }

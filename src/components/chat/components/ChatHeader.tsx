@@ -23,8 +23,17 @@ export function ChatHeader({ hasCompletedAssessment, userArchetype, onStartAsses
         {/* Add Start New Chat button */}
         <StartNewChatButton />
         
-        {/* Right sidebar trigger button - ensure it's visible */}
-        <div className="right-sidebar-trigger-wrapper">
+        {/* Right sidebar trigger button with ensured visibility */}
+        <div 
+          className="right-sidebar-trigger-wrapper" 
+          style={{
+            position: 'relative',
+            zIndex: 100,
+            display: 'flex !important',
+            visibility: 'visible',
+            opacity: 1
+          }}
+        >
           <ChatRightSidebarTrigger />
         </div>
       </div>
