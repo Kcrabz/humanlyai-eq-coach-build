@@ -1,15 +1,6 @@
-
 import React, { createContext, useContext, useState } from "react";
 import { useMemorySettings, MemoryStats } from "@/hooks/useMemorySettings";
-import { useMemoryOperations } from "@/hooks/useMemoryOperations";
-
-interface ArchivedMemory {
-  id: string;
-  content: string;
-  memory_type: string;
-  archived_at: string;
-  metadata?: any;
-}
+import { useMemoryOperations, ArchivedMemory } from "@/hooks/memory-operations";
 
 interface MemoryContextType {
   memoryEnabled: boolean;
