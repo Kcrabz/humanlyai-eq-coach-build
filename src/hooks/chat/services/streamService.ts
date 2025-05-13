@@ -31,7 +31,7 @@ export async function sendMessageStream(
   setIsLoading(true);
   
   try {
-    toast.loading("Connecting to Kai...", { id: "kai-connecting" });
+    toast.loading("Kai is thinking", { id: "kai-connecting" });
     
     // Prepare context messages for AI based on subscription tier
     const contextMessages = prepareContextMessages(content, currentMessages, user?.subscription_tier);

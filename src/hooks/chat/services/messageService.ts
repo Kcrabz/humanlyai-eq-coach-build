@@ -28,7 +28,7 @@ export async function sendMessage(
   setIsLoading(true);
 
   try {
-    toast.loading("Connecting to Kai...", { id: "kai-connecting" });
+    toast.loading("Kai is thinking", { id: "kai-connecting" });
     
     console.log("Sending message to Edge Function:", content);
     
