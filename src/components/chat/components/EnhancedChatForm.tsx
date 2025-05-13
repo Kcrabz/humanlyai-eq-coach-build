@@ -47,7 +47,7 @@ export function EnhancedChatForm({
         />
       )}
       
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-2 pr-6">
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}

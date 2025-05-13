@@ -47,7 +47,7 @@ export function ChatInput() {
   return (
     <>
       <form 
-        className="p-3 border-t flex items-end gap-2" 
+        className="p-3 border-t flex items-end gap-2 pr-6" 
         onSubmit={handleSubmit}
       >
         <HistoryButton onClick={() => setIsHistoryOpen(true)} />
