@@ -33,36 +33,36 @@ export function RightSidebarContent() {
   };
 
   return (
-    <div className="flex flex-col h-full p-5">
+    <div className="flex flex-col h-full p-4">
       {/* User Profile Header - Styled to match screenshot */}
-      <div className="flex flex-col items-center mb-8">
+      <div className="flex flex-col items-center mb-6">
         <UserAvatar 
           userId={user?.id}
           name={user?.name || 'User'}
           avatarUrl={user?.avatar_url}
-          className="h-16 w-16 mb-3"
+          className="h-14 w-14 mb-2"
         />
         <h3 className="font-semibold text-base">{user?.name || 'User'}</h3>
-        <p className="text-sm text-gray-500">{user?.email}</p>
+        <p className="text-xs text-gray-500">{user?.email}</p>
         
         {user?.subscription_tier && (
-          <div className="mt-1.5">
-            <span className="bg-humanly-pastel-mint/50 text-humanly-teal px-3 py-1 rounded-full text-xs">
+          <div className="mt-1">
+            <span className="bg-humanly-pastel-mint/50 text-humanly-teal px-2 py-0.5 rounded-full text-xs">
               {user.subscription_tier.charAt(0).toUpperCase() + user.subscription_tier.slice(1)} Plan
             </span>
           </div>
         )}
       </div>
       
-      {/* Navigation Links - Styled to match screenshot exactly */}
-      <div className="space-y-1 mb-6">
+      {/* Navigation Links - More compact styling */}
+      <div className="space-y-0.5 mb-4">
         <Button
           variant="ghost"
-          className="w-full justify-start text-gray-700 font-normal text-sm h-9"
+          className="w-full justify-start text-gray-700 font-normal text-xs h-8"
           asChild
         >
           <Link to="/dashboard">
-            <LayoutDashboard className="h-4 w-4 mr-3" />
+            <LayoutDashboard className="h-3.5 w-3.5 mr-2" />
             Dashboard
           </Link>
         </Button>
@@ -70,61 +70,61 @@ export function RightSidebarContent() {
         {isAdmin && (
           <Button
             variant="ghost"
-            className="w-full justify-start text-gray-700 font-normal text-sm h-9"
+            className="w-full justify-start text-gray-700 font-normal text-xs h-8"
             asChild
           >
             <Link to="/admin">
-              <Shield className="h-4 w-4 mr-3" />
+              <Shield className="h-3.5 w-3.5 mr-2" />
               Admin
             </Link>
           </Button>
         )}
         
-        {/* Memory button - Styled to match screenshot */}
+        {/* Memory button - More compact styling */}
         <Button
           variant="ghost"
-          className="w-full justify-start text-gray-700 font-normal text-sm h-9"
+          className="w-full justify-start text-gray-700 font-normal text-xs h-8"
           onClick={openMemoryDialog}
         >
-          <Brain className="h-4 w-4 mr-3" />
+          <Brain className="h-3.5 w-3.5 mr-2" />
           Memory
         </Button>
         
         <Button
           variant="ghost"
-          className="w-full justify-start text-gray-700 font-normal text-sm h-9"
+          className="w-full justify-start text-gray-700 font-normal text-xs h-8"
           asChild
         >
           <Link to="/subscription">
-            <CreditCard className="h-4 w-4 mr-3" />
+            <CreditCard className="h-3.5 w-3.5 mr-2" />
             Your Plan
           </Link>
         </Button>
         
         <Button
           variant="ghost"
-          className="w-full justify-start text-gray-700 font-normal text-sm h-9"
+          className="w-full justify-start text-gray-700 font-normal text-xs h-8"
           asChild
         >
           <Link to="/settings">
-            <Settings className="h-4 w-4 mr-3" />
+            <Settings className="h-3.5 w-3.5 mr-2" />
             Settings
           </Link>
         </Button>
       </div>
       
-      {/* EQ Archetype Section - Styled to match screenshot */}
+      {/* EQ Archetype Section - More compact styling */}
       {user?.eq_archetype && (
         <div 
-          className="bg-humanly-pastel-lavender/30 rounded-lg p-3 mb-6 cursor-pointer"
+          className="bg-humanly-pastel-lavender/30 rounded-lg p-2.5 mb-4 cursor-pointer"
           onClick={() => window.location.href = "/progress?tab=eq-journey"}
         >
           <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-humanly-indigo flex items-center justify-center text-white">
+            <div className="h-8 w-8 rounded-full bg-humanly-indigo flex items-center justify-center text-white text-xs">
               {user.eq_archetype.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h3 className="font-medium text-sm">{user.eq_archetype.charAt(0).toUpperCase() + user.eq_archetype.slice(1)}</h3>
+              <h3 className="font-medium text-xs">{user.eq_archetype.charAt(0).toUpperCase() + user.eq_archetype.slice(1)}</h3>
               <p className="text-xs text-gray-500">EQ Archetype</p>
             </div>
           </div>
@@ -142,13 +142,13 @@ export function RightSidebarContent() {
       </Dialog>
       
       {/* Logout Button - Styled to match screenshot */}
-      <div className="mt-auto pt-4">
+      <div className="mt-auto pt-2">
         <Button
           variant="outline"
-          className="w-full justify-start h-9 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
+          className="w-full justify-start h-8 text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
           onClick={logout}
         >
-          <LogOut className="h-4 w-4 mr-3" />
+          <LogOut className="h-3.5 w-3.5 mr-2" />
           Log out
         </Button>
       </div>

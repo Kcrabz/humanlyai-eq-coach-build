@@ -60,7 +60,7 @@
     height: 100%;
     z-index: 50;
     width: 80% !important;
-    max-width: 300px !important;
+    max-width: 280px !important;
   }
   
   .user-sidebar[data-state="open"][data-mobile="true"] {
@@ -102,21 +102,21 @@
 @media all and (display-mode: standalone) {
   /* Show sidebar by default in PWA mode */
   .user-sidebar[data-pwa="true"] {
-    width: 16rem !important;
-    min-width: 16rem !important;
+    width: 14rem !important;
+    min-width: 14rem !important;
   }
   
   /* Adjust content width when sidebar is open in PWA mode */
   .user-sidebar[data-pwa="true"] + .main-content {
-    width: calc(100% - 16rem) !important;
-    margin-right: 16rem !important;
+    width: calc(100% - 14rem) !important;
+    margin-right: 14rem !important;
   }
   
   /* Mobile PWA mode still needs overlay sidebar */
   @media (max-width: 767px) {
     .user-sidebar[data-pwa="true"][data-mobile="true"] {
       width: 80% !important;
-      max-width: 300px !important;
+      max-width: 280px !important;
     }
     
     .user-sidebar[data-pwa="true"][data-mobile="true"] + .main-content {
