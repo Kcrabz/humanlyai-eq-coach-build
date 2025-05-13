@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,7 @@ import { LogOut, Laptop, Smartphone, Clock, Loader2 } from "lucide-react";
 
 // Rename the interface to avoid conflicts with Supabase's Session type
 interface SessionInfo {
-  id: string; // Ensuring this property exists
+  id: string;
   user_agent: string;
   created_at: string;
   is_current: boolean;
@@ -27,7 +28,7 @@ export default function SessionManagement() {
       setLoading(true);
       
       // Get current session
-      const { data: currentSession } = await supabase.auth.getSession();
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
       // Get login history from user_login_history table
       const { data: loginHistory, error } = await supabase
@@ -43,7 +44,7 @@ export default function SessionManagement() {
         id: session.id,
         user_agent: session.user_agent || "Unknown device",
         created_at: session.created_at,
-        is_current: currentSession.session?.id === session.id
+        is_current: currentSession?.id === session.id
       })) || [];
       
       setSessions(formattedSessions);
