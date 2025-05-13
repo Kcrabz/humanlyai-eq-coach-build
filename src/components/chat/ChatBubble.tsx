@@ -1,17 +1,15 @@
 
 import React, { useState, useEffect } from "react";
 import { ChatMessage } from "@/types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { MemoryIndicator } from "./components/MemoryIndicator";
 import { useMemoryIndicator } from "@/hooks/useMemoryIndicator";
 import { useAuth } from "@/context/AuthContext";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-// Import highlight.js styles - we'll use this instead of rehype-highlight
 import "highlight.js/styles/github.css";
-// Import the highlight function from highlight.js
 import hljs from "highlight.js";
+import { UserAvatar } from "./components/UserAvatar";
 
 interface ChatBubbleProps {
   message: ChatMessage;
@@ -57,10 +55,7 @@ export function ChatBubble({
     <div className={`flex gap-3 ${isUserMessage ? "justify-end" : "justify-start"} ${className}`}>
       {/* Assistant Avatar - only show for assistant messages if showAvatar is true */}
       {!isUserMessage && showAvatar && (
-        <Avatar className="h-8 w-8">
-          <AvatarImage src="/images/kai-avatar.jpg" alt="Kai" />
-          <AvatarFallback>K</AvatarFallback>
-        </Avatar>
+        <UserAvatar name="Kai" avatarUrl="/images/kai-avatar.jpg" className="h-8 w-8" />
       )}
       
       {/* Message Content */}
@@ -122,10 +117,7 @@ export function ChatBubble({
       
       {/* User Avatar - only show for user messages if showAvatar is true */}
       {isUserMessage && showAvatar && (
-        <Avatar className="h-8 w-8">
-          <AvatarImage src="/images/default-avatar.png" alt="User" />
-          <AvatarFallback>U</AvatarFallback>
-        </Avatar>
+        <UserAvatar userId={user?.id} name={user?.name} avatarUrl={user?.avatar_url} className="h-8 w-8" />
       )}
     </div>
   );
