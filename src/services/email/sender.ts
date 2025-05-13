@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TriggerEmailOptions } from "./types";
@@ -102,6 +101,63 @@ export async function resendEmail(emailLogId: string): Promise<boolean> {
     });
   } catch (err) {
     console.error("Error in resendEmail:", err);
+    return false;
+  }
+}
+
+/**
+ * Generate a simple test email template for delivery testing
+ */
+export function generateTestEmailTemplate(recipientName: string = 'User'): {
+  subject: string;
+  templateName: string;
+  emailData: Record<string, any>;
+} {
+  const currentTime = new Date().toLocaleString();
+  
+  return {
+    subject: `Email Test - ${currentTime}`,
+    templateName: 'generic', // Use the generic template for testing
+    emailData: {
+      name: recipientName,
+      message: `This is a test email sent at ${currentTime}. If you're reading this, email delivery is working correctly!`,
+      testInfo: {
+        timestamp: Date.now(),
+        environment: window.location.hostname,
+        testId: `test-${Math.random().toString(36).substring(2, 10)}`
+      }
+    }
+  };
+}
+
+/**
+ * Send a test email for verifying email delivery
+ */
+export async function sendTestEmail(userId: string, recipientEmail?: string): Promise<boolean> {
+  const { subject, templateName, emailData } = generateTestEmailTemplate();
+  
+  toast.info("Sending test email...");
+  
+  try {
+    const result = await triggerEmail({
+      userId,
+      emailType: 'test_email',
+      templateName,
+      subject,
+      to: recipientEmail, // Will be optional if not provided
+      data: emailData
+    });
+    
+    if (result) {
+      toast.success("Test email sent successfully");
+      return true;
+    } else {
+      toast.error("Failed to send test email");
+      return false;
+    }
+  } catch (err) {
+    console.error("Error sending test email:", err);
+    toast.error("Failed to send test email");
     return false;
   }
 }
