@@ -9,7 +9,6 @@
   @apply bg-white border-l border-gray-100 shadow-sm;
   transition: transform 0.3s ease, width 0.3s ease;
   z-index: 40;
-  width: 16rem; /* Restore original 64px/16rem width */
 }
 
 /* Mobile specific chat layout */
@@ -20,7 +19,7 @@
     height: 100%;
     z-index: 50;
     width: 80% !important;
-    max-width: 320px !important;
+    max-width: 280px !important;
   }
   
   .user-sidebar[data-state="open"][data-mobile="true"] {
