@@ -15,7 +15,6 @@ import {
 import { ConversationStarters } from "./ConversationStarters";
 import { ProgressTracker } from "./ProgressTracker";
 import { DailyChallenge } from "./DailyChallenge";
-import { ChatHistorySidebar } from "./ChatHistorySidebar";
 import { Separator } from "@/components/ui/separator";
 
 export function EnhancedChatSidebar() {
@@ -57,14 +56,7 @@ export function EnhancedChatSidebar() {
           
           <Separator className="my-1" />
           
-          {/* Chat history section (now second) */}
-          <div>
-            <ChatHistorySidebar />
-          </div>
-          
-          <Separator className="my-1" />
-          
-          {/* Daily challenges (now third) */}
+          {/* Daily challenges (now second) */}
           <DailyChallenge />
           
           <Separator className="my-1" />

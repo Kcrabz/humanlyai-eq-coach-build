@@ -1,15 +1,96 @@
 
-/* Import base styles with Tailwind directives */
-@import './styles/base.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Import component styles */
-@import './styles/components.css';
-
-/* Import animation styles */
+/* Import general styles */
 @import './styles/animations.css';
-
-/* Import layout styles */
+@import './styles/base.css';
+@import './styles/chat.css';
+@import './styles/components.css';
 @import './styles/layout.css';
 
-/* Import chat-specific styles */
-@import './styles/chat.css';
+/* Root variables */
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 250, 250, 250;
+  --background-end-rgb: 255, 255, 255;
+  --max-width: 1200px;
+  --font-body: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  
+  /* Enhanced app colors */
+  --humanly-indigo: #6366F1;
+  --humanly-teal: #2DD4BF;
+  --humanly-indigo-dark: #4F46E5;
+  --humanly-teal-dark: #0D9488;
+  --humanly-gray-light: #F9FAFB;
+  --humanly-gray-medium: #D1D5DB;
+  --humanly-gray-dark: #374151;
+  
+  /* Pastel palette for subtle accents */
+  --humanly-pastel-lavender: #E0E7FF;
+  --humanly-pastel-mint: #D1FAE5;
+  --humanly-pastel-rose: #FFE4E6;
+  --humanly-pastel-blue: #DBEAFE;
+  --humanly-pastel-amber: #FEF3C7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 23, 23, 23;
+    --background-end-rgb: 15, 15, 15;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  font-family: var(--font-body);
+  overflow-x: hidden;
+}
+
+/* Global link styles */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Improved focused states */
+*:focus-visible {
+  outline: 2px solid var(--humanly-indigo);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Special breathing animation for loading states */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+.animate-breathe {
+  animation: breathe 2.5s infinite ease-in-out;
+}
+
+/* Custom scale/fade in animation */
+@keyframes scale-fade-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-fade-in {
+  animation: scale-fade-in 0.3s ease-out forwards;
+}
+
