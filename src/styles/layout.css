@@ -1,3 +1,4 @@
+
 /* Enhanced header styling */
 .enhanced-header {
   @apply border-b border-gray-100 bg-white/90 backdrop-blur-md;
@@ -39,6 +40,7 @@
 .user-sidebar {
   @apply bg-white border-l border-gray-100 shadow-sm;
   transition: transform 0.3s ease, width 0.3s ease;
+  z-index: 40;
 }
 
 /* Main content area with responsive width */
@@ -47,6 +49,7 @@
   transition: width 0.3s ease;
   width: 100%;
   flex-grow: 1;
+  z-index: 10;
 }
 
 /* Mobile specific chat layout */
@@ -77,6 +80,11 @@
     width: 100% !important;
     max-width: 100% !important;
     flex-basis: 100% !important;
+  }
+  
+  /* Fix for toggle button and sidebar overlap */
+  .user-sidebar[data-mobile="true"] {
+    z-index: 50;
   }
 }
 
@@ -113,7 +121,7 @@
   position: absolute;
   top: 0;
   right: 0;
-  z-index: 100;
+  z-index: 30;
 }
 
 .mobile-main-content {
@@ -136,6 +144,12 @@
   .enhanced-header .container {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+  
+  /* Ensure sidebar trigger is above the sidebar on mobile */
+  .sidebar-trigger {
+    position: relative;
+    z-index: 60;
   }
 }
 

@@ -72,7 +72,7 @@ export function ResponsiveMainContent({
 
   return (
     <div 
-      className="flex-1 flex flex-col overflow-hidden main-content"
+      className="flex-1 flex flex-col overflow-hidden main-content relative"
       style={contentStyle}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
