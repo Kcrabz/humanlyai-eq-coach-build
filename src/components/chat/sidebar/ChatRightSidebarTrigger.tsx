@@ -23,7 +23,7 @@ export function ChatRightSidebarTrigger() {
       size="icon" 
       className={`h-9 w-9 flex items-center justify-center rounded-full bg-humanly-pastel-lavender/30 text-humanly-indigo hover:bg-humanly-pastel-lavender/50 transition-colors duration-300 ${
         open ? 'bg-humanly-pastel-lavender/50' : ''
-      } z-10 relative`}
+      } z-60 relative`}
       aria-label="Toggle User Menu"
       onClick={() => toggleSidebar()}
     >

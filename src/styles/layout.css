@@ -1,3 +1,4 @@
+
 /* Enhanced header styling */
 .enhanced-header {
   @apply border-b border-gray-100 bg-white/90 backdrop-blur-md;
@@ -153,7 +154,8 @@
   
   /* Make sure the right sidebar toggle is visible on mobile */
   .enhanced-header .ChatRightSidebarTrigger,
-  .enhanced-header button[aria-label="Toggle User Menu"] {
+  .enhanced-header button[aria-label="Toggle User Menu"],
+  .right-sidebar-trigger-wrapper {
     position: relative;
     z-index: 60;
     display: flex !important;
@@ -170,4 +172,11 @@
 /* Chat container with calming background */
 .chat-container {
   @apply bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-50 overflow-hidden;
+}
+
+/* Explicit styling for right sidebar trigger */
+.right-sidebar-trigger-wrapper {
+  position: relative;
+  z-index: 70;
+  display: flex !important;
 }

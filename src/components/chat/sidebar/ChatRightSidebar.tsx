@@ -11,7 +11,7 @@ export function ChatRightSidebar() {
   return (
     <Sidebar 
       side="right" 
-      className={`w-80 transition-all duration-300 ${open ? 'translate-x-0' : 'translate-x-full'} bg-white border-l border-gray-100 shadow-sm z-20`}
+      className={`w-80 transition-all duration-300 ${open ? 'translate-x-0' : 'translate-x-full'} bg-white border-l border-gray-100 shadow-sm z-40`}
       data-state={open ? "open" : "closed"}
       data-mobile={isMobile ? "true" : "false"}
     >
