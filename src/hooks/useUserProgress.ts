@@ -86,8 +86,7 @@ export const useUserProgress = () => {
         
       } catch (error) {
         console.error("Error fetching user progress:", error);
-        toast({
-          title: "Error loading progress data",
+        toast("Error loading progress data", {
           description: "There was a problem fetching your progress data.",
           variant: "destructive"
         });

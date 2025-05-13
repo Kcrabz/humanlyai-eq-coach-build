@@ -40,12 +40,9 @@ export const MemorySettings = () => {
   const handleMemoryToggle = async (checked: boolean) => {
     const success = await toggleMemory(checked);
     if (success) {
-      toast({
-        title: checked ? "Memory enabled" : "Memory disabled",
-      });
+      toast(checked ? "Memory enabled" : "Memory disabled");
     } else {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to update memory settings",
         variant: "destructive"
       });
@@ -56,12 +53,9 @@ export const MemorySettings = () => {
   const handleInsightsToggle = async (checked: boolean) => {
     const success = await toggleSmartInsights(checked);
     if (success) {
-      toast({
-        title: checked ? "Smart insights enabled" : "Smart insights disabled",
-      });
+      toast(checked ? "Smart insights enabled" : "Smart insights disabled");
     } else {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to update smart insights settings",
         variant: "destructive"
       });
@@ -72,13 +66,11 @@ export const MemorySettings = () => {
   const handleClearMemories = async (shouldArchive: boolean) => {
     const success = await clearAllMemories(shouldArchive);
     if (success) {
-      toast({
-        title: "Memories cleared",
+      toast("Memories cleared", {
         description: shouldArchive ? "All memories have been archived and cleared" : "All memories cleared",
       });
     } else {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to clear memories",
         variant: "destructive"
       });

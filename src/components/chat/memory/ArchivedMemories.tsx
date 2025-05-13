@@ -43,13 +43,11 @@ export const ArchivedMemories = () => {
   const handleDeleteMemory = async (id: string) => {
     const success = await deleteArchivedMemory(id);
     if (success) {
-      toast({
-        title: "Memory deleted",
+      toast("Memory deleted", {
         description: "The archived memory has been permanently deleted",
       });
     } else {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to delete memory",
         variant: "destructive"
       });
@@ -60,13 +58,11 @@ export const ArchivedMemories = () => {
   const handleRestoreMemory = async (memory: any) => {
     const success = await restoreMemory(memory);
     if (success) {
-      toast({
-        title: "Memory restored",
+      toast("Memory restored", {
         description: "The memory has been restored to your active memories",
       });
     } else {
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to restore memory",
         variant: "destructive"
       });

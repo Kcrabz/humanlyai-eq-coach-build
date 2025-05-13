@@ -43,8 +43,7 @@ export const SessionManagement: React.FC = () => {
       setSessions(formattedSessions);
     } catch (error) {
       console.error("Error loading sessions:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to load sessions",
         variant: "destructive"
       });
@@ -64,14 +63,12 @@ export const SessionManagement: React.FC = () => {
       // Remove from the list
       setSessions(sessions.filter(s => s.id !== sessionId));
       
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "Session terminated successfully"
       });
     } catch (error) {
       console.error("Error terminating session:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to terminate session",
         variant: "destructive"
       });
@@ -91,14 +88,12 @@ export const SessionManagement: React.FC = () => {
       // Keep only current session in the list
       setSessions(sessions.filter(s => s.is_current));
       
-      toast({
-        title: "Success",
+      toast("Success", {
         description: "All other sessions terminated successfully"
       });
     } catch (error) {
       console.error("Error terminating all sessions:", error);
-      toast({
-        title: "Error",
+      toast("Error", {
         description: "Failed to terminate sessions",
         variant: "destructive"
       });

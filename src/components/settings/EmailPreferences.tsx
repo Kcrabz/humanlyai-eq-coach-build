@@ -41,8 +41,7 @@ export const EmailPreferences: React.FC<EmailPreferencesProps> = ({ className })
 
       if (error) {
         console.error("Error loading preferences:", error);
-        toast({
-          title: "Error loading preferences",
+        toast("Error loading preferences", {
           description: "Please try again later",
           variant: "destructive",
         });
@@ -78,21 +77,18 @@ export const EmailPreferences: React.FC<EmailPreferencesProps> = ({ className })
       const success = await emailService.updatePreferences(preferences);
 
       if (success) {
-        toast({
-          title: "Preferences updated",
+        toast("Preferences updated", {
           description: "Your email preferences have been saved",
         });
       } else {
-        toast({
-          title: "Error saving preferences",
+        toast("Error saving preferences", {
           description: "Please try again later",
           variant: "destructive",
         });
       }
     } catch (err) {
       console.error("Error saving preferences:", err);
-      toast({
-        title: "Error saving preferences",
+      toast("Error saving preferences", {
         description: "Please try again later",
         variant: "destructive",
       });
@@ -118,21 +114,18 @@ export const EmailPreferences: React.FC<EmailPreferencesProps> = ({ className })
           inactivity_reminders: false,
         });
 
-        toast({
-          title: "Opted out successfully",
+        toast("Opted out successfully", {
           description: "You've been unsubscribed from all emails",
         });
       } else {
-        toast({
-          title: "Error opting out",
+        toast("Error opting out", {
           description: "Please try again later",
           variant: "destructive",
         });
       }
     } catch (err) {
       console.error("Error opting out:", err);
-      toast({
-        title: "Error opting out",
+      toast("Error opting out", {
         description: "Please try again later",
         variant: "destructive",
       });
