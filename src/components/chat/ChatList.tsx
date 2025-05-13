@@ -42,7 +42,7 @@ export function ChatList() {
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, isLoading]); // Add isLoading to dependencies to scroll when loading state changes
 
   // If there are messages and this is the first render, scroll to the most recent message
   useEffect(() => {

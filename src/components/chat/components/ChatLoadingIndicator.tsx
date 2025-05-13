@@ -1,11 +1,11 @@
 
 import React from "react";
-import { Loading } from "@/components/ui/loading";
+import { TypingIndicator } from "./TypingIndicator";
 
 export function ChatLoadingIndicator() {
   return (
     <div className="flex justify-center my-4">
-      <Loading />
+      <TypingIndicator />
     </div>
   );
 }
