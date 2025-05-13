@@ -26,30 +26,17 @@ export function UserEQArchetype() {
   return (
     <>
       <div 
-        className="bg-white rounded-lg border border-gray-100 p-3 mb-4 shadow-sm transition-all hover:shadow-md hover:border-humanly-pastel-lavender/60 cursor-pointer"
+        className="bg-humanly-pastel-lavender/30 rounded-lg p-3 mb-4 cursor-pointer"
         onClick={() => setShowDetails(true)}
-        role="button"
-        aria-label="View archetype details"
       >
-        <h4 className="text-sm font-medium flex items-center gap-1 text-humanly-indigo">
-          Your EQ Archetype
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-5 w-5 p-0 rounded-full ml-auto" 
-            onClick={(e) => {
-              e.stopPropagation();
-              navigate("/onboarding?step=archetype");
-            }}
-          >
-            <ChevronRight className="h-3 w-3" />
-          </Button>
-        </h4>
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-xl">{archetype.icon}</span>
-          <span className="font-medium text-sm">
-            {user.eq_archetype.charAt(0).toUpperCase() + user.eq_archetype.slice(1)}
-          </span>
+        <div className="flex items-center gap-2">
+          <div className="h-10 w-10 rounded-full bg-humanly-indigo flex items-center justify-center text-white font-medium">
+            {user.eq_archetype.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h3 className="font-medium text-sm">{user.eq_archetype.charAt(0).toUpperCase() + user.eq_archetype.slice(1)}</h3>
+            <p className="text-xs text-gray-500">EQ Archetype</p>
+          </div>
         </div>
       </div>
       

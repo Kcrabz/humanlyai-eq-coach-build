@@ -54,7 +54,7 @@ export function EnhancedChatSidebar() {
           
           <Separator className="my-1" />
           
-          {/* Chat history section (now second) */}
+          {/* Chat history section (moved back to left sidebar) */}
           <div>
             <ChatHistorySidebar />
           </div>

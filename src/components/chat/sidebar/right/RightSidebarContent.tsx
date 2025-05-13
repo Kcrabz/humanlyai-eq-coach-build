@@ -21,11 +21,11 @@ import {
 } from "@/components/ui/dialog";
 import { MemorySettings } from "@/components/chat/memory/MemorySettings";
 import { useChatMemory } from "@/context/ChatMemoryContext";
+import { UserEQArchetype } from "./UserEQArchetype";
 
 export function RightSidebarContent() {
   const { user, logout } = useAuth();
   const { isAdmin } = useAdminCheck();
-  const { memoryStats, toggleMemory } = useChatMemory();
   const [showMemoryDialog, setShowMemoryDialog] = React.useState(false);
 
   const openMemoryDialog = () => {
@@ -33,7 +33,7 @@ export function RightSidebarContent() {
   };
 
   return (
-    <div className="flex flex-col h-full p-4">
+    <div className="flex flex-col h-full">
       {/* User Profile Header */}
       <div className="flex flex-col items-center mb-6">
         <UserAvatar 
@@ -53,6 +53,9 @@ export function RightSidebarContent() {
           </div>
         )}
       </div>
+      
+      {/* EQ Archetype Section */}
+      <UserEQArchetype />
       
       {/* Navigation Links */}
       <div className="space-y-0.5 mb-4">
@@ -113,24 +116,6 @@ export function RightSidebarContent() {
         </Button>
       </div>
       
-      {/* EQ Archetype Section */}
-      {user?.eq_archetype && (
-        <div 
-          className="bg-humanly-pastel-lavender/30 rounded-lg p-3 mb-4 cursor-pointer"
-          onClick={() => window.location.href = "/progress?tab=eq-journey"}
-        >
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-humanly-indigo flex items-center justify-center text-white font-medium">
-              {user.eq_archetype.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <h3 className="font-medium text-sm">{user.eq_archetype.charAt(0).toUpperCase() + user.eq_archetype.slice(1)}</h3>
-              <p className="text-xs text-gray-500">EQ Archetype</p>
-            </div>
-          </div>
-        </div>
-      )}
-      
       {/* Memory Dialog */}
       <Dialog open={showMemoryDialog} onOpenChange={setShowMemoryDialog}>
         <DialogContent className="sm:max-w-[500px]">
@@ -142,7 +127,7 @@ export function RightSidebarContent() {
       </Dialog>
       
       {/* Logout Button */}
-      <div className="mt-auto pt-2">
+      <div className="mt-auto">
         <Button
           variant="outline"
           className="w-full justify-start text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"

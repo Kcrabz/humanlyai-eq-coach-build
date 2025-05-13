@@ -2,7 +2,7 @@
 import React from "react";
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { RightSidebarContent } from "./right/RightSidebarContent";
+import { UserProfileSettings } from "./UserProfileSettings";
 
 export function ChatRightSidebar() {
   const { open } = useSidebar("right");
@@ -15,8 +15,8 @@ export function ChatRightSidebar() {
       data-state={open ? "open" : "closed"}
       data-mobile={isMobile ? "true" : "false"}
     >
-      <SidebarContent className="flex flex-col h-full p-0">
-        <RightSidebarContent />
+      <SidebarContent className="flex flex-col h-full p-4">
+        <UserProfileSettings />
       </SidebarContent>
     </Sidebar>
   );
