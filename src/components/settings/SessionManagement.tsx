@@ -39,7 +39,7 @@ export default function SessionManagement() {
       if (error) throw error;
       
       // Transform and mark current session
-      const formattedSessions = loginHistory?.map(session => ({
+      const formattedSessions: SessionInfo[] = loginHistory?.map(session => ({
         id: session.id,
         user_agent: session.user_agent || "Unknown device",
         created_at: session.created_at,
