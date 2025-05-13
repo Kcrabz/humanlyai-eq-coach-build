@@ -163,13 +163,20 @@ export const emailService = {
       }
       
       // Now resend with the same data
+      // Fix the type issue by safely accessing email_data as an object
+      const emailData = typeof emailLog.email_data === 'object' && emailLog.email_data !== null 
+        ? emailLog.email_data 
+        : {};
+      
+      const originalSubject = emailData.subject || 'Notification from Humanly';
+      
       return await this.triggerEmail({
         userId: emailLog.user_id,
         emailType: emailLog.email_type,
         templateName: emailLog.template_name,
-        subject: `RE: ${emailLog.email_data?.subject || 'Notification from Humanly'}`,
+        subject: `RE: ${originalSubject}`,
         data: {
-          ...emailLog.email_data,
+          ...emailData,
           isResend: true,
           originalSentAt: emailLog.sent_at
         }
