@@ -58,15 +58,24 @@ export function ResponsiveMainContent({
   // as they should overlay instead of pushing content
   const contentWidth = isMobile 
     ? '100%' 
-    : isPWA && rightSidebarOpen 
-      ? 'calc(100% - 16rem)' 
-      : rightSidebarOpen ? 'calc(100% - 16rem)' : '100%';
+    : (rightSidebarOpen && !isPWA)
+      ? 'calc(100% - 20rem)'
+      : (rightSidebarOpen && isPWA)
+        ? 'calc(100% - 16rem)'
+        : '100%';
+
+  const contentStyle = {
+    width: contentWidth,
+    transition: 'width 0.3s ease, margin-right 0.3s ease',
+    marginRight: isMobile ? '0' : rightSidebarOpen ? '0' : '0'
+  };
 
   return (
     <div 
-      className={`flex-1 flex flex-col overflow-hidden main-content`}
-      style={{ width: contentWidth, transition: 'width 0.3s ease' }}
+      className="flex-1 flex flex-col overflow-hidden main-content"
+      style={contentStyle}
       data-pwa={isPWA ? "true" : "false"}
+      data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
     >
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}

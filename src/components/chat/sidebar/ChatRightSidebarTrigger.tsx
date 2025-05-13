@@ -2,10 +2,20 @@
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
+import { useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function ChatRightSidebarTrigger() {
   // Specifically use the right sidebar context
-  const { toggleSidebar, open } = useSidebar("right");
+  const { toggleSidebar, open, setOpen } = useSidebar("right");
+  const isMobile = useIsMobile();
+  
+  // Close sidebar by default on mobile
+  useEffect(() => {
+    if (isMobile) {
+      setOpen(false);
+    }
+  }, [isMobile, setOpen]);
   
   return (
     <Button

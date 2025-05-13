@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
 import { ChevronRight } from "lucide-react";
 import { RightSidebarContent } from "./right/RightSidebarContent";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function ChatRightSidebar() {
   const { open, setOpen } = useSidebar("right");
+  const isMobile = useIsMobile();
 
   // Toggle sidebar on narrow screens
   const toggleSidebar = () => {
@@ -14,8 +16,13 @@ export function ChatRightSidebar() {
   };
   
   return (
-    <Sidebar side="right" className="w-80">
-      <SidebarContent className="flex flex-col h-full divide-y">
+    <Sidebar 
+      side="right" 
+      className={`w-80 transition-all duration-300 ${open ? 'translate-x-0' : 'translate-x-full'}`}
+      data-state={open ? "open" : "closed"}
+      data-mobile={isMobile ? "true" : "false"}
+    >
+      <SidebarContent className="flex flex-col h-full">
         {/* Header with close button - Improved alignment */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <h2 className="font-medium">Your Account</h2>
