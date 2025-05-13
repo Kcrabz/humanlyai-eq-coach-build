@@ -16,10 +16,15 @@ export function ChatRightSidebar() {
   return (
     <Sidebar side="right" className="w-80">
       <SidebarContent className="flex flex-col h-full divide-y">
-        {/* Header with close button */}
-        <div className="flex items-center justify-between p-4">
-          <h2 className="font-medium text-sm">Your Account</h2>
-          <Button variant="ghost" size="sm" onClick={toggleSidebar}>
+        {/* Header with close button - Improved alignment */}
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <h2 className="font-medium">Your Account</h2>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleSidebar}
+            className="h-8 w-8 p-0"
+          >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
