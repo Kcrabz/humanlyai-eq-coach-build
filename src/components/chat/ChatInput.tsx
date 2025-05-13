@@ -47,14 +47,14 @@ export function ChatInput() {
   return (
     <>
       <form 
-        className="p-4 border-t flex items-end gap-2" 
+        className="p-3 border-t flex items-end gap-2" 
         onSubmit={handleSubmit}
       >
         <HistoryButton onClick={() => setIsHistoryOpen(true)} />
         
         <Textarea
           ref={textareaRef}
-          className="flex-1 resize-none max-h-32 py-3"
+          className="flex-1 resize-none max-h-24 py-2 text-sm"
           placeholder="Type a message..."
           rows={1}
           value={message}
@@ -65,10 +65,11 @@ export function ChatInput() {
         
         <Button 
           type="submit" 
-          size="icon" 
+          size="sm"
+          className="h-8 w-8"
           disabled={!message.trim() || isLoading}
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-3.5 w-3.5" />
         </Button>
       </form>
       

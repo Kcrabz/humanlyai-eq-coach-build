@@ -37,7 +37,7 @@ export function EnhancedChatForm({
   };
   
   return (
-    <div className="border-t p-4 bg-background">
+    <div className="border-t p-3 bg-background">
       {error && (
         <ChatErrorBanner 
           error={error}
@@ -52,7 +52,7 @@ export function EnhancedChatForm({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder={placeholder}
-          className="min-h-[60px] resize-none soft-input"
+          className="min-h-[50px] resize-none soft-input text-sm"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -63,12 +63,13 @@ export function EnhancedChatForm({
         />
         <Button 
           type="submit"
+          size="sm"
           disabled={isLoading || !message.trim()}
-          className="self-end soft-button-primary"
+          className="self-end soft-button-primary h-8"
         >
           {isLoading ? <Loading size="small" /> : 
             <>
-              <MessageSquare className="h-4 w-4 mr-1" />
+              <MessageSquare className="h-3.5 w-3.5 mr-1" />
               Send
             </>
           }
@@ -76,13 +77,13 @@ export function EnhancedChatForm({
       </form>
       
       {isLoading && (
-        <p className="text-xs text-muted-foreground mt-2 animate-pulse">
+        <p className="text-xs text-muted-foreground mt-1.5 animate-pulse">
           Kai is thinking...
         </p>
       )}
       
       {!isPremiumMember && (
-        <div className="mt-2 text-xs text-muted-foreground">
+        <div className="mt-1.5 text-xs text-muted-foreground">
           <p>
             <a href="/pricing" className="text-humanly-teal hover:underline">Upgrade to Premium</a> to unlock EQ tracking, streak records, and breakthrough detection.
           </p>
