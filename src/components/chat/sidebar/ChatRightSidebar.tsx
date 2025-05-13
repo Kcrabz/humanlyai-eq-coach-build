@@ -1,19 +1,12 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
 import { Sidebar, SidebarContent, useSidebar } from "@/components/ui/sidebar";
-import { ChevronRight } from "lucide-react";
-import { RightSidebarContent } from "./right/RightSidebarContent";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { RightSidebarContent } from "./right/RightSidebarContent";
 
 export function ChatRightSidebar() {
-  const { open, setOpen } = useSidebar("right");
+  const { open } = useSidebar("right");
   const isMobile = useIsMobile();
-
-  // Toggle sidebar on narrow screens
-  const toggleSidebar = () => {
-    setOpen(!open);
-  };
   
   return (
     <Sidebar 
@@ -23,17 +16,9 @@ export function ChatRightSidebar() {
       data-mobile={isMobile ? "true" : "false"}
     >
       <SidebarContent className="flex flex-col h-full">
-        {/* Header with close button - Improved alignment */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <div className="w-4"></div> {/* Empty space to maintain alignment */}
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={toggleSidebar}
-            className="h-8 w-8 p-0"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
+        {/* Header without close button */}
+        <div className="border-b border-gray-100">
+          {/* Empty header - no content */}
         </div>
 
         {/* Main Content */}
