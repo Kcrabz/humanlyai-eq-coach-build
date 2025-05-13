@@ -12,11 +12,12 @@ export function TypingIndicator() {
   useEffect(() => {
     console.log("Typing indicator mounted at", new Date().toISOString());
     
-    // Add a self-destruct timer - no typing indicator should live longer than 10 seconds
+    // Add a self-destruct timer - no typing indicator should live longer than 5 seconds
+    // Reduced from 10 seconds to 5 seconds for faster removal
     const maxLifetimeTimer = setTimeout(() => {
       console.log("Force removing typing indicator after timeout");
       setIsExpired(true);
-    }, 10000);
+    }, 5000);
     
     return () => {
       const duration = Date.now() - mountTimeRef.current;

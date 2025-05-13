@@ -13,6 +13,7 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
   let fullResponse = "";
   let hasStartedResponse = false;
   let messageUpdatedCount = 0;
+  let isCompleted = false;
   
   // Pre-compile regex patterns for better performance
   const dataLineRegex = /^data: (.+)$/;
@@ -20,7 +21,13 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
   try {
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      
+      // Check if we've reached the end of the stream
+      if (done) {
+        console.log("Stream reader reports done, processing completed");
+        isCompleted = true;
+        break;
+      }
       
       // Decode new chunk and add to buffer
       buffer += decoder.decode(value, { stream: true });
@@ -38,7 +45,11 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
         if (!match) continue;
         
         const jsonStr = match[1];
-        if (jsonStr === "[DONE]") continue;
+        if (jsonStr === "[DONE]") {
+          console.log("Received [DONE] marker in stream");
+          isCompleted = true;
+          continue;
+        }
         
         try {
           const data = JSON.parse(jsonStr);
@@ -50,13 +61,16 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
             messageUpdatedCount++;
             hasStartedResponse = true;
           } 
-          else if (data.type === "complete" && data.usage) {
-            // Update usage info when complete
-            setUsageInfo({
-              currentUsage: data.usage.currentUsage,
-              limit: data.usage.limit,
-              percentage: (data.usage.currentUsage / data.usage.limit) * 100
-            });
+          else if (data.type === "complete") {
+            isCompleted = true;
+            if (data.usage) {
+              // Update usage info when complete
+              setUsageInfo({
+                currentUsage: data.usage.currentUsage,
+                limit: data.usage.limit,
+                percentage: (data.usage.currentUsage / data.usage.limit) * 100
+              });
+            }
           }
           else if (data.content) {
             fullResponse += data.content;
@@ -75,6 +89,8 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
             updateAssistantMessage(assistantMessageId, fullResponse);
             messageUpdatedCount++;
             hasStartedResponse = true;
+            // This is likely a completion message
+            isCompleted = true;
           }
           
           // Log progress for debugging
@@ -119,7 +135,9 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
       updateAssistantMessage(assistantMessageId, null);
     }
     
-    // Message completed successfully
+    // Message completed successfully - very important to signal completion
+    // This is crucial for removing the typing indicator
+    console.log("Setting lastSentMessage to null to indicate completion");
     setLastSentMessage(null);
     
     // Return the full response
@@ -131,6 +149,8 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
     console.log(`Error in stream handler, removing empty bubble`);
     updateAssistantMessage(assistantMessageId, null);
     
+    // Still need to signal completion even on error
+    console.log("Setting lastSentMessage to null after error");
     setLastSentMessage(null);
     
     throw error;
