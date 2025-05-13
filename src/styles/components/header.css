@@ -1,0 +1,37 @@
+
+/* Enhanced header styling */
+.enhanced-header {
+  @apply border-b border-gray-100 bg-white/90 backdrop-blur-md;
+  position: relative;
+  z-index: 50;
+}
+
+/* Mobile-specific styling for header */
+@media (max-width: 767px) {
+  .enhanced-header {
+    padding: 0.75rem;
+  }
+
+  /* Collapsible menu improvements for mobile */
+  .enhanced-header .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Explicit styling for right sidebar trigger with highest priority */
+.right-sidebar-trigger-wrapper {
+  position: relative;
+  z-index: 100 !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Additional class to ensure the trigger button itself is always visible */
+.right-sidebar-trigger {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 100 !important;
+}

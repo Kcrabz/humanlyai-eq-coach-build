@@ -1,0 +1,78 @@
+
+/* Sidebar styling with improved transitions */
+.zen-sidebar {
+  @apply bg-white border-r border-gray-50 transition-all duration-300 ease-in-out;
+}
+
+/* User sidebar styling with improved animations */
+.user-sidebar {
+  @apply bg-white border-l border-gray-100 shadow-sm;
+  transition: transform 0.3s ease, width 0.3s ease;
+  z-index: 40;
+}
+
+/* Mobile specific chat layout */
+@media (max-width: 767px) {
+  .user-sidebar[data-mobile="true"] {
+    position: fixed;
+    top: 0;
+    height: 100%;
+    z-index: 50;
+    width: 80% !important;
+    max-width: 280px !important;
+  }
+  
+  .user-sidebar[data-state="open"][data-mobile="true"] {
+    right: 0;
+    transform: translateX(0);
+    box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+  }
+  
+  .user-sidebar[data-state="closed"][data-mobile="true"] {
+    right: -100%;
+    transform: translateX(100%);
+  }
+
+  /* Fix for toggle button and sidebar overlap */
+  .user-sidebar[data-mobile="true"] {
+    z-index: 50;
+  }
+  
+  /* Always ensure the right sidebar trigger is visible */
+  .right-sidebar-trigger-wrapper, 
+  .right-sidebar-trigger {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 100 !important;
+  }
+}
+
+/* Mobile chat menu specific styling */
+.mobile-chat-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 30;
+}
+
+/* Ensure sidebar trigger is above the sidebar on mobile */
+.sidebar-trigger {
+  position: relative;
+  z-index: 100 !important;
+}
+
+/* Explicit styles to guarantee the right sidebar toggle is visible on mobile */
+.enhanced-header .ChatRightSidebarTrigger,
+.enhanced-header button[aria-label="Toggle Right Sidebar"],
+.enhanced-header button[aria-label="Toggle User Menu"],
+.right-sidebar-trigger-wrapper,
+.right-sidebar-trigger {
+  position: relative;
+  z-index: 100 !important;
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}

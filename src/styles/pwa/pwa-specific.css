@@ -1,0 +1,28 @@
+
+/* PWA specific styling */
+@media all and (display-mode: standalone) {
+  /* Show sidebar by default in PWA mode */
+  .user-sidebar[data-pwa="true"] {
+    width: 14rem !important;
+    min-width: 14rem !important;
+  }
+  
+  /* Adjust content width when sidebar is open in PWA mode */
+  .user-sidebar[data-pwa="true"] + .main-content {
+    width: calc(100% - 14rem) !important;
+    margin-right: 14rem !important;
+  }
+  
+  /* Mobile PWA mode still needs overlay sidebar */
+  @media (max-width: 767px) {
+    .user-sidebar[data-pwa="true"][data-mobile="true"] {
+      width: 80% !important;
+      max-width: 280px !important;
+    }
+    
+    .user-sidebar[data-pwa="true"][data-mobile="true"] + .main-content {
+      width: 100% !important;
+      margin-right: 0 !important;
+    }
+  }
+}

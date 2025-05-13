@@ -1,9 +1,13 @@
-
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import App from './App.tsx'
-import './index.css'
+import './index.css';
+import './styles/animations.css';
+import './styles/base.css';
+import './styles/chat.css';
+import './styles/components.css';
+import './styles/layout.css';
 
 // Create function for registering service worker to better handle errors
 const registerServiceWorker = async () => {

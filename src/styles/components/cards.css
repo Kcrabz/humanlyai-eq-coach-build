@@ -1,0 +1,15 @@
+
+/* Zen card */
+.zen-card {
+  @apply bg-white border border-gray-50 rounded-xl p-5 shadow-sm;
+}
+
+/* Meditation space */
+.meditation-space {
+  @apply bg-gradient-to-br from-humanly-pastel-lavender/20 to-humanly-pastel-blue/10 p-6 rounded-xl border border-humanly-pastel-lavender/10;
+}
+
+/* Chat container with calming background */
+.chat-container {
+  @apply bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-50 overflow-hidden;
+}

@@ -1,0 +1,50 @@
+
+/* Page container with improved spacing */
+.page-container {
+  @apply max-w-5xl mx-auto px-4 py-8 md:px-6 md:py-10;
+}
+
+/* Section container */
+.section-container {
+  @apply py-6 md:py-10;
+}
+
+/* Content container */
+.content-container {
+  @apply max-w-3xl mx-auto;
+}
+
+/* Main content area with responsive width */
+.main-content {
+  @apply flex-1 overflow-auto bg-gradient-to-br from-white to-humanly-pastel-lavender/10;
+  transition: width 0.3s ease;
+  width: 100%;
+  flex-grow: 1;
+  z-index: 10;
+}
+
+/* Mobile-specific content fixes */
+@media (max-width: 767px) {
+  .main-content,
+  .main-content-with-right-sidebar-open,
+  .main-content-with-right-sidebar-closed {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex-basis: 100% !important;
+  }
+  
+  .mobile-main-content {
+    padding-top: 0; /* Remove additional padding */
+  }
+  
+  /* Ensure text doesn't overflow on mobile */
+  .enhanced-chat-bubble {
+    max-width: 85% !important;
+    word-break: break-word;
+  }
+}
+
+/* Footer styling */
+.zen-footer {
+  @apply border-t border-gray-50 py-3 px-4 text-xs text-gray-500 bg-white;
+}
