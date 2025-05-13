@@ -9,13 +9,22 @@
 /* Mobile-specific styling for header */
 @media (max-width: 767px) {
   .enhanced-header {
-    padding: 0.75rem;
+    padding: 0.75rem 1rem;
   }
 
   /* Collapsible menu improvements for mobile */
   .enhanced-header .container {
     padding-left: 1rem;
     padding-right: 1rem;
+  }
+  
+  /* Ensure proper spacing between header elements */
+  .enhanced-header .gap-3 {
+    gap: 0.5rem;
+  }
+  
+  .enhanced-header .gap-4 {
+    gap: 0.75rem;
   }
 }
 
