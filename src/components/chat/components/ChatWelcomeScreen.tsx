@@ -16,6 +16,14 @@ export function ChatWelcomeScreen({ sendSuggestedMessage }: ChatWelcomeScreenPro
     setWelcomeMessage(getWelcomeMessage());
   }, []);
   
+  // Handler for sending a message - directly calls the passed function
+  const handleSendMessage = (content: string) => {
+    // Only send non-empty messages
+    if (content.trim()) {
+      sendSuggestedMessage(content);
+    }
+  };
+  
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-4">
       <div className="mb-4">
@@ -36,7 +44,7 @@ export function ChatWelcomeScreen({ sendSuggestedMessage }: ChatWelcomeScreenPro
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => sendSuggestedMessage("I've been feeling overwhelmed at work lately.")}
+            onClick={() => handleSendMessage("I've been feeling overwhelmed at work lately.")}
             className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30"
           >
             "I've been feeling overwhelmed at work lately."
@@ -44,7 +52,7 @@ export function ChatWelcomeScreen({ sendSuggestedMessage }: ChatWelcomeScreenPro
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => sendSuggestedMessage("I struggle with communicating my needs to others.")}
+            onClick={() => handleSendMessage("I struggle with communicating my needs to others.")}
             className="bg-humanly-pastel-lavender/20 border-humanly-indigo/30"
           >
             "I struggle with communicating my needs to others."

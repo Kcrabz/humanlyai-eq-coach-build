@@ -26,6 +26,12 @@ export const useChatApi = () => {
 
   // Non-streaming message send function
   const sendMessage = async (content: string, addUserMessage: (message: string) => string, addAssistantMessage: (message: string) => string) => {
+    // Only proceed if we have valid content
+    if (!content || !content.trim()) {
+      console.log("Skipping empty message");
+      return;
+    }
+    
     await apiSendMessage(
       content, 
       addUserMessage, 
@@ -44,6 +50,13 @@ export const useChatApi = () => {
     assistantMessageId: string,
     updateAssistantMessage?: (id: string, content: string) => void
   ) => {
+    // Only proceed if we have valid content
+    if (!content || !content.trim()) {
+      console.log("Skipping empty message stream");
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       // Set loading state at the beginning
       setIsLoading(true);
@@ -61,6 +74,9 @@ export const useChatApi = () => {
       // Make sure loading is set to false
       setIsLoading(false);
       throw error;
+    } finally {
+      // Always ensure loading state is reset
+      setIsLoading(false);
     }
   };
 

@@ -19,6 +19,9 @@ export function ChatList() {
   const [prevRightState, setPrevRightState] = useState(rightSidebarOpen);
   const [prevLeftState, setPrevLeftState] = useState(leftSidebarOpen);
 
+  // Filter out any empty messages to prevent blank bubbles
+  const validMessages = messages.filter(msg => msg.content && msg.content.trim());
+
   // Detect if running in PWA mode
   useEffect(() => {
     setIsPWA(
@@ -42,15 +45,15 @@ export function ChatList() {
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [validMessages]);
 
   // If there are messages and this is the first render, scroll to the most recent message
   useEffect(() => {
-    if (messages.length > 0 && firstRenderRef.current) {
+    if (validMessages.length > 0 && firstRenderRef.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
       firstRenderRef.current = false;
     }
-  }, [messages]);
+  }, [validMessages]);
 
   // Ensure we reset the first render flag when component unmounts/remounts
   useEffect(() => {
@@ -64,10 +67,14 @@ export function ChatList() {
       className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-4'} space-y-6`} 
       data-pwa={isPWA ? "true" : "false"}
     >
-      {messages.length === 0 ? (
+      {validMessages.length === 0 ? (
         <EmptyChatState />
       ) : (
-        messages.map((message) => <ChatBubble key={message.id} message={message} />)
+        validMessages.map((message) => (
+          message.content && message.content.trim() ? 
+            <ChatBubble key={message.id} message={message} /> : 
+            null
+        ))
       )}
       
       <div ref={messagesEndRef} />

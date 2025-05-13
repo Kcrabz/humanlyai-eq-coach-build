@@ -1,3 +1,4 @@
+
 import { StreamOptions } from './chatStreamTypes';
 
 /**
@@ -56,9 +57,12 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
           // Handle different types of events efficiently
           if (data.type === "chunk" && data.content) {
             fullResponse += data.content;
-            updateAssistantMessage(assistantMessageId, fullResponse);
-            messageUpdatedCount++;
-            hasStartedResponse = true;
+            // Only update if there's actual content
+            if (fullResponse.trim()) {
+              updateAssistantMessage(assistantMessageId, fullResponse);
+              messageUpdatedCount++;
+              hasStartedResponse = true;
+            }
           } 
           else if (data.type === "complete") {
             isCompleted = true;
@@ -73,21 +77,30 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
           }
           else if (data.content) {
             fullResponse += data.content;
-            updateAssistantMessage(assistantMessageId, fullResponse);
-            messageUpdatedCount++;
-            hasStartedResponse = true;
+            // Only update if there's actual content
+            if (fullResponse.trim()) {
+              updateAssistantMessage(assistantMessageId, fullResponse);
+              messageUpdatedCount++;
+              hasStartedResponse = true;
+            }
           }
           else if (data.choices?.[0]?.delta?.content) {
             fullResponse += data.choices[0].delta.content;
-            updateAssistantMessage(assistantMessageId, fullResponse);
-            messageUpdatedCount++;
-            hasStartedResponse = true;
+            // Only update if there's actual content
+            if (fullResponse.trim()) {
+              updateAssistantMessage(assistantMessageId, fullResponse);
+              messageUpdatedCount++;
+              hasStartedResponse = true;
+            }
           }
           else if (data.choices?.[0]?.message?.content) {
             fullResponse = data.choices[0].message.content;
-            updateAssistantMessage(assistantMessageId, fullResponse);
-            messageUpdatedCount++;
-            hasStartedResponse = true;
+            // Only update if there's actual content
+            if (fullResponse.trim()) {
+              updateAssistantMessage(assistantMessageId, fullResponse);
+              messageUpdatedCount++;
+              hasStartedResponse = true;
+            }
             // This is likely a completion message
             isCompleted = true;
           }
@@ -110,8 +123,11 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
           const data = JSON.parse(match[1]);
           if (data.content) {
             fullResponse += data.content;
-            updateAssistantMessage(assistantMessageId, fullResponse);
-            messageUpdatedCount++;
+            // Only update if there's actual content
+            if (fullResponse.trim()) {
+              updateAssistantMessage(assistantMessageId, fullResponse);
+              messageUpdatedCount++;
+            }
           }
         } catch (e) {
           // Ignore errors in final buffer processing
@@ -121,10 +137,10 @@ export async function handleChatStream(reader: ReadableStreamDefaultReader<Uint8
     
     console.log(`Stream completed for message ${assistantMessageId}. Updated content ${messageUpdatedCount} times. Content length: ${fullResponse.length}`);
     
-    // CRITICAL: If after all processing we still have no real content, 
-    // delete the message by sending null content
+    // If after all processing we still have no real content or no updates happened,
+    // delete the message by sending null content 
     if (!fullResponse.trim() || messageUpdatedCount === 0) {
-      console.log(`Stream completed with empty response - removing empty bubble by sending null`);
+      console.log(`Stream completed with empty response or no updates - removing empty bubble`);
       // Use null to signal that the message should be removed completely
       updateAssistantMessage(assistantMessageId, null);
     }
