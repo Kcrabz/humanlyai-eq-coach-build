@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useUserProgress } from "@/hooks/useUserProgress";
 import { EQArchetype } from "@/types";
+import { Loader } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { useEQProgress } from "@/hooks/useEQProgress";
 
 // Import tabs
 import { OverviewTab } from "@/components/progress/OverviewTab";
@@ -20,12 +22,73 @@ import { MOCK_ACHIEVEMENTS, MOCK_TIMELINE_ITEMS } from "@/data/mockProgressData"
 import { MOCK_BADGES_CERTIFICATES } from "@/data/mockBadgesCertificatesData";
 
 const UserProgressPage = () => {
-  const { user, stats, userArchetype } = useUserProgress();
+  const { user, stats, userArchetype, isLoading } = useUserProgress();
+  const { userAchievements } = useAuth();
+  const { recentBreakthroughs } = useEQProgress();
   const [activeTab, setActiveTab] = useState("overview");
   const navigate = useNavigate();
   
   const handleChallengeTakeToChatPage = () => {
     navigate("/chat");
+  };
+  
+  // Create timeline items from breakthroughs and achievements
+  const generateTimelineItems = () => {
+    const items = [];
+    
+    // Add recent breakthroughs
+    if (recentBreakthroughs) {
+      recentBreakthroughs.slice(0, 3).forEach((breakthrough, index) => {
+        const date = new Date(breakthrough.detectedAt);
+        items.push({
+          date: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          title: `EQ Breakthrough: ${breakthrough.category}`,
+          description: breakthrough.insight || "You gained an emotional intelligence insight",
+          icon: "Lightbulb"
+        });
+      });
+    }
+    
+    // Add achievements
+    if (userAchievements) {
+      userAchievements.filter(a => a.achieved).slice(0, 3).forEach((achievement) => {
+        const date = achievement.achievedAt ? 
+          new Date(achievement.achievedAt).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) :
+          "Recent Achievement";
+          
+        items.push({
+          date,
+          title: achievement.title,
+          description: achievement.description,
+          icon: achievement.icon
+        });
+      });
+    }
+    
+    // Add current focus as the last item
+    items.push({
+      date: "Current Focus",
+      title: "Building Emotional Awareness",
+      description: "Your current growth focus is on recognizing emotional patterns.",
+      icon: "Flag",
+      isCurrent: true,
+      progress: stats.archetypeProgress
+    });
+    
+    // Sort by date, keeping "Current Focus" at the end
+    const sortedItems = items.filter(item => item.date !== "Current Focus").sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      return dateB.getTime() - dateA.getTime(); // Most recent first
+    });
+    
+    // Add current focus at the end
+    const currentFocus = items.find(item => item.date === "Current Focus");
+    if (currentFocus) {
+      sortedItems.push(currentFocus);
+    }
+    
+    return sortedItems;
   };
   
   if (!user) {
@@ -43,6 +106,20 @@ const UserProgressPage = () => {
               </Button>
             </CardContent>
           </Card>
+        </div>
+      </PageLayout>
+    );
+  }
+  
+  // Show a loading state while data is being fetched
+  if (isLoading) {
+    return (
+      <PageLayout>
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader className="h-8 w-8 animate-spin text-humanly-teal" />
+            <p className="text-muted-foreground">Loading your progress data...</p>
+          </div>
         </div>
       </PageLayout>
     );
@@ -71,7 +148,7 @@ const UserProgressPage = () => {
           <TabsContent value="overview" className="animate-scale-fade-in">
             <OverviewTab 
               stats={stats} 
-              achievements={MOCK_ACHIEVEMENTS} 
+              achievements={userAchievements?.filter(a => a.achieved).slice(0, 4) || []}
               userArchetype={userArchetype}
               onChallengeClick={handleChallengeTakeToChatPage} 
             />
@@ -79,12 +156,23 @@ const UserProgressPage = () => {
           
           {/* Achievements Tab */}
           <TabsContent value="achievements" className="animate-scale-fade-in">
-            <AchievementsTab achievements={MOCK_ACHIEVEMENTS} />
+            <AchievementsTab achievements={userAchievements?.filter(a => a.achieved) || []} />
           </TabsContent>
           
           {/* Badges & Certificates Tab */}
           <TabsContent value="badges" className="animate-scale-fade-in">
-            <BadgesCertificatesTab badges={MOCK_BADGES_CERTIFICATES} />
+            <BadgesCertificatesTab 
+              badges={userAchievements?.filter(a => a.type === "badge" || a.type === "certificate")
+                .map(a => ({
+                  id: a.id,
+                  type: a.type === "certificate" ? "certificate" : "badge",
+                  name: a.title,
+                  description: a.description,
+                  dateEarned: a.achievedAt ? new Date(a.achievedAt).toLocaleDateString('en-US', 
+                    { month: 'long', day: 'numeric', year: 'numeric' }) : "Not yet earned",
+                  category: a.type
+                })) || []}
+            />
           </TabsContent>
           
           {/* Challenges Tab */}
@@ -96,7 +184,7 @@ const UserProgressPage = () => {
           <TabsContent value="journey" className="animate-scale-fade-in">
             <EQJourneyTab 
               userArchetype={userArchetype}
-              timelineItems={MOCK_TIMELINE_ITEMS} 
+              timelineItems={generateTimelineItems()}
             />
           </TabsContent>
         </Tabs>
