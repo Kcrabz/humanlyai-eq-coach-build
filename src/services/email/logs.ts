@@ -1,39 +1,44 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { EmailLog } from "./types";
+import { 
+  EmailErrorType, 
+  withEmailErrorHandling
+} from "./utils/errorHandler";
 
 /**
  * Get email logs for the current user or all logs for admins
  */
 export async function getEmailLogs(limit = 50, forAllUsers = false): Promise<EmailLog[]> {
-  try {
-    let query = supabase
-      .from("email_logs")
-      .select("*")
-      .order("sent_at", { ascending: false });
-    
-    // If not fetching all users' logs, filter by current user
-    if (!forAllUsers) {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
-      if (!userId) {
-        console.error("No user ID available");
-        return [];
+  const [logs, error] = await withEmailErrorHandling(
+    async () => {
+      let query = supabase
+        .from("email_logs")
+        .select("*")
+        .order("sent_at", { ascending: false });
+      
+      // If not fetching all users' logs, filter by current user
+      if (!forAllUsers) {
+        const userId = (await supabase.auth.getUser()).data.user?.id;
+        if (!userId) {
+          throw new Error("No user ID available");
+        }
+        query = query.eq("user_id", userId);
       }
-      query = query.eq("user_id", userId);
-    }
-    
-    const { data, error } = await query.limit(limit);
+      
+      const { data, error } = await query.limit(limit);
 
-    if (error) {
-      console.error("Error fetching email logs:", error);
-      return [];
-    }
+      if (error) {
+        throw error;
+      }
 
-    return data || [];
-  } catch (err) {
-    console.error("Error in getEmailLogs:", err);
-    return [];
-  }
+      return data || [];
+    },
+    EmailErrorType.FETCH_FAILURE,
+    "Failed to fetch email logs"
+  );
+  
+  return logs || [];
 }
 
 /**

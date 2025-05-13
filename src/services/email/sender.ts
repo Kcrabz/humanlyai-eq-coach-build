@@ -1,6 +1,12 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TriggerEmailOptions } from "./types";
+import { 
+  EmailErrorType, 
+  handleEmailError, 
+  withEmailErrorHandling 
+} from "./utils/errorHandler";
 
 /**
  * Manually trigger an email send (for testing or admin use)
@@ -29,16 +35,22 @@ export async function triggerEmail(options: TriggerEmailOptions): Promise<boolea
     });
 
     if (error) {
-      console.error("Error triggering email:", error);
-      toast.error("Failed to send email");
+      handleEmailError(
+        error, 
+        EmailErrorType.SEND_FAILURE, 
+        "Failed to send email"
+      );
       return false;
     }
 
     toast.success("Email sent successfully");
     return true;
   } catch (err) {
-    console.error("Error in triggerEmail:", err);
-    toast.error("Failed to send email");
+    handleEmailError(
+      err, 
+      EmailErrorType.SEND_FAILURE, 
+      "Failed to send email"
+    );
     return false;
   }
 }
@@ -56,7 +68,11 @@ export async function resendEmail(emailLogId: string): Promise<boolean> {
       .single();
       
     if (fetchError || !emailLog) {
-      console.error("Error fetching email log for resend:", fetchError);
+      handleEmailError(
+        fetchError || new Error("Email log not found"), 
+        EmailErrorType.FETCH_FAILURE, 
+        "Failed to retrieve original email data"
+      );
       return false;
     }
     
@@ -79,7 +95,11 @@ export async function resendEmail(emailLogId: string): Promise<boolean> {
             emailData = parsed;
           }
         } catch (e) {
-          console.warn("Could not parse email_data as JSON:", e);
+          handleEmailError(
+            e, 
+            EmailErrorType.INVALID_DATA, 
+            "Could not parse email data"
+          );
         }
       }
     }
@@ -100,7 +120,11 @@ export async function resendEmail(emailLogId: string): Promise<boolean> {
       }
     });
   } catch (err) {
-    console.error("Error in resendEmail:", err);
+    handleEmailError(
+      err, 
+      EmailErrorType.SEND_FAILURE, 
+      "Failed to resend email"
+    );
     return false;
   }
 }
@@ -138,26 +162,28 @@ export async function sendTestEmail(userId: string, recipientEmail?: string): Pr
   
   toast.info("Sending test email...");
   
-  try {
-    const result = await triggerEmail({
-      userId,
-      emailType: 'test_email',
-      templateName,
-      subject,
-      to: recipientEmail, // Will be optional if not provided
-      data: emailData
-    });
-    
-    if (result) {
-      toast.success("Test email sent successfully");
-      return true;
-    } else {
-      toast.error("Failed to send test email");
-      return false;
-    }
-  } catch (err) {
-    console.error("Error sending test email:", err);
-    toast.error("Failed to send test email");
+  const [result, error] = await withEmailErrorHandling(
+    async () => {
+      return await triggerEmail({
+        userId,
+        emailType: 'test_email',
+        templateName,
+        subject,
+        to: recipientEmail,
+        data: emailData
+      });
+    },
+    EmailErrorType.SEND_FAILURE,
+    "Failed to send test email"
+  );
+  
+  if (error) {
     return false;
   }
+  
+  if (result) {
+    toast.success("Test email sent successfully");
+  }
+  
+  return !!result;
 }
