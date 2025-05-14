@@ -1,8 +1,22 @@
 
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
+import { useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Direct redirect for already authenticated users
+  useEffect(() => {
+    if (!isLoading && user) {
+      console.log("User already authenticated on login page, redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, isLoading, navigate]);
+  
   return (
     <PageLayout>
       <div className="flex min-h-screen items-center justify-center py-12 animate-scale-fade-in">

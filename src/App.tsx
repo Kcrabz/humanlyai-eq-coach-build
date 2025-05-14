@@ -31,7 +31,12 @@ function App() {
     <AppProviders>
       <AuthenticationGuard />
       <AppRoutes />
-      <Toaster position="top-center" expand={true} richColors closeButton />
+      <Toaster 
+        position="top-center" 
+        expand={true} 
+        richColors 
+        closeButton 
+      />
     </AppProviders>
   );
 }

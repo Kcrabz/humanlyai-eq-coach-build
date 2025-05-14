@@ -83,14 +83,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Early short-circuit loading state for faster UI rendering
   useEffect(() => {
-    // If loading takes too long, give early access after 300ms (faster than before)
+    // If loading takes too long, give early access after 200ms (faster than before)
     if (isSessionLoading) {
       const timer = setTimeout(() => {
         if (session) {
           setProfileLoaded(true);
           setIsSessionLoading(false);
         }
-      }, 300); // Reduced from 500ms for faster UI loading
+      }, 200); // Reduced from 300ms for faster UI loading
       
       return () => clearTimeout(timer);
     }

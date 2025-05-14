@@ -16,6 +16,7 @@ export const AuthenticationGuard = () => {
   const redirectedRef = useRef(false);
   const redirectAttemptCount = useRef(0);
   const lastPathRef = useRef(pathname);
+  const loginToastShownRef = useRef(false);
   
   // Reset redirect tracking when path changes
   useEffect(() => {
@@ -26,18 +27,16 @@ export const AuthenticationGuard = () => {
       lastPathRef.current = pathname;
       
       // Clear toast flag when changing paths
-      document.body.removeAttribute('data-toast-shown');
+      loginToastShownRef.current = false;
     }
   }, [pathname]);
   
   // Show welcome toast on successful login
   useEffect(() => {
-    if (user && (authEvent === 'SIGN_IN_COMPLETE')) {
-      if (!document.body.getAttribute('data-toast-shown')) {
-        const firstName = user?.name ? user.name.split(" ")[0] : '';
-        toast.success(`Welcome back${firstName ? `, ${firstName}` : ''}!`);
-        document.body.setAttribute('data-toast-shown', 'true');
-      }
+    if (user && (authEvent === 'SIGN_IN_COMPLETE') && !loginToastShownRef.current) {
+      const firstName = user?.name ? user.name.split(" ")[0] : '';
+      toast.success(`Welcome back${firstName ? `, ${firstName}` : ''}!`);
+      loginToastShownRef.current = true;
     }
   }, [user, authEvent]);
   
@@ -48,7 +47,7 @@ export const AuthenticationGuard = () => {
     
     // Safety limit for redirect attempts
     redirectAttemptCount.current += 1;
-    if (redirectAttemptCount.current > 5) {
+    if (redirectAttemptCount.current > 10) {
       console.warn("Too many redirect attempts, breaking the loop", {
         path: pathname,
         hasUser: !!user,
@@ -70,6 +69,18 @@ export const AuthenticationGuard = () => {
     if (pathname === "/reset-password" || pathname === "/update-password") return;
     
     const isCurrentlyOnAuth = isOnAuthPage(pathname);
+    
+    // Short-circuit for login page with active user
+    if (isCurrentlyOnAuth && user) {
+      console.log("User already logged in but on auth page, redirecting to dashboard");
+      redirectedRef.current = true;
+      
+      // Add a small delay to allow auth state to stabilize
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true });
+      }, 100);
+      return;
+    }
     
     if (user) {
       // Priority path: Redirect to onboarding if not onboarded
