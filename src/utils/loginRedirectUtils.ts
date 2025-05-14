@@ -35,20 +35,8 @@ export const clearLoginSuccess = (): void => {
 /**
  * Checks if login was successful recently (within extended window)
  * Window extended to 60 seconds to ensure redirect logic has time to complete
- * 
- * @param ignoreSourceParam If true, source=dashboard param will be ignored in checks
  */
-export const wasLoginSuccessful = (ignoreSourceParam: boolean = false): boolean => {
-  // Check URL parameters for source=dashboard which indicates direct navigation
-  if (!ignoreSourceParam) {
-    const urlParams = new URLSearchParams(window.location.search);
-    const source = urlParams.get('source');
-    if (source === 'dashboard') {
-      console.log("Skipping login success check due to source=dashboard param");
-      return false;
-    }
-  }
-  
+export const wasLoginSuccessful = (): boolean => {
   const timestamp = localStorage.getItem(LOGIN_SUCCESS_KEY);
   if (timestamp) {
     const loginTime = parseInt(timestamp);

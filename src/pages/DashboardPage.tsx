@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -5,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, TrendingUp, Users, Shield, MessageSquare } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
+import { toast } from "sonner";
 import { memo, useEffect, useState, Suspense } from "react";
 import { Loading } from "@/components/ui/loading";
-import { clearLoginSuccess } from "@/utils/loginRedirectUtils";
 
 // Memoize card components for performance
 const ActionCard = memo(({ 
@@ -81,16 +82,13 @@ const DashboardContent = memo(() => {
   const handleReferral = () => {
     const referralLink = `${window.location.origin}?ref=${user?.id}`;
     navigator.clipboard.writeText(referralLink);
+    toast.success("Referral link copied to clipboard!", {
+      description: "Share this link with your friends to invite them to join."
+    });
   };
   
   const openFeedbackForm = () => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
-  };
-  
-  // Updated navigation to chat page - using source parameter to prevent redirect loops
-  const handleChatNavigation = () => {
-    clearLoginSuccess(); // Clear login success flag to avoid redirect loops
-    window.location.href = '/chat?source=dashboard'; // Add source parameter to signal direct navigation
   };
   
   return (
@@ -106,9 +104,9 @@ const DashboardContent = memo(() => {
       
       {/* Use conditional rendering for smoother loading */}
       <div className={`grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${loaded ? 'animate-scale-fade-in' : 'opacity-0'}`}>
-        {/* Chat with Kai - Fixed navigation */}
+        {/* Chat with Kai */}
         <ActionCard 
-          onClick={handleChatNavigation}
+          onClick={() => navigate("/chat")}
           icon={MessageCircle}
           title="Chat with Kai"
           color="humanly-indigo"

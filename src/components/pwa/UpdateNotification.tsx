@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -14,6 +15,27 @@ export function UpdateNotification({ reloadPage }: UpdateNotificationProps) {
     // Listen for update events from the service worker
     const updateHandler = () => {
       setShowUpdateNotification(true);
+      
+      toast.info(
+        <div className="flex flex-col gap-2">
+          <p>A new version is available!</p>
+          <Button 
+            size="sm" 
+            className="bg-humanly-indigo"
+            onClick={() => {
+              reloadPage();
+              setShowUpdateNotification(false);
+            }}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Update Now
+          </Button>
+        </div>,
+        {
+          duration: Infinity,
+          id: 'pwa-update',
+        }
+      );
     };
     
     window.addEventListener('pwa-update-available', updateHandler);
@@ -23,25 +45,5 @@ export function UpdateNotification({ reloadPage }: UpdateNotificationProps) {
     };
   }, [reloadPage]);
   
-  if (!showUpdateNotification) {
-    return null;
-  }
-  
-  return (
-    <div className="fixed bottom-4 right-4 bg-humanly-indigo text-white p-4 rounded-lg shadow-lg z-50 flex flex-col gap-2">
-      <p>A new version is available!</p>
-      <Button 
-        size="sm" 
-        variant="outline"
-        className="bg-white text-humanly-indigo hover:bg-gray-100"
-        onClick={() => {
-          reloadPage();
-          setShowUpdateNotification(false);
-        }}
-      >
-        <RefreshCw className="mr-2 h-4 w-4" />
-        Update Now
-      </Button>
-    </div>
-  );
+  return null; // This component doesn't render anything itself, it just shows a toast
 }

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { WifiOff } from "lucide-react";
+import { toast } from "sonner";
 
 export function OfflineIndicator() {
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -8,10 +9,14 @@ export function OfflineIndicator() {
   useEffect(() => {
     const handleOnline = () => {
       setIsOffline(false);
+      toast.success("You're back online!");
     };
 
     const handleOffline = () => {
       setIsOffline(true);
+      toast.warning("You're offline. Some features may be limited.", {
+        duration: 5000,
+      });
     };
 
     window.addEventListener('online', handleOnline);

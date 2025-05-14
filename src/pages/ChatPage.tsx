@@ -1,3 +1,4 @@
+
 import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -10,8 +11,7 @@ import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar } from "@/components/chat/sidebar/ChatRightSidebar";
 import { ResponsiveMainContent } from "@/components/chat/components/ResponsiveMainContent";
 import { UpdateNotification } from "@/components/pwa/UpdateNotification";
-import { wasLoginSuccessful, clearLoginSuccess } from "@/utils/loginRedirectUtils";
-import { Toaster } from "sonner";
+import { wasLoginSuccessful } from "@/utils/loginRedirectUtils";
 
 // Lazy load components that aren't immediately visible
 const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
@@ -29,23 +29,13 @@ const ChatPage = () => {
   const prevCoachingModeRef = useRef<string | undefined>(undefined);
 
   // Check if this is a post-login navigation - redirect to dashboard if so
-  // But skip redirection if coming from dashboard (source=dashboard param)
   useEffect(() => {
-    const source = searchParams.get('source');
-    const isFromDashboard = source === 'dashboard';
-    
-    if (!isLoading && isAuthenticated && wasLoginSuccessful() && !isFromDashboard) {
+    if (!isLoading && isAuthenticated && wasLoginSuccessful()) {
       console.log("Post-login detected on chat page, redirecting to dashboard");
       navigate("/dashboard", { replace: true });
       return;
     }
-    
-    // If we're coming from dashboard, clear any login success flags
-    if (isFromDashboard) {
-      console.log("Coming from dashboard, clearing any login success flags");
-      clearLoginSuccess();
-    }
-  }, [isAuthenticated, navigate, isLoading, searchParams]);
+  }, [isAuthenticated, navigate, isLoading]);
 
   // Optimize auth check to use fewer rerenders
   useEffect(() => {
@@ -105,9 +95,6 @@ const ChatPage = () => {
         <LeftSidebarProvider>
           <RightSidebarProvider defaultOpen={true}>
             <ChatProvider>
-              {/* Keep the Toaster for chat page only */}
-              <Toaster position="bottom-right" richColors />
-              
               {/* PWA update notification */}
               <UpdateNotification reloadPage={handleReload} />
               

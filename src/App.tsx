@@ -1,6 +1,7 @@
 
 import { AuthProvider } from "./context/AuthContext"; 
 import { ThemeProvider } from "./context/ThemeContext";
+import { Toaster } from "sonner";
 import { ReactNode } from "react";
 import AppRoutes from "./AppRoutes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -30,7 +31,12 @@ function App() {
     <AppProviders>
       <AuthenticationGuard />
       <AppRoutes />
-      {/* Removed global Toaster here */}
+      <Toaster 
+        position="top-center" 
+        expand={true} 
+        richColors 
+        closeButton 
+      />
     </AppProviders>
   );
 }

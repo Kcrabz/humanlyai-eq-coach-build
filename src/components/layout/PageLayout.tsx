@@ -1,6 +1,7 @@
 
 import React, { ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
 import { CollapsibleMenu } from "@/components/layout/CollapsibleMenu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InstallPWA } from "@/components/pwa/InstallPWA";
@@ -32,7 +33,8 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
         <div className="fixed top-40 right-20 w-48 h-48 bg-humanly-pastel-mint blob-animation -z-10 opacity-20 blob" style={{ animationDelay: '3s' }}></div>
       </>
       
-      {/* Removed Sonner toast provider */}
+      {/* Sonner toast provider - positioned at bottom only */}
+      <Toaster position="bottom-right" richColors />
       
       {/* PWA Install button - positioned top right */}
       <div className="fixed top-4 right-16 z-50">
