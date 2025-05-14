@@ -16,6 +16,7 @@ import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthActionWrappers } from "./useAuthActionWrappers";
 import { setAuthState, AuthState } from "@/services/authService";
 import { useLocation } from "react-router-dom";
+import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // State for auth error handling
@@ -75,16 +76,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Enhanced login function that sets auth state
   const enhancedLogin = useCallback(async (email: string, password: string) => {
+    console.log("AuthProvider: Login attempt starting");
+    
+    // Clear all navigation state
+    AuthNavigationService.resetAllNavigationState();
     setAuthState(AuthState.SIGNING_IN);
+    AuthNavigationService.setState(NavigationState.AUTHENTICATING, { email });
+    
     const success = await authCore.login(email, password);
     
     if (success) {
+      console.log("AuthProvider: Login successful");
       setAuthState(AuthState.SIGNED_IN);
-      // Set login to dashboard flag to ensure proper flow
-      localStorage.setItem('login_to_dashboard', 'true');
-      console.log("AuthProvider: Login successful, set login_to_dashboard flag");
+      
+      // Don't set additional flags - we'll use NavigationState now
     } else {
+      console.log("AuthProvider: Login failed");
       setAuthState(AuthState.SIGNED_OUT);
+      AuthNavigationService.setState(NavigationState.ERROR, { reason: "login_failed" });
     }
     
     return success;
@@ -92,58 +101,66 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   
   // Enhanced signup function that sets auth state
   const enhancedSignup = useCallback(async (email: string, password: string, securityQuestionId?: string, securityAnswer?: string) => {
+    console.log("AuthProvider: Signup attempt starting");
+    
+    // Clear all navigation state  
+    AuthNavigationService.resetAllNavigationState();
     setAuthState(AuthState.SIGNING_UP);
+    AuthNavigationService.setState(NavigationState.AUTHENTICATING, { email, isSignup: true });
+    
     const success = await signup(email, password, securityQuestionId, securityAnswer);
     
     if (success) {
+      console.log("AuthProvider: Signup successful");
       setAuthState(AuthState.SIGNED_UP);
-      // Set login to dashboard flag to ensure proper flow
-      localStorage.setItem('login_to_dashboard', 'true');
-      console.log("AuthProvider: Signup successful, set login_to_dashboard flag");
+      
+      // Don't set additional flags - we'll use NavigationState now
     } else {
+      console.log("AuthProvider: Signup failed");
       setAuthState(AuthState.SIGNED_OUT);
+      AuthNavigationService.setState(NavigationState.ERROR, { reason: "signup_failed" });
     }
     
     return success;
   }, [signup]);
   
-  // Enhanced logout that clears auth state
+  // Enhanced logout that clears all state
   const enhancedLogout = useCallback(async () => {
-    const result = await authLogout();
+    console.log("AuthProvider: Logging out");
+    
+    // Clear ALL navigation state when signing out
+    AuthNavigationService.resetAllNavigationState();
     setAuthState(AuthState.SIGNED_OUT);
     
-    // Clear ALL navigation flags when signing out
-    sessionStorage.removeItem('auth_navigation_in_progress');
-    localStorage.removeItem('intentional_navigation_to_chat');
-    localStorage.removeItem('login_to_dashboard');
-    
+    const result = await authLogout();
     return result;
   }, [authLogout]);
   
   // Track auth state changes
   useEffect(() => {
     if (authEvent === "SIGN_IN_COMPLETE" && user) {
-      console.log("Detected sign in complete with user");
+      console.log("AuthProvider: Detected sign in complete with user");
       setAuthState(AuthState.SIGNED_IN);
-      // Set login to dashboard flag to ensure proper flow
-      localStorage.setItem('login_to_dashboard', 'true');
+      AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
+        userId: user.id, 
+        onboarded: user.onboarded 
+      });
     } else if (authEvent === "SIGN_OUT_COMPLETE") {
+      console.log("AuthProvider: Detected sign out complete");
       setAuthState(AuthState.SIGNED_OUT);
-      
-      // Clear any navigation flags when signing out
-      sessionStorage.removeItem('auth_navigation_in_progress');
-      localStorage.removeItem('intentional_navigation_to_chat');
-      localStorage.removeItem('login_to_dashboard');
+      AuthNavigationService.resetAllNavigationState();
     }
   }, [authEvent, user]);
   
   // Track onboarding state
   useEffect(() => {
     if (user) {
+      console.log("AuthProvider: User onboarding status:", user.onboarded);
       if (user.onboarded) {
         setAuthState(AuthState.ONBOARDED);
       } else {
         setAuthState(AuthState.NEEDS_ONBOARDING);
+        AuthNavigationService.setState(NavigationState.ONBOARDING, { userId: user.id });
       }
     }
   }, [user?.onboarded]);

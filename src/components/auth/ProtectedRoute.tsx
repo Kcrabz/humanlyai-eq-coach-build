@@ -15,9 +15,11 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Log navigation information for debugging
   useEffect(() => {
     if (isAuthenticated) {
-      console.log(`ProtectedRoute: Rendering route ${location.pathname}, auth state: authenticated`);
+      console.log(`ProtectedRoute: Rendering protected content at ${location.pathname}`);
+    } else if (!isLoading) {
+      console.log(`ProtectedRoute: Not authenticated for ${location.pathname}, awaiting guard redirect`);
     }
-  }, [isAuthenticated, location.pathname]);
+  }, [isAuthenticated, isLoading, location.pathname]);
   
   // Simplified to just protect content - navigation handled by AuthenticationGuard
   if (isLoading) {

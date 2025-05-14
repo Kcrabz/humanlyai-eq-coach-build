@@ -3,35 +3,30 @@ import { useEffect } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
-import { useLocation, useNavigate } from "react-router-dom";
-import { getAuthState } from "@/services/authService";
-import { AuthNavigationService } from "@/services/authNavigationService";
+import { useLocation } from "react-router-dom";
+import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 const LoginPage = () => {
-  const { isAuthenticated, user } = useAuth();
-  const navigate = useNavigate();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
   
-  // Handle redirection for authenticated users
   useEffect(() => {
+    // Only for debugging - all navigation is handled by AuthenticationGuard
     if (isAuthenticated && user) {
-      console.log("LoginPage: User already authenticated, handling redirection");
+      console.log("LoginPage: User already authenticated", { 
+        id: user.id, 
+        onboarded: user.onboarded 
+      });
       
-      // Check if there's a specific page to return to
-      const authState = getAuthState();
-      const returnTo = authState?.returnTo;
-      
-      if (user.onboarded) {
-        // Onboarded users go to dashboard (never directly to chat)
-        console.log("LoginPage: Redirecting to dashboard");
-        AuthNavigationService.navigateToDashboard(navigate);
-      } else {
-        // Non-onboarded users must complete onboarding
-        console.log("LoginPage: Redirecting to onboarding");
-        navigate("/onboarding", { replace: true });
+      // Set navigation state to authenticated for tracking
+      if (!AuthNavigationService.getState()) {
+        AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
+          userId: user.id, 
+          onboarded: user.onboarded 
+        });
       }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user]);
   
   return (
     <PageLayout>

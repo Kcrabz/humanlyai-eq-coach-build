@@ -1,15 +1,22 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { 
-  isOnAuthPage, isOnOnboardingPage, isOnChatPage, isOnDashboardPage, isRetakingAssessment 
+  AuthNavigationService, 
+  NavigationState,
+  isOnAuthPage, 
+  isOnOnboardingPage, 
+  isOnChatPage, 
+  isOnDashboardPage,
+  isRetakingAssessment,
+  isPublicPage
 } from "@/services/authNavigationService";
 
 /**
- * Enhanced authentication guard with improved navigation control
- * This component is the single source of truth for auth-based navigation
+ * Centralized authentication guard that controls all navigation in the app
+ * This is the ONLY component that should make redirect decisions
  */
 export const AuthenticationGuard = () => {
   const { user, isLoading, authEvent } = useAuth();
@@ -17,45 +24,62 @@ export const AuthenticationGuard = () => {
   const location = useLocation();
   const pathname = location.pathname;
   const searchParams = location.search;
+  const navigatingRef = useRef(false);
   
-  // Main navigation logic - consolidated and simplified
+  // Cleanup navigation state on unmount
+  useEffect(() => {
+    return () => {
+      if (navigatingRef.current) {
+        AuthNavigationService.clearState();
+        navigatingRef.current = false;
+      }
+    };
+  }, []);
+  
+  // Main navigation logic - consolidated and centralized
   useEffect(() => {
     // Skip if still loading auth state
-    if (isLoading) return;
+    if (isLoading) {
+      console.log("AuthGuard: Still loading auth state, skipping navigation check");
+      return;
+    }
     
     // Skip certain paths that have special handling
     if (pathname === "/reset-password" || pathname === "/update-password") {
+      console.log("AuthGuard: On special auth path, skipping navigation");
       return;
     }
     
-    // Check if navigation is currently being handled by another process
-    if (sessionStorage.getItem('auth_navigation_in_progress')) {
-      console.log("Navigation already in progress, skipping guard checks");
+    // Don't interrupt an ongoing navigation
+    const currentNavState = AuthNavigationService.getState();
+    if (currentNavState && Date.now() - currentNavState.timestamp < 1000) {
+      console.log(`AuthGuard: Navigation already in progress (${currentNavState.state}), skipping guard checks`);
       return;
     }
     
-    console.log("AuthGuard evaluating navigation:", { 
+    console.log("AuthGuard: Evaluating navigation:", { 
       pathname, 
       isAuthenticated: !!user, 
       onboarded: user?.onboarded,
       isRetaking: isRetakingAssessment(searchParams)
     });
     
+    // Reset navigation reference
+    navigatingRef.current = false;
+    
     // CASE 1: Not authenticated users
     if (!user) {
-      // Allow access to public pages
-      if (isOnAuthPage(pathname) || pathname === "/") {
+      // If on an auth or public page, allow access
+      if (isPublicPage(pathname)) {
+        console.log("AuthGuard: Unauthenticated user on public page, allowing access");
         return;
       }
       
       // Redirect to login from protected pages
-      console.log("User not authenticated, redirecting to login");
-      sessionStorage.setItem('auth_navigation_in_progress', 'to_login');
+      console.log("AuthGuard: User not authenticated, redirecting to login");
+      AuthNavigationService.setState(NavigationState.INITIAL);
       navigate("/login", { replace: true });
-      
-      setTimeout(() => {
-        sessionStorage.removeItem('auth_navigation_in_progress');
-      }, 500);
+      navigatingRef.current = true;
       return;
     }
     
@@ -63,29 +87,24 @@ export const AuthenticationGuard = () => {
     if (user && !user.onboarded) {
       // Already on onboarding page
       if (isOnOnboardingPage(pathname)) {
+        console.log("AuthGuard: Non-onboarded user on onboarding page, allowing access");
         return;
       }
       
-      // Special case - user is already on auth page
+      // If on auth page, redirect to onboarding
       if (isOnAuthPage(pathname)) {
-        console.log("Non-onboarded user on auth page, redirecting to onboarding");
-        sessionStorage.setItem('auth_navigation_in_progress', 'to_onboarding');
+        console.log("AuthGuard: Non-onboarded user on auth page, redirecting to onboarding");
+        AuthNavigationService.setState(NavigationState.ONBOARDING, { userId: user.id });
         navigate("/onboarding", { replace: true });
-        
-        setTimeout(() => {
-          sessionStorage.removeItem('auth_navigation_in_progress');
-        }, 500);
+        navigatingRef.current = true;
         return;
       }
       
       // All other pages redirect to onboarding
-      console.log("User needs onboarding, redirecting from", pathname);
-      sessionStorage.setItem('auth_navigation_in_progress', 'to_onboarding');
+      console.log("AuthGuard: User needs onboarding, redirecting from", pathname);
+      AuthNavigationService.setState(NavigationState.ONBOARDING, { userId: user.id });
       navigate("/onboarding", { replace: true });
-      
-      setTimeout(() => {
-        sessionStorage.removeItem('auth_navigation_in_progress');
-      }, 500);
+      navigatingRef.current = true;
       return;
     }
     
@@ -93,46 +112,35 @@ export const AuthenticationGuard = () => {
     if (user && user.onboarded) {
       // Redirect from auth pages to dashboard
       if (isOnAuthPage(pathname)) {
-        console.log("Authenticated user on auth page, redirecting to dashboard");
-        sessionStorage.setItem('auth_navigation_in_progress', 'to_dashboard');
+        console.log("AuthGuard: Authenticated user on auth page, redirecting to dashboard");
+        AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { userId: user.id });
         navigate("/dashboard", { replace: true });
-        
-        setTimeout(() => {
-          sessionStorage.removeItem('auth_navigation_in_progress');
-        }, 500);
+        navigatingRef.current = true;
         return;
       }
       
       // Redirect from onboarding to dashboard unless explicitly retaking assessment
       if (isOnOnboardingPage(pathname) && !isRetakingAssessment(searchParams)) {
-        console.log("Onboarded user on onboarding page, redirecting to dashboard");
-        sessionStorage.setItem('auth_navigation_in_progress', 'to_dashboard');
+        console.log("AuthGuard: Onboarded user on onboarding page, redirecting to dashboard");
+        AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { userId: user.id });
         navigate("/dashboard", { replace: true });
-        
-        setTimeout(() => {
-          sessionStorage.removeItem('auth_navigation_in_progress');
-        }, 500);
+        navigatingRef.current = true;
         return;
       }
       
-      // CRITICAL FIX: Don't auto-navigate from dashboard to chat - let users navigate manually
-      // This ensures proper login -> dashboard -> chat flow
-      
-      // Check if we just logged in and we're on the chat page without intentional navigation
-      if (isOnChatPage(pathname) && localStorage.getItem('login_to_dashboard') === 'true' && 
-          !localStorage.getItem('intentional_navigation_to_chat')) {
-        console.log("Preventing unintentional navigation to chat - redirecting to dashboard");
-        localStorage.removeItem('login_to_dashboard');
-        sessionStorage.setItem('auth_navigation_in_progress', 'to_dashboard');
+      // If just authenticated and on chat page WITHOUT intentional navigation, redirect to dashboard
+      if (isOnChatPage(pathname) && 
+          AuthNavigationService.isFromAuthentication() && 
+          !AuthNavigationService.wasIntentionalNavigationToChat()) {
+        console.log("AuthGuard: Preventing unintentional navigation to chat - redirecting to dashboard");
+        AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { userId: user.id });
         navigate("/dashboard", { replace: true });
-        
-        setTimeout(() => {
-          sessionStorage.removeItem('auth_navigation_in_progress');
-        }, 500);
+        navigatingRef.current = true;
         return;
       }
     }
-  }, [user, isLoading, pathname, navigate, location.search]);
+  }, [user, isLoading, pathname, navigate, location.search, authEvent]);
   
+  // We don't render anything - this is purely for navigation control
   return null;
 };

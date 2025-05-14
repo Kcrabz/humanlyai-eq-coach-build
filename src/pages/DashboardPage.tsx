@@ -8,7 +8,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { memo, useEffect, useState, Suspense } from "react";
 import { Loading } from "@/components/ui/loading";
-import { AuthNavigationService } from "@/services/authNavigationService";
+import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 // Memoize card components for performance
 const ActionCard = memo(({ 
@@ -88,17 +88,10 @@ const DashboardContent = memo(() => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
   
-  // Enhanced handler for chat navigation with source parameter
+  // Enhanced handler for chat navigation using our centralized service
   const handleNavigateToChat = () => {
     console.log("DashboardPage: User clicked 'Chat with Kai' button");
-    // Clear login flags if they exist
-    localStorage.removeItem('login_to_dashboard');
-    
-    // Mark this as intentional navigation
-    localStorage.setItem('intentional_navigation_to_chat', 'true');
-    
-    // Navigate to chat with source parameter
-    navigate("/chat?source=dashboard");
+    AuthNavigationService.navigateToChat(navigate);
   };
   
   return (
@@ -167,9 +160,11 @@ const DashboardPage = () => {
   // Delay rendering content until auth is ready
   useEffect(() => {
     if (!isLoading && user) {
-      // Remove login flag when dashboard successfully loads
-      // This prevents unwanted redirects from chat back to dashboard
-      localStorage.removeItem('login_to_dashboard');
+      // Signal ready state when dashboard loads
+      AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { 
+        userId: user.id,
+        timestamp: Date.now()
+      });
       
       // Short delay to ensure profile is loaded
       const timer = setTimeout(() => {

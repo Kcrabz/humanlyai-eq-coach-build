@@ -4,8 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { setAuthState, AuthState } from "@/services/authService";
-import { AuthNavigationService } from "@/services/authNavigationService";
+import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -65,26 +64,30 @@ export function useLoginForm() {
     if (!validateForm()) return;
     
     setIsSubmitting(true);
-    console.log("Login attempt starting...", { email });
+    console.log("Login attempt starting for:", email);
     
     try {
-      // Clear any existing navigation flags
-      AuthNavigationService.clearNavigationState();
+      // Clear existing navigation state
+      AuthNavigationService.resetAllNavigationState();
+      
+      // Set authentication state
+      AuthNavigationService.setState(NavigationState.AUTHENTICATING, { email });
       
       // Use the enhanced login function
       const success = await login(email, password);
       
       if (success) {
-        console.log("Login successful");
-        
-        // Set success toast
+        console.log("Login successful, navigation will be handled by AuthenticationGuard");
         toast.success("Login successful!");
         
-        // Use our centralized navigation service
-        AuthNavigationService.handleSuccessfulLogin(navigate);
+        // We no longer need to handle navigation here - AuthenticationGuard will do it
+        // Just set the authentication state
+        AuthNavigationService.setState(NavigationState.AUTHENTICATED);
       } else {
+        console.log("Login failed");
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);
+        AuthNavigationService.setState(NavigationState.ERROR, { reason: "login_failed" });
         
         if (updatedRateLimit.attemptsRemaining > 0) {
           setErrorMessage(`Login failed. ${updatedRateLimit.attemptsRemaining} attempts remaining.`);
@@ -94,6 +97,10 @@ export function useLoginForm() {
       console.error(`Error during login:`, error);
       setErrorMessage(error instanceof Error ? error.message : "Login failed");
       setRateLimitInfo(clientRateLimit('login_attempt', 5, 60000));
+      AuthNavigationService.setState(NavigationState.ERROR, { 
+        reason: "login_error", 
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
     } finally {
       setIsSubmitting(false);
     }

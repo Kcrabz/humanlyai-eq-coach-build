@@ -3,27 +3,28 @@ import { useEffect } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { setAuthState, AuthState } from "@/services/authService";
+import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 const SignupPage = () => {
   const { user, isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   
-  // Direct users appropriately based on auth status
   useEffect(() => {
-    if (isAuthenticated) {
-      if (user?.onboarded) {
-        // Already onboarded users go to dashboard
-        navigate("/dashboard", { replace: true });
-      } else {
-        // Set auth state for newly registered users
-        setAuthState(AuthState.NEEDS_ONBOARDING);
-        // Send to onboarding
-        navigate("/onboarding", { replace: true });
+    // Only for debugging - all navigation is handled by AuthenticationGuard
+    if (isAuthenticated && user) {
+      console.log("SignupPage: User already authenticated", { 
+        id: user.id, 
+        onboarded: user.onboarded 
+      });
+      
+      // Set navigation state for newly registered users
+      if (!user.onboarded) {
+        AuthNavigationService.setState(NavigationState.ONBOARDING, { 
+          userId: user.id, 
+          fromSignup: true 
+        });
       }
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user]);
   
   return (
     <PageLayout>

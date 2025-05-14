@@ -4,6 +4,7 @@ import { useSignupValidation } from "./signup/useSignupValidation";
 import { useSignupRateLimit } from "./signup/useSignupRateLimit";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 export function useSignupForm() {
   const {
@@ -93,10 +94,23 @@ export function useSignupForm() {
     console.log(`Starting signup process for: ${email}`);
     
     try {
+      // Clear all navigation state
+      AuthNavigationService.resetAllNavigationState();
+      
+      // Set authentication state
+      AuthNavigationService.setState(NavigationState.AUTHENTICATING, { 
+        email, 
+        isSignup: true 
+      });
+      
       // Check server-side rate limiting
       const serverRateLimitError = await checkServerRateLimit(email);
       if (serverRateLimitError) {
         setErrorMessage(serverRateLimitError);
+        AuthNavigationService.setState(NavigationState.ERROR, { 
+          reason: "rate_limit", 
+          error: serverRateLimitError 
+        });
         return;
       }
       
@@ -104,9 +118,16 @@ export function useSignupForm() {
       const success = await signup(email, password, securityQuestionId, securityAnswer);
       console.log(`Signup result:`, { success });
       
-      // If signup was successful, redirect to onboarding
       if (success) {
-        navigate("/onboarding", { replace: true });
+        // We don't need to navigate - AuthenticationGuard will handle it
+        console.log("Signup successful, navigation will be handled by AuthenticationGuard");
+        AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
+          fromSignup: true, 
+          needsOnboarding: true 
+        });
+      } else {
+        console.log("Signup failed");
+        AuthNavigationService.setState(NavigationState.ERROR, { reason: "signup_failed" });
       }
     } catch (error) {
       console.error(`Error during signup:`, error);
@@ -115,6 +136,12 @@ export function useSignupForm() {
       
       // Update client-side rate limit info after failure
       updateRateLimitAfterFailure();
+      
+      // Update navigation state
+      AuthNavigationService.setState(NavigationState.ERROR, { 
+        reason: "signup_error", 
+        error: message 
+      });
     } finally {
       console.log(`Signup process completed, resetting submission state`);
       setIsSubmitting(false);
