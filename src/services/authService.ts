@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { User } from "@/types";
+import { User, SubscriptionTier } from "@/types";
 import { toast } from "sonner";
 
 /**
@@ -111,7 +112,7 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
     const user: User = {
       ...profileData,
       email,
-      subscription_tier: profileData.subscription_tier || 'free'
+      subscription_tier: (profileData.subscription_tier as SubscriptionTier) || 'free'
     };
     
     return user;
