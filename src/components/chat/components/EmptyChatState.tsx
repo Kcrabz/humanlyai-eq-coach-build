@@ -1,9 +1,12 @@
 
 import React from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function EmptyChatState() {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+    <div className={`flex flex-col items-center justify-center ${isMobile ? 'h-full min-h-[50vh]' : 'h-full'} text-center p-4`}>
       <div className="mb-4">
         <span className="inline-block p-4 rounded-full bg-humanly-teal-light/10">
           <svg

@@ -2,6 +2,7 @@
 /* Base PWA styles */
 html.pwa {
   overscroll-behavior-y: none;
+  height: 100%;
 }
 
 body.pwa {
@@ -9,32 +10,42 @@ body.pwa {
   -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
+  height: 100%;
 }
 
 /* PWA-specific mobile optimizations */
 @media (max-width: 767px) {
   .pwa .enhanced-header {
-    padding-top: env(safe-area-inset-top);
+    padding-top: max(8px, env(safe-area-inset-top));
     padding-bottom: 8px;
     padding-left: 16px;
     padding-right: 16px;
   }
   
   .pwa form.p-3 {
-    padding-bottom: env(safe-area-inset-bottom, 16px);
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
     padding-left: 16px;
     padding-right: 16px;
   }
   
-  /* Better spacing for PWA send button */
-  .pwa .send-button-mobile {
-    bottom: calc(env(safe-area-inset-bottom, 16px) + 10px);
-    right: 20px;
+  /* Ensure chat container takes full viewport height */
+  .pwa .main-content {
+    height: 100vh !important;
+    height: 100dvh !important; /* Dynamic viewport height for modern browsers */
   }
   
-  /* Content area adjustments for PWA */
-  .pwa .main-content {
-    padding-bottom: env(safe-area-inset-bottom, 0);
+  /* Adjust flex layout for chat content */
+  .pwa .main-content > div {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+  
+  /* Fix ChatList to take remaining space */
+  .pwa .flex-1.overflow-y-auto {
+    min-height: 0;
+    flex: 1 1 auto;
   }
   
   /* Better right sidebar positioning for PWA */
