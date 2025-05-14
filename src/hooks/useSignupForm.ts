@@ -114,8 +114,12 @@ export function useSignupForm() {
         return;
       }
       
-      // Attempt to sign up the user
-      const success = await signup(email, password, securityQuestionId, securityAnswer);
+      // Attempt to sign up the user - Fix parameter count here
+      const success = await signup(email, password, {
+        securityQuestionId,
+        securityAnswer
+      });
+      
       console.log(`Signup result:`, { success });
       
       if (success) {

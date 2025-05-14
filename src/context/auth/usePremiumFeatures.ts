@@ -13,6 +13,9 @@ export function usePremiumFeatures(user: User | null) {
   const isPremiumMember = useMemo(() => 
     user?.subscription_tier === 'premium', 
   [user?.subscription_tier]);
+  
+  // Derived flag for premium features
+  const hasPremiumFeatures = isPremiumMember;
 
   // Fetch premium user data when user logs in and is premium
   useEffect(() => {
@@ -45,6 +48,7 @@ export function usePremiumFeatures(user: User | null) {
 
   return {
     isPremiumMember,
+    hasPremiumFeatures,
     userStreakData,
     userAchievements
   };

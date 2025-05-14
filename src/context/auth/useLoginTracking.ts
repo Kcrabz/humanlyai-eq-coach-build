@@ -1,31 +1,22 @@
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { User } from "@/types";
-import { supabase } from "@/integrations/supabase/client";
 
-export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
+export function useLoginTracking(authEvent: string | null) {
+  const [loginEvent, setLoginEvent] = useState<string | null>(null);
+  
   useEffect(() => {
-    const recordLogin = async () => {
-      if (!isAuthenticated || !user?.id) return;
+    if (authEvent === 'SIGN_IN_COMPLETE') {
+      setLoginEvent('LOGIN_COMPLETE');
+      
+      // Reset after a delay
+      const timer = setTimeout(() => {
+        setLoginEvent(null);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [authEvent]);
 
-      try {
-        // Record login using RPC function
-        await supabase.rpc('record_user_login', { 
-          user_id_param: user.id,
-          user_agent_param: navigator.userAgent
-        });
-
-        // Call increment-streak function to update user streak
-        await supabase.functions.invoke('increment-streak', {
-          body: { user_id: user.id }
-        });
-        
-        console.log("Login recorded and streak updated successfully");
-      } catch (error) {
-        console.error("Failed to record login or update streak:", error);
-      }
-    };
-
-    recordLogin();
-  }, [isAuthenticated, user?.id]);
+  return { loginEvent };
 }

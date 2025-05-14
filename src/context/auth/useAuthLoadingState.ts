@@ -1,12 +1,9 @@
 
 import { useState, useEffect } from "react";
-import { User } from "@/types";
 
 export function useAuthLoadingState(
   isSessionLoading: boolean, 
-  user: User | null, 
-  authEvent: string | null, 
-  profileLoaded: boolean
+  isLoadingUser: boolean
 ) {
   // Consolidated loading state
   const [isLoading, setIsLoading] = useState(true);
@@ -14,7 +11,7 @@ export function useAuthLoadingState(
   // Fast-track loading state updates - optimize to complete faster
   useEffect(() => {
     // Fast path: mark as loaded as soon as we know the session state
-    if (!isSessionLoading) {
+    if (!isSessionLoading && !isLoadingUser) {
       setIsLoading(false);
     }
     
@@ -27,7 +24,7 @@ export function useAuthLoadingState(
     }, 500);
     
     return () => clearTimeout(safetyTimeout);
-  }, [isSessionLoading, isLoading]);
+  }, [isSessionLoading, isLoadingUser, isLoading]);
 
-  return { isLoading };
+  return { isLoading, setIsLoading };
 }

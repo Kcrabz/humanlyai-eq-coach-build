@@ -7,6 +7,9 @@ import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthLoadingState } from "./useAuthLoadingState";
 import { usePremiumFeatures } from "./usePremiumFeatures";
 import { useLoginTracking } from "./useLoginTracking";
+import { useProfileCore } from "@/hooks/useProfileCore";
+import { useProfileActions } from "@/hooks/useProfileActions";
+import { useAuthCore } from "@/hooks/useAuthCore";
 
 /**
  * AuthProvider - Enhanced with mobile/PWA detection
@@ -31,7 +34,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isLoadingUser,
     setUser,
     setUserProfile,
+    userHasArchetype,
+    getUserSubscription
   } = useAuthDerivedState(session, profileLoaded);
+
+  // Core profile functionality
+  const profileCore = useProfileCore(setUser);
+  
+  // Profile action handlers
+  const profileActions = useProfileActions(setUser);
+  
+  // Auth core functionality
+  const authCore = useAuthCore();
 
   // Auth actions with error handling wrappers
   const {
@@ -40,17 +54,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     signup,
     resetPassword,
     updatePassword,
-    updateUserProfile
-  } = useAuthActionWrappers(setUser, setUserProfile);
+    updateUserProfile,
+    updateProfile,
+    forceUpdateProfile,
+    setName,
+    setArchetype,
+    setCoachingMode,
+    setOnboarded
+  } = useAuthActionWrappers(setUser, profileCore, profileActions, authCore);
 
   // Consolidated loading state
-  const { isLoading, setIsLoading } = useAuthLoadingState(isSessionLoading, isLoadingUser);
+  const { isLoading } = useAuthLoadingState(isSessionLoading, isLoadingUser);
 
   // Track login events for UX optimization
   const { loginEvent } = useLoginTracking(authEvent);
 
   // Process premium features and capabilities
-  const { hasPremiumFeatures } = usePremiumFeatures(user?.subscription_tier);
+  const { isPremiumMember, hasPremiumFeatures, userStreakData, userAchievements } = usePremiumFeatures(user);
 
   // Special logging for PWA/mobile
   useEffect(() => {
@@ -78,6 +98,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         resetPassword,
         updatePassword,
         updateUserProfile,
+        updateProfile,
+        forceUpdateProfile,
         authEvent,
         loginEvent,
         profileLoaded,
@@ -86,7 +108,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         hasPremiumFeatures,
         sessionReady,
         isPwaMode,
-        isMobileDevice
+        isMobileDevice,
+        setName,
+        setArchetype,
+        setCoachingMode,
+        setOnboarded,
+        setUser,
+        isPremiumMember,
+        userStreakData,
+        userAchievements,
+        getUserSubscription,
+        userHasArchetype
       }}
     >
       {children}
