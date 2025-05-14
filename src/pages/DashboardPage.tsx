@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -82,19 +81,18 @@ const DashboardContent = memo(() => {
   const handleReferral = () => {
     const referralLink = `${window.location.origin}?ref=${user?.id}`;
     navigator.clipboard.writeText(referralLink);
-    // Removed success toast
   };
   
   const openFeedbackForm = () => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
   
-  // Handle navigation to chat
+  // Handle navigation to chat - simplified to prevent redirection loops
   const handleNavigateToChat = () => {
-    // Mark the navigation as intentional going to chat
-    setAuthState(AuthState.ONBOARDED, { navigatingTo: 'chat', source: 'dashboard' });
+    // Set explicit flag that we're navigating intentionally
+    localStorage.setItem('intentional_navigation_to_chat', 'true');
     
-    // Navigate to the chat page with source parameter
+    // Navigate to chat with source parameter
     navigate("/chat?source=dashboard");
   };
   

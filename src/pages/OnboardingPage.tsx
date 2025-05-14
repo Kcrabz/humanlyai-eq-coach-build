@@ -10,7 +10,6 @@ import { hasRetakingParameter, getAuthState, AuthState, setAuthState } from "@/s
 
 const OnboardingPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [searchParams] = useSearchParams();
   const location = useLocation();
   const navigate = useNavigate();
   
@@ -37,12 +36,12 @@ const OnboardingPage = () => {
     }
   }, [isLoading, isAuthenticated, navigate]);
   
-  // Set onboarding state when page loads
+  // Set onboarding state when page loads - but avoid redirections
   useEffect(() => {
-    if (isAuthenticated && user && !user.onboarded) {
+    if (isAuthenticated && user && !user.onboarded && !isRetaking) {
       setAuthState(AuthState.NEEDS_ONBOARDING);
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isRetaking]);
   
   if (isLoading) {
     return (

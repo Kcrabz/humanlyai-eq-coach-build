@@ -1,6 +1,6 @@
 
 import { useEffect, lazy, Suspense, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ChatProvider } from "@/context/ChatContext";
 import { useAuth } from "@/context/AuthContext";
@@ -11,7 +11,7 @@ import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar } from "@/components/chat/sidebar/ChatRightSidebar";
 import { ResponsiveMainContent } from "@/components/chat/components/ResponsiveMainContent";
 import { UpdateNotification } from "@/components/pwa/UpdateNotification";
-import { getAuthState, AuthState, getSourceParameter } from "@/services/authService";
+import { getAuthState, AuthState, setAuthState } from "@/services/authService";
 
 // Lazy load components that aren't immediately visible
 const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
@@ -24,37 +24,40 @@ const ChatPage = () => {
   } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   
   // Get source parameter to detect navigation from dashboard
-  const source = getSourceParameter(location.search);
+  const source = new URLSearchParams(location.search).get('source');
   const isFromDashboard = source === 'dashboard';
   
   // Keep track of previous coaching mode to detect changes
   const prevCoachingModeRef = useRef<string | undefined>(undefined);
-
-  // Prevent post-login redirect to dashboard when coming from dashboard
+  
+  // Check if the user is onboarded - only once when component mounts
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      // Check if we just logged in but are coming from dashboard
-      const authState = getAuthState();
-      const isJustLoggedIn = authState?.state === AuthState.SIGNED_IN && 
-                           Date.now() - authState.timestamp < 30000;
-      
-      if (isJustLoggedIn && !isFromDashboard) {
-        console.log("Post-login detected on chat page, redirecting to dashboard");
-        navigate("/dashboard", { replace: true });
-      }
-    }
-  }, [isAuthenticated, navigate, isLoading, isFromDashboard]);
-
-  // Verify authentication and onboarding status  
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
+    // Wait until authentication is complete
+    if (isLoading) return;
+    
+    if (!isAuthenticated) {
+      // Not logged in - redirect to login
+      console.log("User not authenticated, redirecting to login");
       navigate("/login", { state: { returnTo: '/chat' } });
-    } else if (!isLoading && isAuthenticated && user && !user.onboarded) {
-      navigate("/onboarding");
+      return;
     }
-  }, [isAuthenticated, navigate, user?.onboarded, isLoading]);
+    
+    if (user && !user.onboarded) {
+      // Logged in but not onboarded - redirect to onboarding
+      console.log("User not onboarded, redirecting to onboarding");
+      navigate("/onboarding", { replace: true });
+      return;
+    }
+    
+    // If we get here, the user is authenticated and onboarded
+    // Mark the chat page as the current destination to prevent further redirects
+    setAuthState(AuthState.ONBOARDED, { currentPage: 'chat', timestamp: Date.now() });
+    
+    console.log("User authenticated and onboarded, staying on chat page");
+  }, [isAuthenticated, user, isLoading, navigate]);
 
   // Reset introduction when coaching mode changes
   useEffect(() => {
