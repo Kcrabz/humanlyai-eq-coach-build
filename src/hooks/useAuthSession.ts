@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { markLoginSuccess, isRunningAsPWA } from '@/utils/loginRedirectUtils';
 
 /**
- * Optimized hook for managing authentication session state
+ * Further optimized hook for managing authentication session state
  */
 export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -36,7 +36,8 @@ export const useAuthSession = () => {
             // Fast path - quickly exit loading state if we have a session
             setTimeout(() => {
               setIsLoading(false);
-            }, 100);
+              setProfileLoaded(true); // Also set profile as loaded for instant UI rendering
+            }, 50); // Reduced timeout for faster loading
           }
         } catch (e) {
           console.warn("Could not parse stored session", e);
@@ -45,7 +46,7 @@ export const useAuthSession = () => {
         // Fast negative path - no session found, exit loading quickly
         setTimeout(() => {
           setIsLoading(false);
-        }, 100);
+        }, 50); // Reduced from 100ms for faster loading
       }
     } catch (e) {
       console.warn("Error accessing localStorage", e);
@@ -150,14 +151,14 @@ export const useAuthSession = () => {
       }
     });
 
-    // Safety timeout to prevent indefinite loading - 200ms max wait (reduced from 500ms)
+    // Safety timeout to prevent indefinite loading - 150ms max wait (reduced from 200ms)
     const safetyTimeout = setTimeout(() => {
       if (isMounted && isLoading) {
         console.log("Safety timeout triggered - forcing auth state to complete loading");
         setIsLoading(false);
         setInitialized(true);
       }
-    }, 200);
+    }, 150);
 
     return () => {
       isMounted = false;

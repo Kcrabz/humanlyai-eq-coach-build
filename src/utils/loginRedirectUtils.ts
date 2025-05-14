@@ -1,6 +1,6 @@
 
 /**
- * Simple utility functions for login success tracking
+ * Improved utility functions for login success tracking
  */
 
 const LOGIN_SUCCESS_KEY = 'login_success_timestamp';
@@ -19,18 +19,20 @@ export const markLoginSuccess = (): void => {
  * Clears the login success flag
  */
 export const clearLoginSuccess = (): void => {
+  console.log("Clearing login success flag");
   localStorage.removeItem(LOGIN_SUCCESS_KEY);
 };
 
 /**
- * Checks if login was successful recently (within last 5 minutes)
+ * Checks if login was successful recently (within last 30 seconds)
+ * Shortened time window to avoid stale redirects
  */
 export const wasLoginSuccessful = (): boolean => {
   const timestamp = localStorage.getItem(LOGIN_SUCCESS_KEY);
   if (timestamp) {
     const loginTime = parseInt(timestamp);
-    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-    return loginTime > fiveMinutesAgo;
+    const thirtySecondsAgo = Date.now() - 30 * 1000; // Reduced from 5 minutes to 30 seconds
+    return loginTime > thirtySecondsAgo;
   }
   return false;
 };
