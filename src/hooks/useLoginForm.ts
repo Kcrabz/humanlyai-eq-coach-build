@@ -98,6 +98,7 @@ export function useLoginForm() {
         console.log("Login successful in form handler");
         setLoginSuccess(true);
         markLoginSuccess();
+        toast.success("Login successful!");
         
         // Use React Router for better navigation
         navigate('/dashboard', { replace: true });

@@ -7,6 +7,7 @@ import { AuthError } from "./AuthError";
 import { AuthSubmitButton } from "./AuthSubmitButton";
 import { RateLimitWarning } from "./rate-limit/RateLimitWarning";
 import { EmailPasswordFields } from "./login/EmailPasswordFields";
+import { toast } from "sonner";
 
 export function LoginForm() {
   const {
@@ -21,23 +22,28 @@ export function LoginForm() {
     handleSubmit
   } = useLoginForm();
   
-  const { authEvent } = useAuth();
+  const { authEvent, user } = useAuth();
   
   // Debug authentication process
   useEffect(() => {
     console.log("LoginForm: Auth state updated", { 
       authEvent,
       loginSuccess,
+      userId: user?.id,
       timestamp: new Date().toISOString()
     });
     
-    // When login is successful according to the form hook
-    if (loginSuccess) {
+    // When login is successful according to the form hook or auth event
+    if (loginSuccess || authEvent === 'SIGN_IN_COMPLETE') {
       // Store login success in localStorage as a fallback
       localStorage.setItem('login_form_success', 'true');
       console.log("LoginForm: Login success detected, set fallback flag");
+      
+      // Display welcome toast
+      const userName = user?.name ? `, ${user.name.split(' ')[0]}` : '';
+      toast.success(`Welcome back${userName}!`);
     }
-  }, [authEvent, loginSuccess]);
+  }, [authEvent, loginSuccess, user]);
   
   return (
     <div className="w-full max-w-md space-y-6">

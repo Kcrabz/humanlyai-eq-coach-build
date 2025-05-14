@@ -24,8 +24,12 @@ export const AuthenticationGuard = () => {
   // Handle immediate welcome toast for better UX
   useEffect(() => {
     if (user && (authEvent === 'SIGN_IN_COMPLETE' || wasLoginSuccessful() || isFirstLoginAfterLoad())) {
-      // Show welcome toast
-      toast.success(`Welcome back${user.name ? `, ${user.name}` : ''}!`);
+      // Show welcome toast if not already shown in LoginForm
+      if (!document.body.getAttribute('data-toast-shown')) {
+        const firstName = user?.name ? user.name.split(" ")[0] : '';
+        toast.success(`Welcome back${firstName ? `, ${firstName}` : ''}!`);
+        document.body.setAttribute('data-toast-shown', 'true');
+      }
       
       // Mark login as successful for redirects
       if (authEvent === 'SIGN_IN_COMPLETE') {
@@ -38,6 +42,11 @@ export const AuthenticationGuard = () => {
         }
       }
     }
+    
+    // Clear toast flag when leaving the page
+    return () => {
+      document.body.removeAttribute('data-toast-shown');
+    };
   }, [user, authEvent, pathname, navigate]);
   
   // Main auth redirection effect - simplified for performance
