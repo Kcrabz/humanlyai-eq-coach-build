@@ -5,6 +5,7 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getAuthState } from "@/services/authService";
+import { AuthNavigationService } from "@/services/authNavigationService";
 
 const LoginPage = () => {
   const { isAuthenticated, user } = useAuth();
@@ -19,8 +20,8 @@ const LoginPage = () => {
       const returnTo = authState?.returnTo;
       
       if (user.onboarded) {
-        // Onboarded users go to returnTo path or dashboard
-        navigate(returnTo || "/dashboard", { replace: true });
+        // Onboarded users go to dashboard (never directly to chat)
+        AuthNavigationService.navigateToDashboard(navigate);
       } else {
         // Non-onboarded users must complete onboarding
         navigate("/onboarding", { replace: true });

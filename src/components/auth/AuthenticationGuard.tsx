@@ -114,6 +114,9 @@ export const AuthenticationGuard = () => {
         }, 500);
         return;
       }
+      
+      // FIX: Don't auto-navigate from dashboard to chat - let users navigate manually
+      // This prevents the dashboard from being skipped
     }
   }, [user, isLoading, pathname, navigate, location.search]);
   

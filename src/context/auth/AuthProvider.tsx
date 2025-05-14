@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import AuthContext from "./AuthContext";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -115,6 +114,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAuthState(AuthState.SIGNED_IN);
     } else if (authEvent === "SIGN_OUT_COMPLETE") {
       setAuthState(AuthState.SIGNED_OUT);
+      
+      // Clear any navigation flags when signing out
+      sessionStorage.removeItem('auth_navigation_in_progress');
     }
   }, [authEvent, user]);
   

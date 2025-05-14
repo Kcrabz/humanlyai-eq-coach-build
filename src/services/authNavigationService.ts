@@ -6,8 +6,8 @@ import { User } from "@/types";
 const AUTH_STATE_STABILIZE_DELAY = 200; // ms to wait for auth state to stabilize
 
 /**
- * Centralized auth navigation service - Version 2.0
- * Completely refactored to eliminate navigation conflicts and race conditions
+ * Centralized auth navigation service - Version 2.1
+ * Fixed navigation flow to ensure proper routing login -> dashboard
  */
 export const AuthNavigationService = {
   /**
@@ -47,6 +47,21 @@ export const AuthNavigationService = {
     
     // Navigate and clear flag after navigation completes
     navigate("/chat");
+    
+    setTimeout(() => {
+      sessionStorage.removeItem('auth_navigation_in_progress');
+    }, 500);
+  },
+  
+  /**
+   * Navigate to dashboard with navigation marker
+   */
+  navigateToDashboard: (navigate: NavigateFunction): void => {
+    // Set intention flag directly in session storage
+    sessionStorage.setItem('auth_navigation_in_progress', 'to_dashboard');
+    
+    // Navigate and clear flag after navigation completes
+    navigate("/dashboard");
     
     setTimeout(() => {
       sessionStorage.removeItem('auth_navigation_in_progress');
