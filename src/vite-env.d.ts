@@ -5,4 +5,5 @@
 interface Window {
   deferredPrompt: any;
   isPwaMode: () => boolean;
+  isMobileDevice: () => boolean;
 }

@@ -39,8 +39,22 @@ const registerServiceWorker = async () => {
 // Enhanced PWA detection with proper class application
 const initPwaFeatures = () => {
   try {
-    const isRunningAsPWA = window.matchMedia('(display-mode: standalone)').matches || 
+    // Detect PWA mode with multiple checks to ensure reliability
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                           (window.navigator as any).standalone === true;
+    const isMobileApp = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    // Comprehensive detection information
+    console.log("PWA detection:", {
+      isStandalone,
+      isMobileUserAgent: isMobileApp,
+      standalone: (window.navigator as any).standalone,
+      matchMedia: window.matchMedia('(display-mode: standalone)').matches,
+      userAgent: navigator.userAgent,
+      previouslyDetected: localStorage.getItem('is_pwa_mode') === 'true'
+    });
+    
+    const isRunningAsPWA = isStandalone;
     
     // Apply the PWA class to both html and body for complete styling coverage
     if (isRunningAsPWA) {
@@ -58,9 +72,25 @@ const initPwaFeatures = () => {
         console.log('PWA: Storing desired path:', window.location.pathname);
         sessionStorage.setItem('pwa_desired_path', window.location.pathname);
       }
-    } else {
+      
+      // For mobile devices, add special mobile-related classes too
+      if (isMobileApp) {
+        document.documentElement.classList.add('mobile');
+        document.body.classList.add('mobile');
+        localStorage.setItem('is_mobile_device', 'true');
+      }
+    } else if (isMobileApp) {
+      // Even if not PWA, still track mobile status
+      document.documentElement.classList.add('mobile');
+      document.body.classList.add('mobile');
+      localStorage.setItem('is_mobile_device', 'true');
+      
       // Ensure we're not in PWA mode
       localStorage.removeItem('is_pwa_mode');
+    } else {
+      // Ensure we're not in PWA or mobile mode
+      localStorage.removeItem('is_pwa_mode');
+      localStorage.removeItem('is_mobile_device');
     }
   } catch (err) {
     console.error('Error detecting PWA mode:', err);
@@ -70,10 +100,23 @@ const initPwaFeatures = () => {
 // Enhanced utility function to detect if app is in PWA mode - properly defined as a window property
 window.isPwaMode = function(): boolean {
   try {
+    // Check both standard detection and our custom flag
     return (
       window.matchMedia('(display-mode: standalone)').matches || 
       (window.navigator as any).standalone === true ||
       localStorage.getItem('is_pwa_mode') === 'true'
+    );
+  } catch (e) {
+    return false;
+  }
+};
+
+// Add utility to detect mobile devices
+window.isMobileDevice = function(): boolean {
+  try {
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      localStorage.getItem('is_mobile_device') === 'true'
     );
   } catch (e) {
     return false;
@@ -103,8 +146,8 @@ const initializeApp = () => {
     
     // Add additional PWA detection for login flow
     window.addEventListener('DOMContentLoaded', () => {
-      if (window.isPwaMode()) {
-        console.log('PWA detected on DOMContentLoaded, current path:', window.location.pathname);
+      if (window.isPwaMode() || window.isMobileDevice()) {
+        console.log('Mobile/PWA detected on DOMContentLoaded, current path:', window.location.pathname);
       }
     });
     

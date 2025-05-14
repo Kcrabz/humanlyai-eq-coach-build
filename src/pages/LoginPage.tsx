@@ -8,14 +8,15 @@ import { AuthNavigationService, NavigationState } from "@/services/authNavigatio
 import { toast } from "sonner";
 
 const LoginPage = () => {
-  const { user, isAuthenticated, authEvent } = useAuth();
+  const { user, isAuthenticated, authEvent, isPwaMode, isMobileDevice } = useAuth();
   const location = useLocation();
-  const isPwaMode = typeof window !== 'undefined' ? window.isPwaMode() : false;
   
   useEffect(() => {
-    // Log detailed information about PWA login state
-    if (isPwaMode) {
-      console.log("LoginPage: Running in PWA mode", { 
+    // Log detailed information about mobile/PWA login state
+    if (isPwaMode || isMobileDevice) {
+      console.log("LoginPage: Running in special mode", { 
+        isPwa: isPwaMode,
+        isMobile: isMobileDevice,
         isAuthenticated, 
         userId: user?.id,
         authEvent,
@@ -29,23 +30,30 @@ const LoginPage = () => {
       console.log("LoginPage: User already authenticated", { 
         id: user.id, 
         onboarded: user.onboarded,
-        isPwaMode
+        isPwa: isPwaMode,
+        isMobile: isMobileDevice
       });
       
       // Set navigation state to authenticated for tracking
       AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
         userId: user.id, 
         onboarded: user.onboarded,
-        isPwa: isPwaMode
+        isPwa: isPwaMode,
+        isMobile: isMobileDevice,
+        fromLoginPage: true
       });
       
-      // In PWA mode, show a toast to indicate successful login
-      if (isPwaMode && authEvent === "SIGN_IN_COMPLETE") {
+      // In mobile/PWA mode, show a toast to indicate successful login
+      if ((isPwaMode || isMobileDevice) && authEvent === "SIGN_IN_COMPLETE") {
         toast.success("Login successful! Redirecting...");
+        
+        // Set additional flags to ensure smooth navigation
+        sessionStorage.setItem('login_redirect_pending', 'true');
+        
         // AuthenticationGuard will handle the actual navigation
       }
     }
-  }, [isAuthenticated, user, isPwaMode, authEvent, location.pathname]);
+  }, [isAuthenticated, user, isPwaMode, isMobileDevice, authEvent, location.pathname]);
   
   return (
     <PageLayout>

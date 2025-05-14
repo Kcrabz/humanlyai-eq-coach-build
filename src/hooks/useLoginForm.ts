@@ -18,8 +18,8 @@ export function useLoginForm() {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
   
-  const { login } = useAuth();
-  const isPwaMode = typeof window !== 'undefined' ? window.isPwaMode() : false;
+  const { login, isPwaMode, isMobileDevice } = useAuth();
+  const isSpecialMode = isPwaMode || isMobileDevice;
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -45,16 +45,25 @@ export function useLoginForm() {
     return true;
   };
   
-  // Effect to record PWA login success
+  // Effect to record mobile/PWA login success
   useEffect(() => {
-    if (loginTimestamp && isPwaMode) {
-      console.log("Recording PWA login timestamp:", loginTimestamp);
-      localStorage.setItem('pwa_login_timestamp', loginTimestamp.toString());
+    if (loginTimestamp && isSpecialMode) {
+      console.log("Recording special mode login timestamp:", loginTimestamp, {
+        isPwa: isPwaMode,
+        isMobile: isMobileDevice
+      });
       
-      // Mark as just logged in for special handling
-      sessionStorage.setItem('just_logged_in', 'true');
+      if (isPwaMode) {
+        localStorage.setItem('pwa_login_timestamp', loginTimestamp.toString());
+        sessionStorage.setItem('just_logged_in', 'true');
+      }
+      
+      if (isMobileDevice) {
+        localStorage.setItem('mobile_login_timestamp', loginTimestamp.toString());
+        sessionStorage.setItem('mobile_just_logged_in', 'true');
+      }
     }
-  }, [loginTimestamp, isPwaMode]);
+  }, [loginTimestamp, isSpecialMode, isPwaMode, isMobileDevice]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +84,10 @@ export function useLoginForm() {
     if (!validateForm()) return;
     
     setIsSubmitting(true);
-    console.log(`Login attempt starting for: ${email} ${isPwaMode ? "(PWA mode)" : ""}`);
+    console.log(`Login attempt starting for: ${email}`, {
+      isPwa: isPwaMode,
+      isMobile: isMobileDevice
+    });
     
     try {
       // Clear existing navigation state
@@ -84,26 +96,41 @@ export function useLoginForm() {
       // Set authentication state
       AuthNavigationService.setState(NavigationState.AUTHENTICATING, { 
         email,
-        isPwa: isPwaMode
+        isPwa: isPwaMode,
+        isMobile: isMobileDevice
       });
       
       // Use the enhanced login function
       const success = await login(email, password);
       
       if (success) {
-        console.log(`Login successful ${isPwaMode ? "(PWA mode)" : ""}, navigation will be handled by AuthenticationGuard`);
+        console.log(`Login successful`, {
+          isPwa: isPwaMode,
+          isMobile: isMobileDevice
+        });
         
-        // Record login timestamp for PWA handling
+        // Record login timestamp for special handling
         const timestamp = Date.now();
         setLoginTimestamp(timestamp);
         
-        // We don't navigate here, AuthenticationGuard will handle it
+        // Set special flags for mobile/PWA
+        if (isPwaMode) {
+          sessionStorage.setItem('pwa_login_complete', 'true');
+        }
+        
+        if (isMobileDevice) {
+          sessionStorage.setItem('mobile_login_complete', 'true');
+        }
+        
+        // AuthenticationGuard will handle navigation
         AuthNavigationService.setState(NavigationState.AUTHENTICATED, {
           timestamp,
-          isPwa: isPwaMode
+          isPwa: isPwaMode,
+          isMobile: isMobileDevice,
+          loginSuccess: true
         });
         
-        if (!isPwaMode) {
+        if (!isSpecialMode) {
           toast.success("Login successful!");
         }
       } else {
@@ -112,7 +139,8 @@ export function useLoginForm() {
         setRateLimitInfo(updatedRateLimit);
         AuthNavigationService.setState(NavigationState.ERROR, { 
           reason: "login_failed",
-          isPwa: isPwaMode
+          isPwa: isPwaMode,
+          isMobile: isMobileDevice
         });
         
         if (updatedRateLimit.attemptsRemaining > 0) {
@@ -126,7 +154,8 @@ export function useLoginForm() {
       AuthNavigationService.setState(NavigationState.ERROR, { 
         reason: "login_error", 
         error: error instanceof Error ? error.message : "Unknown error",
-        isPwa: isPwaMode
+        isPwa: isPwaMode,
+        isMobile: isMobileDevice
       });
     } finally {
       setIsSubmitting(false);
