@@ -6,7 +6,7 @@ import { AuthSubmitButton } from "./AuthSubmitButton";
 import { RateLimitWarning } from "./rate-limit/RateLimitWarning";
 import { EmailPasswordFields } from "./login/EmailPasswordFields";
 import { useAuth } from "@/context/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 export function LoginForm() {
@@ -21,21 +21,30 @@ export function LoginForm() {
     handleSubmit
   } = useLoginForm();
   
-  const { isPwaMode, isMobileDevice, authEvent } = useAuth();
+  const { isPwaMode, isMobileDevice, authEvent, user } = useAuth();
   const isSpecialMode = isPwaMode || isMobileDevice;
+  const [loginStatus, setLoginStatus] = useState<string>('idle');
   
-  // Add special handling for mobile login
+  // Enhanced mobile login handling with visual feedback
   useEffect(() => {
-    if (isSpecialMode && authEvent === 'SIGN_IN_COMPLETE') {
-      // Show toast for mobile users
-      toast.success("Login successful! Redirecting...");
-      
-      // Set login redirect flag for mobile
-      sessionStorage.setItem('login_redirect_pending', 'true');
-      
-      console.log("LoginForm: Mobile login successful, setting redirect pending flag");
+    if (isSpecialMode) {
+      if (authEvent === 'SIGN_IN_COMPLETE') {
+        // Show toast for mobile users
+        toast.success("Login successful! Redirecting...");
+        
+        // Set login redirect flag for mobile
+        sessionStorage.setItem('login_redirect_pending', 'true');
+        sessionStorage.setItem('just_logged_in', 'true');
+        setLoginStatus('success');
+        
+        console.log("LoginForm: Mobile login successful, setting redirect pending flag", {
+          isPwa: isPwaMode,
+          isMobile: isMobileDevice,
+          hasUser: !!user
+        });
+      }
     }
-  }, [isSpecialMode, authEvent]);
+  }, [isSpecialMode, authEvent, isPwaMode, isMobileDevice, user]);
   
   return (
     <div className="w-full max-w-md space-y-6">
@@ -51,6 +60,12 @@ export function LoginForm() {
       <form className="space-y-4" onSubmit={handleSubmit}>
         {errorMessage && <AuthError message={errorMessage} />}
         
+        {loginStatus === 'success' && (
+          <div className="bg-green-50 text-green-800 p-2 rounded border border-green-200 text-center">
+            Login successful! Please wait while we redirect you...
+          </div>
+        )}
+        
         <RateLimitWarning rateLimitInfo={rateLimitInfo} />
         
         <EmailPasswordFields
@@ -58,15 +73,15 @@ export function LoginForm() {
           password={password}
           handleEmailChange={handleEmailChange}
           handlePasswordChange={handlePasswordChange}
-          isSubmitting={isSubmitting}
+          isSubmitting={isSubmitting || loginStatus === 'success'}
           isRateLimited={rateLimitInfo?.isLimited || false}
         />
         
         <AuthSubmitButton 
-          isSubmitting={isSubmitting} 
+          isSubmitting={isSubmitting || loginStatus === 'success'} 
           text="Sign In" 
-          loadingText="Signing in..." 
-          disabled={rateLimitInfo?.isLimited}
+          loadingText={loginStatus === 'success' ? "Redirecting..." : "Signing in..."} 
+          disabled={rateLimitInfo?.isLimited || loginStatus === 'success'}
         />
         
         {isSpecialMode && (

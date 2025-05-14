@@ -86,11 +86,41 @@ export const AuthenticationGuard = () => {
                 navigate('/onboarding', { replace: true });
               }
             }
-          }, 2500); // Give more time for initial load
+          }, 2000); // Increased timeout for initial recovery
         }
       }
     }
   }, [isLoading, isInitialized, pathname, isPwaMode, isMobileDevice, isSpecialMode, user, authEvent, navigate]);
+
+  // Force check for authentication on mobile/PWA - NEW IMMEDIATE CHECK
+  useEffect(() => {
+    // This effect runs on every render, but we only want to force recovery if we're on login
+    // and have authentication data
+    if (isSpecialMode && pathname === "/login" && user && authEvent === "SIGN_IN_COMPLETE") {
+      console.log("AuthGuard: IMMEDIATE Force recovery for mobile login", {
+        userId: user.id,
+        onboarded: user.onboarded,
+        authEvent
+      });
+      
+      // Force immediate navigation to appropriate page
+      setTimeout(() => {
+        if (user.onboarded) {
+          console.log("AuthGuard: Force redirecting to dashboard");
+          toast.success("Login successful! Redirecting to dashboard...");
+          navigate('/dashboard', { replace: true });
+        } else {
+          console.log("AuthGuard: Force redirecting to onboarding");
+          toast.success("Login successful! Redirecting to onboarding...");
+          navigate('/onboarding', { replace: true });
+        }
+        
+        // Clean up flags
+        sessionStorage.removeItem('login_redirect_pending');
+        sessionStorage.removeItem('just_logged_in');
+      }, 100);
+    }
+  }, [user, isSpecialMode, pathname, authEvent, navigate]);
 
   // Clear navigation lock on unmount
   useEffect(() => {
@@ -175,11 +205,10 @@ export const AuthenticationGuard = () => {
     });
   };
 
-  // Main navigation logic - simplified and more resilient
+  // SIMPLIFIED MAIN NAVIGATION LOGIC - More direct approach for mobile
   useEffect(() => {
     // Skip if still loading auth state or not initialized
     if (isLoading || !isInitialized) {
-      console.log("AuthGuard: Still loading auth state, skipping navigation check");
       return;
     }
     
@@ -188,35 +217,43 @@ export const AuthenticationGuard = () => {
       return;
     }
     
-    // Skip if we're in a navigation debounce period
+    // EMERGENCY MOBILE LOGIN HANDLING
+    // If we have a user and we're on the login page in mobile mode, force redirect
+    if (isSpecialMode && pathname === "/login" && user) {
+      if (sessionStorage.getItem('mobile_login_handled') !== 'true') {
+        console.log("AuthGuard: Emergency mobile login redirect activated");
+        sessionStorage.setItem('mobile_login_handled', 'true');
+        
+        setTimeout(() => {
+          if (user.onboarded) {
+            console.log("AuthGuard: Emergency redirect to dashboard");
+            navigate("/dashboard", { replace: true });
+          } else {
+            console.log("AuthGuard: Emergency redirect to onboarding");
+            navigate("/onboarding", { replace: true });
+          }
+        }, 500);
+        return;
+      }
+    }
+    
+    // Skip debounced navigations
     if (shouldSkipNavigation()) {
       return;
     }
     
-    // Don't interrupt an ongoing navigation 
+    // Don't interrupt ongoing navigation
     const currentNavState = AuthNavigationService.getState();
     const debounceTime = isSpecialMode ? 2000 : 800;
     if (currentNavState && Date.now() - currentNavState.timestamp < debounceTime) {
-      console.log(`AuthGuard: Navigation already in progress (${currentNavState.state}), skipping guard checks`);
       return;
     }
-    
-    console.log("AuthGuard: Evaluating navigation:", { 
-      pathname, 
-      isAuthenticated: !!user, 
-      onboarded: user?.onboarded,
-      isRetaking: isRetakingAssessment(searchParams),
-      profileLoaded,
-      isPwaMode,
-      isMobileDevice
-    });
     
     // Reset navigation reference
     navigatingRef.current = false;
     
     // Wait for profile data to be loaded before making navigation decisions
     if (user && !profileLoaded) {
-      console.log("AuthGuard: User exists but profile not fully loaded yet, waiting");
       return;
     }
     
@@ -228,8 +265,6 @@ export const AuthenticationGuard = () => {
       }
       
       // Redirect to login from protected pages
-      console.log("AuthGuard: User not authenticated, redirecting to login");
-      AuthNavigationService.setState(NavigationState.INITIAL);
       recordNavigation('/login');
       navigate("/login", { replace: true });
       return;
@@ -242,26 +277,7 @@ export const AuthenticationGuard = () => {
         return;
       }
       
-      // If on auth page, redirect to onboarding
-      if (isOnAuthPage(pathname)) {
-        console.log("AuthGuard: Non-onboarded user on auth page, redirecting to onboarding");
-        AuthNavigationService.setState(NavigationState.ONBOARDING, { 
-          userId: user.id,
-          isPwa: isPwaMode,
-          isMobile: isMobileDevice
-        });
-        recordNavigation('/onboarding');
-        navigate("/onboarding", { replace: true });
-        return;
-      }
-      
-      // All other pages redirect to onboarding
-      console.log("AuthGuard: User needs onboarding, redirecting from", pathname);
-      AuthNavigationService.setState(NavigationState.ONBOARDING, { 
-        userId: user.id,
-        isPwa: isPwaMode,
-        isMobile: isMobileDevice
-      });
+      // Direct to onboarding
       recordNavigation('/onboarding');
       navigate("/onboarding", { replace: true });
       return;
@@ -272,24 +288,13 @@ export const AuthenticationGuard = () => {
       // Redirect from auth pages to dashboard
       if (isOnAuthPage(pathname)) {
         console.log("AuthGuard: Authenticated user on auth page, redirecting to dashboard");
-        AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { 
-          userId: user.id,
-          isPwa: isPwaMode,
-          isMobile: isMobileDevice
-        });
         recordNavigation('/dashboard');
         navigate("/dashboard", { replace: true });
         return;
       }
       
-      // Redirect from onboarding to dashboard unless explicitly retaking assessment
+      // Redirect from onboarding unless retaking assessment
       if (isOnOnboardingPage(pathname) && !isRetakingAssessment(searchParams)) {
-        console.log("AuthGuard: Onboarded user on onboarding page, redirecting to dashboard");
-        AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { 
-          userId: user.id,
-          isPwa: isPwaMode,
-          isMobile: isMobileDevice
-        });
         recordNavigation('/dashboard');
         navigate("/dashboard", { replace: true });
         return;

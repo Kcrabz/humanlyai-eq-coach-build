@@ -6,7 +6,7 @@ import { useAuthActionWrappers } from "./useAuthActionWrappers";
 import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthLoadingState } from "./useAuthLoadingState";
 import { usePremiumFeatures } from "./usePremiumFeatures";
-import { useLoginTracking } from "./useLoginTracking";
+import { useLoginTracking } from "@/hooks/useLoginTracking"; // Updated import path
 import { useProfileCore } from "@/hooks/useProfileCore";
 import { useProfileActions } from "@/hooks/useProfileActions";
 import useAuthCore from "@/hooks/useAuthCore"; // Using default import
@@ -66,8 +66,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Consolidated loading state
   const { isLoading } = useAuthLoadingState(isSessionLoading, isLoadingUser);
 
-  // Track login events for UX optimization
-  const { loginEvent } = useLoginTracking(authEvent);
+  // Track login events for UX optimization - using updated hook
+  const { loginEvent } = useLoginTracking(!!user, user);
 
   // Process premium features and capabilities
   const { isPremiumMember, hasPremiumFeatures, userStreakData, userAchievements } = usePremiumFeatures(user);

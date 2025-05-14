@@ -11,6 +11,7 @@ export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
   // Use a ref to prevent duplicate tracking in same session
   const loginTrackedRef = useRef<boolean>(false);
   const [mobileLoginStatus, setMobileLoginStatus] = useState<string | null>(null);
+  const [loginEvent, setLoginEvent] = useState<string | null>(null);
   
   useEffect(() => {
     // Skip if not authenticated, no user, or already tracked in this session
@@ -42,6 +43,13 @@ export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
         
         console.log("Streak updated successfully");
         setMobileLoginStatus("streak_updated");
+        setLoginEvent("LOGIN_COMPLETE");
+        
+        // Set special flag for mobile login
+        if (typeof window !== 'undefined' && (window.isPwaMode() || window.isMobileDevice())) {
+          sessionStorage.setItem('mobile_login_complete', 'true');
+          sessionStorage.setItem('login_redirect_pending', 'true');
+        }
       } catch (err) {
         console.error("Error in login tracking:", err);
         // Don't block auth flow, just log the error
@@ -59,7 +67,7 @@ export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
 
   // Always return an object with loginEvent property for compatibility
   return { 
-    loginEvent: mobileLoginStatus === "streak_updated" ? "LOGIN_COMPLETE" : null,
+    loginEvent: mobileLoginStatus === "streak_updated" ? "LOGIN_COMPLETE" : loginEvent,
     mobileLoginStatus 
   };
 }
