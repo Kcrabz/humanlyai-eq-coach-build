@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { markLoginSuccess, forceRedirectToDashboard, isRunningAsPWA } from '@/utils/loginRedirectUtils';
+import { markLoginSuccess, isRunningAsPWA } from '@/utils/loginRedirectUtils';
 
 /**
  * Optimized hook for managing authentication session state
