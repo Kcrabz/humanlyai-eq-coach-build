@@ -1,4 +1,2 @@
 
-import { SessionManagement } from './sessions/SessionManagement';
-
-export default SessionManagement;
+export { SessionManagement } from './sessions/SessionManagement';

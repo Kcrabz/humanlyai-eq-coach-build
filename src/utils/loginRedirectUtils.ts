@@ -1,62 +1,55 @@
 
 /**
- * Utility functions to help with login redirection
+ * Optimized utility functions for login redirection
  */
+
+const LOGIN_SUCCESS_KEY = 'login_success_timestamp';
+const LOGIN_SESSION_KEY = 'login_success';
+const JUST_LOGGED_IN_KEY = 'just_logged_in';
+const FRESH_CHAT_KEY = 'fresh_chat_needed';
 
 /**
- * Sets a login success flag with a timestamp
+ * Sets a login success flag with a timestamp - optimized version
  */
 export const markLoginSuccess = (): void => {
+  // Store minimal timestamp data
   const timestamp = Date.now();
-  localStorage.setItem('login_success_timestamp', timestamp.toString());
-  
-  // Also set a session storage flag which is cleared when browser closes
-  sessionStorage.setItem('login_success', 'true');
-  
-  // Set a flag to indicate that the chat should be reset for fresh experience
-  sessionStorage.setItem('fresh_chat_needed', 'true');
-  
-  // Remove any previous chat clearing flag to ensure we clear on new login
+  localStorage.setItem(LOGIN_SUCCESS_KEY, timestamp.toString());
+  sessionStorage.setItem(LOGIN_SESSION_KEY, 'true');
+  sessionStorage.setItem(FRESH_CHAT_KEY, 'true');
   sessionStorage.removeItem('chat_cleared_for_session');
-
-  console.log("Login success marked with timestamp", { timestamp });
+  sessionStorage.setItem(JUST_LOGGED_IN_KEY, 'true');
   
-  // Special handling for PWA mode
-  if (window.isPwaMode?.()) {
-    console.log("Login success detected in PWA mode");
-    
-    // Store dashboard as the default redirect path if nothing else is specified
+  // Efficient PWA mode handling
+  if (isRunningAsPWA()) {
     if (!sessionStorage.getItem('pwa_desired_path')) {
       sessionStorage.setItem('pwa_desired_path', '/dashboard');
     }
   }
-  
-  // Set a specific flag in sessionStorage to detect first login after page load
-  sessionStorage.setItem('just_logged_in', 'true');
 };
 
 /**
- * Clears the login success flag
+ * Clears the login success flag - optimized version
  */
 export const clearLoginSuccess = (): void => {
-  localStorage.removeItem('login_success_timestamp');
-  sessionStorage.removeItem('login_success');
-  sessionStorage.removeItem('fresh_chat_needed');
-  sessionStorage.removeItem('just_logged_in');
+  localStorage.removeItem(LOGIN_SUCCESS_KEY);
+  sessionStorage.removeItem(LOGIN_SESSION_KEY);
+  sessionStorage.removeItem(FRESH_CHAT_KEY);
+  sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
 };
 
 /**
  * Checks if login was successful recently (within last 5 minutes)
  */
 export const wasLoginSuccessful = (): boolean => {
-  // First check session storage (cleared when browser closes)
-  if (sessionStorage.getItem('login_success') === 'true' || 
-      sessionStorage.getItem('just_logged_in') === 'true') {
+  // Fast path: check session storage first
+  if (sessionStorage.getItem(LOGIN_SESSION_KEY) === 'true' || 
+      sessionStorage.getItem(JUST_LOGGED_IN_KEY) === 'true') {
     return true;
   }
   
-  // Then check localStorage with timestamp
-  const timestamp = localStorage.getItem('login_success_timestamp');
+  // Check localStorage with timestamp
+  const timestamp = localStorage.getItem(LOGIN_SUCCESS_KEY);
   if (timestamp) {
     const loginTime = parseInt(timestamp);
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
@@ -67,66 +60,55 @@ export const wasLoginSuccessful = (): boolean => {
 };
 
 /**
- * Checks if this is the first login after page load
- * This is stricter than wasLoginSuccessful and is cleared after first check
+ * Checks if this is the first login after page load - optimized version
  */
 export const isFirstLoginAfterLoad = (): boolean => {
-  const justLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
+  const justLoggedIn = sessionStorage.getItem(JUST_LOGGED_IN_KEY) === 'true';
   if (justLoggedIn) {
-    // Clear it so it's only true once
-    sessionStorage.removeItem('just_logged_in');
+    // Clear immediately to prevent multiple redirects
+    sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
   }
   return justLoggedIn;
 };
 
 /**
- * Forces a redirect to dashboard using window.location
- * This is a fallback method when React Router navigation fails
+ * Forces a redirect to dashboard using window.location - optimized
  */
 export const forceRedirectToDashboard = (): void => {
-  console.log("Forcing redirect to dashboard using window.location");
-  
-  // If in PWA mode, use a slight delay to ensure state is properly updated
+  // If in PWA mode, use a direct approach
   if (isRunningAsPWA()) {
-    // For PWA, store the redirect in localStorage to persist across page loads
     localStorage.setItem('pwa_redirect_after_login', '/dashboard');
-    console.log("Set localStorage redirect for PWA");
-    
-    // Use timeout to give a chance for other processes to complete
-    setTimeout(() => {
-      window.location.href = '/dashboard';
-    }, 100);
+    window.location.href = '/dashboard';
   } else {
     window.location.href = '/dashboard';
   }
 };
 
 /**
- * Checks if a fresh chat experience is needed after login
- * Returns true once, then clears the flag
- */
-export const shouldShowFreshChat = (): boolean => {
-  const freshChatNeeded = sessionStorage.getItem('fresh_chat_needed') === 'true';
-  
-  // Clear the flag after checking so it only returns true once
-  if (freshChatNeeded) {
-    sessionStorage.removeItem('fresh_chat_needed');
-    console.log("Fresh chat experience triggered");
-  }
-  
-  return freshChatNeeded;
-};
-
-/**
- * Detect if the app is running as a PWA (standalone mode)
+ * Detect if the app is running as a PWA (standalone mode) - optimized
  */
 export const isRunningAsPWA = (): boolean => {
   try {
-    return window.matchMedia('(display-mode: standalone)').matches || 
-          (window.navigator as any).standalone === true || 
-          (window.isPwaMode && window.isPwaMode());
+    // Cache the result for consistent checks within same render cycle
+    if (typeof window._isPwaMode !== 'undefined') {
+      return window._isPwaMode;
+    }
+    
+    const result = window.matchMedia('(display-mode: standalone)').matches || 
+                  (window.navigator as any).standalone === true || 
+                  (window.isPwaMode && window.isPwaMode());
+    
+    window._isPwaMode = result;
+    return result;
   } catch (e) {
-    console.error("Error checking PWA mode:", e);
     return false;
   }
 };
+
+// Add to Window interface
+declare global {
+  interface Window {
+    _isPwaMode?: boolean;
+    isPwaMode?: () => boolean;
+  }
+}

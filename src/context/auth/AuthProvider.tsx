@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import AuthContext from "./AuthContext";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import useAuthActions from "@/hooks/useAuthActions";
@@ -18,17 +18,24 @@ import { isRunningAsPWA, markLoginSuccess } from "@/utils/loginRedirectUtils";
 import { useLocation } from "react-router-dom";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State for auth error handling
+  // State for auth error handling - optimized with useCallback
   const [error, setError] = useState<string | null>(null);
   const location = useLocation();
   
-  // Auth session
-  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading, authEvent, profileLoaded, setProfileLoaded } = useAuthSession();
+  // Auth session - optimized to reduce rerenders
+  const { 
+    session, 
+    isLoading: isSessionLoading, 
+    setIsLoading: setIsSessionLoading, 
+    authEvent, 
+    profileLoaded, 
+    setProfileLoaded 
+  } = useAuthSession();
   
   // Profile state with unified loading
   const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
   
-  // Track login events
+  // Track login events - memoized
   const isAuthenticated = !!user;
   useLoginTracking(isAuthenticated, user);
   
@@ -38,7 +45,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Auth core for login/logout
   const authCore = useAuthCore(setUser);
   
-  // Auth signup - Pass the function through directly without wrapping it
+  // Auth signup
   const { signup } = useAuthSignup(setUser);
   
   // Auth actions
@@ -65,58 +72,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPasswordWrapper 
   } = useAuthActionWrappers(user, profileCore, profileActions, authCore);
   
-  // Special handling for session restore and login success
-  useEffect(() => {
-    if (authEvent === "RESTORED_SESSION" || authEvent === "SIGN_IN_COMPLETE") {
-      if (user && profileLoaded) {
-        console.log("Auth session restored or login complete, marking as successful", { 
-          userId: user.id, 
-          authEvent, 
-          profileLoaded 
-        });
-        
-        // Update login success flags to ensure correct redirects
-        markLoginSuccess();
-      }
+  // Optimized session and login success handling
+  const handleSessionRestore = useCallback(() => {
+    if ((authEvent === "RESTORED_SESSION" || authEvent === "SIGN_IN_COMPLETE") && user && profileLoaded) {
+      markLoginSuccess();
     }
-  }, [user, authEvent, profileLoaded]);
+  }, [authEvent, user, profileLoaded]);
   
-  // Special handling for PWA navigation
+  useEffect(() => {
+    handleSessionRestore();
+  }, [handleSessionRestore]);
+  
+  // Optimized PWA navigation handling
   useEffect(() => {
     if (isAuthenticated && isRunningAsPWA()) {
-      console.log("Authenticated in PWA, current path:", location.pathname);
-      
-      // Store current path for PWA after successful authentication
-      // This helps with navigation after login in PWA mode
       if (location.pathname !== '/login' && location.pathname !== '/signup') {
         sessionStorage.setItem('pwa_last_path', location.pathname);
-        console.log("Stored last path for PWA:", location.pathname);
       }
       
-      // Store desired path for PWA after successful authentication
-      if (user?.onboarded) {
-        if (location.pathname === '/login' || location.pathname === '/signup') {
-          // After login/signup in PWA mode, direct to dashboard or last stored path
-          const lastPath = sessionStorage.getItem('pwa_last_path') || '/dashboard';
-          console.log("Storing redirect target for PWA post-auth:", lastPath);
-          sessionStorage.setItem('pwa_desired_path', lastPath);
-        }
+      if (user?.onboarded && (location.pathname === '/login' || location.pathname === '/signup')) {
+        const lastPath = sessionStorage.getItem('pwa_last_path') || '/dashboard';
+        sessionStorage.setItem('pwa_desired_path', lastPath);
       }
     }
   }, [isAuthenticated, user, location.pathname]);
-  
-  // Debugging log for auth state changes
-  useEffect(() => {
-    console.log("AuthProvider state updated:", { 
-      isAuthenticated, 
-      hasUser: !!user,
-      userOnboarded: user?.onboarded,
-      authEvent,
-      isLoading,
-      profileLoaded,
-      pathname: location.pathname
-    });
-  }, [isAuthenticated, user, authEvent, isLoading, profileLoaded, location.pathname]);
   
   // Memoize the context value to prevent unnecessary rerenders
   const contextValue: AuthContextType = useMemo(() => ({

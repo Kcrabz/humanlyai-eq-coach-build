@@ -7,28 +7,46 @@ import { MessageCircle, TrendingUp, Users, Shield, MessageSquare } from "lucide-
 import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
-import { useEffect } from "react";
+import { memo, useEffect } from "react";
+
+// Memoize card components for performance
+const ActionCard = memo(({ 
+  onClick, 
+  icon: Icon, 
+  title, 
+  color 
+}: { 
+  onClick: () => void, 
+  icon: any, 
+  title: string,
+  color: string 
+}) => (
+  <Card className={`hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-${color}/10`}>
+    <CardContent className="p-0">
+      <Button 
+        variant="ghost" 
+        className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
+        onClick={onClick}
+      >
+        <div className={`w-16 h-16 rounded-full bg-${color}/10 flex items-center justify-center`}>
+          <Icon className={`w-8 h-8 text-${color}`} />
+        </div>
+        <div className="text-center w-full">
+          <h2 className="text-xl font-semibold">{title}</h2>
+        </div>
+      </Button>
+    </CardContent>
+  </Card>
+));
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isAdmin, isLoading: isAdminCheckLoading, refreshAdminStatus } = useAdminCheck();
+  const { isAdmin, refreshAdminStatus } = useAdminCheck();
   
-  // Add detailed logging to verify dashboard rendering and diagnose issues
-  useEffect(() => {
-    console.log("Dashboard mounted and rendering:", { 
-      hasUser: !!user, 
-      userEmail: user?.email,
-      userOnboarded: user?.onboarded,
-      currentPath: window.location.pathname,
-      timestamp: new Date().toISOString()
-    });
-  }, [user]);
-  
-  // Force refresh admin status when dashboard is loaded
+  // Force refresh admin status when dashboard loads
   useEffect(() => {
     if (user?.email) {
-      console.log("DashboardPage - Refreshing admin status for:", user.email);
       refreshAdminStatus();
     }
   }, [user?.email, refreshAdminStatus]);
@@ -37,7 +55,6 @@ const DashboardPage = () => {
   const firstName = user?.name ? user.name.split(" ")[0] : "Friend";
   
   const handleReferral = () => {
-    // Copy a referral link to clipboard
     const referralLink = `${window.location.origin}?ref=${user?.id}`;
     navigator.clipboard.writeText(referralLink);
     toast.success("Referral link copied to clipboard!", {
@@ -45,7 +62,6 @@ const DashboardPage = () => {
     });
   };
   
-  // Function to open the feedback form in a new tab
   const openFeedbackForm = () => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
@@ -64,98 +80,45 @@ const DashboardPage = () => {
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-scale-fade-in">
           {/* Chat with Kai */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-indigo/10">
-            <CardContent className="p-0">
-              <Button 
-                variant="ghost" 
-                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                onClick={() => navigate("/chat")}
-              >
-                <div className="w-16 h-16 rounded-full bg-humanly-indigo/10 flex items-center justify-center">
-                  <MessageCircle className="w-8 h-8 text-humanly-indigo" />
-                </div>
-                <div className="text-center w-full">
-                  <h2 className="text-xl font-semibold">Chat with Kai</h2>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
+          <ActionCard 
+            onClick={() => navigate("/chat")}
+            icon={MessageCircle}
+            title="Chat with Kai"
+            color="humanly-indigo"
+          />
           
           {/* Track Your Growth */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-teal/10">
-            <CardContent className="p-0">
-              <Button 
-                variant="ghost" 
-                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                onClick={() => navigate("/progress")}
-              >
-                <div className="w-16 h-16 rounded-full bg-humanly-teal/10 flex items-center justify-center">
-                  <TrendingUp className="w-8 h-8 text-humanly-teal" />
-                </div>
-                <div className="text-center w-full">
-                  <h2 className="text-xl font-semibold">Track Your Growth</h2>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
+          <ActionCard 
+            onClick={() => navigate("/progress")}
+            icon={TrendingUp}
+            title="Track Your Growth"
+            color="humanly-teal"
+          />
           
           {/* Help a Friend */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-rose/20">
-            <CardContent className="p-0">
-              <Button 
-                variant="ghost" 
-                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                onClick={handleReferral}
-              >
-                <div className="w-16 h-16 rounded-full bg-humanly-pastel-rose/20 flex items-center justify-center">
-                  <Users className="w-8 h-8 text-humanly-indigo" />
-                </div>
-                <div className="text-center w-full">
-                  <h2 className="text-xl font-semibold">Help a Friend</h2>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
+          <ActionCard 
+            onClick={handleReferral}
+            icon={Users}
+            title="Help a Friend"
+            color="humanly-pastel-rose"
+          />
           
-          {/* Give Feedback - new card for beta testers */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-blue/20">
-            <CardContent className="p-0">
-              <Button 
-                variant="ghost" 
-                className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                onClick={openFeedbackForm}
-              >
-                <div className="w-16 h-16 rounded-full bg-humanly-pastel-blue/20 flex items-center justify-center">
-                  <MessageSquare className="w-8 h-8 text-humanly-teal" />
-                </div>
-                <div className="text-center w-full">
-                  <h2 className="text-xl font-semibold">Give Feedback</h2>
-                </div>
-              </Button>
-            </CardContent>
-          </Card>
+          {/* Give Feedback */}
+          <ActionCard 
+            onClick={openFeedbackForm}
+            icon={MessageSquare}
+            title="Give Feedback"
+            color="humanly-pastel-blue"
+          />
           
           {/* Admin Portal - Only visible for admin users */}
           {isAdmin && (
-            <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-gray-400/20">
-              <CardContent className="p-0">
-                <Button 
-                  variant="ghost" 
-                  className="w-full h-full p-6 flex flex-col items-center justify-center gap-4 rounded-none" 
-                  onClick={() => {
-                    console.log("Admin portal access requested by:", user?.email);
-                    navigate("/admin");
-                  }}
-                >
-                  <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
-                    <Shield className="w-8 h-8 text-gray-700" />
-                  </div>
-                  <div className="text-center w-full">
-                    <h2 className="text-xl font-semibold">Admin Portal</h2>
-                  </div>
-                </Button>
-              </CardContent>
-            </Card>
+            <ActionCard 
+              onClick={() => navigate("/admin")}
+              icon={Shield}
+              title="Admin Portal"
+              color="gray-400"
+            />
           )}
         </div>
       </div>
@@ -163,4 +126,4 @@ const DashboardPage = () => {
   );
 };
 
-export default DashboardPage;
+export default memo(DashboardPage);
