@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { User, SubscriptionTier } from "@/types";
+import { User, SubscriptionTier, EQArchetype, CoachingMode } from "@/types";
 import { toast } from "sonner";
 
 /**
@@ -108,10 +108,24 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
       console.error("Could not retrieve user email from session");
     }
     
+    // Validate the eq_archetype to ensure it conforms to the expected type
+    const isValidEQArchetype = (value: any): value is EQArchetype => {
+      const validArchetypes: EQArchetype[] = ["reflector", "activator", "regulator", "connector", "observer"];
+      return validArchetypes.includes(value as EQArchetype);
+    };
+    
+    // Correctly cast or validate fields
+    const eq_archetype: EQArchetype | "Not set" = 
+      profileData.eq_archetype && isValidEQArchetype(profileData.eq_archetype) 
+        ? profileData.eq_archetype 
+        : "Not set";
+
     // Combine the profile data with the email from the session
     const user: User = {
       ...profileData,
       email,
+      eq_archetype,
+      coaching_mode: profileData.coaching_mode as CoachingMode || undefined,
       subscription_tier: (profileData.subscription_tier as SubscriptionTier) || 'free'
     };
     
