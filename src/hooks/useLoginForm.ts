@@ -66,22 +66,24 @@ export function useLoginForm() {
     setIsSubmitting(true);
     
     try {
+      console.log("Attempting login with email:", email);
       const success = await login(email, password);
       
       if (success) {
-        console.log("Login successful in useLoginForm, preparing to navigate to dashboard");
+        console.log("Login successful in useLoginForm, preparing navigation");
         
-        // Mark login success for cross-page tracking
+        // Mark login success for cross-page tracking - earlier than before
         markLoginSuccess();
         
         // Set toast only once
         toast.success("Login successful! Redirecting to dashboard...");
         
         // Increased delay to ensure auth state is fully updated before navigation
+        // This is the ONLY place that should handle redirect after login
         setTimeout(() => {
-          console.log("Navigation timeout triggered, redirecting to dashboard");
+          console.log("Navigation timeout triggered in useLoginForm, redirecting to dashboard");
           navigate("/dashboard", { replace: true });
-        }, 300); // Increased from 100ms to 300ms for more reliable state updates
+        }, 500); // Increased from 300ms to 500ms for more reliable state updates
       } else {
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);

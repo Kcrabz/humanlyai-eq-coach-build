@@ -73,24 +73,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPasswordWrapper 
   } = useAuthActionWrappers(user, profileCore, profileActions, authCore);
   
-  // Early session restore handling - mark login success immediately
+  // Immediate session/auth state responses
   useEffect(() => {
-    if ((authEvent === "RESTORED_SESSION" || authEvent === "SIGN_IN_COMPLETE" || 
-        authEvent === "FAST_RESTORED_SESSION") && user) {
+    if (authEvent === "SIGN_IN_COMPLETE" && user) {
+      console.log("Detected sign in complete with user, marking login success");
       markLoginSuccess();
+    }
+    
+    if (authEvent === "RESTORED_SESSION" && user) {
+      console.log("Detected restored session with user");
+      // We don't want to mark login success for restored sessions
+      // as it would trigger unnecessary redirects
     }
   }, [authEvent, user]);
   
-  // Early short-circuit loading state for faster UI rendering
+  // Short-circuit loading state for faster UI rendering - but with delayed timing to ensure state is ready
   useEffect(() => {
-    // If loading takes too long, give early access after 200ms (faster than before)
-    if (isSessionLoading) {
+    if (isSessionLoading && session) {
       const timer = setTimeout(() => {
         if (session) {
+          console.log("Fast-tracking profile loaded state");
           setProfileLoaded(true);
           setIsSessionLoading(false);
         }
-      }, 200); // Reduced from 300ms for faster UI loading
+      }, 180); // Slightly increased from 150ms to ensure profile data is ready
       
       return () => clearTimeout(timer);
     }

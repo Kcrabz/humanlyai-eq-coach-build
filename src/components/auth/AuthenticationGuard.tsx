@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { wasLoginSuccessful, clearLoginSuccess } from "@/utils/loginRedirectUtils";
 
 /**
- * Improved authentication guard with better protection against redirect loops
+ * Enhanced authentication guard with better protection against redirect loops
  */
 export const AuthenticationGuard = () => {
   const { user, isLoading, authEvent } = useAuth();
@@ -47,7 +47,7 @@ export const AuthenticationGuard = () => {
     // Skip if still loading auth state or we've already redirected on this path
     if (isLoading || redirectedRef.current) return;
     
-    // Safety limit for redirect attempts (increased from 10 to 15)
+    // Safety limit for redirect attempts (maintain at 15)
     redirectAttemptCount.current += 1;
     if (redirectAttemptCount.current > 15) {
       console.warn("Too many redirect attempts, breaking the loop", {
@@ -65,7 +65,8 @@ export const AuthenticationGuard = () => {
       authEvent,
       onboarded: user?.onboarded,
       attempts: redirectAttemptCount.current,
-      justLoggedIn: justLoggedInRef.current
+      justLoggedIn: justLoggedInRef.current,
+      currentTime: new Date().toISOString()
     });
     
     // Skip navigation for password reset pages
@@ -75,11 +76,16 @@ export const AuthenticationGuard = () => {
     
     // If user just logged in via login form, let the form handle navigation
     // Skip first redirection check in AuthGuard to avoid race conditions
-    if (justLoggedInRef.current && isCurrentlyOnAuth) {
-      console.log("User just logged in via login form, skipping AuthGuard redirection");
-      // Clear the login success flag after checking it once
-      justLoggedInRef.current = false;
-      clearLoginSuccess();
+    if (justLoggedInRef.current) {
+      console.log("User just logged in, letting login form handle redirection");
+      
+      // Only clear the flag if we're not on a login page anymore
+      // This prevents clearing too early before navigation completes
+      if (!isCurrentlyOnAuth && pathname === "/dashboard") {
+        console.log("On dashboard after login, clearing login success flag");
+        justLoggedInRef.current = false;
+        clearLoginSuccess();
+      }
       return;
     }
     

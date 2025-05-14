@@ -3,8 +3,6 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
 
 const LoginPage = () => {
-  // Removed redundant redirection logic - now handled in useLoginForm and AuthenticationGuard
-  
   return (
     <PageLayout>
       <div className="flex min-h-screen items-center justify-center py-12 animate-scale-fade-in">

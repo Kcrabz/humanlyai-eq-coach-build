@@ -14,8 +14,6 @@ export const useAuthSession = () => {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
-
-  // Session ready flag for tracking manual token check
   const [sessionReady, setSessionReady] = useState(false);
 
   // Fast session restoration from localStorage before network requests
@@ -33,20 +31,26 @@ export const useAuthSession = () => {
             setAuthEvent('FAST_RESTORED_SESSION');
             setSessionReady(true);
             
-            // Fast path - quickly exit loading state if we have a session
+            // Don't exit loading state too quickly - we need to ensure profile data is loaded
             setTimeout(() => {
-              setIsLoading(false);
-              setProfileLoaded(true); // Also set profile as loaded for instant UI rendering
-            }, 50); // Reduced timeout for faster loading
+              if (!profileLoaded) {
+                console.log("Setting profile as loaded after fast session restore");
+                setProfileLoaded(true);
+                setIsLoading(false);
+              }
+            }, 200);
           }
         } catch (e) {
           console.warn("Could not parse stored session", e);
         }
       } else {
-        // Fast negative path - no session found, exit loading quickly
+        // No session found - exit loading quickly
         setTimeout(() => {
-          setIsLoading(false);
-        }, 50); // Reduced from 100ms for faster loading
+          if (isLoading) {
+            console.log("No stored session found, exiting loading state");
+            setIsLoading(false);
+          }
+        }, 100);
       }
     } catch (e) {
       console.warn("Error accessing localStorage", e);
@@ -68,9 +72,13 @@ export const useAuthSession = () => {
         if (data.user) {
           console.log("User signed in:", data.user.id);
           setAuthEvent('SIGN_IN_COMPLETE');
-          setProfileLoaded(true);
-          setSessionReady(true);
-          setIsLoading(false); // Exit loading state immediately on sign in
+          
+          // Delaying these state updates slightly to ensure they happen after session is fully established
+          setTimeout(() => {
+            setProfileLoaded(true);
+            setSessionReady(true);
+            setIsLoading(false); // Exit loading state on sign in
+          }, 50);
           
           // Handle PWA mode
           if (isRunningAsPWA()) {
@@ -92,6 +100,9 @@ export const useAuthSession = () => {
       localStorage.removeItem('pwa_auth_timestamp');
       localStorage.removeItem('pwa_redirect_after_login');
       sessionStorage.removeItem('pwa_desired_path');
+      
+      // Clean cached profiles on logout
+      localStorage.removeItem('cached_user_profile');
     }
   }, []);
 
@@ -151,14 +162,14 @@ export const useAuthSession = () => {
       }
     });
 
-    // Safety timeout to prevent indefinite loading - 150ms max wait (reduced from 200ms)
+    // Safety timeout - 200ms max wait (increased slightly for reliability)
     const safetyTimeout = setTimeout(() => {
       if (isMounted && isLoading) {
         console.log("Safety timeout triggered - forcing auth state to complete loading");
         setIsLoading(false);
         setInitialized(true);
       }
-    }, 150);
+    }, 200);
 
     return () => {
       isMounted = false;
