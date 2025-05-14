@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { updateUserProfileInDatabase } from "@/services/authService";
 
-const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
+const useAuthCore = () => {
   const [error, setError] = useState<string | null>(null);
 
   /**
@@ -100,8 +100,7 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
       const success = await updateUserProfileInDatabase(authUser.id, updates);
       
       if (success) {
-        // Update local state
-        setUser((prevUser) => prevUser ? { ...prevUser, ...updates } : null);
+        // Update local state handled by caller
         toast.success("Profile updated successfully");
       }
       
@@ -123,4 +122,5 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
   };
 };
 
+// Export as default instead of named export
 export default useAuthCore;

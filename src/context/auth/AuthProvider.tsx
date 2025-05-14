@@ -9,7 +9,7 @@ import { usePremiumFeatures } from "./usePremiumFeatures";
 import { useLoginTracking } from "./useLoginTracking";
 import { useProfileCore } from "@/hooks/useProfileCore";
 import { useProfileActions } from "@/hooks/useProfileActions";
-import { useAuthCore } from "@/hooks/useAuthCore";
+import useAuthCore from "@/hooks/useAuthCore"; // Changed from named import to default import
 
 /**
  * AuthProvider - Enhanced with mobile/PWA detection
@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const profileActions = useProfileActions(setUser);
   
   // Auth core functionality
-  const authCore = useAuthCore();
+  const authCore = useAuthCore(); // Using the default import
 
   // Auth actions with error handling wrappers
   const {
