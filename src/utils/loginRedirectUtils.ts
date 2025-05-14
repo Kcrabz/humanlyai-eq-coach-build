@@ -72,6 +72,13 @@ export const isFirstLoginAfterLoad = (): boolean => {
 };
 
 /**
+ * Check if we need to show a fresh chat experience after login
+ */
+export const shouldShowFreshChat = (): boolean => {
+  return sessionStorage.getItem(FRESH_CHAT_KEY) === 'true';
+};
+
+/**
  * Forces a redirect to dashboard using window.location - optimized
  */
 export const forceRedirectToDashboard = (): void => {
@@ -96,7 +103,7 @@ export const isRunningAsPWA = (): boolean => {
     
     const result = window.matchMedia('(display-mode: standalone)').matches || 
                   (window.navigator as any).standalone === true || 
-                  (window.isPwaMode && window.isPwaMode());
+                  window.isPwaMode?.();
     
     window._isPwaMode = result;
     return result;

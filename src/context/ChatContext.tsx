@@ -5,7 +5,7 @@ import { useChatActions } from "@/hooks/chat/useChatActions";
 import { useAuth } from "@/context/AuthContext";
 import { getIntroductionMessage, shouldShowIntroduction, markIntroductionAsShown } from "@/lib/introductionMessages";
 import { getWelcomeMessage } from "@/lib/welcomeMessages";
-import { shouldShowFreshChat } from "@/utils/loginRedirectUtils";
+import { wasLoginSuccessful } from "@/utils/loginRedirectUtils";
 
 interface ChatContextType {
   messages: ChatMessage[];
@@ -108,7 +108,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!user || hasFreshChatRun) return;
     
     // Check if user has recently logged in and needs a fresh chat
-    if (shouldShowFreshChat()) {
+    if (wasLoginSuccessful()) {
       console.log("Displaying fresh chat experience after login");
       
       // Clear the UI messages (but database records are preserved)

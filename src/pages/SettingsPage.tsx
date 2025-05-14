@@ -11,7 +11,7 @@ import { PersonalInfoEditor } from "@/components/settings/PersonalInfoEditor";
 import { ArchetypeSettings } from "@/components/settings/ArchetypeSettings";
 import { CoachingPreferences } from "@/components/settings/CoachingPreferences";
 import PasswordChanger from "@/components/settings/PasswordChanger";
-import SessionManagement from "@/components/settings/SessionManagement";
+import { SessionManagement } from "@/components/settings/SessionManagement";
 import { AccountSettings } from "@/components/settings/AccountSettings";
 import AvatarSelector from "@/components/settings/avatar/AvatarSelector";
 import { User, Shield, Bell, CreditCard } from "lucide-react";
