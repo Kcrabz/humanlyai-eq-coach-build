@@ -1,4 +1,3 @@
-
 import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -12,6 +11,7 @@ import { ChatRightSidebar } from "@/components/chat/sidebar/ChatRightSidebar";
 import { ResponsiveMainContent } from "@/components/chat/components/ResponsiveMainContent";
 import { UpdateNotification } from "@/components/pwa/UpdateNotification";
 import { wasLoginSuccessful } from "@/utils/loginRedirectUtils";
+import { Toaster } from "sonner";
 
 // Lazy load components that aren't immediately visible
 const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
@@ -95,6 +95,9 @@ const ChatPage = () => {
         <LeftSidebarProvider>
           <RightSidebarProvider defaultOpen={true}>
             <ChatProvider>
+              {/* Keep the Toaster for chat page only */}
+              <Toaster position="bottom-right" richColors />
+              
               {/* PWA update notification */}
               <UpdateNotification reloadPage={handleReload} />
               

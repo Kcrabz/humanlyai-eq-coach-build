@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, TrendingUp, Users, Shield, MessageSquare } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { toast } from "sonner";
 import { memo, useEffect, useState, Suspense } from "react";
 import { Loading } from "@/components/ui/loading";
 
@@ -82,13 +81,15 @@ const DashboardContent = memo(() => {
   const handleReferral = () => {
     const referralLink = `${window.location.origin}?ref=${user?.id}`;
     navigator.clipboard.writeText(referralLink);
-    toast.success("Referral link copied to clipboard!", {
-      description: "Share this link with your friends to invite them to join."
-    });
   };
   
   const openFeedbackForm = () => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
+  };
+  
+  // Fix navigation to chat page with proper Link usage
+  const handleChatNavigation = () => {
+    navigate('/chat');
   };
   
   return (
@@ -104,9 +105,9 @@ const DashboardContent = memo(() => {
       
       {/* Use conditional rendering for smoother loading */}
       <div className={`grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${loaded ? 'animate-scale-fade-in' : 'opacity-0'}`}>
-        {/* Chat with Kai */}
+        {/* Chat with Kai - Fixed navigation */}
         <ActionCard 
-          onClick={() => navigate("/chat")}
+          onClick={handleChatNavigation}
           icon={MessageCircle}
           title="Chat with Kai"
           color="humanly-indigo"
