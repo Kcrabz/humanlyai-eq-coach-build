@@ -1,179 +1,53 @@
 
 /**
- * Optimized utility functions for login redirection
+ * Simple utility functions for login success tracking
  */
 
 const LOGIN_SUCCESS_KEY = 'login_success_timestamp';
-const LOGIN_SESSION_KEY = 'login_success';
-const JUST_LOGGED_IN_KEY = 'just_logged_in';
-const REDIRECT_IN_PROGRESS = 'login_redirect_in_progress';
-const REDIRECT_ATTEMPT_COUNT = 'redirect_attempt_count';
 
 /**
- * Sets a login success flag with a timestamp - optimized version
+ * Sets a login success flag with a timestamp
  */
 export const markLoginSuccess = (): void => {
   // Store minimal timestamp data
   const timestamp = Date.now();
   localStorage.setItem(LOGIN_SUCCESS_KEY, timestamp.toString());
-  sessionStorage.setItem(LOGIN_SESSION_KEY, 'true');
-  sessionStorage.setItem(JUST_LOGGED_IN_KEY, 'true');
-  
-  // Reset redirect attempt counter
-  sessionStorage.setItem(REDIRECT_ATTEMPT_COUNT, '0');
-  
-  // Debug log for tracking login flow
   console.log("Login success marked at", new Date(timestamp).toISOString());
-  
-  // Efficient PWA mode handling
-  if (isRunningAsPWA()) {
-    if (!sessionStorage.getItem('pwa_desired_path')) {
-      // Make sure dashboard is the default post-login destination
-      sessionStorage.setItem('pwa_desired_path', '/dashboard');
-    }
-  }
 };
 
 /**
- * Clears the login success flag - optimized version
+ * Clears the login success flag
  */
 export const clearLoginSuccess = (): void => {
   localStorage.removeItem(LOGIN_SUCCESS_KEY);
-  sessionStorage.removeItem(LOGIN_SESSION_KEY);
-  sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
-  sessionStorage.removeItem(REDIRECT_IN_PROGRESS);
-  sessionStorage.removeItem(REDIRECT_ATTEMPT_COUNT);
 };
 
 /**
  * Checks if login was successful recently (within last 5 minutes)
- * Optimized for performance with early return paths
  */
 export const wasLoginSuccessful = (): boolean => {
-  // Fast path: check session storage first (most efficient)
-  if (sessionStorage.getItem(LOGIN_SESSION_KEY) === 'true' || 
-      sessionStorage.getItem(JUST_LOGGED_IN_KEY) === 'true' ||
-      sessionStorage.getItem(REDIRECT_IN_PROGRESS) === 'true') {
-    return true;
-  }
-  
-  // Check localStorage with timestamp
   const timestamp = localStorage.getItem(LOGIN_SUCCESS_KEY);
   if (timestamp) {
     const loginTime = parseInt(timestamp);
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
     return loginTime > fiveMinutesAgo;
   }
-  
   return false;
 };
 
 /**
- * Checks if this is the first login after page load - optimized version
- */
-export const isFirstLoginAfterLoad = (): boolean => {
-  const justLoggedIn = sessionStorage.getItem(JUST_LOGGED_IN_KEY) === 'true';
-  if (justLoggedIn) {
-    // Clear immediately to prevent multiple redirects
-    sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
-    return true;
-  }
-  return false;
-};
-
-/**
- * Checks if a redirection is currently in progress
- */
-export const isRedirectInProgress = (): boolean => {
-  return sessionStorage.getItem(REDIRECT_IN_PROGRESS) === 'true';
-};
-
-/**
- * Sets the redirect in progress flag
- */
-export const setRedirectInProgress = (): void => {
-  sessionStorage.setItem(REDIRECT_IN_PROGRESS, 'true');
-  
-  // Track redirect attempts
-  const attempts = sessionStorage.getItem(REDIRECT_ATTEMPT_COUNT);
-  const count = attempts ? parseInt(attempts) : 0;
-  sessionStorage.setItem(REDIRECT_ATTEMPT_COUNT, (count + 1).toString());
-};
-
-/**
- * Clears the redirect in progress flag
- */
-export const clearRedirectInProgress = (): void => {
-  sessionStorage.removeItem(REDIRECT_IN_PROGRESS);
-};
-
-/**
- * Gets the current redirect attempt count
- */
-export const getRedirectAttemptCount = (): number => {
-  const attempts = sessionStorage.getItem(REDIRECT_ATTEMPT_COUNT);
-  return attempts ? parseInt(attempts) : 0;
-};
-
-/**
- * Resets the redirect attempt count
- */
-export const resetRedirectAttemptCount = (): void => {
-  sessionStorage.setItem(REDIRECT_ATTEMPT_COUNT, '0');
-};
-
-/**
- * Forces a redirect to dashboard using window.location - optimized
- * This version prefers React Router navigation when possible
- */
-export const forceRedirectToDashboard = (): void => {
-  console.log("Force redirect to dashboard initiated");
-  
-  // Mark redirection as in progress
-  setRedirectInProgress();
-  
-  // Directly navigate to dashboard
-  const alreadyOnDashboard = window.location.pathname === '/dashboard';
-  
-  // If not already on dashboard, redirect
-  if (!alreadyOnDashboard) {
-    console.log("Redirecting to dashboard via direct navigation");
-    // If in PWA mode, use localStorage to persist the redirect target
-    if (isRunningAsPWA()) {
-      localStorage.setItem('pwa_redirect_after_login', '/dashboard');
-    }
-    
-    // Use direct navigation for most reliable redirect
-    window.location.href = '/dashboard';
-  } else {
-    console.log("Already on dashboard, no redirect needed");
-    clearRedirectInProgress();
-  }
-};
-
-/**
- * Detect if the app is running as a PWA (standalone mode) - optimized with caching
+ * Detect if the app is running as a PWA (standalone mode)
  */
 export const isRunningAsPWA = (): boolean => {
   try {
-    // Cache the result for consistent checks
-    if (typeof window._isPwaMode !== 'undefined') {
-      return window._isPwaMode;
-    }
-    
-    // Use the || operator for more concise code
-    const result = 
-      window.matchMedia('(display-mode: standalone)').matches || 
+    return window.matchMedia('(display-mode: standalone)').matches || 
       (window.navigator as any).standalone === true;
-    
-    window._isPwaMode = result;
-    return result;
   } catch (e) {
     return false;
   }
 };
 
-// Add type definition to Window interface
+// Add type definition for Window interface
 declare global {
   interface Window {
     _isPwaMode?: boolean;

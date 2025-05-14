@@ -4,33 +4,22 @@ import { useNavigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
-import { wasLoginSuccessful } from "@/utils/loginRedirectUtils";
 
 const Index = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Fast path for authenticated users with reduced checks
+  // Simple redirect logic for authenticated users
   useEffect(() => {
-    // Skip if still loading
-    if (isLoading) return;
-    
-    if (isAuthenticated) {
-      // Check if user just logged in - always send to dashboard
-      if (wasLoginSuccessful()) {
-        console.log("Root page - Recent login detected, redirecting to dashboard");
-        navigate("/dashboard", { replace: true });
-        return;
-      }
-      
-      // Redirect onboarding users immediately
+    if (!isLoading && isAuthenticated) {
+      // Redirect onboarding users
       if (user && !user.onboarded) {
         console.log("Root page - Redirecting to onboarding");
         navigate("/onboarding", { replace: true });
         return;
       }
       
-      // Redirect authenticated + onboarded users to dashboard
+      // Redirect authenticated users to dashboard
       if (user && user.onboarded) {
         console.log("Root page - Redirecting to dashboard");
         navigate("/dashboard", { replace: true });

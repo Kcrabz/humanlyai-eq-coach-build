@@ -1,9 +1,8 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
-import { markLoginSuccess } from "@/utils/loginRedirectUtils";
 import { useNavigate } from "react-router-dom";
 
 export function useLoginForm() {
@@ -17,35 +16,9 @@ export function useLoginForm() {
     resetTimeMs: number;
   } | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
-  
-  // Clear login form success flag when component mounts
-  useEffect(() => {
-    localStorage.removeItem('login_form_success');
-  }, []);
-  
-  // Timer for rate limit countdown
-  useEffect(() => {
-    if (!rateLimitInfo?.isLimited) return;
-    
-    const calculateTimeRemaining = () => {
-      const now = Date.now();
-      const remaining = Math.max(0, rateLimitInfo.resetTimeMs - now);
-      setTimeRemaining(Math.ceil(remaining / 1000)); // Convert to seconds
-      
-      if (remaining <= 0) {
-        setRateLimitInfo(null);
-      }
-    };
-    
-    calculateTimeRemaining();
-    const interval = setInterval(calculateTimeRemaining, 1000);
-    
-    return () => clearInterval(interval);
-  }, [rateLimitInfo]);
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -95,18 +68,16 @@ export function useLoginForm() {
       const success = await login(email, password);
       
       if (success) {
-        console.log("Login successful in form handler");
-        setLoginSuccess(true);
-        markLoginSuccess();
+        console.log("Login successful, navigating to dashboard");
         
-        // Set a flag to prevent duplicate toasts
+        // Set toast only once
         if (!document.body.hasAttribute('data-toast-shown')) {
+          toast.success("Login successful! Redirecting to dashboard...");
           document.body.setAttribute('data-toast-shown', 'true');
         }
         
-        // Instead of navigating immediately, let AuthGuard handle it
-        // The redirect will happen naturally through the auth state change
-        console.log("Login successful, letting AuthGuard handle redirect");
+        // Navigate directly to dashboard after successful login
+        navigate("/dashboard", { replace: true });
       } else {
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);
@@ -131,7 +102,6 @@ export function useLoginForm() {
     errorMessage,
     rateLimitInfo,
     timeRemaining,
-    loginSuccess,
     handleEmailChange,
     handlePasswordChange,
     handleSubmit
