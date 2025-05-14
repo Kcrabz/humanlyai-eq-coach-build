@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
+import { clientRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
 import { markLoginSuccess } from "@/utils/loginRedirectUtils";
 import { useNavigate } from "react-router-dom";
@@ -99,17 +99,14 @@ export function useLoginForm() {
         setLoginSuccess(true);
         markLoginSuccess();
         
-        // Set body attribute to prevent duplicate toasts
-        document.body.setAttribute('data-toast-shown', 'true');
+        // Set a flag to prevent duplicate toasts
+        if (!document.body.hasAttribute('data-toast-shown')) {
+          document.body.setAttribute('data-toast-shown', 'true');
+        }
         
-        // Set a session flag to indicate we're in a redirection process
-        sessionStorage.setItem('login_redirect_in_progress', 'true');
-        
-        // Small delay to ensure auth state is updated
-        setTimeout(() => {
-          console.log("Navigating to dashboard after login");
-          navigate('/dashboard', { replace: true });
-        }, 50);
+        // Instead of navigating immediately, let AuthGuard handle it
+        // The redirect will happen naturally through the auth state change
+        console.log("Login successful, letting AuthGuard handle redirect");
       } else {
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);

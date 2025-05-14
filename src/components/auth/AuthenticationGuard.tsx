@@ -1,13 +1,11 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isOnAuthPage } from "@/utils/navigationUtils";
 import { toast } from "sonner";
 import { 
-  forceRedirectToDashboard, 
-  isRunningAsPWA, 
-  wasLoginSuccessful, 
+  wasLoginSuccessful,
   isFirstLoginAfterLoad,
   markLoginSuccess,
   isRedirectInProgress,
@@ -22,6 +20,20 @@ export const AuthenticationGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
+  const redirectedRef = useRef(false);
+  const redirectAttemptCount = useRef(0);
+  const lastPathRef = useRef(pathname);
+  
+  // Debug redirect attempts
+  useEffect(() => {
+    // Reset redirect counter when path actually changes
+    if (lastPathRef.current !== pathname) {
+      console.log(`Path changed from ${lastPathRef.current} to ${pathname}`);
+      redirectAttemptCount.current = 0;
+      redirectedRef.current = false;
+      lastPathRef.current = pathname;
+    }
+  }, [pathname]);
   
   // Cleanup function for the redirect in progress flag
   useEffect(() => {
@@ -47,12 +59,6 @@ export const AuthenticationGuard = () => {
       // Mark login as successful for redirects
       if (authEvent === 'SIGN_IN_COMPLETE') {
         markLoginSuccess();
-        
-        // Fast path: redirect to dashboard immediately if on login page or chat page
-        if (isOnAuthPage(pathname) || pathname === '/chat') {
-          console.log("Redirecting to dashboard after login");
-          navigate("/dashboard", { replace: true });
-        }
       }
     }
     
@@ -60,20 +66,34 @@ export const AuthenticationGuard = () => {
     return () => {
       document.body.removeAttribute('data-toast-shown');
     };
-  }, [user, authEvent, pathname, navigate]);
+  }, [user, authEvent]);
   
   // Main auth redirection effect - simplified for performance
   useEffect(() => {
+    // Skip if still loading auth state or we've already redirected on this path
+    if (isLoading || redirectedRef.current) return;
+    
+    // Increment redirect attempt counter
+    redirectAttemptCount.current += 1;
+    
+    // Safety circuit breaker - if too many attempts, don't redirect
+    if (redirectAttemptCount.current > 3) {
+      console.warn("Too many redirect attempts, breaking the loop", {
+        path: pathname,
+        user: !!user,
+        attempts: redirectAttemptCount.current
+      });
+      return;
+    }
+    
     console.log("AuthGuard checking state:", { 
       isLoading, 
       user: user?.id ? "Yes" : "No", 
       path: pathname, 
       authEvent,
-      onboarded: user?.onboarded
+      onboarded: user?.onboarded,
+      attempts: redirectAttemptCount.current
     });
-    
-    // Skip if still loading auth state
-    if (isLoading) return;
     
     // Skip navigation for password reset pages
     if (pathname === "/reset-password" || pathname === "/update-password") return;
@@ -87,6 +107,7 @@ export const AuthenticationGuard = () => {
       // Priority path: Redirect to onboarding if not onboarded
       if (!user.onboarded && pathname !== "/onboarding") {
         console.log("Redirecting to onboarding");
+        redirectedRef.current = true;
         navigate("/onboarding", { replace: true });
         return;
       } 
@@ -94,6 +115,7 @@ export const AuthenticationGuard = () => {
       // Handle authenticated users on auth pages - direct them to dashboard
       if (user.onboarded && isCurrentlyOnAuth) {
         console.log("Authenticated user on auth page, redirecting to dashboard");
+        redirectedRef.current = true;
         navigate("/dashboard", { replace: true });
         return;
       }
@@ -101,20 +123,7 @@ export const AuthenticationGuard = () => {
       // Handle root path - redirect to dashboard for authenticated users
       if (user.onboarded && pathname === "/") {
         console.log("Authenticated user on root page, redirecting to dashboard");
-        navigate("/dashboard", { replace: true });
-        return;
-      }
-      
-      // Redirect to dashboard if user lands directly on chat page after login
-      if (user.onboarded && pathname === "/chat" && wasLoginSuccessful()) {
-        console.log("Redirecting to dashboard after recent login");
-        navigate("/dashboard", { replace: true });
-        return;
-      }
-      
-      // Handle post-login redirects for PWA
-      if (isRunningAsPWA() && wasLoginSuccessful() && isCurrentlyOnAuth) {
-        console.log("PWA authenticated user on auth page, redirecting to dashboard");
+        redirectedRef.current = true;
         navigate("/dashboard", { replace: true });
         return;
       }
@@ -122,6 +131,7 @@ export const AuthenticationGuard = () => {
     // Simple case: Unauthenticated users trying to access protected routes
     else if (!user && pathname !== "/" && !isCurrentlyOnAuth) {
       console.log("Unauthenticated user on protected route, redirecting to login");
+      redirectedRef.current = true;
       navigate("/login", { replace: true });
     }
   }, [user, isLoading, pathname, navigate, authEvent]);

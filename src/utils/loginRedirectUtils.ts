@@ -7,6 +7,7 @@ const LOGIN_SUCCESS_KEY = 'login_success_timestamp';
 const LOGIN_SESSION_KEY = 'login_success';
 const JUST_LOGGED_IN_KEY = 'just_logged_in';
 const REDIRECT_IN_PROGRESS = 'login_redirect_in_progress';
+const REDIRECT_ATTEMPT_COUNT = 'redirect_attempt_count';
 
 /**
  * Sets a login success flag with a timestamp - optimized version
@@ -17,6 +18,9 @@ export const markLoginSuccess = (): void => {
   localStorage.setItem(LOGIN_SUCCESS_KEY, timestamp.toString());
   sessionStorage.setItem(LOGIN_SESSION_KEY, 'true');
   sessionStorage.setItem(JUST_LOGGED_IN_KEY, 'true');
+  
+  // Reset redirect attempt counter
+  sessionStorage.setItem(REDIRECT_ATTEMPT_COUNT, '0');
   
   // Debug log for tracking login flow
   console.log("Login success marked at", new Date(timestamp).toISOString());
@@ -38,6 +42,7 @@ export const clearLoginSuccess = (): void => {
   sessionStorage.removeItem(LOGIN_SESSION_KEY);
   sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
   sessionStorage.removeItem(REDIRECT_IN_PROGRESS);
+  sessionStorage.removeItem(REDIRECT_ATTEMPT_COUNT);
 };
 
 /**
@@ -84,10 +89,37 @@ export const isRedirectInProgress = (): boolean => {
 };
 
 /**
+ * Sets the redirect in progress flag
+ */
+export const setRedirectInProgress = (): void => {
+  sessionStorage.setItem(REDIRECT_IN_PROGRESS, 'true');
+  
+  // Track redirect attempts
+  const attempts = sessionStorage.getItem(REDIRECT_ATTEMPT_COUNT);
+  const count = attempts ? parseInt(attempts) : 0;
+  sessionStorage.setItem(REDIRECT_ATTEMPT_COUNT, (count + 1).toString());
+};
+
+/**
  * Clears the redirect in progress flag
  */
 export const clearRedirectInProgress = (): void => {
   sessionStorage.removeItem(REDIRECT_IN_PROGRESS);
+};
+
+/**
+ * Gets the current redirect attempt count
+ */
+export const getRedirectAttemptCount = (): number => {
+  const attempts = sessionStorage.getItem(REDIRECT_ATTEMPT_COUNT);
+  return attempts ? parseInt(attempts) : 0;
+};
+
+/**
+ * Resets the redirect attempt count
+ */
+export const resetRedirectAttemptCount = (): void => {
+  sessionStorage.setItem(REDIRECT_ATTEMPT_COUNT, '0');
 };
 
 /**
@@ -98,7 +130,7 @@ export const forceRedirectToDashboard = (): void => {
   console.log("Force redirect to dashboard initiated");
   
   // Mark redirection as in progress
-  sessionStorage.setItem(REDIRECT_IN_PROGRESS, 'true');
+  setRedirectInProgress();
   
   // Directly navigate to dashboard
   const alreadyOnDashboard = window.location.pathname === '/dashboard';
