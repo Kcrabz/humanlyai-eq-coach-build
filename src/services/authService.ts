@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { toast } from "sonner";
@@ -88,7 +87,8 @@ export const hasJustAuthenticated = (): boolean => {
  */
 export const getUserProfile = async (userId: string): Promise<User | null> => {
   try {
-    const { data, error } = await supabase
+    // First get the profile data
+    const { data: profileData, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -99,7 +99,22 @@ export const getUserProfile = async (userId: string): Promise<User | null> => {
       return null;
     }
     
-    return data as User;
+    // Get the current session to access the user email
+    const { data: sessionData } = await supabase.auth.getSession();
+    const email = sessionData?.session?.user?.email || '';
+    
+    if (!email) {
+      console.error("Could not retrieve user email from session");
+    }
+    
+    // Combine the profile data with the email from the session
+    const user: User = {
+      ...profileData,
+      email,
+      subscription_tier: profileData.subscription_tier || 'free'
+    };
+    
+    return user;
   } catch (e) {
     console.error("Exception fetching user profile:", e);
     return null;
@@ -205,4 +220,3 @@ export const getSourceParameter = (search: string): string | null => {
   const params = new URLSearchParams(search);
   return params.get('source');
 };
-
