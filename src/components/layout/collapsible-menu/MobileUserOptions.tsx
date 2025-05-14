@@ -11,7 +11,7 @@ interface MobileUserOptionsProps {
 
 export function MobileUserOptions({ user, isAdmin, handleMenuItemClick, logout }: MobileUserOptionsProps) {
   return (
-    <div className="flex flex-col w-full mt-4 md:hidden">
+    <div className="flex flex-col w-full mt-4 md:hidden pb-4">
       <Link 
         to="/progress"
         onClick={handleMenuItemClick}
