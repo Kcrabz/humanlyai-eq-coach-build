@@ -14,8 +14,13 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const { isAdmin, isLoading: isAdminCheckLoading, refreshAdminStatus } = useAdminCheck();
   
-  // Add logging to verify admin status on dashboard
-  console.log("Dashboard admin status:", { isAdmin, isAdminCheckLoading, userEmail: user?.email });
+  // Add logging to verify dashboard rendering
+  console.log("Dashboard rendering:", { 
+    hasUser: !!user, 
+    userEmail: user?.email,
+    userOnboarded: user?.onboarded,
+    currentPath: window.location.pathname
+  });
   
   // Force refresh admin status when dashboard is loaded
   useEffect(() => {

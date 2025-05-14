@@ -22,7 +22,7 @@ export const markLoginSuccess = (): void => {
   console.log("Login success marked with timestamp", { timestamp });
   
   // Special handling for PWA mode
-  if (window.isPwaMode()) {
+  if (window.isPwaMode?.()) {
     console.log("Login success detected in PWA mode");
     
     // Store dashboard as the default redirect path if nothing else is specified
@@ -69,7 +69,7 @@ export const forceRedirectToDashboard = (): void => {
   console.log("Forcing redirect to dashboard using window.location");
   
   // If in PWA mode, use a slight delay to ensure state is properly updated
-  if (window.isPwaMode()) {
+  if (isRunningAsPWA()) {
     // For PWA, store the redirect in localStorage to persist across page loads
     localStorage.setItem('pwa_redirect_after_login', '/dashboard');
     console.log("Set localStorage redirect for PWA");
@@ -103,6 +103,12 @@ export const shouldShowFreshChat = (): boolean => {
  * Detect if the app is running as a PWA (standalone mode)
  */
 export const isRunningAsPWA = (): boolean => {
-  return window.matchMedia('(display-mode: standalone)').matches || 
-         (window.navigator as any).standalone === true;
+  try {
+    return window.matchMedia('(display-mode: standalone)').matches || 
+          (window.navigator as any).standalone === true || 
+          (window.isPwaMode && window.isPwaMode());
+  } catch (e) {
+    console.error("Error checking PWA mode:", e);
+    return false;
+  }
 };

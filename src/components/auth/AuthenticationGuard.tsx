@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isOnAuthPage } from "@/utils/navigationUtils";
 import { toast } from "sonner";
-import { forceRedirectToDashboard, isRunningAsPWA } from "@/utils/loginRedirectUtils";
+import { forceRedirectToDashboard, isRunningAsPWA, wasLoginSuccessful } from "@/utils/loginRedirectUtils";
 
 /**
  * Global authentication guard component that handles all redirects based on auth state
@@ -63,12 +63,14 @@ export const AuthenticationGuard = () => {
     const shouldGoToOnboarding = user && !user.onboarded && pathname !== "/onboarding";
     const shouldGoToDashboard = user && user.onboarded && isCurrentlyOnAuth;
     const shouldGoToLogin = !user && pathname !== "/" && !isCurrentlyOnAuth;
+    const wasRecentLogin = wasLoginSuccessful();
     
     console.log("AuthGuard: Navigation logic check", {
       isCurrentlyOnAuth,
       shouldGoToOnboarding,
       shouldGoToDashboard,
       shouldGoToLogin,
+      wasRecentLogin,
       isPWA,
       pathname
     });
@@ -89,10 +91,11 @@ export const AuthenticationGuard = () => {
             navigate("/onboarding", { replace: true });
           }
         }
-      } else if (isCurrentlyOnAuth) {
+      } else if (isCurrentlyOnAuth || wasRecentLogin) {
         // Only redirect to dashboard after successful login if we're on an auth page
+        // or if login was recent (to handle the case where React Router navigation fails)
         if (pathname !== "/dashboard") {
-          console.log("AuthGuard: User onboarded and on auth page, redirecting to dashboard");
+          console.log("AuthGuard: User onboarded and on auth page or recent login, redirecting to dashboard");
           
           // Use direct window.location for PWA to avoid React Router issues
           if (isPWA) {
@@ -101,8 +104,13 @@ export const AuthenticationGuard = () => {
             forceRedirectToDashboard();
             toast.success(`Welcome back, ${user.name || 'Friend'}!`);
           } else {
-            navigate("/dashboard", { replace: true });
-            toast.success(`Welcome back, ${user.name || 'Friend'}!`);
+            try {
+              navigate("/dashboard", { replace: true });
+              toast.success(`Welcome back, ${user.name || 'Friend'}!`);
+            } catch (e) {
+              console.error("Navigation error, using fallback:", e);
+              forceRedirectToDashboard();
+            }
           }
         }
       }

@@ -9,7 +9,7 @@ import { useProfileCore } from "@/hooks/useProfileCore";
 import { useProfileActions } from "@/hooks/useProfileActions";
 import { useProfileState } from "@/hooks/useProfileState";
 import { AuthContextType } from "@/types/auth";
-import { useLoginTracking } from "./useLoginTracking";
+import { useLoginTracking } from "@/hooks/useLoginTracking";
 import { usePremiumFeatures } from "./usePremiumFeatures";
 import { useAuthLoadingState } from "./useAuthLoadingState";
 import { useAuthDerivedState } from "./useAuthDerivedState";
@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Profile state with unified loading
   const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
   
-  // Track login events - Fix: Pass isAuthenticated boolean and user object
+  // Track login events
   const isAuthenticated = !!user;
   useLoginTracking(isAuthenticated, user);
   
@@ -88,6 +88,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
   }, [isAuthenticated, user, location.pathname]);
+  
+  // Debugging log for auth state changes
+  useEffect(() => {
+    console.log("AuthProvider state updated:", { 
+      isAuthenticated, 
+      hasUser: !!user,
+      userOnboarded: user?.onboarded,
+      authEvent,
+      isLoading,
+      profileLoaded,
+      pathname: location.pathname
+    });
+  }, [isAuthenticated, user, authEvent, isLoading, profileLoaded, location.pathname]);
   
   // Memoize the context value to prevent unnecessary rerenders
   const contextValue: AuthContextType = useMemo(() => ({
