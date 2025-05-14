@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { User } from "@/types";
 
 export function useLoginTracking(authEvent: string | null) {
   const [loginEvent, setLoginEvent] = useState<string | null>(null);
   
   useEffect(() => {
     if (authEvent === 'SIGN_IN_COMPLETE') {
+      console.log("Login event detected, setting LOGIN_COMPLETE");
       setLoginEvent('LOGIN_COMPLETE');
       
       // Reset after a delay
@@ -18,5 +18,6 @@ export function useLoginTracking(authEvent: string | null) {
     }
   }, [authEvent]);
 
+  // Always return an object with loginEvent property to avoid destructuring errors
   return { loginEvent };
 }

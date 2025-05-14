@@ -44,7 +44,6 @@ const initPwaFeatures = () => {
                           (window.navigator as any).standalone === true;
     const isMobileApp = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
     
-    // Comprehensive detection information
     console.log("PWA detection:", {
       isStandalone,
       isMobileUserAgent: isMobileApp,
@@ -62,10 +61,10 @@ const initPwaFeatures = () => {
       document.body.classList.add('pwa');
       console.log('Running as installed PWA');
       
-      // Set PWA mode for the app, used by AuthenticationGuard
+      // Set PWA mode for the app
       localStorage.setItem('is_pwa_mode', 'true');
       
-      // Store pending paths if needed, but let AuthenticationGuard handle navigation
+      // Store pending paths if needed
       if (window.location.pathname !== '/' && 
           window.location.pathname !== '/login' && 
           window.location.pathname !== '/signup') {
@@ -97,7 +96,7 @@ const initPwaFeatures = () => {
   }
 };
 
-// Enhanced utility function to detect if app is in PWA mode - properly defined as a window property
+// Enhanced utility function to detect if app is in PWA mode
 window.isPwaMode = function(): boolean {
   try {
     // Check both standard detection and our custom flag
@@ -132,14 +131,14 @@ const initializeApp = () => {
       return;
     }
 
+    // Initialize PWA features first
+    initPwaFeatures();
+
     createRoot(root).render(
       <BrowserRouter>
         <App />
       </BrowserRouter>
     );
-
-    // Initialize PWA features first
-    initPwaFeatures();
     
     // Register service worker after the app is loaded
     registerServiceWorker();
@@ -166,6 +165,15 @@ const initializeApp = () => {
     }
   }
 };
+
+// Add type definition for Window interface
+declare global {
+  interface Window {
+    isPwaMode(): boolean;
+    isMobileDevice(): boolean;
+    _isPwaMode?: boolean;
+  }
+}
 
 // Initialize the application
 initializeApp();

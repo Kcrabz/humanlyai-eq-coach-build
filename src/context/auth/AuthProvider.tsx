@@ -9,7 +9,7 @@ import { usePremiumFeatures } from "./usePremiumFeatures";
 import { useLoginTracking } from "./useLoginTracking";
 import { useProfileCore } from "@/hooks/useProfileCore";
 import { useProfileActions } from "@/hooks/useProfileActions";
-import useAuthCore from "@/hooks/useAuthCore"; // Changed from named import to default import
+import useAuthCore from "@/hooks/useAuthCore"; // Using default import
 
 /**
  * AuthProvider - Enhanced with mobile/PWA detection
@@ -81,10 +81,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAuthenticated: !!user,
         userId: user?.id,
         authEvent,
-        profileLoaded
+        profileLoaded,
+        loginEvent
       });
     }
-  }, [isPwaMode, isMobileDevice, user, authEvent, profileLoaded]);
+  }, [isPwaMode, isMobileDevice, user, authEvent, profileLoaded, loginEvent]);
 
   return (
     <AuthContext.Provider 
