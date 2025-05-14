@@ -112,10 +112,10 @@ export const isRunningAsPWA = (): boolean => {
   }
 };
 
-// Add to Window interface
+// Add type definition to Window interface but don't redeclare isPwaMode
+// This fixes the duplicate declaration error
 declare global {
   interface Window {
     _isPwaMode?: boolean;
-    isPwaMode?: () => boolean;
   }
 }
