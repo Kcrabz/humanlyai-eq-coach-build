@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
 import { markLoginSuccess } from "@/utils/loginRedirectUtils";
+import { useNavigate } from "react-router-dom";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -19,6 +20,7 @@ export function useLoginForm() {
   const [loginSuccess, setLoginSuccess] = useState(false);
   
   const { login } = useAuth();
+  const navigate = useNavigate();
   
   // Clear login form success flag when component mounts
   useEffect(() => {
@@ -97,8 +99,8 @@ export function useLoginForm() {
         setLoginSuccess(true);
         markLoginSuccess();
         
-        // Force a redirect to dashboard to ensure navigation happens
-        window.location.href = '/dashboard';
+        // Use React Router for better navigation
+        navigate('/dashboard', { replace: true });
       } else {
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);

@@ -23,6 +23,7 @@ export const markLoginSuccess = (): void => {
   // Efficient PWA mode handling
   if (isRunningAsPWA()) {
     if (!sessionStorage.getItem('pwa_desired_path')) {
+      // Make sure dashboard is the default post-login destination
       sessionStorage.setItem('pwa_desired_path', '/dashboard');
     }
   }

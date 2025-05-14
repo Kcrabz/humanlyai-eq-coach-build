@@ -31,9 +31,9 @@ export const AuthenticationGuard = () => {
       if (authEvent === 'SIGN_IN_COMPLETE') {
         markLoginSuccess();
         
-        // Fast path: redirect to dashboard immediately if on login page
-        if (isOnAuthPage(pathname)) {
-          console.log("Redirecting to dashboard from auth page after login");
+        // Fast path: redirect to dashboard immediately if on login page or chat page
+        if (isOnAuthPage(pathname) || pathname === '/chat') {
+          console.log("Redirecting to dashboard after login");
           navigate("/dashboard", { replace: true });
         }
       }
@@ -77,6 +77,12 @@ export const AuthenticationGuard = () => {
       // Handle root path - redirect to dashboard for authenticated users
       if (user.onboarded && pathname === "/") {
         console.log("Authenticated user on root page, redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
+      }
+      
+      // Redirect to dashboard if user lands directly on chat page after login
+      if (user.onboarded && pathname === "/chat" && wasLoginSuccessful()) {
+        console.log("Redirecting to dashboard after recent login");
         navigate("/dashboard", { replace: true });
       }
     } 

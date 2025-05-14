@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
+import { wasLoginSuccessful } from "@/utils/loginRedirectUtils";
 
 const Index = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -15,6 +16,13 @@ const Index = () => {
     if (isLoading) return;
     
     if (isAuthenticated) {
+      // Check if user just logged in - always send to dashboard
+      if (wasLoginSuccessful()) {
+        console.log("Root page - Recent login detected, redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+      
       // Redirect onboarding users immediately
       if (user && !user.onboarded) {
         console.log("Root page - Redirecting to onboarding");

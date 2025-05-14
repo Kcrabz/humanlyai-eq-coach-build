@@ -11,6 +11,7 @@ import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar } from "@/components/chat/sidebar/ChatRightSidebar";
 import { ResponsiveMainContent } from "@/components/chat/components/ResponsiveMainContent";
 import { UpdateNotification } from "@/components/pwa/UpdateNotification";
+import { wasLoginSuccessful } from "@/utils/loginRedirectUtils";
 
 // Lazy load components that aren't immediately visible
 const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
@@ -26,6 +27,15 @@ const ChatPage = () => {
   
   // Keep track of previous coaching mode to detect changes
   const prevCoachingModeRef = useRef<string | undefined>(undefined);
+
+  // Check if this is a post-login navigation - redirect to dashboard if so
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && wasLoginSuccessful()) {
+      console.log("Post-login detected on chat page, redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+  }, [isAuthenticated, navigate, isLoading]);
 
   // Optimize auth check to use fewer rerenders
   useEffect(() => {
