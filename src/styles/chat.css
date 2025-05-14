@@ -30,15 +30,21 @@
   .enhanced-header .gap-2 svg {
     @apply h-3.5 w-3.5;
   }
+  
+  /* Smaller header on mobile */
+  .enhanced-header {
+    min-height: 48px;
+    padding: 8px 12px;
+  }
 }
 
 /* Chat markdown content styling with improved readability */
 .chat-md p {
-  @apply mb-3 leading-relaxed break-words;
+  @apply mb-2 leading-relaxed break-words;
 }
 
 .chat-md h1, .chat-md h2, .chat-md h3 {
-  @apply font-medium mb-2 mt-3;
+  @apply font-medium mb-2 mt-2;
 }
 
 .chat-md h1 {
@@ -54,7 +60,7 @@
 }
 
 .chat-md ul, .chat-md ol {
-  @apply my-3 ml-4 space-y-1;
+  @apply my-2 ml-4 space-y-1;
 }
 
 .chat-md ul {
@@ -70,7 +76,7 @@
 }
 
 .chat-md blockquote {
-  @apply border-l-4 border-humanly-indigo bg-humanly-pastel-lavender/10 pl-4 py-2 my-3 rounded-r;
+  @apply border-l-4 border-humanly-indigo bg-humanly-pastel-lavender/10 pl-4 py-2 my-2 rounded-r;
 }
 
 .chat-md code {
@@ -78,7 +84,7 @@
 }
 
 .chat-md pre {
-  @apply bg-humanly-gray-lightest p-3 rounded-lg my-3 overflow-auto;
+  @apply bg-humanly-gray-lightest p-3 rounded-lg my-2 overflow-auto;
 }
 
 .chat-md pre code {
@@ -90,7 +96,7 @@
 }
 
 .chat-md table {
-  @apply w-full my-3 border-collapse rounded-lg overflow-hidden;
+  @apply w-full my-2 border-collapse rounded-lg overflow-hidden;
 }
 
 .chat-md table th, .chat-md table td {
@@ -107,29 +113,28 @@
     max-width: 100%;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    font-size: 0.9rem;
   }
   
   .chat-md pre {
     max-width: 100%;
     overflow-x: auto;
+    font-size: 0.85rem;
   }
   
-  /* Mobile chat input styling */
-  form.p-3 {
-    padding: 12px 16px;
+  /* Spacing adjustments for mobile */
+  .chat-md p {
+    margin-bottom: 0.5rem;
   }
   
-  /* Mobile send button positioning */
-  .send-button-mobile {
-    position: absolute;
-    right: 16px;
-    bottom: 16px;
-    height: 32px;
-    width: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+  .chat-md h1, .chat-md h2, .chat-md h3 {
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .chat-md ul, .chat-md ol {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 }
 

@@ -64,7 +64,7 @@ export function ChatList() {
 
   return (
     <div 
-      className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-4'} space-y-6`} 
+      className={`flex-1 overflow-y-auto ${isMobile ? 'p-2 space-y-4' : 'p-4 space-y-6'}`} 
       data-pwa={isPWA ? "true" : "false"}
     >
       {validMessages.length === 0 ? (

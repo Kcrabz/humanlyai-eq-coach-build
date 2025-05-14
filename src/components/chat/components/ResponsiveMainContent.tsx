@@ -21,6 +21,7 @@ export function ResponsiveMainContent({
   const { open: leftSidebarOpen } = useSidebar("left");
   const isMobile = useIsMobile();
   const [isPWA, setIsPWA] = useState(false);
+  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
   
   // Detect if running as PWA
   useEffect(() => {
@@ -37,6 +38,13 @@ export function ResponsiveMainContent({
     const mediaQueryList = window.matchMedia('(display-mode: standalone)');
     const handleChange = () => checkPWA();
     
+    // Handle window resize to adjust height calculation
+    const handleResize = () => {
+      setWindowHeight(window.innerHeight);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
     // Use the correct event listener based on browser support
     if (mediaQueryList.addEventListener) {
       mediaQueryList.addEventListener('change', handleChange);
@@ -46,6 +54,7 @@ export function ResponsiveMainContent({
     }
     
     return () => {
+      window.removeEventListener('resize', handleResize);
       if (mediaQueryList.removeEventListener) {
         mediaQueryList.removeEventListener('change', handleChange);
       } else if ((mediaQueryList as any).removeListener) {
@@ -67,7 +76,9 @@ export function ResponsiveMainContent({
   const contentStyle = {
     width: contentWidth,
     transition: 'width 0.3s ease',
-    marginRight: '0'
+    marginRight: '0',
+    height: isMobile ? `${windowHeight}px` : '100%',
+    maxHeight: isMobile ? `${windowHeight}px` : '100%',
   };
 
   return (
@@ -76,6 +87,7 @@ export function ResponsiveMainContent({
       style={contentStyle}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
+      data-mobile={isMobile ? "true" : "false"}
     >
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}

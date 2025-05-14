@@ -2,6 +2,7 @@
 /* Base PWA styles */
 html.pwa {
   overscroll-behavior-y: none;
+  height: 100%;
 }
 
 body.pwa {
@@ -9,32 +10,33 @@ body.pwa {
   -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
+  height: 100%;
 }
 
 /* PWA-specific mobile optimizations */
 @media (max-width: 767px) {
   .pwa .enhanced-header {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: 8px;
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-top: env(safe-area-inset-top, 8px) !important;
+    padding-bottom: 8px !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
   
-  .pwa form.p-3 {
-    padding-bottom: env(safe-area-inset-bottom, 16px);
-    padding-left: 16px;
-    padding-right: 16px;
+  .pwa form {
+    padding-bottom: env(safe-area-inset-bottom, 8px) !important;
   }
   
   /* Better spacing for PWA send button */
-  .pwa .send-button-mobile {
-    bottom: calc(env(safe-area-inset-bottom, 16px) + 10px);
-    right: 20px;
+  .pwa form .absolute {
+    bottom: calc(env(safe-area-inset-bottom, 8px) + 8px) !important;
   }
   
   /* Content area adjustments for PWA */
   .pwa .main-content {
-    padding-bottom: env(safe-area-inset-bottom, 0);
+    height: 100vh !important; /* Fallback */
+    height: 100dvh !important; /* Dynamic viewport height */
+    max-height: 100vh !important; /* Fallback */
+    max-height: 100dvh !important; /* Dynamic viewport height */
   }
   
   /* Better right sidebar positioning for PWA */
@@ -43,27 +45,14 @@ body.pwa {
     padding-bottom: env(safe-area-inset-bottom);
   }
   
-  /* Progress page tabs improvements for PWA */
-  .pwa .TabsList {
-    overflow-x: auto;
-    scrollbar-width: none; /* Firefox */
+  /* Enhanced chat list and input area for better space use */
+  .pwa .flex-1.overflow-y-auto {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
   }
   
-  .pwa .TabsList::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Edge */
-  }
-  
-  /* Segmented control improvements for Progress page */
-  .pwa .ToggleGroup {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-  
-  .pwa .ToggleGroupItem {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
+  .pwa .enhanced-chat-bubble {
+    margin-bottom: 8px !important;
   }
 }
 
@@ -76,48 +65,4 @@ body.pwa {
   z-index: 100;
   width: 90%;
   max-width: 360px;
-}
-
-/* Additional styles for progress page tabs on mobile */
-@media (max-width: 767px) {
-  /* Make tabs container scrollable horizontally */
-  .overflow-x-auto::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .overflow-x-auto {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding-bottom: 5px;
-  }
-  
-  /* Add a little fade effect to indicate more content */
-  .overflow-x-auto::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 12px;
-    width: 24px;
-    background: linear-gradient(to right, transparent, white);
-    pointer-events: none;
-    z-index: 10;
-  }
-  
-  /* Segmented control specific styles */
-  .ToggleGroup {
-    display: flex;
-    width: 100%;
-  }
-  
-  .ToggleGroupItem {
-    padding-left: 2px;
-    padding-right: 2px;
-    font-size: 0.75rem; /* text-xs equivalent */
-    flex: 1;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 }
