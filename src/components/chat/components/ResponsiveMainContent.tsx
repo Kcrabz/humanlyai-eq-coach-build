@@ -67,8 +67,7 @@ export function ResponsiveMainContent({
   const contentStyle = {
     width: contentWidth,
     transition: 'width 0.3s ease',
-    marginRight: '0',
-    height: isMobile ? '100%' : undefined
+    marginRight: '0'
   };
 
   return (
@@ -77,7 +76,6 @@ export function ResponsiveMainContent({
       style={contentStyle}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
-      data-mobile={isMobile ? "true" : "false"}
     >
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}

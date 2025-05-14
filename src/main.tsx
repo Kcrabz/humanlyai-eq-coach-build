@@ -1,4 +1,3 @@
-
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
@@ -81,28 +80,26 @@ window.isPwaMode = function(): boolean {
          (window.navigator as any).standalone === true;
 };
 
-// Initialize the application with proper error handling and order of operations
+// Initialize the application with error handling
 const initializeApp = () => {
   try {
-    // First, find the root element
     const root = document.getElementById("root");
     if (!root) {
       console.error("Root element not found!");
       return;
     }
 
-    // Then render the app
     createRoot(root).render(
       <BrowserRouter>
         <App />
       </BrowserRouter>
     );
 
-    // After rendering, initialize PWA features
-    initPwaFeatures();
-    
-    // Finally register service worker
+    // Register service worker after the app is loaded
     registerServiceWorker();
+    
+    // Initialize PWA features
+    initPwaFeatures();
     
     // Add additional PWA detection for login flow
     window.addEventListener('DOMContentLoaded', () => {

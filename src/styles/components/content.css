@@ -31,12 +31,10 @@
     width: 100% !important;
     max-width: 100% !important;
     flex-basis: 100% !important;
-    height: 100dvh !important; /* Dynamic viewport height for mobile */
   }
   
   .mobile-main-content {
     padding-top: 0; /* Remove additional padding */
-    height: 100%; /* Full height */
   }
   
   /* Ensure text doesn't overflow on mobile */
@@ -48,7 +46,6 @@
   /* Mobile-specific spacing for chat UI */
   .enhanced-header {
     padding: 12px 16px;
-    height: 60px; /* Fixed height for header */
   }
   
   /* Better positioning for the mobile send button */
@@ -61,55 +58,9 @@
   form textarea {
     padding-right: 40px;
   }
-  
-  /* Use proper height on mobile */
-  [data-mobile="true"] .flex-1 {
-    height: 100%;
-    min-height: 0;
-  }
-  
-  /* Fix chat list height on mobile */
-  [data-mobile="true"] .overflow-y-auto {
-    max-height: calc(100dvh - 170px);
-    min-height: 0;
-  }
 }
 
 /* Footer styling */
 .zen-footer {
   @apply border-t border-gray-50 py-3 px-4 text-xs text-gray-500 bg-white;
-}
-
-/* Use dvh values for better mobile height handling */
-@supports (height: 100dvh) {
-  .h-\[100dvh\] {
-    height: 100dvh;
-  }
-  
-  @media (max-width: 767px) {
-    [data-mobile="true"] .overflow-y-auto {
-      max-height: calc(100dvh - 170px);
-    }
-    
-    .main-content {
-      max-height: 100dvh;
-    }
-  }
-}
-
-/* Fallback for browsers that don't support dvh */
-@supports not (height: 100dvh) {
-  .h-\[100dvh\] {
-    height: 100vh;
-  }
-  
-  @media (max-width: 767px) {
-    [data-mobile="true"] .overflow-y-auto {
-      max-height: calc(100vh - 170px);
-    }
-    
-    .main-content {
-      max-height: 100vh;
-    }
-  }
 }
