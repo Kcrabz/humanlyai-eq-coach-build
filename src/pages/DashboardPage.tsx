@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { memo, useEffect, useState, Suspense } from "react";
 import { Loading } from "@/components/ui/loading";
-import { setAuthState, AuthState } from "@/services/authService";
+import { AuthNavigationService } from "@/services/authNavigationService";
 
 // Memoize card components for performance
 const ActionCard = memo(({ 
@@ -87,13 +87,10 @@ const DashboardContent = memo(() => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
   
-  // Handle navigation to chat - simplified to prevent redirection loops
+  // Enhanced handler for chat navigation
   const handleNavigateToChat = () => {
-    // Set explicit flag that we're navigating intentionally
-    localStorage.setItem('intentional_navigation_to_chat', 'true');
-    
-    // Navigate to chat with source parameter
-    navigate("/chat?source=dashboard");
+    // Use our centralized navigation service
+    AuthNavigationService.navigateToChat(navigate);
   };
   
   return (
