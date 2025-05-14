@@ -8,7 +8,6 @@ import { HelpPrompt } from "@/components/chat/components/HelpPrompt";
 import { BreakthroughAlert } from "@/components/chat/components/BreakthroughAlert";
 import { EnhancedChatForm } from "@/components/chat/components/EnhancedChatForm";
 import { useEnhancedChat } from "@/components/chat/hooks/useEnhancedChat";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface EnhancedChatUIProps {
   initialMessages?: ChatMessage[];
@@ -23,7 +22,6 @@ export function EnhancedChatUI({
 }: EnhancedChatUIProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { isPremiumMember } = useAuth();
-  const isMobile = useIsMobile();
   
   const {
     chatHistory,
@@ -45,20 +43,12 @@ export function EnhancedChatUI({
   }, [chatHistory, isLoading]);
 
   return (
-    <div className={`flex flex-col h-full ${className} enhanced-chat-ui`}>
-      <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-2 space-y-2' : 'p-4 space-y-6'} chat-list-container`}>
+    <div className={`flex flex-col h-full ${className}`}>
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {chatHistory.length === 0 ? (
-          <div className="h-full flex items-center justify-center">
-            <ChatWelcomeScreen sendSuggestedMessage={sendSuggestedMessage} />
-          </div>
+          <ChatWelcomeScreen sendSuggestedMessage={sendSuggestedMessage} />
         ) : (
-          chatHistory.map((message) => (
-            <ChatBubble 
-              key={message.id} 
-              message={message} 
-              className={isMobile ? "enhanced-chat-bubble-mobile" : ""}
-            />
-          ))
+          chatHistory.map((message) => <ChatBubble key={message.id} message={message} />)
         )}
         
         {showHelpPrompt && <HelpPrompt sendSuggestedMessage={sendSuggestedMessage} />}

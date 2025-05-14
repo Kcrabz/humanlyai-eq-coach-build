@@ -2,7 +2,6 @@
 import { ChatLeftSidebarTrigger } from "@/components/chat/sidebar/ChatLeftSidebarTrigger";
 import { ChatRightSidebarTrigger } from "@/components/chat/sidebar/ChatRightSidebarTrigger";
 import { StartNewChatButton } from "./StartNewChatButton";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChatHeaderProps {
   hasCompletedAssessment: boolean;
@@ -11,18 +10,16 @@ interface ChatHeaderProps {
 }
 
 export function ChatHeader({ hasCompletedAssessment, userArchetype, onStartAssessment }: ChatHeaderProps) {
-  const isMobile = useIsMobile();
-  
   return (
-    <div className={`enhanced-header flex items-center justify-between ${isMobile ? 'py-1.5 px-2' : 'p-3'} shrink-0`}>
-      <div className="flex items-center gap-2">
+    <div className="enhanced-header p-3 flex items-center justify-between">
+      <div className="flex items-center gap-3">
         <ChatLeftSidebarTrigger />
-        <h1 className={`font-medium bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent ${isMobile ? 'text-base' : 'text-lg'}`}>
+        <h1 className="font-medium text-lg bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
           Kai | EQ Coach
         </h1>
       </div>
       
-      <div className="flex items-center gap-2 md:gap-4">
+      <div className="flex items-center gap-4">
         {/* Add Start New Chat button */}
         <StartNewChatButton />
         

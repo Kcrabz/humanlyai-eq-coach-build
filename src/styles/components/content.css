@@ -16,14 +16,11 @@
 
 /* Main content area with responsive width */
 .main-content {
-  @apply flex-1 bg-gradient-to-br from-white to-humanly-pastel-lavender/10;
+  @apply flex-1 overflow-auto bg-gradient-to-br from-white to-humanly-pastel-lavender/10;
   transition: width 0.3s ease;
   width: 100%;
   flex-grow: 1;
   z-index: 10;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 /* Mobile-specific content fixes */
@@ -34,16 +31,6 @@
     width: 100% !important;
     max-width: 100% !important;
     flex-basis: 100% !important;
-    display: flex;
-    flex-direction: column;
-    height: 100dvh !important;
-    overflow: hidden;
-  }
-  
-  /* Optimize total height use on mobile using dynamic viewport height */
-  .main-content[data-mobile="true"] {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
   }
   
   .mobile-main-content {
@@ -52,88 +39,28 @@
   
   /* Ensure text doesn't overflow on mobile */
   .enhanced-chat-bubble {
-    max-width: 90% !important;
+    max-width: 85% !important;
     word-break: break-word;
   }
 
   /* Mobile-specific spacing for chat UI */
   .enhanced-header {
-    padding: 4px 8px !important;
-    min-height: 42px !important;
-    height: auto !important;
-    flex-shrink: 0;
+    padding: 12px 16px;
   }
   
   /* Better positioning for the mobile send button */
   form .absolute.right-5 {
-    right: 10px !important;
-    bottom: 10px !important;
+    right: 12px;
+    bottom: 12px;
   }
   
   /* Ensure the chat input has proper spacing */
   form textarea {
     padding-right: 40px;
-    max-height: 60px !important;
-  }
-  
-  /* Safe area insets for iOS devices */
-  .pb-safe {
-    padding-bottom: env(safe-area-inset-bottom, 8px);
-  }
-
-  /* Better input container spacing */
-  form.border-t {
-    border-top-width: 1px;
-    padding: 6px 8px;
-  }
-
-  /* Chat container needs to fill available space but not overflow */
-  .chat-content-container {
-    display: flex;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    flex-direction: column;
-  }
-
-  /* Chat list should scroll within available space */
-  .chat-list-container {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    min-height: 0;
-    padding-top: 4px !important;
-    padding-bottom: 4px !important;
-  }
-  
-  /* Fix chat input container */
-  .chat-input-container {
-    flex-shrink: 0;
   }
 }
 
 /* Footer styling */
 .zen-footer {
   @apply border-t border-gray-50 py-3 px-4 text-xs text-gray-500 bg-white;
-}
-
-/* Ensure the chat bubbles have adequate spacing but not too much on mobile */
-@media (max-width: 767px) {
-  .space-y-6 {
-    --tw-space-y-reverse: 0;
-    margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
-    margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));
-  }
-
-  /* Better vertical spacing on mobile */
-  .py-4 {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-  }
-}
-
-/* Ensure chat content fills available space properly */
-.overflow-hidden.flex.flex-col {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
 }

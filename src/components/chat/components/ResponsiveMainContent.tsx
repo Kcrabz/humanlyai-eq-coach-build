@@ -3,7 +3,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { ChatHeader } from "./ChatHeader";
 import { ChatContent } from "./ChatContent";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEffect, useState, useLayoutEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface ResponsiveMainContentProps {
   hasCompletedAssessment: boolean;
@@ -28,15 +28,6 @@ export function ResponsiveMainContent({
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                           (window.navigator as any).standalone === true;
       setIsPWA(isStandalone);
-      
-      // Apply PWA class to html and body if in PWA mode
-      if (isStandalone) {
-        document.documentElement.classList.add('pwa');
-        document.body.classList.add('pwa');
-      } else {
-        document.documentElement.classList.remove('pwa');
-        document.body.classList.remove('pwa');
-      }
     };
     
     // Check on initial render
@@ -73,18 +64,18 @@ export function ResponsiveMainContent({
         ? 'calc(100% - 14.5rem)'
         : '100%';
 
+  const contentStyle = {
+    width: contentWidth,
+    transition: 'width 0.3s ease',
+    marginRight: '0'
+  };
+
   return (
     <div 
       className="flex-1 flex flex-col overflow-hidden main-content relative"
-      style={{
-        width: contentWidth,
-        transition: 'width 0.3s ease',
-        height: isMobile ? '100dvh' : '100%', // Use dynamic viewport height for mobile
-        maxHeight: isMobile ? '100dvh' : '100%'
-      }}
+      style={contentStyle}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
-      data-mobile={isMobile ? "true" : "false"}
     >
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}

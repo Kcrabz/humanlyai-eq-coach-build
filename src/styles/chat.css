@@ -4,10 +4,6 @@
   @apply rounded-xl shadow-sm transition-all duration-300;
 }
 
-.enhanced-chat-bubble-mobile {
-  @apply py-2 px-3 mb-1 max-w-[90%] !important;
-}
-
 .enhanced-chat-user {
   @apply bg-gradient-to-br from-humanly-indigo to-humanly-indigo-dark/90 text-white;
 }
@@ -34,73 +30,15 @@
   .enhanced-header .gap-2 svg {
     @apply h-3.5 w-3.5;
   }
-  
-  /* Smaller header on mobile */
-  .enhanced-header {
-    min-height: 42px !important;
-    padding: 4px 8px !important;
-    height: auto !important;
-    flex-shrink: 0;
-    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
-  }
-
-  /* Ensure the send button is properly positioned */
-  .chat-input-container .absolute {
-    bottom: 10px !important;
-    right: 12px !important;
-  }
-}
-
-/* Fix layout structure */
-.chat-content-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.chat-list-container {
-  flex: 1 1 auto;
-  overflow-y: auto;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.chat-input-wrapper {
-  flex-shrink: 0;
-  position: relative;
-  z-index: 20;
-  background: white;
-  width: 100%;
-}
-
-/* Mobile sizing */
-@media (max-width: 640px) {
-  html, body {
-    overflow: hidden;
-    height: 100%;
-  }
-
-  #root, .app-container, .main-content {
-    height: 100dvh;
-    overflow: hidden;
-  }
-
-  .main-content {
-    display: flex;
-    flex-direction: column;
-  }
 }
 
 /* Chat markdown content styling with improved readability */
 .chat-md p {
-  @apply mb-2 leading-relaxed break-words;
+  @apply mb-3 leading-relaxed break-words;
 }
 
 .chat-md h1, .chat-md h2, .chat-md h3 {
-  @apply font-medium mb-2 mt-2;
+  @apply font-medium mb-2 mt-3;
 }
 
 .chat-md h1 {
@@ -116,7 +54,7 @@
 }
 
 .chat-md ul, .chat-md ol {
-  @apply my-2 ml-4 space-y-1;
+  @apply my-3 ml-4 space-y-1;
 }
 
 .chat-md ul {
@@ -132,7 +70,7 @@
 }
 
 .chat-md blockquote {
-  @apply border-l-4 border-humanly-indigo bg-humanly-pastel-lavender/10 pl-4 py-2 my-2 rounded-r;
+  @apply border-l-4 border-humanly-indigo bg-humanly-pastel-lavender/10 pl-4 py-2 my-3 rounded-r;
 }
 
 .chat-md code {
@@ -140,7 +78,7 @@
 }
 
 .chat-md pre {
-  @apply bg-humanly-gray-lightest p-3 rounded-lg my-2 overflow-auto;
+  @apply bg-humanly-gray-lightest p-3 rounded-lg my-3 overflow-auto;
 }
 
 .chat-md pre code {
@@ -152,7 +90,7 @@
 }
 
 .chat-md table {
-  @apply w-full my-2 border-collapse rounded-lg overflow-hidden;
+  @apply w-full my-3 border-collapse rounded-lg overflow-hidden;
 }
 
 .chat-md table th, .chat-md table td {
@@ -169,59 +107,29 @@
     max-width: 100%;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    font-size: 0.9rem;
-    margin-bottom: 0.5rem;
   }
   
   .chat-md pre {
     max-width: 100%;
     overflow-x: auto;
-    font-size: 0.85rem;
   }
   
-  /* Spacing adjustments for mobile */
-  .chat-md p {
-    margin-bottom: 0.5rem;
+  /* Mobile chat input styling */
+  form.p-3 {
+    padding: 12px 16px;
   }
   
-  .chat-md h1, .chat-md h2, .chat-md h3 {
-    margin-top: 0.75rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .chat-md ul, .chat-md ol {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  /* Tighter spacing for mobile chat interface */
-  .prose-xs p {
-    margin-bottom: 0.5rem;
-    font-size: 0.9rem;
-    line-height: 1.4;
-  }
-  
-  .prose-xs h1, 
-  .prose-xs h2, 
-  .prose-xs h3 {
-    margin-top: 0.5rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .prose-xs ul, 
-  .prose-xs ol {
-    margin-top: 0.25rem;
-    margin-bottom: 0.25rem;
-  }
-  
-  .prose-xs li {
-    margin-bottom: 0.25rem;
-  }
-
-  /* Better sized elements for mobile */
-  .enhanced-chat-bubble {
-    padding: 8px 10px;
-    margin-bottom: 4px;
+  /* Mobile send button positioning */
+  .send-button-mobile {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    height: 32px;
+    width: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
   }
 }
 

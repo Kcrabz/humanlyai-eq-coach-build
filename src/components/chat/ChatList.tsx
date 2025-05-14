@@ -10,7 +10,6 @@ export function ChatList() {
   const { messages, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const firstRenderRef = useRef(true);
-  const listContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const [isPWA, setIsPWA] = useState(false);
   
@@ -65,22 +64,15 @@ export function ChatList() {
 
   return (
     <div 
-      ref={listContainerRef}
-      className={`flex-1 overflow-y-auto ${isMobile ? 'px-2 pb-1 pt-1 space-y-2' : 'p-4 space-y-6'} chat-list-container`} 
+      className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-4'} space-y-6`} 
       data-pwa={isPWA ? "true" : "false"}
     >
       {validMessages.length === 0 ? (
-        <div className="h-full flex items-center justify-center">
-          <EmptyChatState />
-        </div>
+        <EmptyChatState />
       ) : (
         validMessages.map((message) => (
           message.content && message.content.trim() ? 
-            <ChatBubble 
-              key={message.id} 
-              message={message}
-              className={isMobile ? "enhanced-chat-bubble-mobile" : ""}
-            /> : 
+            <ChatBubble key={message.id} message={message} /> : 
             null
         ))
       )}
@@ -89,5 +81,3 @@ export function ChatList() {
     </div>
   );
 }
-
-export default ChatList;
