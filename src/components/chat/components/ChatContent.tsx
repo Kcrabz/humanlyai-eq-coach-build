@@ -28,8 +28,8 @@ export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatC
       
       <Suspense fallback={
         <div className="flex-1 flex justify-center items-center">
-          <div className="animate-breathe rounded-full h-14 w-14 border-2 border-humanly-indigo/30 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-humanly-indigo"></div>
+          <div className="animate-breathe rounded-full h-10 w-10 border-2 border-humanly-indigo/30 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-humanly-indigo"></div>
           </div>
         </div>
       }>

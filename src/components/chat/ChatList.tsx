@@ -66,7 +66,7 @@ export function ChatList() {
   return (
     <div 
       ref={listContainerRef}
-      className={`flex-1 overflow-y-auto ${isMobile ? 'p-2 space-y-4' : 'p-4 space-y-6'} chat-list-container`} 
+      className={`flex-1 overflow-y-auto ${isMobile ? 'px-2 py-2 space-y-2' : 'p-4 space-y-6'} chat-list-container`} 
       data-pwa={isPWA ? "true" : "false"}
     >
       {validMessages.length === 0 ? (
@@ -87,3 +87,5 @@ export function ChatList() {
     </div>
   );
 }
+
+export default ChatList;

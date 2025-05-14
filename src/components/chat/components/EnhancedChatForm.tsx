@@ -39,7 +39,7 @@ export function EnhancedChatForm({
       textareaRef.current.style.height = "auto";
       const newHeight = Math.min(
         textareaRef.current.scrollHeight,
-        isMobile ? 80 : 120
+        isMobile ? 60 : 120
       );
       textareaRef.current.style.height = `${newHeight}px`;
     }
@@ -66,7 +66,7 @@ export function EnhancedChatForm({
   };
   
   return (
-    <div className={`border-t relative bg-background ${isMobile ? 'p-2 pb-safe' : 'p-3'}`}>
+    <div className={`sticky bottom-0 border-t relative bg-background ${isMobile ? 'p-2 pb-safe' : 'p-3'} chat-input-container`} style={{ zIndex: 20 }}>
       {error && (
         <ChatErrorBanner 
           error={error}
@@ -87,7 +87,7 @@ export function EnhancedChatForm({
           onChange={(e) => setMessage(e.target.value)}
           placeholder={placeholder}
           className={`min-h-[40px] w-full resize-none soft-input text-sm pr-10 rounded-lg ${
-            isMobile ? 'max-h-20 py-2' : 'max-h-24'
+            isMobile ? 'max-h-[60px] py-2' : 'max-h-24'
           }`}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -102,20 +102,20 @@ export function EnhancedChatForm({
           type="submit"
           size="sm"
           disabled={isLoading || !message.trim()}
-          className={`absolute ${isMobile ? 'bottom-2 right-2' : 'bottom-2 right-3'} h-8 w-8 rounded-full p-0 flex items-center justify-center`}
+          className={`absolute ${isMobile ? 'bottom-[10px] right-2' : 'bottom-2 right-3'} h-8 w-8 rounded-full p-0 flex items-center justify-center`}
         >
           {isLoading ? <Loading size="small" /> : <Send className="h-3.5 w-3.5" />}
         </Button>
       </form>
       
       {isLoading && (
-        <p className="text-xs text-muted-foreground mt-1.5 animate-pulse">
+        <p className="text-xs text-muted-foreground mt-1 animate-pulse">
           Kai is thinking...
         </p>
       )}
       
       {!isPremiumMember && !isMobile && (
-        <div className="mt-1.5 text-xs text-muted-foreground">
+        <div className="mt-1 text-xs text-muted-foreground">
           <p>
             <a href="/pricing" className="text-humanly-teal hover:underline">Upgrade to Premium</a> to unlock EQ tracking, streak records, and breakthrough detection.
           </p>

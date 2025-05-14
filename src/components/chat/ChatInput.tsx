@@ -19,7 +19,7 @@ export function ChatInput() {
       textareaRef.current.style.height = "auto";
       const newHeight = Math.min(
         textareaRef.current.scrollHeight,
-        isMobile ? 80 : 120
+        isMobile ? 60 : 120
       );
       textareaRef.current.style.height = `${newHeight}px`;
     }
@@ -55,16 +55,19 @@ export function ChatInput() {
   return (
     <form
       ref={formRef}
-      className={`border-t relative flex items-end gap-2 bg-white ${
+      className={`sticky bottom-0 bg-white border-t relative flex items-end gap-2 ${
         isMobile ? "p-2 pb-safe" : "p-3"
-      }`}
+      } chat-input-container`}
       onSubmit={handleSubmit}
-      style={{ minHeight: isMobile ? "50px" : "64px" }}
+      style={{ 
+        minHeight: isMobile ? "50px" : "64px",
+        zIndex: 20
+      }}
     >
       <Textarea
         ref={textareaRef}
         className={`flex-1 resize-none py-2 text-sm pr-10 rounded-lg ${
-          isMobile ? "max-h-20" : "max-h-24"
+          isMobile ? "max-h-[60px]" : "max-h-24"
         }`}
         placeholder="Type a message..."
         rows={1}
@@ -78,7 +81,7 @@ export function ChatInput() {
         type="submit"
         size="sm"
         className={`absolute ${
-          isMobile ? "bottom-4 right-4" : "bottom-5 right-5"
+          isMobile ? "bottom-[10px] right-4" : "bottom-5 right-5"
         } h-8 w-8 rounded-full flex items-center justify-center`}
         disabled={!message.trim() || isLoading}
       >

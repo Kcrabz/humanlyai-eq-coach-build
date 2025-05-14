@@ -18,25 +18,27 @@ body.pwa {
 /* PWA-specific mobile optimizations */
 @media (max-width: 767px) {
   .pwa .enhanced-header {
-    padding-top: env(safe-area-inset-top, 8px) !important;
-    padding-bottom: 8px !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+    padding-top: env(safe-area-inset-top, 4px) !important;
+    padding-bottom: 4px !important;
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+    min-height: auto !important;
+    height: auto !important;
   }
   
   .pwa form {
-    padding-bottom: env(safe-area-inset-bottom, 8px) !important;
+    padding-bottom: env(safe-area-inset-bottom, 6px) !important;
   }
   
   /* Better spacing for PWA send button */
   .pwa form .absolute {
-    bottom: calc(env(safe-area-inset-bottom, 8px) + 8px) !important;
+    bottom: calc(env(safe-area-inset-bottom, 6px) + 6px) !important;
   }
   
   /* Content area adjustments for PWA */
   .pwa .main-content {
-    height: 100dvh !important; /* Dynamic viewport height */
-    max-height: 100dvh !important;
+    height: 100svh !important; /* Small viewport height */
+    max-height: 100svh !important;
   }
   
   /* Better right sidebar positioning for PWA */
@@ -47,38 +49,42 @@ body.pwa {
   
   /* Enhanced chat list and input area for better space use */
   .pwa .flex-1.overflow-y-auto {
-    padding-top: 8px !important;
-    padding-bottom: 8px !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
   }
   
   .pwa .enhanced-chat-bubble {
-    margin-bottom: 8px !important;
+    margin-bottom: 4px !important;
   }
 
   /* Fix for iOS keyboard appearance */
   .pwa .chat-content-container {
-    height: calc(100dvh - 44px) !important; /* Subtract header height */
+    height: calc(100svh - 44px) !important; /* Subtract header height */
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
 
   .pwa .chat-input-container {
     position: sticky;
     bottom: 0;
     background: white;
-    z-index: 10;
+    z-index: 20;
+    padding-bottom: env(safe-area-inset-bottom, 8px) !important;
   }
 
   /* Fix for notch/dynamic island on newer iPhones */
   @supports (padding-top: env(safe-area-inset-top)) {
     .pwa .enhanced-header {
       padding-top: env(safe-area-inset-top) !important;
-      padding-left: env(safe-area-inset-left, 12px) !important;
-      padding-right: env(safe-area-inset-right, 12px) !important;
+      padding-left: env(safe-area-inset-left, 8px) !important;
+      padding-right: env(safe-area-inset-right, 8px) !important;
     }
     
     .pwa form {
       padding-bottom: env(safe-area-inset-bottom) !important;
-      padding-left: env(safe-area-inset-left, 12px) !important;
-      padding-right: env(safe-area-inset-right, 12px) !important;
+      padding-left: env(safe-area-inset-left, 8px) !important;
+      padding-right: env(safe-area-inset-right, 8px) !important;
     }
   }
 }
@@ -98,16 +104,15 @@ body.pwa {
 @media (max-width: 767px) {
   .vh-fix {
     height: -webkit-fill-available;
-    height: stretch;
   }
   
-  .dvh-fix {
-    height: 100dvh;
+  .svh-fix {
+    height: 100svh; /* Small viewport height - better for mobile */
   }
   
   /* Apply these in PWA context */
   .pwa .main-content {
-    height: 100dvh !important;
+    height: 100svh !important;
     height: -webkit-fill-available !important;
   }
   

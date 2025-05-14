@@ -5,7 +5,7 @@
 }
 
 .enhanced-chat-bubble-mobile {
-  @apply py-2 px-3 mb-2 max-w-[90%] !important;
+  @apply py-2 px-3 mb-1 max-w-[90%] !important;
 }
 
 .enhanced-chat-user {
@@ -37,20 +37,27 @@
   
   /* Smaller header on mobile */
   .enhanced-header {
-    min-height: 44px;
-    padding: 4px 12px;
+    min-height: 44px !important;
+    padding: 4px 8px !important;
+    height: auto !important;
   }
 
   /* Optimize chat bubbles on mobile */
   .chat-list-container {
-    padding-top: 8px;
-    padding-bottom: 8px;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
   }
 
   /* Ensure space for input area */
   .chat-content-container {
     display: flex;
     flex-direction: column;
+  }
+  
+  /* Ensure the send button is properly positioned */
+  .chat-input-container .absolute {
+    bottom: 10px !important;
+    right: 12px !important;
   }
 }
 
@@ -180,8 +187,8 @@
 
   /* Better sized elements for mobile */
   .enhanced-chat-bubble {
-    padding: 8px 12px;
-    margin-bottom: 8px;
+    padding: 8px 10px;
+    margin-bottom: 4px;
   }
 }
 

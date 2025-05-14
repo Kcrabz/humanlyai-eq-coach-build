@@ -99,8 +99,8 @@ export function ResponsiveMainContent({
       style={{
         width: contentWidth,
         transition: 'width 0.3s ease',
-        height: isMobile ? '100dvh' : '100%', // Use dynamic viewport height for mobile
-        maxHeight: isMobile ? '100dvh' : '100%' // Use dynamic viewport height for mobile
+        height: isMobile ? '100svh' : '100%', // Use small viewport height for mobile
+        maxHeight: isMobile ? '100svh' : '100%'
       }}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
