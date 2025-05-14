@@ -67,13 +67,12 @@ export function ResponsiveMainContent({
   const contentStyle = {
     width: contentWidth,
     transition: 'width 0.3s ease',
-    marginRight: '0',
-    height: isMobile ? '100%' : undefined
+    marginRight: '0'
   };
 
   return (
     <div 
-      className="flex-1 flex flex-col overflow-hidden main-content relative h-full"
+      className="flex-1 flex flex-col overflow-hidden main-content relative"
       style={contentStyle}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}

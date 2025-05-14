@@ -15,7 +15,7 @@ interface ChatContentProps {
 
 export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatContentProps) {
   return (
-    <div className="flex-1 flex flex-col overflow-hidden h-full">
+    <div className="flex-1 overflow-hidden flex flex-col">
       {!hasCompletedAssessment && <EQAssessmentAlert onStartAssessment={onStartAssessment} />}
       
       {/* Use ChatUsage directly, not in Suspense */}
