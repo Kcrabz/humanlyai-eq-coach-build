@@ -18,7 +18,7 @@ export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatC
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col">
+    <div className="flex-1 overflow-hidden flex flex-col chat-content-container">
       {!hasCompletedAssessment && (
         <EQAssessmentAlert onStartAssessment={onStartAssessment} />
       )}

@@ -3,7 +3,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { ChatHeader } from "./ChatHeader";
 import { ChatContent } from "./ChatContent";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect } from "react";
 
 interface ResponsiveMainContentProps {
   hasCompletedAssessment: boolean;
@@ -21,7 +21,26 @@ export function ResponsiveMainContent({
   const { open: leftSidebarOpen } = useSidebar("left");
   const isMobile = useIsMobile();
   const [isPWA, setIsPWA] = useState(false);
-  const [windowHeight, setWindowHeight] = useState(window.innerHeight);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
+  
+  // Handle viewport height changes (mobile browsers address bar appearing/disappearing)
+  const updateViewportHeight = () => {
+    setViewportHeight(window.innerHeight);
+  };
+  
+  // Use layout effect for smoother transition when keyboard appears
+  useLayoutEffect(() => {
+    updateViewportHeight();
+    window.addEventListener('resize', updateViewportHeight);
+    
+    // On some mobile browsers, we need to listen for orientation change as well
+    window.addEventListener('orientationchange', updateViewportHeight);
+    
+    return () => {
+      window.removeEventListener('resize', updateViewportHeight);
+      window.removeEventListener('orientationchange', updateViewportHeight);
+    };
+  }, []);
   
   // Detect if running as PWA
   useEffect(() => {
@@ -29,6 +48,15 @@ export function ResponsiveMainContent({
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                           (window.navigator as any).standalone === true;
       setIsPWA(isStandalone);
+      
+      // Apply PWA class to html and body if in PWA mode
+      if (isStandalone) {
+        document.documentElement.classList.add('pwa');
+        document.body.classList.add('pwa');
+      } else {
+        document.documentElement.classList.remove('pwa');
+        document.body.classList.remove('pwa');
+      }
     };
     
     // Check on initial render
@@ -37,13 +65,6 @@ export function ResponsiveMainContent({
     // Also check when display mode changes
     const mediaQueryList = window.matchMedia('(display-mode: standalone)');
     const handleChange = () => checkPWA();
-    
-    // Handle window resize to adjust height calculation
-    const handleResize = () => {
-      setWindowHeight(window.innerHeight);
-    };
-    
-    window.addEventListener('resize', handleResize);
     
     // Use the correct event listener based on browser support
     if (mediaQueryList.addEventListener) {
@@ -54,7 +75,6 @@ export function ResponsiveMainContent({
     }
     
     return () => {
-      window.removeEventListener('resize', handleResize);
       if (mediaQueryList.removeEventListener) {
         mediaQueryList.removeEventListener('change', handleChange);
       } else if ((mediaQueryList as any).removeListener) {
@@ -73,18 +93,15 @@ export function ResponsiveMainContent({
         ? 'calc(100% - 14.5rem)'
         : '100%';
 
-  const contentStyle = {
-    width: contentWidth,
-    transition: 'width 0.3s ease',
-    marginRight: '0',
-    height: isMobile ? `${windowHeight}px` : '100%',
-    maxHeight: isMobile ? `${windowHeight}px` : '100%',
-  };
-
   return (
     <div 
       className="flex-1 flex flex-col overflow-hidden main-content relative"
-      style={contentStyle}
+      style={{
+        width: contentWidth,
+        transition: 'width 0.3s ease',
+        height: isMobile ? '100dvh' : '100%', // Use dynamic viewport height for mobile
+        maxHeight: isMobile ? '100dvh' : '100%' // Use dynamic viewport height for mobile
+      }}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
       data-mobile={isMobile ? "true" : "false"}

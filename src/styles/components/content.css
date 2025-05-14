@@ -35,11 +35,9 @@
     flex-direction: column;
   }
   
-  /* Optimize total height use on mobile */
+  /* Optimize total height use on mobile using dynamic viewport height */
   .main-content[data-mobile="true"] {
-    height: 100vh !important;
-    height: 100dvh !important; /* Use dynamic viewport height when available */
-    max-height: 100vh !important;
+    height: 100dvh !important; /* Use dynamic viewport height on mobile */
     max-height: 100dvh !important;
   }
   
@@ -55,8 +53,9 @@
 
   /* Mobile-specific spacing for chat UI */
   .enhanced-header {
-    padding: 8px 12px !important;
+    padding: 6px 12px !important;
     min-height: unset !important;
+    height: auto !important;
   }
   
   /* Better positioning for the mobile send button */
@@ -80,6 +79,26 @@
   .flex-1.overflow-y-auto {
     padding-bottom: 8px !important;
   }
+
+  /* Better input container spacing */
+  form.border-t {
+    border-top-width: 1px;
+    padding: 8px 12px;
+  }
+
+  /* Chat container needs to fill available space but not overflow */
+  .chat-content-container {
+    display: flex;
+    flex: 1 1 auto;
+    min-height: 0; /* Important for flexbox nesting */
+  }
+
+  /* Chat list should scroll within available space */
+  .chat-list-container {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    min-height: 0; /* Important for flexbox nesting */
+  }
 }
 
 /* Footer styling */
@@ -91,8 +110,14 @@
 @media (max-width: 767px) {
   .space-y-6 {
     --tw-space-y-reverse: 0;
-    margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
-    margin-bottom: calc(1rem * var(--tw-space-y-reverse));
+    margin-top: calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));
+    margin-bottom: calc(0.75rem * var(--tw-space-y-reverse));
+  }
+
+  /* Better vertical spacing on mobile */
+  .py-4 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
   }
 }
 

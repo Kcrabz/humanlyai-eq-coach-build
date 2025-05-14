@@ -4,6 +4,10 @@
   @apply rounded-xl shadow-sm transition-all duration-300;
 }
 
+.enhanced-chat-bubble-mobile {
+  @apply py-2 px-3 mb-2 max-w-[90%] !important;
+}
+
 .enhanced-chat-user {
   @apply bg-gradient-to-br from-humanly-indigo to-humanly-indigo-dark/90 text-white;
 }
@@ -33,8 +37,20 @@
   
   /* Smaller header on mobile */
   .enhanced-header {
-    min-height: 48px;
-    padding: 8px 12px;
+    min-height: 44px;
+    padding: 4px 12px;
+  }
+
+  /* Optimize chat bubbles on mobile */
+  .chat-list-container {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+
+  /* Ensure space for input area */
+  .chat-content-container {
+    display: flex;
+    flex-direction: column;
   }
 }
 
@@ -114,6 +130,7 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     font-size: 0.9rem;
+    margin-bottom: 0.5rem;
   }
   
   .chat-md pre {
@@ -135,6 +152,36 @@
   .chat-md ul, .chat-md ol {
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+  }
+
+  /* Tighter spacing for mobile chat interface */
+  .prose-xs p {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+  
+  .prose-xs h1, 
+  .prose-xs h2, 
+  .prose-xs h3 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .prose-xs ul, 
+  .prose-xs ol {
+    margin-top: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .prose-xs li {
+    margin-bottom: 0.25rem;
+  }
+
+  /* Better sized elements for mobile */
+  .enhanced-chat-bubble {
+    padding: 8px 12px;
+    margin-bottom: 8px;
   }
 }
 
