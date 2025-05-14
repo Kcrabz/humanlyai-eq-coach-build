@@ -35,7 +35,7 @@ const AvatarSelector = () => {
 
     try {
       await updateProfile({ avatar_url: selectedAvatar });
-      toast.success("Avatar updated successfully");
+      // Removed success toast
     } catch (error) {
       console.error("Error saving avatar:", error);
       toast.error("Failed to update avatar");

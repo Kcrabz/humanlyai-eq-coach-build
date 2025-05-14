@@ -28,11 +28,10 @@ export const AuthenticationGuard = () => {
     }
   }, [pathname]);
   
-  // Show welcome toast on successful login
+  // Remove welcome toast on successful login
   useEffect(() => {
     if (user && (authEvent === 'SIGN_IN_COMPLETE') && !loginToastShownRef.current) {
-      const firstName = user?.name ? user.name.split(" ")[0] : '';
-      toast.success(`Welcome back${firstName ? `, ${firstName}` : ''}!`);
+      // Removed success toast
       loginToastShownRef.current = true;
     }
   }, [user, authEvent]);

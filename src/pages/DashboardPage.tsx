@@ -82,9 +82,7 @@ const DashboardContent = memo(() => {
   const handleReferral = () => {
     const referralLink = `${window.location.origin}?ref=${user?.id}`;
     navigator.clipboard.writeText(referralLink);
-    toast.success("Referral link copied to clipboard!", {
-      description: "Share this link with your friends to invite them to join."
-    });
+    // Removed success toast
   };
   
   const openFeedbackForm = () => {

@@ -29,7 +29,7 @@ const BioEditor = ({ className }: BioEditorProps) => {
     try {
       setIsSaving(true);
       await updateProfile({ bio });
-      toast.success("Bio updated successfully");
+      // Removed success toast
     } catch (error) {
       console.error("Error saving bio:", error);
       toast.error("Failed to update bio");
