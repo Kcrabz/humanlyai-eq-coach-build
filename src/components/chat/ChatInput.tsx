@@ -5,22 +5,19 @@ import { useChat } from "@/context/ChatContext";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export function ChatInput() {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { sendMessage, isLoading } = useChat();
-  const isMobile = useIsMobile();
 
   // Adjust textarea height based on content
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      const newHeight = Math.min(textareaRef.current.scrollHeight, isMobile ? 60 : 100);
-      textareaRef.current.style.height = `${newHeight}px`;
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
     }
-  }, [message, isMobile]);
+  }, [message]);
 
   // Reset height when the message is sent
   useEffect(() => {
@@ -46,9 +43,8 @@ export function ChatInput() {
 
   return (
     <form 
-      className={`border-t flex items-end gap-2 relative ${isMobile ? 'p-2 pb-3' : 'p-3'}`}
+      className="p-3 border-t flex items-end gap-2 relative" 
       onSubmit={handleSubmit}
-      style={{ minHeight: isMobile ? '60px' : 'auto' }}
     >
       <Textarea
         ref={textareaRef}
@@ -59,13 +55,12 @@ export function ChatInput() {
         onChange={(e) => setMessage(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={isLoading}
-        style={{ maxHeight: isMobile ? '60px' : '96px' }}
       />
       
       <Button 
         type="submit" 
         size="sm"
-        className={`absolute ${isMobile ? 'right-4 bottom-4' : 'right-5 bottom-5'} h-8 w-8 rounded-full flex items-center justify-center`}
+        className="absolute right-5 bottom-5 h-8 w-8 rounded-full flex items-center justify-center"
         disabled={!message.trim() || isLoading}
       >
         <Send className="h-3.5 w-3.5" />

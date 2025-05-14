@@ -31,8 +31,6 @@
     width: 100% !important;
     max-width: 100% !important;
     flex-basis: 100% !important;
-    height: 100% !important;
-    max-height: 100dvh !important;
   }
   
   .mobile-main-content {
@@ -59,21 +57,6 @@
   /* Ensure the chat input has proper spacing */
   form textarea {
     padding-right: 40px;
-    max-height: 60px !important;
-  }
-  
-  /* Ensure chat container is correctly sized for mobile */
-  [data-mobile="true"].main-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    max-height: 100dvh;
-  }
-  
-  /* Adjust chat list to leave room for input */
-  [data-mobile="true"] .flex-1.overflow-y-auto {
-    max-height: calc(100dvh - 120px);
-    flex: 0 1 auto;
   }
 }
 

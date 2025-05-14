@@ -88,7 +88,7 @@ const ChatPage = () => {
               {/* PWA update notification */}
               <UpdateNotification reloadPage={handleReload} />
               
-              <div className="flex h-[100dvh] md:h-screen overflow-hidden w-full">
+              <div className="flex h-screen overflow-hidden w-full">
                 {/* Left Sidebar */}
                 <Suspense fallback={<div className="w-64 zen-sidebar animate-pulse"></div>}>
                   <EnhancedChatSidebar />
