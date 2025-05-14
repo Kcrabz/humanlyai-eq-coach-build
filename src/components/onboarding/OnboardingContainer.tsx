@@ -1,5 +1,6 @@
+
 import { useEffect } from "react";
-import { useSearchParams, useLocation } from "react-router-dom";
+import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import { OnboardingProgress } from "./OnboardingProgress";
 import { NameInput } from "./NameInput";
 import { GoalSelector } from "./GoalSelector";
@@ -11,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { isRetakingAssessment } from "@/utils/navigationUtils";
+import { hasRetakingParameter, setAuthState, AuthState } from "@/services/authService";
 import { OnboardingLoader } from "./OnboardingLoader";
 import { AuthenticationRequired } from "./AuthenticationRequired";
 
@@ -21,9 +22,10 @@ export const OnboardingContainer = () => {
   const { user, isAuthenticated } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Check if user is specifically retaking the assessment
-  const isRetaking = isRetakingAssessment(location.search);
+  const isRetaking = hasRetakingParameter(location.search);
 
   // Effect to handle step parameter in URL
   useEffect(() => {
@@ -41,10 +43,17 @@ export const OnboardingContainer = () => {
       isLoading,
       currentStep,
       isRetaking,
-      search: location.search,
-      state: location.state
+      search: location.search
     });
-  }, [user, isLoading, currentStep, isAuthenticated, isRetaking, location]);
+    
+    // If not retaking assessment and already onboarded, redirect to dashboard
+    if (user?.onboarded && !isRetaking) {
+      toast.info("You've already completed onboarding");
+      console.log("User already onboarded, redirecting to dashboard");
+      setAuthState(AuthState.ONBOARDED);
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, isLoading, currentStep, isAuthenticated, isRetaking, navigate, location]);
   
   if (isLoading) {
     return <OnboardingLoader />;

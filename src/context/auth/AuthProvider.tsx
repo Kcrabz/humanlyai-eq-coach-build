@@ -14,7 +14,7 @@ import { usePremiumFeatures } from "./usePremiumFeatures";
 import { useAuthLoadingState } from "./useAuthLoadingState";
 import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthActionWrappers } from "./useAuthActionWrappers";
-import { markLoginSuccess } from "@/utils/loginRedirectUtils";
+import { setAuthState, AuthState } from "@/services/authService";
 import { useLocation } from "react-router-dom";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -72,35 +72,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOnboardedWrapper, 
     resetPasswordWrapper 
   } = useAuthActionWrappers(user, profileCore, profileActions, authCore);
-  
-  // Immediate session/auth state responses
-  useEffect(() => {
-    if (authEvent === "SIGN_IN_COMPLETE" && user) {
-      console.log("Detected sign in complete with user, marking login success");
-      markLoginSuccess();
+
+  // Enhanced login function that sets auth state
+  const enhancedLogin = useCallback(async (email: string, password: string) => {
+    setAuthState(AuthState.SIGNING_IN);
+    const success = await authCore.login(email, password);
+    
+    if (success) {
+      setAuthState(AuthState.SIGNED_IN);
+    } else {
+      setAuthState(AuthState.SIGNED_OUT);
     }
     
-    if (authEvent === "RESTORED_SESSION" && user) {
-      console.log("Detected restored session with user");
-      // We don't want to mark login success for restored sessions
-      // as it would trigger unnecessary redirects
+    return success;
+  }, [authCore]);
+  
+  // Enhanced signup function that sets auth state
+  const enhancedSignup = useCallback(async (email: string, password: string, securityQuestionId?: string, securityAnswer?: string) => {
+    setAuthState(AuthState.SIGNING_UP);
+    const success = await signup(email, password, securityQuestionId, securityAnswer);
+    
+    if (success) {
+      setAuthState(AuthState.SIGNED_UP);
+    } else {
+      setAuthState(AuthState.SIGNED_OUT);
+    }
+    
+    return success;
+  }, [signup]);
+  
+  // Enhanced logout that clears auth state
+  const enhancedLogout = useCallback(async () => {
+    const result = await authLogout();
+    setAuthState(AuthState.SIGNED_OUT);
+    return result;
+  }, [authLogout]);
+  
+  // Track auth state changes
+  useEffect(() => {
+    if (authEvent === "SIGN_IN_COMPLETE" && user) {
+      console.log("Detected sign in complete with user");
+      setAuthState(AuthState.SIGNED_IN);
+    } else if (authEvent === "SIGN_OUT_COMPLETE") {
+      setAuthState(AuthState.SIGNED_OUT);
     }
   }, [authEvent, user]);
   
-  // Short-circuit loading state for faster UI rendering - but with delayed timing to ensure state is ready
+  // Track onboarding state
   useEffect(() => {
-    if (isSessionLoading && session) {
-      const timer = setTimeout(() => {
-        if (session) {
-          console.log("Fast-tracking profile loaded state");
-          setProfileLoaded(true);
-          setIsSessionLoading(false);
-        }
-      }, 180); // Slightly increased from 150ms to ensure profile data is ready
-      
-      return () => clearTimeout(timer);
+    if (user) {
+      if (user.onboarded) {
+        setAuthState(AuthState.ONBOARDED);
+      } else {
+        setAuthState(AuthState.NEEDS_ONBOARDING);
+      }
     }
-  }, [isSessionLoading, session, setProfileLoaded, setIsSessionLoading]);
+  }, [user?.onboarded]);
   
   // Memoize the context value to prevent unnecessary rerenders
   const contextValue: AuthContextType = useMemo(() => ({
@@ -110,9 +137,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated,
     authEvent: authEvent as "SIGN_IN_COMPLETE" | "RESTORED_SESSION" | "SIGN_OUT_COMPLETE" | null,
     profileLoaded,
-    login: authCore.login,
-    logout: authLogout,
-    signup,
+    login: enhancedLogin,
+    logout: enhancedLogout,
+    signup: enhancedSignup,
     resetPassword: resetPasswordWrapper,
     updateProfile,
     forceUpdateProfile,
@@ -129,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userAchievements
   }), [
     user, isLoading, error, isAuthenticated, authEvent, profileLoaded,
-    authCore.login, authLogout, signup, resetPasswordWrapper,
+    enhancedLogin, enhancedLogout, enhancedSignup, resetPasswordWrapper,
     updateProfile, forceUpdateProfile, setNameWrapper, setArchetypeWrapper,
     setCoachingModeWrapper, setOnboardedWrapper, setUser, getUserSubscription,
     userHasArchetype, isPremiumMember, userStreakData, userAchievements

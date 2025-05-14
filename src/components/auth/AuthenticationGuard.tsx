@@ -1,100 +1,55 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
-import { wasLoginSuccessful, clearLoginSuccess } from "@/utils/loginRedirectUtils";
-import { AuthNavigationService, isOnAuthPage, isRetakingAssessment } from "@/services/authNavigationService";
+import { getAuthState, AuthState, navigateBasedOnAuthState } from "@/services/authService";
 
 /**
- * Enhanced authentication guard that uses the centralized AuthNavigationService
+ * Enhanced authentication guard that uses the centralized auth service
  */
 export const AuthenticationGuard = () => {
   const { user, isLoading, authEvent } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
-  const loginToastShownRef = useRef(false);
-  const justLoggedInRef = useRef(wasLoginSuccessful());
-  const redirectAttemptCount = useRef(0);
-  const lastPathRef = useRef(pathname);
-  
-  // Reset redirect tracking when path changes
-  useEffect(() => {
-    if (lastPathRef.current !== pathname) {
-      redirectAttemptCount.current = 0;
-      lastPathRef.current = pathname;
-      loginToastShownRef.current = false;
-    }
-  }, [pathname]);
-  
-  // Remove welcome toast on successful login
-  useEffect(() => {
-    if (user && (authEvent === 'SIGN_IN_COMPLETE') && !loginToastShownRef.current) {
-      // Removed success toast
-      loginToastShownRef.current = true;
-    }
-  }, [user, authEvent]);
   
   // Main auth redirection effect - improved for reliability
   useEffect(() => {
     // Skip if still loading auth state
     if (isLoading) return;
     
-    // Safety limit for redirect attempts
-    redirectAttemptCount.current += 1;
-    if (redirectAttemptCount.current > 15) {
-      console.warn("Too many redirect attempts, breaking the loop", {
-        path: pathname,
-        hasUser: !!user,
-        attempts: redirectAttemptCount.current
-      });
-      return;
-    }
-    
-    console.log("AuthGuard checking state:", { 
-      isLoading, 
-      hasUser: !!user, 
-      path: pathname, 
-      authEvent,
-      onboarded: user?.onboarded,
-      attempts: redirectAttemptCount.current,
-      justLoggedIn: justLoggedInRef.current,
-    });
-    
-    // Skip navigation for password reset pages
+    // Skip password reset pages
     if (pathname === "/reset-password" || pathname === "/update-password") return;
     
-    // Skip navigation immediately after login as the form will handle navigation
-    if (justLoggedInRef.current) {
-      console.log("User just logged in, letting login form handle redirection");
+    // Get the current auth state
+    const authState = getAuthState();
+    
+    // If we have an explicit auth state from a recent login/signup
+    if (authState && Date.now() - authState.timestamp < 5000) {
+      console.log("Recent auth state detected:", authState.state);
       
-      // If we're on dashboard after login, clear the flag
-      if (pathname === "/dashboard") {
-        console.log("On dashboard after login, clearing login success flag");
-        justLoggedInRef.current = false;
-        clearLoginSuccess();
+      // Handle specific auth states
+      switch (authState.state) {
+        case AuthState.SIGNED_IN:
+        case AuthState.SIGNED_UP:
+          // New login or signup - navigate to dashboard
+          console.log("Recently logged in or signed up, navigating to dashboard");
+          navigate("/dashboard", { replace: true });
+          return;
+          
+        case AuthState.NEEDS_ONBOARDING:
+          // User needs onboarding - navigate to onboarding
+          console.log("User needs onboarding, navigating to onboarding");
+          navigate("/onboarding", { replace: true });
+          return;
       }
-      return;
     }
     
-    // Skip navigation if the AuthNavigationService is currently handling login
-    if (AuthNavigationService.isHandlingLoginNavigation()) {
-      console.log("Auth navigation service is handling login, skipping AuthGuard navigation");
-      return;
-    }
-    
-    // Check if user is specifically retaking the assessment
-    const isRetaking = isRetakingAssessment(location.search);
-    
+    // Use the central navigation service for all other cases
     if (user) {
-      // Let the AuthNavigationService handle navigation for authenticated users
-      AuthNavigationService.handleAuthenticatedNavigation(user, pathname, navigate, isRetaking);
-    } else {
-      // Let the AuthNavigationService handle navigation for unauthenticated users
-      AuthNavigationService.handleUnauthenticatedNavigation(pathname, navigate);
+      navigateBasedOnAuthState(user, navigate, pathname);
     }
-  }, [user, isLoading, pathname, navigate, authEvent, location.search]);
+  }, [user, isLoading, pathname, navigate, authEvent]);
 
   return null;
 };

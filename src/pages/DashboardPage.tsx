@@ -6,10 +6,9 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle, TrendingUp, Users, Shield, MessageSquare } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
-import { toast } from "sonner";
 import { memo, useEffect, useState, Suspense } from "react";
 import { Loading } from "@/components/ui/loading";
-import { clearLoginSuccess } from "@/utils/loginRedirectUtils";
+import { setAuthState, AuthState } from "@/services/authService";
 
 // Memoize card components for performance
 const ActionCard = memo(({ 
@@ -90,10 +89,11 @@ const DashboardContent = memo(() => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
   
-  // Handle navigation to chat with clear login success flag
+  // Handle navigation to chat
   const handleNavigateToChat = () => {
-    // Clear login success flag to prevent redirect loop
-    clearLoginSuccess();
+    // Mark the navigation as intentional going to chat
+    setAuthState(AuthState.ONBOARDED, { navigatingTo: 'chat', source: 'dashboard' });
+    
     // Navigate to the chat page with source parameter
     navigate("/chat?source=dashboard");
   };

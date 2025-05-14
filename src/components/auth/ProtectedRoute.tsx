@@ -3,7 +3,7 @@ import { ReactNode, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
 import { useLocation, useNavigate } from "react-router-dom";
-import { AuthNavigationService, isRetakingAssessment } from "@/services/authNavigationService";
+import { navigateBasedOnAuthState, getSourceParameter, hasRetakingParameter } from "@/services/authService";
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -17,24 +17,18 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   // Skip protection for password reset/update pages
   const isPasswordResetPage = location.pathname === "/reset-password" || location.pathname === "/update-password";
   
-  // Use the same navigation service as AuthenticationGuard for consistency
+  // Use the unified navigation service
   useEffect(() => {
     if (!isLoading && !isPasswordResetPage) {
-      const isRetaking = isRetakingAssessment(location.search);
-      
       if (user) {
         // Only check onboarding state once we have user data
-        AuthNavigationService.handleAuthenticatedNavigation(
-          user, 
-          location.pathname, 
-          navigate,
-          isRetaking
-        );
+        navigateBasedOnAuthState(user, navigate, location.pathname);
       } else if (!isAuthenticated) {
-        AuthNavigationService.handleUnauthenticatedNavigation(
-          location.pathname,
-          navigate
-        );
+        // Use source parameter to prevent endless redirects
+        const source = getSourceParameter(location.search);
+        if (source !== 'login' && source !== 'signup') {
+          navigate("/login", { replace: true });
+        }
       }
     }
   }, [isLoading, isPasswordResetPage, user, isAuthenticated, location, navigate]);

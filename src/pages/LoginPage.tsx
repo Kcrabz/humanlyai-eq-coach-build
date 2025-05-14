@@ -1,8 +1,33 @@
 
+import { useEffect } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
+import { useAuth } from "@/context/AuthContext";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getAuthState } from "@/services/authService";
 
 const LoginPage = () => {
+  const { isAuthenticated, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Handle redirection for authenticated users
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Check if there's a specific page to return to
+      const authState = getAuthState();
+      const returnTo = authState?.returnTo;
+      
+      if (user.onboarded) {
+        // Onboarded users go to returnTo path or dashboard
+        navigate(returnTo || "/dashboard", { replace: true });
+      } else {
+        // Non-onboarded users must complete onboarding
+        navigate("/onboarding", { replace: true });
+      }
+    }
+  }, [isAuthenticated, user, navigate]);
+  
   return (
     <PageLayout>
       <div className="flex min-h-screen items-center justify-center py-12 animate-scale-fade-in">

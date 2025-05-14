@@ -4,8 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { markLoginSuccess } from "@/utils/loginRedirectUtils";
-import { AuthNavigationService } from "@/services/authNavigationService";
+import { setAuthState, AuthState } from "@/services/authService";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -68,19 +67,19 @@ export function useLoginForm() {
     console.log("Login attempt starting...", { email });
     
     try {
+      // Use the enhanced login function that tracks state
       const success = await login(email, password);
       
       if (success) {
         console.log("Login successful, preparing for navigation");
         
-        // Mark login success for cross-page tracking
-        markLoginSuccess();
-        
         // Set success toast
         toast.success("Login successful! Redirecting to dashboard...");
         
-        // Use our centralized navigation service for post-login navigation
-        AuthNavigationService.handleSuccessfulLogin(navigate);
+        // Navigate directly to dashboard with delay to ensure state is updated
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 300);
       } else {
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);
