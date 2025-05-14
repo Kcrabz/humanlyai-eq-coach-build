@@ -74,25 +74,26 @@ export const isFirstLoginAfterLoad = (): boolean => {
 
 /**
  * Forces a redirect to dashboard using window.location - optimized
+ * This version prefers React Router navigation when possible
  */
 export const forceRedirectToDashboard = (): void => {
   console.log("Force redirect to dashboard initiated");
   
-  // If in PWA mode, use a direct approach
-  if (isRunningAsPWA()) {
-    localStorage.setItem('pwa_redirect_after_login', '/dashboard');
+  // Directly navigate to dashboard
+  const alreadyOnDashboard = window.location.pathname === '/dashboard';
+  
+  // If not already on dashboard, redirect
+  if (!alreadyOnDashboard) {
+    console.log("Redirecting to dashboard via direct navigation");
+    // If in PWA mode, use localStorage to persist the redirect target
+    if (isRunningAsPWA()) {
+      localStorage.setItem('pwa_redirect_after_login', '/dashboard');
+    }
     
-    // Check if we're already on the dashboard to avoid reload loops
-    if (window.location.pathname !== '/dashboard') {
-      console.log("Redirecting to dashboard via direct navigation");
-      window.location.href = '/dashboard';
-    }
+    // Use direct navigation for most reliable redirect
+    window.location.href = '/dashboard';
   } else {
-    // Avoid reload if already on dashboard
-    if (window.location.pathname !== '/dashboard') {
-      console.log("Redirecting to dashboard via direct navigation");
-      window.location.href = '/dashboard';
-    }
+    console.log("Already on dashboard, no redirect needed");
   }
 };
 

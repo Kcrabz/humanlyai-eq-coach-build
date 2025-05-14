@@ -24,14 +24,21 @@ export const AuthenticationGuard = () => {
   // Handle immediate welcome toast for better UX
   useEffect(() => {
     if (user && (authEvent === 'SIGN_IN_COMPLETE' || wasLoginSuccessful() || isFirstLoginAfterLoad())) {
-      // No need to block with toast.promise, use regular toast instead
+      // Show welcome toast
       toast.success(`Welcome back${user.name ? `, ${user.name}` : ''}!`);
       
+      // Mark login as successful for redirects
       if (authEvent === 'SIGN_IN_COMPLETE') {
         markLoginSuccess();
+        
+        // Fast path: redirect to dashboard immediately if on login page
+        if (isOnAuthPage(pathname)) {
+          console.log("Redirecting to dashboard from auth page after login");
+          navigate("/dashboard", { replace: true });
+        }
       }
     }
-  }, [user, authEvent]);
+  }, [user, authEvent, pathname, navigate]);
   
   // Main auth redirection effect - simplified for performance
   useEffect(() => {
@@ -39,7 +46,8 @@ export const AuthenticationGuard = () => {
       isLoading, 
       user: user?.id ? "Yes" : "No", 
       path: pathname, 
-      authEvent 
+      authEvent,
+      onboarded: user?.onboarded
     });
     
     // Skip if still loading auth state
@@ -63,6 +71,12 @@ export const AuthenticationGuard = () => {
       // Handle authenticated users on auth pages - direct them to dashboard
       if (user.onboarded && isCurrentlyOnAuth) {
         console.log("Authenticated user on auth page, redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
+      }
+
+      // Handle root path - redirect to dashboard for authenticated users
+      if (user.onboarded && pathname === "/") {
+        console.log("Authenticated user on root page, redirecting to dashboard");
         navigate("/dashboard", { replace: true });
       }
     } 

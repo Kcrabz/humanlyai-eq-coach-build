@@ -32,10 +32,20 @@ export const useAuthSession = () => {
             setSession(parsedSession.currentSession);
             setAuthEvent('FAST_RESTORED_SESSION');
             setSessionReady(true);
+            
+            // Fast path - quickly exit loading state if we have a session
+            setTimeout(() => {
+              setIsLoading(false);
+            }, 100);
           }
         } catch (e) {
           console.warn("Could not parse stored session", e);
         }
+      } else {
+        // Fast negative path - no session found, exit loading quickly
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 100);
       }
     } catch (e) {
       console.warn("Error accessing localStorage", e);
@@ -59,6 +69,7 @@ export const useAuthSession = () => {
           setAuthEvent('SIGN_IN_COMPLETE');
           setProfileLoaded(true);
           setSessionReady(true);
+          setIsLoading(false); // Exit loading state immediately on sign in
           
           // Handle PWA mode
           if (isRunningAsPWA()) {
@@ -68,12 +79,14 @@ export const useAuthSession = () => {
         }
       }).catch(error => {
         console.error("Error getting user after sign in:", error);
+        setIsLoading(false); // Exit loading state even on error
       });
     } else if (event === 'SIGNED_OUT') {
       setSession(null);
       setAuthEvent('SIGN_OUT_COMPLETE');
       setProfileLoaded(false);
       setSessionReady(false);
+      setIsLoading(false); // Exit loading state immediately on sign out
       localStorage.removeItem('login_success_timestamp');
       localStorage.removeItem('pwa_auth_timestamp');
       localStorage.removeItem('pwa_redirect_after_login');
@@ -137,14 +150,14 @@ export const useAuthSession = () => {
       }
     });
 
-    // Safety timeout to prevent indefinite loading - 500ms max wait
+    // Safety timeout to prevent indefinite loading - 200ms max wait (reduced from 500ms)
     const safetyTimeout = setTimeout(() => {
       if (isMounted && isLoading) {
         console.log("Safety timeout triggered - forcing auth state to complete loading");
         setIsLoading(false);
         setInitialized(true);
       }
-    }, 500);
+    }, 200);
 
     return () => {
       isMounted = false;

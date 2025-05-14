@@ -3,30 +3,42 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import { useAuth } from "@/context/AuthContext";
+import { Loading } from "@/components/ui/loading";
 
 const Index = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Fast path for authenticated users
+  // Fast path for authenticated users with reduced checks
   useEffect(() => {
-    if (!isLoading) {
+    // Skip if still loading
+    if (isLoading) return;
+    
+    if (isAuthenticated) {
       // Redirect onboarding users immediately
-      if (isAuthenticated && user?.onboarded === false) {
+      if (user && !user.onboarded) {
+        console.log("Root page - Redirecting to onboarding");
         navigate("/onboarding", { replace: true });
         return;
       }
       
-      // Optional: For improved UX, auto-redirect authenticated users to dashboard
-      // Uncomment if you want authenticated users to skip landing page
-      /*
-      if (isAuthenticated && user?.onboarded) {
+      // Redirect authenticated + onboarded users to dashboard
+      if (user && user.onboarded) {
+        console.log("Root page - Redirecting to dashboard");
         navigate("/dashboard", { replace: true });
         return;
       }
-      */
     }
   }, [isAuthenticated, user, isLoading, navigate]);
+
+  // Show loading while checking auth state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loading size="large" />
+      </div>
+    );
+  }
 
   return <LandingPage />;
 };

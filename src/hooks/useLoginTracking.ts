@@ -5,6 +5,7 @@ import { User } from "@/types";
 
 /**
  * Optimized hook for tracking login events without blocking the UI
+ * This version uses true non-blocking operations to avoid delaying the UI
  */
 export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
   // Use a ref to prevent duplicate tracking in same session
@@ -19,37 +20,28 @@ export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
     // Mark as tracked immediately to prevent duplicate tracking
     loginTrackedRef.current = true;
     
-    // Create a non-blocking tracking function
+    // Create a non-blocking tracking function using requestAnimationFrame 
+    // instead of setTimeout for better performance with the browser's render cycle
     const trackLoginInBackground = () => {
       console.log("Background login tracking started for", user.id);
       
-      // Use setTimeout to push this to the next event loop tick
-      // This prevents blocking UI rendering
-      setTimeout(() => {
-        // Run operations in parallel for maximum efficiency
-        Promise.allSettled([
-          // Track 1: Record login event
-          supabase.rpc("record_user_login", { 
-            user_id_param: user.id,
-            user_agent_param: navigator.userAgent
-          })
-          .then(() => console.log("Login event recorded successfully"))
-          .then(undefined, err => console.error("Error recording login:", err)),
-          
-          // Track 2: Update user metrics via edge function
-          supabase.functions.invoke('increment-streak', {
-            body: { user_id: user.id }
-          })
-          .then(() => console.log("Streak updated successfully"))
-          .then(undefined, err => console.error("Error updating streak:", err))
-        ])
-        .then(() => {
-          console.log("Login tracking completed");
+      // Use requestAnimationFrame to truly defer this work
+      window.requestAnimationFrame(() => {
+        // Record login event - fire and forget
+        supabase.rpc("record_user_login", { 
+          user_id_param: user.id,
+          user_agent_param: navigator.userAgent
         })
-        .then(undefined, error => {
-          console.error("Error in login tracking:", error);
-        });
-      }, 0);
+        .then(() => console.log("Login event recorded successfully"))
+        .then(undefined, err => console.error("Error recording login:", err));
+        
+        // Update user metrics via edge function - fire and forget
+        supabase.functions.invoke('increment-streak', {
+          body: { user_id: user.id }
+        })
+        .then(() => console.log("Streak updated successfully"))
+        .then(undefined, err => console.error("Error updating streak:", err));
+      });
     };
 
     // Execute tracking without awaiting results

@@ -7,7 +7,8 @@ import { MessageCircle, TrendingUp, Users, Shield, MessageSquare } from "lucide-
 import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useState, Suspense } from "react";
+import { Loading } from "@/components/ui/loading";
 
 // Memoize card components for performance
 const ActionCard = memo(({ 
@@ -39,7 +40,15 @@ const ActionCard = memo(({
   </Card>
 ));
 
-const DashboardPage = () => {
+// Loading state component
+const DashboardLoading = () => (
+  <div className="flex flex-col items-center justify-center h-[70vh] space-y-4">
+    <Loading size="large" className="text-humanly-teal" />
+    <p className="text-muted-foreground animate-pulse">Loading your dashboard...</p>
+  </div>
+);
+
+const DashboardContent = memo(() => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loaded, setLoaded] = useState(false);
@@ -83,62 +92,92 @@ const DashboardPage = () => {
   };
   
   return (
-    <PageLayout>
-      <div className="max-w-4xl mx-auto p-4 py-8">
-        <div className="text-center mb-8 animate-fade-in">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
-            Welcome back, {firstName}!
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            What would you like to do now?
-          </p>
-        </div>
-        
-        {/* Use conditional rendering for smoother loading */}
-        <div className={`grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${loaded ? 'animate-scale-fade-in' : 'opacity-0'}`}>
-          {/* Chat with Kai */}
-          <ActionCard 
-            onClick={() => navigate("/chat")}
-            icon={MessageCircle}
-            title="Chat with Kai"
-            color="humanly-indigo"
-          />
-          
-          {/* Track Your Growth */}
-          <ActionCard 
-            onClick={() => navigate("/progress")}
-            icon={TrendingUp}
-            title="Track Your Growth"
-            color="humanly-teal"
-          />
-          
-          {/* Help a Friend */}
-          <ActionCard 
-            onClick={handleReferral}
-            icon={Users}
-            title="Help a Friend"
-            color="humanly-pastel-rose"
-          />
-          
-          {/* Give Feedback */}
-          <ActionCard 
-            onClick={openFeedbackForm}
-            icon={MessageSquare}
-            title="Give Feedback"
-            color="humanly-pastel-blue"
-          />
-          
-          {/* Admin Portal - Only visible for admin users */}
-          {isAdmin && (
-            <ActionCard 
-              onClick={() => navigate("/admin")}
-              icon={Shield}
-              title="Admin Portal"
-              color="gray-400"
-            />
-          )}
-        </div>
+    <div className="max-w-4xl mx-auto p-4 py-8">
+      <div className="text-center mb-8 animate-fade-in">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
+          Welcome back, {firstName}!
+        </h1>
+        <p className="text-muted-foreground mt-2">
+          What would you like to do now?
+        </p>
       </div>
+      
+      {/* Use conditional rendering for smoother loading */}
+      <div className={`grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${loaded ? 'animate-scale-fade-in' : 'opacity-0'}`}>
+        {/* Chat with Kai */}
+        <ActionCard 
+          onClick={() => navigate("/chat")}
+          icon={MessageCircle}
+          title="Chat with Kai"
+          color="humanly-indigo"
+        />
+        
+        {/* Track Your Growth */}
+        <ActionCard 
+          onClick={() => navigate("/progress")}
+          icon={TrendingUp}
+          title="Track Your Growth"
+          color="humanly-teal"
+        />
+        
+        {/* Help a Friend */}
+        <ActionCard 
+          onClick={handleReferral}
+          icon={Users}
+          title="Help a Friend"
+          color="humanly-pastel-rose"
+        />
+        
+        {/* Give Feedback */}
+        <ActionCard 
+          onClick={openFeedbackForm}
+          icon={MessageSquare}
+          title="Give Feedback"
+          color="humanly-pastel-blue"
+        />
+        
+        {/* Admin Portal - Only visible for admin users */}
+        {isAdmin && (
+          <ActionCard 
+            onClick={() => navigate("/admin")}
+            icon={Shield}
+            title="Admin Portal"
+            color="gray-400"
+          />
+        )}
+      </div>
+    </div>
+  );
+});
+
+const DashboardPage = () => {
+  const { isLoading, user } = useAuth();
+  const [pageReady, setPageReady] = useState(false);
+  
+  // Delay rendering content until auth is ready
+  useEffect(() => {
+    if (!isLoading && user) {
+      // Short delay to ensure profile is loaded
+      const timer = setTimeout(() => {
+        setPageReady(true);
+      }, 50);
+      
+      return () => clearTimeout(timer);
+    } else if (!isLoading && !user) {
+      // No user, so we're ready to show whatever content is appropriate
+      setPageReady(true);
+    }
+  }, [isLoading, user]);
+
+  return (
+    <PageLayout>
+      {!pageReady || isLoading ? (
+        <DashboardLoading />
+      ) : (
+        <Suspense fallback={<DashboardLoading />}>
+          <DashboardContent />
+        </Suspense>
+      )}
     </PageLayout>
   );
 };

@@ -6,6 +6,7 @@ import { createProfileIfNeeded, fetchUserProfile, createBasicUserProfile } from 
 
 /**
  * Hook for managing user profile state based on authentication
+ * Optimized to load profile data faster using caching
  */
 export const useProfileState = (
   session: Session | null, 
@@ -14,6 +15,30 @@ export const useProfileState = (
   setProfileLoaded: (value: boolean) => void
 ) => {
   const [user, setUser] = useState<User | null>(null);
+  const [profileError, setProfileError] = useState<Error | null>(null);
+
+  // Attempt to load cached profile immediately
+  useEffect(() => {
+    try {
+      // Try to load cached profile for instant UI
+      const cachedProfile = localStorage.getItem('cached_user_profile');
+      if (cachedProfile && session) {
+        try {
+          const parsedProfile = JSON.parse(cachedProfile);
+          if (parsedProfile?.id === session.user.id) {
+            console.log("Using cached profile for immediate UI render");
+            setUser(parsedProfile);
+            setProfileLoaded(true);
+            // Note: We'll still fetch the fresh profile from the server below
+          }
+        } catch (e) {
+          console.warn("Could not parse cached profile", e);
+        }
+      }
+    } catch (e) {
+      console.warn("Error accessing localStorage for cached profile", e);
+    }
+  }, [session, setProfileLoaded]);
 
   // Effect for loading and setting user profile when session changes
   useEffect(() => {
@@ -34,6 +59,10 @@ export const useProfileState = (
         if (session.user) {
           console.log("Creating or fetching profile for:", session.user.id);
           
+          // Set basic user info immediately for faster UI updates
+          const basicProfile = createBasicUserProfile(session.user.id, session.user.email!);
+          setUser(basicProfile);
+          
           // Make sure profile exists
           await createProfileIfNeeded(session.user.id);
           
@@ -44,10 +73,17 @@ export const useProfileState = (
             console.log("Profile found with onboarded status:", profile.onboarded);
             setUser(profile);
             setProfileLoaded(true);
+            
+            // Cache the profile for faster loading next time
+            try {
+              localStorage.setItem('cached_user_profile', JSON.stringify(profile));
+            } catch (e) {
+              console.warn("Could not cache profile:", e);
+            }
           } else {
             // Basic user info if profile not found
             console.log("No profile found, setting basic user info");
-            setUser(createBasicUserProfile(session.user.id, session.user.email!));
+            setUser(basicProfile);
             
             // Try to create the profile again
             await createProfileIfNeeded(session.user.id);
@@ -56,6 +92,8 @@ export const useProfileState = (
         }
       } catch (error) {
         console.error("Error setting up user profile:", error);
+        setProfileError(error as Error);
+        
         // Set basic user info even if there's an error
         if (session.user) {
           setUser(createBasicUserProfile(session.user.id, session.user.email!));
@@ -74,8 +112,15 @@ export const useProfileState = (
     if (session === null && !isLoading) {
       setUser(null);
       setProfileLoaded(false);
+      
+      // Clear cached profile when logging out
+      try {
+        localStorage.removeItem('cached_user_profile');
+      } catch (e) {
+        console.warn("Could not clear cached profile:", e);
+      }
     }
   }, [session, isLoading, setProfileLoaded]);
 
-  return { user, setUser };
+  return { user, setUser, profileError };
 };
