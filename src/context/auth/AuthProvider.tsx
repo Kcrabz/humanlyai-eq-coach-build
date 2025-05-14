@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Profile state with unified loading
   const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
   
-  // Track login events - memoized
+  // Track login events - happening in background
   const isAuthenticated = !!user;
   useLoginTracking(isAuthenticated, user);
   
@@ -72,9 +72,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPasswordWrapper 
   } = useAuthActionWrappers(user, profileCore, profileActions, authCore);
   
-  // Optimized session and login success handling
+  // Optimized session and login success handling - now faster with early marking
   const handleSessionRestore = useCallback(() => {
-    if ((authEvent === "RESTORED_SESSION" || authEvent === "SIGN_IN_COMPLETE") && user && profileLoaded) {
+    if ((authEvent === "RESTORED_SESSION" || authEvent === "SIGN_IN_COMPLETE" || authEvent === "FAST_RESTORED_SESSION") 
+        && user && profileLoaded) {
+      console.log("Marking login success early for faster feedback");
       markLoginSuccess();
     }
   }, [authEvent, user, profileLoaded]);
@@ -82,6 +84,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     handleSessionRestore();
   }, [handleSessionRestore]);
+  
+  // Early short-circuit loading state for faster UI rendering
+  const quickLoadDelay = 500; // ms
+  useEffect(() => {
+    // If loading takes too long, give early access after 500ms
+    if (isSessionLoading) {
+      const timer = setTimeout(() => {
+        console.log("Quick-loading auth state after timeout");
+        if (session) {
+          setProfileLoaded(true);
+          setIsSessionLoading(false);
+        }
+      }, quickLoadDelay);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isSessionLoading, session, setProfileLoaded, setIsSessionLoading]);
   
   // Optimized PWA navigation handling
   useEffect(() => {

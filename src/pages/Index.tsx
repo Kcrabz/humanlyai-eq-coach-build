@@ -8,6 +8,7 @@ const Index = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
+  // Fast path for authenticated users to dashboard
   useEffect(() => {
     if (!isLoading) {
       console.log("Index page loaded:", { 
@@ -17,14 +18,22 @@ const Index = () => {
         currentUrl: window.location.href 
       });
       
-      // We're removing the automatic redirection to chat for authenticated users
-      // This allows them to view the landing page even when logged in
-      
-      // Only redirect if the user is not onboarded yet
+      // Redirect onboarding users immediately
       if (isAuthenticated && user?.onboarded === false) {
         console.log("User is authenticated but not onboarded, redirecting to onboarding from Index");
         navigate("/onboarding", { replace: true });
+        return;
       }
+      
+      // Optional: For improved UX, auto-redirect authenticated users to dashboard
+      // Uncomment if you want authenticated users to skip landing page
+      /*
+      if (isAuthenticated && user?.onboarded) {
+        console.log("User is authenticated and onboarded, redirecting to dashboard from Index");
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+      */
     }
   }, [isAuthenticated, user, isLoading, navigate]);
 

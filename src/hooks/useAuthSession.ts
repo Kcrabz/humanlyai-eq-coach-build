@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { markLoginSuccess, forceRedirectToDashboard, isRunningAsPWA } from '@/utils/loginRedirectUtils';
 
 /**
- * Optimized hook for managing authentication session state
+ * Optimized hook for managing authentication session state with improved performance
  */
 export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -14,6 +14,29 @@ export const useAuthSession = () => {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
+
+  // Fast session restoration from localStorage before network requests
+  useEffect(() => {
+    try {
+      // Try to restore session from localStorage immediately 
+      // This provides an instant UI update without waiting for network
+      const storedSession = localStorage.getItem('sb-auth-token');
+      if (storedSession) {
+        try {
+          const parsedSession = JSON.parse(storedSession);
+          if (parsedSession?.currentSession) {
+            console.log("Fast session restoration from localStorage");
+            setSession(parsedSession.currentSession);
+            setAuthEvent('FAST_RESTORED_SESSION');
+          }
+        } catch (e) {
+          console.warn("Could not parse stored session", e);
+        }
+      }
+    } catch (e) {
+      console.warn("Error accessing localStorage", e);
+    }
+  }, []);
 
   // Optimized session update handler
   const updateSessionAfterEvent = useCallback(async (event: string) => {
@@ -70,47 +93,46 @@ export const useAuthSession = () => {
       }
     );
 
-    // Check existing session with minimal delay
-    setTimeout(() => {
-      supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-        if (!isMounted) return;
+    // Check existing session with minimal delay - now with no delay for faster load
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      if (!isMounted) return;
+      
+      setSession(existingSession);
+      
+      if (existingSession) {
+        setAuthEvent('RESTORED_SESSION');
+        setProfileLoaded(true);
         
-        setSession(existingSession);
-        
-        if (existingSession) {
-          setAuthEvent('RESTORED_SESSION');
-          setProfileLoaded(true);
-          
-          // Streamlined PWA handling
-          if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
-            localStorage.setItem('pwa_session_restored', 'true');
-            const desiredPath = sessionStorage.getItem('pwa_desired_path');
-            if (desiredPath && (window.location.pathname === '/' || window.location.pathname === '/login')) {
-              window.location.href = desiredPath;
-            }
+        // Streamlined PWA handling
+        if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
+          localStorage.setItem('pwa_session_restored', 'true');
+          const desiredPath = sessionStorage.getItem('pwa_desired_path');
+          if (desiredPath && (window.location.pathname === '/' || window.location.pathname === '/login')) {
+            window.location.href = desiredPath;
           }
         }
-        
+      }
+      
+      setIsLoading(false);
+      setInitialized(true);
+      hasInitialized = true;
+    }).catch(error => {
+      console.error("Error getting session:", error);
+      if (isMounted) {
         setIsLoading(false);
         setInitialized(true);
         hasInitialized = true;
-      }).catch(error => {
-        console.error("Error getting session:", error);
-        if (isMounted) {
-          setIsLoading(false);
-          setInitialized(true);
-          hasInitialized = true;
-        }
-      });
-    }, 50); // Reduced delay for faster initialization
+      }
+    });
 
-    // Safety timeout to prevent indefinite loading
+    // Safety timeout to prevent indefinite loading - reduced to 1 second
     const safetyTimeout = setTimeout(() => {
       if (!hasInitialized && isMounted) {
         setIsLoading(false);
         setInitialized(true);
+        console.log("Auth initialization safety timeout triggered");
       }
-    }, 2000); // Reduced timeout
+    }, 1000); // Reduced timeout for faster recovery
 
     return () => {
       isMounted = false;

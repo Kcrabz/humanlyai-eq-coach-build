@@ -40,15 +40,16 @@ export const clearLoginSuccess = (): void => {
 
 /**
  * Checks if login was successful recently (within last 5 minutes)
+ * Optimized for performance with early return paths
  */
 export const wasLoginSuccessful = (): boolean => {
-  // Fast path: check session storage first
+  // Fast path: check session storage first (most efficient)
   if (sessionStorage.getItem(LOGIN_SESSION_KEY) === 'true' || 
       sessionStorage.getItem(JUST_LOGGED_IN_KEY) === 'true') {
     return true;
   }
   
-  // Check localStorage with timestamp
+  // Check localStorage with timestamp for longer persistence
   const timestamp = localStorage.getItem(LOGIN_SUCCESS_KEY);
   if (timestamp) {
     const loginTime = parseInt(timestamp);
@@ -67,15 +68,24 @@ export const isFirstLoginAfterLoad = (): boolean => {
   if (justLoggedIn) {
     // Clear immediately to prevent multiple redirects
     sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
+    return true;
   }
-  return justLoggedIn;
+  return false;
 };
 
 /**
  * Check if we need to show a fresh chat experience after login
  */
 export const shouldShowFreshChat = (): boolean => {
-  return sessionStorage.getItem(FRESH_CHAT_KEY) === 'true';
+  // Check if we need fresh chat
+  const needsFreshChat = sessionStorage.getItem(FRESH_CHAT_KEY) === 'true';
+  
+  // Only return true once per session
+  if (needsFreshChat) {
+    sessionStorage.removeItem(FRESH_CHAT_KEY);
+  }
+  
+  return needsFreshChat;
 };
 
 /**
@@ -85,9 +95,16 @@ export const forceRedirectToDashboard = (): void => {
   // If in PWA mode, use a direct approach
   if (isRunningAsPWA()) {
     localStorage.setItem('pwa_redirect_after_login', '/dashboard');
-    window.location.href = '/dashboard';
+    
+    // Check if we're already on the dashboard to avoid reload loops
+    if (window.location.pathname !== '/dashboard') {
+      window.location.href = '/dashboard';
+    }
   } else {
-    window.location.href = '/dashboard';
+    // Avoid reload if already on dashboard
+    if (window.location.pathname !== '/dashboard') {
+      window.location.href = '/dashboard';
+    }
   }
 };
 
@@ -101,9 +118,10 @@ export const isRunningAsPWA = (): boolean => {
       return window._isPwaMode;
     }
     
-    const result = window.matchMedia('(display-mode: standalone)').matches || 
-                  (window.navigator as any).standalone === true || 
-                  window.isPwaMode?.();
+    // Use the || operator for more concise code
+    const result = 
+      window.matchMedia('(display-mode: standalone)').matches || 
+      (window.navigator as any).standalone === true;
     
     window._isPwaMode = result;
     return result;
@@ -113,7 +131,6 @@ export const isRunningAsPWA = (): boolean => {
 };
 
 // Add type definition to Window interface but don't redeclare isPwaMode
-// This fixes the duplicate declaration error
 declare global {
   interface Window {
     _isPwaMode?: boolean;

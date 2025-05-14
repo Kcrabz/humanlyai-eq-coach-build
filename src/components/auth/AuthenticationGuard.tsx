@@ -4,7 +4,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isOnAuthPage } from "@/utils/navigationUtils";
 import { toast } from "sonner";
-import { forceRedirectToDashboard, isRunningAsPWA, wasLoginSuccessful, isFirstLoginAfterLoad } from "@/utils/loginRedirectUtils";
+import { 
+  forceRedirectToDashboard, 
+  isRunningAsPWA, 
+  wasLoginSuccessful, 
+  isFirstLoginAfterLoad,
+  markLoginSuccess 
+} from "@/utils/loginRedirectUtils";
 
 /**
  * Optimized authentication guard component with improved performance
@@ -17,9 +23,22 @@ export const AuthenticationGuard = () => {
   const isPWA = isRunningAsPWA();
   const justLoggedIn = isFirstLoginAfterLoad();
   
-  // Optimized main auth redirection effect with reduced computations
+  // Enhanced login detection for immediate feedback
   useEffect(() => {
-    // Skip if still loading
+    // Show welcome toast immediately when we detect login
+    if (user && (authEvent === 'SIGN_IN_COMPLETE' || wasLoginSuccessful() || justLoggedIn)) {
+      toast.success(`Welcome back${user.name ? `, ${user.name}` : ''}!`);
+      
+      // Optimistic UI updates - mark login success early
+      if (authEvent === 'SIGN_IN_COMPLETE') {
+        markLoginSuccess();
+      }
+    }
+  }, [user, authEvent, justLoggedIn]);
+  
+  // Optimized main auth redirection effect
+  useEffect(() => {
+    // Skip if still loading auth state
     if (isLoading) {
       return;
     }
@@ -29,48 +48,39 @@ export const AuthenticationGuard = () => {
       return;
     }
     
-    // Critical: Wait for profile to load after sign-in before redirecting
-    if (authEvent === 'SIGN_IN_COMPLETE' && !profileLoaded) {
-      return;
-    }
-
-    // Skip redirects if we're already on the right page
+    // Skip redirects if we're already on the right page to avoid redirect loops
     const isCurrentlyOnAuth = isOnAuthPage(pathname);
     
-    // Use memoized variables for performance
     if (user) {
-      // Handle successful login with profile loaded
-      if ((authEvent === "SIGN_IN_COMPLETE" || authEvent === "RESTORED_SESSION" || justLoggedIn) && profileLoaded) {
-        // If not onboarded, go to onboarding
-        if (!user.onboarded) {
-          if (pathname !== "/onboarding") {
-            if (isPWA) {
-              window.location.href = "/onboarding";
-            } else {
-              navigate("/onboarding", { replace: true });
-            }
-          }
-        } 
-        // If onboarded and on auth page, go to dashboard
-        else if (isCurrentlyOnAuth || wasLoginSuccessful() || justLoggedIn) {
-          if (pathname !== "/dashboard") {
-            if (isPWA || justLoggedIn) {
-              forceRedirectToDashboard();
-              toast.success(`Welcome back, ${user.name || 'Friend'}!`);
-            } else {
-              navigate("/dashboard", { replace: true });
-              toast.success(`Welcome back, ${user.name || 'Friend'}!`);
-            }
-          }
-        }
-        return;
-      }
-
+      console.log("AuthGuard: User detected", { 
+        authEvent, 
+        profileLoaded, 
+        onboarded: user.onboarded,
+        pathname 
+      });
+      
       // Handle onboarded vs not onboarded states
       if (!user.onboarded && pathname !== "/onboarding") {
+        console.log("Redirecting user to onboarding");
         navigate("/onboarding", { replace: true });
+        return;
       } 
+      
+      // Handle successful login case with higher priority
+      if ((authEvent === "SIGN_IN_COMPLETE" || authEvent === "RESTORED_SESSION" || justLoggedIn || wasLoginSuccessful()) 
+          && user.onboarded && (isCurrentlyOnAuth || pathname === "/")) {
+        console.log("Login success detected, redirecting to dashboard");
+        
+        // Use immediate redirection methods for snappier UX
+        if (isPWA || justLoggedIn) {
+          forceRedirectToDashboard();
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
+      }
+      // Handle already authenticated users on auth pages
       else if (user.onboarded && isCurrentlyOnAuth) {
+        console.log("User is already authenticated, redirecting to dashboard");
         if (isPWA) {
           forceRedirectToDashboard();
         } else {
@@ -78,8 +88,9 @@ export const AuthenticationGuard = () => {
         }
       }
     } 
-    // Not authenticated -> redirect to login
+    // Handle unauthenticated users trying to access protected routes
     else if (!user && pathname !== "/" && !isCurrentlyOnAuth) {
+      console.log("User is not authenticated, redirecting to login");
       navigate("/login", { replace: true });
     }
   }, [user, isLoading, pathname, navigate, authEvent, profileLoaded, isPWA, justLoggedIn]);

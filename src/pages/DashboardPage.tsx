@@ -7,7 +7,7 @@ import { MessageCircle, TrendingUp, Users, Shield, MessageSquare } from "lucide-
 import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { toast } from "sonner";
-import { memo, useEffect } from "react";
+import { memo, useEffect, useState } from "react";
 
 // Memoize card components for performance
 const ActionCard = memo(({ 
@@ -42,12 +42,28 @@ const ActionCard = memo(({
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [loaded, setLoaded] = useState(false);
   const { isAdmin, refreshAdminStatus } = useAdminCheck();
   
-  // Force refresh admin status when dashboard loads
+  // Mark page as loaded for smoother transitions
+  useEffect(() => {
+    if (!loaded) {
+      // Short timeout to prevent UI jank during load
+      const timer = setTimeout(() => {
+        setLoaded(true);
+      }, 50);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loaded]);
+  
+  // Force refresh admin status when dashboard loads, but in the background
   useEffect(() => {
     if (user?.email) {
-      refreshAdminStatus();
+      // Use a microtask to run this after rendering
+      setTimeout(() => {
+        refreshAdminStatus();
+      }, 0);
     }
   }, [user?.email, refreshAdminStatus]);
   
@@ -78,7 +94,8 @@ const DashboardPage = () => {
           </p>
         </div>
         
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-scale-fade-in">
+        {/* Use conditional rendering for smoother loading */}
+        <div className={`grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 ${loaded ? 'animate-scale-fade-in' : 'opacity-0'}`}>
           {/* Chat with Kai */}
           <ActionCard 
             onClick={() => navigate("/chat")}
