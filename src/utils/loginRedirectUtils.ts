@@ -6,6 +6,7 @@
 const LOGIN_SUCCESS_KEY = 'login_success_timestamp';
 const LOGIN_SESSION_KEY = 'login_success';
 const JUST_LOGGED_IN_KEY = 'just_logged_in';
+const REDIRECT_IN_PROGRESS = 'login_redirect_in_progress';
 
 /**
  * Sets a login success flag with a timestamp - optimized version
@@ -36,6 +37,7 @@ export const clearLoginSuccess = (): void => {
   localStorage.removeItem(LOGIN_SUCCESS_KEY);
   sessionStorage.removeItem(LOGIN_SESSION_KEY);
   sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
+  sessionStorage.removeItem(REDIRECT_IN_PROGRESS);
 };
 
 /**
@@ -45,7 +47,8 @@ export const clearLoginSuccess = (): void => {
 export const wasLoginSuccessful = (): boolean => {
   // Fast path: check session storage first (most efficient)
   if (sessionStorage.getItem(LOGIN_SESSION_KEY) === 'true' || 
-      sessionStorage.getItem(JUST_LOGGED_IN_KEY) === 'true') {
+      sessionStorage.getItem(JUST_LOGGED_IN_KEY) === 'true' ||
+      sessionStorage.getItem(REDIRECT_IN_PROGRESS) === 'true') {
     return true;
   }
   
@@ -74,11 +77,28 @@ export const isFirstLoginAfterLoad = (): boolean => {
 };
 
 /**
+ * Checks if a redirection is currently in progress
+ */
+export const isRedirectInProgress = (): boolean => {
+  return sessionStorage.getItem(REDIRECT_IN_PROGRESS) === 'true';
+};
+
+/**
+ * Clears the redirect in progress flag
+ */
+export const clearRedirectInProgress = (): void => {
+  sessionStorage.removeItem(REDIRECT_IN_PROGRESS);
+};
+
+/**
  * Forces a redirect to dashboard using window.location - optimized
  * This version prefers React Router navigation when possible
  */
 export const forceRedirectToDashboard = (): void => {
   console.log("Force redirect to dashboard initiated");
+  
+  // Mark redirection as in progress
+  sessionStorage.setItem(REDIRECT_IN_PROGRESS, 'true');
   
   // Directly navigate to dashboard
   const alreadyOnDashboard = window.location.pathname === '/dashboard';
@@ -95,6 +115,7 @@ export const forceRedirectToDashboard = (): void => {
     window.location.href = '/dashboard';
   } else {
     console.log("Already on dashboard, no redirect needed");
+    clearRedirectInProgress();
   }
 };
 

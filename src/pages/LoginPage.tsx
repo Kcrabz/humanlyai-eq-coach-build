@@ -2,8 +2,30 @@
 import { AuthForm } from "@/components/auth/AuthForm";
 import { AuthRedirect } from "@/components/auth/AuthRedirect";
 import { PageLayout } from "@/components/layout/PageLayout";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
+import { wasLoginSuccessful } from "@/utils/loginRedirectUtils";
 
 const LoginPage = () => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+  
+  // Handle direct dashboard redirection for authenticated users
+  useEffect(() => {
+    // Only run this effect if we have user data and aren't loading
+    if (!isLoading && user) {
+      console.log("LoginPage: User already authenticated, redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
+    }
+    
+    // Extra check for login success
+    if (wasLoginSuccessful()) {
+      console.log("LoginPage: Login success detected, redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, isLoading, navigate]);
+  
   return (
     <PageLayout>
       <AuthRedirect />

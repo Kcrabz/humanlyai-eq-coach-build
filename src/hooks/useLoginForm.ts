@@ -98,10 +98,18 @@ export function useLoginForm() {
         console.log("Login successful in form handler");
         setLoginSuccess(true);
         markLoginSuccess();
-        toast.success("Login successful!");
         
-        // Use React Router for better navigation
-        navigate('/dashboard', { replace: true });
+        // Set body attribute to prevent duplicate toasts
+        document.body.setAttribute('data-toast-shown', 'true');
+        
+        // Set a session flag to indicate we're in a redirection process
+        sessionStorage.setItem('login_redirect_in_progress', 'true');
+        
+        // Small delay to ensure auth state is updated
+        setTimeout(() => {
+          console.log("Navigating to dashboard after login");
+          navigate('/dashboard', { replace: true });
+        }, 50);
       } else {
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);

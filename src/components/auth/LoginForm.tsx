@@ -42,6 +42,9 @@ export function LoginForm() {
       // Display welcome toast
       const userName = user?.name ? `, ${user.name.split(' ')[0]}` : '';
       toast.success(`Welcome back${userName}!`);
+      
+      // Set body attribute to prevent duplicate toasts
+      document.body.setAttribute('data-toast-shown', 'true');
     }
   }, [authEvent, loginSuccess, user]);
   

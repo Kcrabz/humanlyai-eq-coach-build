@@ -9,7 +9,9 @@ import {
   isRunningAsPWA, 
   wasLoginSuccessful, 
   isFirstLoginAfterLoad,
-  markLoginSuccess 
+  markLoginSuccess,
+  isRedirectInProgress,
+  clearRedirectInProgress
 } from "@/utils/loginRedirectUtils";
 
 /**
@@ -20,6 +22,17 @@ export const AuthenticationGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
+  
+  // Cleanup function for the redirect in progress flag
+  useEffect(() => {
+    return () => {
+      // If we navigate away while a redirect is in progress, clear the flag
+      if (isRedirectInProgress()) {
+        console.log("Clearing redirect in progress flag on AuthGuard unmount");
+        clearRedirectInProgress();
+      }
+    };
+  }, []);
   
   // Handle immediate welcome toast for better UX
   useEffect(() => {
@@ -70,6 +83,7 @@ export const AuthenticationGuard = () => {
     
     if (user) {
       console.log("User is authenticated on path:", pathname);
+      
       // Priority path: Redirect to onboarding if not onboarded
       if (!user.onboarded && pathname !== "/onboarding") {
         console.log("Redirecting to onboarding");
@@ -81,18 +95,28 @@ export const AuthenticationGuard = () => {
       if (user.onboarded && isCurrentlyOnAuth) {
         console.log("Authenticated user on auth page, redirecting to dashboard");
         navigate("/dashboard", { replace: true });
+        return;
       }
 
       // Handle root path - redirect to dashboard for authenticated users
       if (user.onboarded && pathname === "/") {
         console.log("Authenticated user on root page, redirecting to dashboard");
         navigate("/dashboard", { replace: true });
+        return;
       }
       
       // Redirect to dashboard if user lands directly on chat page after login
       if (user.onboarded && pathname === "/chat" && wasLoginSuccessful()) {
         console.log("Redirecting to dashboard after recent login");
         navigate("/dashboard", { replace: true });
+        return;
+      }
+      
+      // Handle post-login redirects for PWA
+      if (isRunningAsPWA() && wasLoginSuccessful() && isCurrentlyOnAuth) {
+        console.log("PWA authenticated user on auth page, redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
+        return;
       }
     } 
     // Simple case: Unauthenticated users trying to access protected routes

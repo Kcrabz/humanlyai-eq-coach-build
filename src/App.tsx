@@ -2,11 +2,12 @@
 import { AuthProvider } from "./context/AuthContext"; 
 import { ThemeProvider } from "./context/ThemeContext";
 import { Toaster } from "sonner";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import AppRoutes from "./AppRoutes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChatMemoryProvider } from "./context/ChatMemoryContext";
 import { AuthenticationGuard } from "./components/auth/AuthenticationGuard";
+import { clearRedirectInProgress } from "./utils/loginRedirectUtils";
 
 // Create a new query client
 const queryClient = new QueryClient();
@@ -27,6 +28,11 @@ function AppProviders({ children }: { children: ReactNode }) {
 }
 
 function App() {
+  // Clear any lingering redirect flags on app initialization
+  useEffect(() => {
+    clearRedirectInProgress();
+  }, []);
+  
   return (
     <AppProviders>
       <AuthenticationGuard />
