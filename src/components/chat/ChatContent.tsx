@@ -2,6 +2,7 @@
 import { lazy, Suspense } from "react";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { EQAssessmentAlert } from "@/components/chat/components/EQAssessmentAlert";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Lazy load components that aren't immediately visible
 const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => ({ default: module.ChatList })));
@@ -14,8 +15,10 @@ interface ChatContentProps {
 }
 
 export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatContentProps) {
+  const isMobile = useIsMobile();
+
   return (
-    <div className="flex-1 overflow-hidden flex flex-col">
+    <div className="flex-1 overflow-hidden flex flex-col" style={{ maxHeight: isMobile ? 'calc(100dvh - 60px)' : undefined }}>
       {!hasCompletedAssessment && <EQAssessmentAlert onStartAssessment={onStartAssessment} />}
       
       {/* Use ChatUsage directly, not in Suspense */}
