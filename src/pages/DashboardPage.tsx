@@ -1,3 +1,4 @@
+
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -87,10 +88,17 @@ const DashboardContent = memo(() => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
   
-  // Enhanced handler for chat navigation
+  // Enhanced handler for chat navigation with source parameter
   const handleNavigateToChat = () => {
-    // Use our centralized navigation service
-    AuthNavigationService.navigateToChat(navigate);
+    console.log("DashboardPage: User clicked 'Chat with Kai' button");
+    // Clear login flags if they exist
+    localStorage.removeItem('login_to_dashboard');
+    
+    // Mark this as intentional navigation
+    localStorage.setItem('intentional_navigation_to_chat', 'true');
+    
+    // Navigate to chat with source parameter
+    navigate("/chat?source=dashboard");
   };
   
   return (
@@ -159,6 +167,10 @@ const DashboardPage = () => {
   // Delay rendering content until auth is ready
   useEffect(() => {
     if (!isLoading && user) {
+      // Remove login flag when dashboard successfully loads
+      // This prevents unwanted redirects from chat back to dashboard
+      localStorage.removeItem('login_to_dashboard');
+      
       // Short delay to ensure profile is loaded
       const timer = setTimeout(() => {
         setPageReady(true);

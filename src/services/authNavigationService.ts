@@ -6,8 +6,8 @@ import { User } from "@/types";
 const AUTH_STATE_STABILIZE_DELAY = 200; // ms to wait for auth state to stabilize
 
 /**
- * Centralized auth navigation service - Version 2.1
- * Fixed navigation flow to ensure proper routing login -> dashboard
+ * Centralized auth navigation service - Version 2.2
+ * Fixed navigation flow to ensure proper routing login -> dashboard -> chat
  */
 export const AuthNavigationService = {
   /**
@@ -18,6 +18,7 @@ export const AuthNavigationService = {
     
     // Set a session flag to prevent other navigation handlers from interfering
     sessionStorage.setItem('auth_navigation_in_progress', 'login_success');
+    localStorage.setItem('login_to_dashboard', 'true');
     
     // Navigate directly to dashboard - simplified flow
     setTimeout(() => {
@@ -40,10 +41,13 @@ export const AuthNavigationService = {
   
   /**
    * Navigate to chat page with intentional navigation marker
+   * This should ONLY be called from user-initiated actions like clicking a button
    */
   navigateToChat: (navigate: NavigateFunction): void => {
+    console.log("AuthNavigationService: Explicitly navigating to chat");
     // Set intention flag directly in session storage (more reliable than localStorage)
     sessionStorage.setItem('auth_navigation_in_progress', 'to_chat');
+    localStorage.setItem('intentional_navigation_to_chat', 'true');
     
     // Navigate and clear flag after navigation completes
     navigate("/chat");
@@ -57,6 +61,7 @@ export const AuthNavigationService = {
    * Navigate to dashboard with navigation marker
    */
   navigateToDashboard: (navigate: NavigateFunction): void => {
+    console.log("AuthNavigationService: Explicitly navigating to dashboard");
     // Set intention flag directly in session storage
     sessionStorage.setItem('auth_navigation_in_progress', 'to_dashboard');
     
@@ -72,8 +77,10 @@ export const AuthNavigationService = {
    * Clear all navigation flags and states
    */
   clearNavigationState: (): void => {
+    console.log("AuthNavigationService: Clearing all navigation state");
     sessionStorage.removeItem('auth_navigation_in_progress');
     localStorage.removeItem('intentional_navigation_to_chat');
+    localStorage.removeItem('login_to_dashboard');
   }
 };
 

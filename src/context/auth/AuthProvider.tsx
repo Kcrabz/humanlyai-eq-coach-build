@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import AuthContext from "./AuthContext";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -79,6 +80,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (success) {
       setAuthState(AuthState.SIGNED_IN);
+      // Set login to dashboard flag to ensure proper flow
+      localStorage.setItem('login_to_dashboard', 'true');
+      console.log("AuthProvider: Login successful, set login_to_dashboard flag");
     } else {
       setAuthState(AuthState.SIGNED_OUT);
     }
@@ -93,6 +97,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     
     if (success) {
       setAuthState(AuthState.SIGNED_UP);
+      // Set login to dashboard flag to ensure proper flow
+      localStorage.setItem('login_to_dashboard', 'true');
+      console.log("AuthProvider: Signup successful, set login_to_dashboard flag");
     } else {
       setAuthState(AuthState.SIGNED_OUT);
     }
@@ -104,6 +111,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const enhancedLogout = useCallback(async () => {
     const result = await authLogout();
     setAuthState(AuthState.SIGNED_OUT);
+    
+    // Clear ALL navigation flags when signing out
+    sessionStorage.removeItem('auth_navigation_in_progress');
+    localStorage.removeItem('intentional_navigation_to_chat');
+    localStorage.removeItem('login_to_dashboard');
+    
     return result;
   }, [authLogout]);
   
@@ -112,11 +125,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (authEvent === "SIGN_IN_COMPLETE" && user) {
       console.log("Detected sign in complete with user");
       setAuthState(AuthState.SIGNED_IN);
+      // Set login to dashboard flag to ensure proper flow
+      localStorage.setItem('login_to_dashboard', 'true');
     } else if (authEvent === "SIGN_OUT_COMPLETE") {
       setAuthState(AuthState.SIGNED_OUT);
       
       // Clear any navigation flags when signing out
       sessionStorage.removeItem('auth_navigation_in_progress');
+      localStorage.removeItem('intentional_navigation_to_chat');
+      localStorage.removeItem('login_to_dashboard');
     }
   }, [authEvent, user]);
   

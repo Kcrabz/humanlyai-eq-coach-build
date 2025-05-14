@@ -115,8 +115,22 @@ export const AuthenticationGuard = () => {
         return;
       }
       
-      // FIX: Don't auto-navigate from dashboard to chat - let users navigate manually
-      // This prevents the dashboard from being skipped
+      // CRITICAL FIX: Don't auto-navigate from dashboard to chat - let users navigate manually
+      // This ensures proper login -> dashboard -> chat flow
+      
+      // Check if we just logged in and we're on the chat page without intentional navigation
+      if (isOnChatPage(pathname) && localStorage.getItem('login_to_dashboard') === 'true' && 
+          !localStorage.getItem('intentional_navigation_to_chat')) {
+        console.log("Preventing unintentional navigation to chat - redirecting to dashboard");
+        localStorage.removeItem('login_to_dashboard');
+        sessionStorage.setItem('auth_navigation_in_progress', 'to_dashboard');
+        navigate("/dashboard", { replace: true });
+        
+        setTimeout(() => {
+          sessionStorage.removeItem('auth_navigation_in_progress');
+        }, 500);
+        return;
+      }
     }
   }, [user, isLoading, pathname, navigate, location.search]);
   

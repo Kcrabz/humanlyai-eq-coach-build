@@ -15,15 +15,19 @@ const LoginPage = () => {
   // Handle redirection for authenticated users
   useEffect(() => {
     if (isAuthenticated && user) {
+      console.log("LoginPage: User already authenticated, handling redirection");
+      
       // Check if there's a specific page to return to
       const authState = getAuthState();
       const returnTo = authState?.returnTo;
       
       if (user.onboarded) {
         // Onboarded users go to dashboard (never directly to chat)
+        console.log("LoginPage: Redirecting to dashboard");
         AuthNavigationService.navigateToDashboard(navigate);
       } else {
         // Non-onboarded users must complete onboarding
+        console.log("LoginPage: Redirecting to onboarding");
         navigate("/onboarding", { replace: true });
       }
     }

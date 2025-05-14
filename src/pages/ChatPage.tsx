@@ -33,8 +33,15 @@ const ChatPage = () => {
   // Keep track of previous coaching mode to detect changes
   const prevCoachingModeRef = useRef<string | undefined>(undefined);
   
+  // Check for intentional navigation from dashboard
+  const wasIntentionalNavigation = () => {
+    return isFromDashboard || 
+           localStorage.getItem('intentional_navigation_to_chat') === 'true';
+  };
+  
   // Check if the user is onboarded - only once when component mounts
   useEffect(() => {
+    console.log("ChatPage: Auth check running");
     // Wait until authentication is complete
     if (isLoading) return;
     
@@ -52,12 +59,28 @@ const ChatPage = () => {
       return;
     }
     
-    // If we get here, the user is authenticated and onboarded
-    // Mark the chat page as the current destination to prevent further redirects
-    setAuthState(AuthState.ONBOARDED, { currentPage: 'chat', timestamp: Date.now() });
+    // Check if this was an intentional navigation from dashboard or direct link
+    const intentional = wasIntentionalNavigation();
+    console.log("ChatPage: Intentional navigation to chat:", intentional);
     
-    console.log("User authenticated and onboarded, staying on chat page");
-  }, [isAuthenticated, user, isLoading, navigate]);
+    // If this wasn't an intentional navigation and we just logged in, redirect to dashboard
+    if (!intentional && localStorage.getItem('login_to_dashboard') === 'true') {
+      console.log("ChatPage: Redirecting to dashboard - not intentional navigation");
+      localStorage.removeItem('login_to_dashboard');
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+    
+    // If we get here, either:
+    // 1. User intentionally navigated to chat (from dashboard button)
+    // 2. User directly accessed chat URL after being authenticated
+    // In either case, we stay on chat page
+    console.log("ChatPage: Staying on chat page");
+    
+    // Clear intentional navigation flag now that we've used it
+    localStorage.removeItem('intentional_navigation_to_chat');
+    
+  }, [isAuthenticated, user, isLoading, navigate, location.search]);
 
   // Reset introduction when coaching mode changes
   useEffect(() => {
