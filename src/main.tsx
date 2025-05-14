@@ -96,7 +96,7 @@ const initPwaFeatures = () => {
   }
 };
 
-// Enhanced utility function to detect if app is in PWA mode
+// Enhanced utility function to detect if app is in PWA mode - attached to window
 window.isPwaMode = function(): boolean {
   try {
     // Check both standard detection and our custom flag
@@ -110,7 +110,7 @@ window.isPwaMode = function(): boolean {
   }
 };
 
-// Add utility to detect mobile devices
+// Add utility to detect mobile devices - attached to window
 window.isMobileDevice = function(): boolean {
   try {
     return (
@@ -166,11 +166,11 @@ const initializeApp = () => {
   }
 };
 
-// Add type definition for Window interface
+// Add type definition for Window interface - moved outside the duplicate declaration
 declare global {
   interface Window {
-    isPwaMode(): boolean;
-    isMobileDevice(): boolean;
+    isPwaMode: () => boolean;
+    isMobileDevice: () => boolean;
     _isPwaMode?: boolean;
   }
 }
