@@ -9,7 +9,8 @@ const SignupPage = () => {
   const { user, isAuthenticated } = useAuth();
   
   useEffect(() => {
-    // Only for debugging - all navigation is handled by AuthenticationGuard
+    // Only track authentication state for debugging
+    // All navigation is handled by AuthenticationGuard
     if (isAuthenticated && user) {
       console.log("SignupPage: User already authenticated", { 
         id: user.id, 
@@ -17,6 +18,12 @@ const SignupPage = () => {
       });
       
       // Set navigation state for newly registered users
+      AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
+        userId: user.id,
+        fromSignup: true
+      });
+      
+      // If user needs onboarding, mark state
       if (!user.onboarded) {
         AuthNavigationService.setState(NavigationState.ONBOARDING, { 
           userId: user.id, 

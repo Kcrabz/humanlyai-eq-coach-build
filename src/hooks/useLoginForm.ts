@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 export function useLoginForm() {
@@ -19,7 +18,6 @@ export function useLoginForm() {
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
   
   const { login } = useAuth();
-  const navigate = useNavigate();
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -80,8 +78,7 @@ export function useLoginForm() {
         console.log("Login successful, navigation will be handled by AuthenticationGuard");
         toast.success("Login successful!");
         
-        // We no longer need to handle navigation here - AuthenticationGuard will do it
-        // Just set the authentication state
+        // We don't navigate here, AuthenticationGuard will handle it
         AuthNavigationService.setState(NavigationState.AUTHENTICATED);
       } else {
         console.log("Login failed");

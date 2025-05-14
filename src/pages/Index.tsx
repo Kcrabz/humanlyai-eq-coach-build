@@ -1,32 +1,35 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import { useAuth } from "@/context/AuthContext";
 import { Loading } from "@/components/ui/loading";
+import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 const Index = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const navigate = useNavigate();
 
-  // Simple redirect logic for authenticated users
+  // Track authentication state but let AuthenticationGuard handle navigation
   useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      // Redirect onboarding users
-      if (user && !user.onboarded) {
-        console.log("Root page - Redirecting to onboarding");
-        navigate("/onboarding", { replace: true });
-        return;
-      }
+    if (!isLoading && isAuthenticated && user) {
+      // Record navigation state - navigation handled by AuthenticationGuard
+      console.log("Root page - User authenticated:", { 
+        id: user.id, 
+        onboarded: user.onboarded 
+      });
       
-      // Redirect authenticated users to dashboard
-      if (user && user.onboarded) {
-        console.log("Root page - Redirecting to dashboard");
-        navigate("/dashboard", { replace: true });
-        return;
+      if (!user.onboarded) {
+        AuthNavigationService.setState(NavigationState.ONBOARDING, { 
+          userId: user.id, 
+          fromRoot: true 
+        });
+      } else {
+        AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { 
+          userId: user.id, 
+          fromRoot: true 
+        });
       }
     }
-  }, [isAuthenticated, user, isLoading, navigate]);
+  }, [isAuthenticated, user, isLoading]);
 
   // Show loading while checking auth state
   if (isLoading) {

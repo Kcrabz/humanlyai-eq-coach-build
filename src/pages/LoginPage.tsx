@@ -7,11 +7,12 @@ import { useLocation } from "react-router-dom";
 import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 const LoginPage = () => {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const location = useLocation();
   
   useEffect(() => {
-    // Only for debugging - all navigation is handled by AuthenticationGuard
+    // Only track authentication state for debugging
+    // All navigation is handled by AuthenticationGuard
     if (isAuthenticated && user) {
       console.log("LoginPage: User already authenticated", { 
         id: user.id, 
@@ -19,12 +20,10 @@ const LoginPage = () => {
       });
       
       // Set navigation state to authenticated for tracking
-      if (!AuthNavigationService.getState()) {
-        AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
-          userId: user.id, 
-          onboarded: user.onboarded 
-        });
-      }
+      AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
+        userId: user.id, 
+        onboarded: user.onboarded 
+      });
     }
   }, [isAuthenticated, user]);
   

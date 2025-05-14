@@ -3,9 +3,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { markLoginSuccess, isRunningAsPWA } from '@/utils/loginRedirectUtils';
+import { AuthNavigationService, NavigationState } from '@/services/authNavigationService';
 
 /**
- * Further optimized hook for managing authentication session state
+ * Optimized hook for managing authentication session state
  */
 export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -15,6 +16,7 @@ export const useAuthSession = () => {
   const [initialized, setInitialized] = useState(false);
   const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
+  const [authInitComplete, setAuthInitComplete] = useState(false);
 
   // Fast session restoration from localStorage before network requests
   useEffect(() => {
@@ -55,7 +57,7 @@ export const useAuthSession = () => {
     } catch (e) {
       console.warn("Error accessing localStorage", e);
     }
-  }, [profileLoaded]);
+  }, [profileLoaded, isLoading]);
 
   // Optimized session update handler
   const updateSessionAfterEvent = useCallback((event: string) => {
@@ -66,6 +68,12 @@ export const useAuthSession = () => {
       const timestamp = Date.now();
       setLoginTimestamp(timestamp);
       markLoginSuccess();
+      
+      // Signal authentication to navigation system
+      AuthNavigationService.setState(NavigationState.AUTHENTICATED, {
+        timestamp,
+        authEvent: event
+      });
       
       // Update session without waiting for getSession
       supabase.auth.getUser().then(({ data }) => {
@@ -96,6 +104,9 @@ export const useAuthSession = () => {
       setProfileLoaded(false);
       setSessionReady(false);
       setIsLoading(false); // Exit loading state immediately on sign out
+      
+      // Clear auth states
+      AuthNavigationService.resetAllNavigationState();
       localStorage.removeItem('login_success_timestamp');
       localStorage.removeItem('pwa_auth_timestamp');
       localStorage.removeItem('pwa_redirect_after_login');
@@ -143,6 +154,12 @@ export const useAuthSession = () => {
         setProfileLoaded(true);
         setSessionReady(true);
         
+        // Update navigation state
+        AuthNavigationService.setState(NavigationState.AUTHENTICATED, {
+          restored: true,
+          timestamp: Date.now()
+        });
+        
         // PWA handling
         if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
           localStorage.setItem('pwa_session_restored', 'true');
@@ -155,11 +172,13 @@ export const useAuthSession = () => {
       
       setIsLoading(false);
       setInitialized(true);
+      setAuthInitComplete(true);
     }).catch(error => {
       console.error("Error getting session:", error);
       if (isMounted) {
         setIsLoading(false);
         setInitialized(true);
+        setAuthInitComplete(true);
       }
     });
 
@@ -169,8 +188,9 @@ export const useAuthSession = () => {
         console.log("Safety timeout triggered - forcing auth state to complete loading");
         setIsLoading(false);
         setInitialized(true);
+        setAuthInitComplete(true);
       }
-    }, 300);
+    }, 500); // Increased timeout for more reliability
 
     return () => {
       isMounted = false;
@@ -188,6 +208,7 @@ export const useAuthSession = () => {
     setProfileLoaded,
     initialized,
     loginTimestamp,
-    sessionReady
+    sessionReady,
+    authInitComplete
   };
 };
