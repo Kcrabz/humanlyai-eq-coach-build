@@ -37,7 +37,12 @@ const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>)
       }
       
       console.log("Login successful for:", email, "User data:", data.user.id);
-      toast.success("Logged in successfully");
+      
+      // Immediately store a success flag to ensure redirects work properly
+      localStorage.setItem('login_success_timestamp', Date.now().toString());
+      sessionStorage.setItem('login_success', 'true');
+      sessionStorage.setItem('just_logged_in', 'true');
+      
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";

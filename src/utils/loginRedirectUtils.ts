@@ -17,6 +17,9 @@ export const markLoginSuccess = (): void => {
   sessionStorage.setItem(LOGIN_SESSION_KEY, 'true');
   sessionStorage.setItem(JUST_LOGGED_IN_KEY, 'true');
   
+  // Debug log for tracking login flow
+  console.log("Login success marked at", new Date(timestamp).toISOString());
+  
   // Efficient PWA mode handling
   if (isRunningAsPWA()) {
     if (!sessionStorage.getItem('pwa_desired_path')) {
@@ -73,17 +76,21 @@ export const isFirstLoginAfterLoad = (): boolean => {
  * Forces a redirect to dashboard using window.location - optimized
  */
 export const forceRedirectToDashboard = (): void => {
+  console.log("Force redirect to dashboard initiated");
+  
   // If in PWA mode, use a direct approach
   if (isRunningAsPWA()) {
     localStorage.setItem('pwa_redirect_after_login', '/dashboard');
     
     // Check if we're already on the dashboard to avoid reload loops
     if (window.location.pathname !== '/dashboard') {
+      console.log("Redirecting to dashboard via direct navigation");
       window.location.href = '/dashboard';
     }
   } else {
     // Avoid reload if already on dashboard
     if (window.location.pathname !== '/dashboard') {
+      console.log("Redirecting to dashboard via direct navigation");
       window.location.href = '/dashboard';
     }
   }

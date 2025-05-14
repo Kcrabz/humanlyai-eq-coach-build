@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
@@ -89,40 +90,15 @@ export function useLoginForm() {
     setIsSubmitting(true);
     
     try {
-      // Optimized: Check rate limit and login in parallel
-      const [serverRateLimitResponse, loginResponse] = await Promise.allSettled([
-        checkRateLimit({
-          email,
-          endpoint: 'login',
-          period: 'minute',
-          maxRequests: 5 
-        }),
-        login(email, password)
-      ]);
-      
-      // Extract rate limit result
-      if (serverRateLimitResponse.status === 'fulfilled' && serverRateLimitResponse.value.isLimited) {
-        setErrorMessage(`Too many login attempts from this email. Please try again later.`);
-        setRateLimitInfo({
-          isLimited: true,
-          attemptsRemaining: 0,
-          resetTimeMs: serverRateLimitResponse.value.resetTime.getTime()
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
-      // Extract login result
-      const success = loginResponse.status === 'fulfilled' ? loginResponse.value : false;
+      const success = await login(email, password);
       
       if (success) {
+        console.log("Login successful in form handler");
         setLoginSuccess(true);
-        
-        // Mark login success immediately to speed up redirections
         markLoginSuccess();
         
-        // No need for timeout-based fallback redirection here
-        // AuthenticationGuard will handle redirections automatically
+        // Force a redirect to dashboard to ensure navigation happens
+        window.location.href = '/dashboard';
       } else {
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);

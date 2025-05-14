@@ -15,18 +15,23 @@ export const useAuthSession = () => {
   const [initialized, setInitialized] = useState(false);
   const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
 
+  // Session ready flag for tracking manual token check
+  const [sessionReady, setSessionReady] = useState(false);
+
   // Fast session restoration from localStorage before network requests
   useEffect(() => {
     try {
       // Try to restore session from localStorage immediately for instant UI update
-      const storedSession = localStorage.getItem('sb-auth-token');
+      const storedSession = localStorage.getItem('sb-acboajrjgqqnfrtozssb-auth-token');
       if (storedSession) {
         try {
+          console.log("Found stored session token, attempting to restore");
           const parsedSession = JSON.parse(storedSession);
           if (parsedSession?.currentSession) {
             console.log("Fast session restoration from localStorage");
             setSession(parsedSession.currentSession);
             setAuthEvent('FAST_RESTORED_SESSION');
+            setSessionReady(true);
           }
         } catch (e) {
           console.warn("Could not parse stored session", e);
@@ -39,6 +44,8 @@ export const useAuthSession = () => {
 
   // Optimized session update handler
   const updateSessionAfterEvent = useCallback((event: string) => {
+    console.log("Auth event:", event);
+    
     if (event === 'SIGNED_IN') {
       // Set login timestamp immediately
       const timestamp = Date.now();
@@ -48,8 +55,10 @@ export const useAuthSession = () => {
       // Update session without waiting for getSession
       supabase.auth.getUser().then(({ data }) => {
         if (data.user) {
+          console.log("User signed in:", data.user.id);
           setAuthEvent('SIGN_IN_COMPLETE');
           setProfileLoaded(true);
+          setSessionReady(true);
           
           // Handle PWA mode
           if (isRunningAsPWA()) {
@@ -57,11 +66,14 @@ export const useAuthSession = () => {
             localStorage.setItem('pwa_redirect_after_login', '/dashboard');
           }
         }
-      }).catch(console.error);
+      }).catch(error => {
+        console.error("Error getting user after sign in:", error);
+      });
     } else if (event === 'SIGNED_OUT') {
       setSession(null);
       setAuthEvent('SIGN_OUT_COMPLETE');
       setProfileLoaded(false);
+      setSessionReady(false);
       localStorage.removeItem('login_success_timestamp');
       localStorage.removeItem('pwa_auth_timestamp');
       localStorage.removeItem('pwa_redirect_after_login');
@@ -72,11 +84,14 @@ export const useAuthSession = () => {
   // Core authentication initialization - optimized for performance
   useEffect(() => {
     let isMounted = true;
+    console.log("Setting up auth state listener");
     
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         if (!isMounted) return;
+        
+        console.log("Auth state change event:", event);
         
         // Immediate updates for critical events
         if (event !== 'INITIAL_SESSION') {
@@ -94,11 +109,13 @@ export const useAuthSession = () => {
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       if (!isMounted) return;
       
+      console.log("Retrieved session from Supabase:", existingSession ? "Yes" : "No");
       setSession(existingSession);
       
       if (existingSession) {
         setAuthEvent('RESTORED_SESSION');
         setProfileLoaded(true);
+        setSessionReady(true);
         
         // PWA handling
         if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
@@ -144,6 +161,7 @@ export const useAuthSession = () => {
     profileLoaded, 
     setProfileLoaded,
     initialized,
-    loginTimestamp
+    loginTimestamp,
+    sessionReady
   };
 };

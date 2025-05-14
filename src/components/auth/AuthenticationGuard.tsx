@@ -20,12 +20,10 @@ export const AuthenticationGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
-  const isPWA = isRunningAsPWA();
-  const justLoggedIn = isFirstLoginAfterLoad();
   
   // Handle immediate welcome toast for better UX
   useEffect(() => {
-    if (user && (authEvent === 'SIGN_IN_COMPLETE' || wasLoginSuccessful() || justLoggedIn)) {
+    if (user && (authEvent === 'SIGN_IN_COMPLETE' || wasLoginSuccessful() || isFirstLoginAfterLoad())) {
       // No need to block with toast.promise, use regular toast instead
       toast.success(`Welcome back${user.name ? `, ${user.name}` : ''}!`);
       
@@ -33,10 +31,17 @@ export const AuthenticationGuard = () => {
         markLoginSuccess();
       }
     }
-  }, [user, authEvent, justLoggedIn]);
+  }, [user, authEvent]);
   
   // Main auth redirection effect - simplified for performance
   useEffect(() => {
+    console.log("AuthGuard checking state:", { 
+      isLoading, 
+      user: user?.id ? "Yes" : "No", 
+      path: pathname, 
+      authEvent 
+    });
+    
     // Skip if still loading auth state
     if (isLoading) return;
     
@@ -47,27 +52,26 @@ export const AuthenticationGuard = () => {
     const isCurrentlyOnAuth = isOnAuthPage(pathname);
     
     if (user) {
+      console.log("User is authenticated on path:", pathname);
       // Priority path: Redirect to onboarding if not onboarded
       if (!user.onboarded && pathname !== "/onboarding") {
+        console.log("Redirecting to onboarding");
         navigate("/onboarding", { replace: true });
         return;
       } 
       
       // Handle authenticated users on auth pages - direct them to dashboard
       if (user.onboarded && isCurrentlyOnAuth) {
-        // Use fastest available redirect method
-        if ((isPWA || justLoggedIn) && location.pathname !== "/dashboard") {
-          forceRedirectToDashboard();
-        } else {
-          navigate("/dashboard", { replace: true });
-        }
+        console.log("Authenticated user on auth page, redirecting to dashboard");
+        navigate("/dashboard", { replace: true });
       }
     } 
     // Simple case: Unauthenticated users trying to access protected routes
     else if (!user && pathname !== "/" && !isCurrentlyOnAuth) {
+      console.log("Unauthenticated user on protected route, redirecting to login");
       navigate("/login", { replace: true });
     }
-  }, [user, isLoading, pathname, navigate, authEvent, isPWA, justLoggedIn]);
+  }, [user, isLoading, pathname, navigate, authEvent]);
 
   return null;
 };
