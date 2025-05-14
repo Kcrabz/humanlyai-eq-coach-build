@@ -34,15 +34,19 @@ export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
             user_agent_param: navigator.userAgent
           })
           .then(() => console.log("Login event recorded successfully"))
-          .catch(err => console.error("Error recording login:", err)),
+          .then(undefined, err => console.error("Error recording login:", err)),
           
           // Track 2: Update user metrics via edge function
           supabase.functions.invoke('increment-streak', {
             body: { user_id: user.id }
           })
           .then(() => console.log("Streak updated successfully"))
-          .catch(err => console.error("Error updating streak:", err))
-        ]).catch(error => {
+          .then(undefined, err => console.error("Error updating streak:", err))
+        ])
+        .then(() => {
+          console.log("Login tracking completed");
+        })
+        .then(undefined, error => {
           console.error("Error in login tracking:", error);
         });
       }, 0);
