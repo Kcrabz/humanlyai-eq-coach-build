@@ -35,6 +35,7 @@ export const clearLoginSuccess = (): void => {
 /**
  * Checks if login was successful recently (within extended window)
  * Window extended to 60 seconds to ensure redirect logic has time to complete
+ * @param ignoreSource Optional parameter to ignore the login success flag for specific sources
  */
 export const wasLoginSuccessful = (): boolean => {
   const timestamp = localStorage.getItem(LOGIN_SUCCESS_KEY);

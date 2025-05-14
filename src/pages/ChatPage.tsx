@@ -1,4 +1,3 @@
-
 import { useEffect, lazy, Suspense, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -11,7 +10,7 @@ import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar } from "@/components/chat/sidebar/ChatRightSidebar";
 import { ResponsiveMainContent } from "@/components/chat/components/ResponsiveMainContent";
 import { UpdateNotification } from "@/components/pwa/UpdateNotification";
-import { wasLoginSuccessful } from "@/utils/loginRedirectUtils";
+import { wasLoginSuccessful, clearLoginSuccess } from "@/utils/loginRedirectUtils";
 
 // Lazy load components that aren't immediately visible
 const EnhancedChatSidebar = lazy(() => import("@/components/chat/sidebar/EnhancedChatSidebar").then(module => ({ default: module.EnhancedChatSidebar })));
@@ -25,17 +24,27 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   
+  // Get source parameter to detect navigation from dashboard
+  const source = searchParams.get('source');
+  const isFromDashboard = source === 'dashboard';
+  
   // Keep track of previous coaching mode to detect changes
   const prevCoachingModeRef = useRef<string | undefined>(undefined);
 
   // Check if this is a post-login navigation - redirect to dashboard if so
   useEffect(() => {
-    if (!isLoading && isAuthenticated && wasLoginSuccessful()) {
+    // Skip redirect if navigating from dashboard
+    if (!isLoading && isAuthenticated && wasLoginSuccessful() && !isFromDashboard) {
       console.log("Post-login detected on chat page, redirecting to dashboard");
       navigate("/dashboard", { replace: true });
       return;
     }
-  }, [isAuthenticated, navigate, isLoading]);
+    
+    // Clear login success flag to prevent future redirects
+    if (isFromDashboard) {
+      clearLoginSuccess();
+    }
+  }, [isAuthenticated, navigate, isLoading, isFromDashboard]);
 
   // Optimize auth check to use fewer rerenders
   useEffect(() => {
