@@ -10,7 +10,7 @@ import { markIntroductionAsShown } from "@/lib/introductionMessages";
 import { ChatRightSidebar } from "@/components/chat/sidebar/ChatRightSidebar";
 import { ResponsiveMainContent } from "@/components/chat/components/ResponsiveMainContent";
 import { UpdateNotification } from "@/components/pwa/UpdateNotification";
-import { wasLoginSuccessful } from "@/utils/loginRedirectUtils";
+import { wasLoginSuccessful, clearLoginSuccess } from "@/utils/loginRedirectUtils";
 import { Toaster } from "sonner";
 
 // Lazy load components that aren't immediately visible
@@ -29,13 +29,23 @@ const ChatPage = () => {
   const prevCoachingModeRef = useRef<string | undefined>(undefined);
 
   // Check if this is a post-login navigation - redirect to dashboard if so
+  // But skip redirection if coming from dashboard (source=dashboard param)
   useEffect(() => {
-    if (!isLoading && isAuthenticated && wasLoginSuccessful()) {
+    const source = searchParams.get('source');
+    const isFromDashboard = source === 'dashboard';
+    
+    if (!isLoading && isAuthenticated && wasLoginSuccessful() && !isFromDashboard) {
       console.log("Post-login detected on chat page, redirecting to dashboard");
       navigate("/dashboard", { replace: true });
       return;
     }
-  }, [isAuthenticated, navigate, isLoading]);
+    
+    // If we're coming from dashboard, clear any login success flags
+    if (isFromDashboard) {
+      console.log("Coming from dashboard, clearing any login success flags");
+      clearLoginSuccess();
+    }
+  }, [isAuthenticated, navigate, isLoading, searchParams]);
 
   // Optimize auth check to use fewer rerenders
   useEffect(() => {

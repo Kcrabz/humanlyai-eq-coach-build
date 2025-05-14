@@ -87,10 +87,10 @@ const DashboardContent = memo(() => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
   
-  // Updated navigation to chat page - using direct location change and clearing login success flag
+  // Updated navigation to chat page - using source parameter to prevent redirect loops
   const handleChatNavigation = () => {
     clearLoginSuccess(); // Clear login success flag to avoid redirect loops
-    window.location.href = '/chat'; // Use direct location change
+    window.location.href = '/chat?source=dashboard'; // Add source parameter to signal direct navigation
   };
   
   return (
