@@ -30,6 +30,9 @@ export const markLoginSuccess = (): void => {
       sessionStorage.setItem('pwa_desired_path', '/dashboard');
     }
   }
+  
+  // Set a specific flag in sessionStorage to detect first login after page load
+  sessionStorage.setItem('just_logged_in', 'true');
 };
 
 /**
@@ -39,6 +42,7 @@ export const clearLoginSuccess = (): void => {
   localStorage.removeItem('login_success_timestamp');
   sessionStorage.removeItem('login_success');
   sessionStorage.removeItem('fresh_chat_needed');
+  sessionStorage.removeItem('just_logged_in');
 };
 
 /**
@@ -46,7 +50,8 @@ export const clearLoginSuccess = (): void => {
  */
 export const wasLoginSuccessful = (): boolean => {
   // First check session storage (cleared when browser closes)
-  if (sessionStorage.getItem('login_success') === 'true') {
+  if (sessionStorage.getItem('login_success') === 'true' || 
+      sessionStorage.getItem('just_logged_in') === 'true') {
     return true;
   }
   
@@ -59,6 +64,19 @@ export const wasLoginSuccessful = (): boolean => {
   }
   
   return false;
+};
+
+/**
+ * Checks if this is the first login after page load
+ * This is stricter than wasLoginSuccessful and is cleared after first check
+ */
+export const isFirstLoginAfterLoad = (): boolean => {
+  const justLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
+  if (justLoggedIn) {
+    // Clear it so it's only true once
+    sessionStorage.removeItem('just_logged_in');
+  }
+  return justLoggedIn;
 };
 
 /**

@@ -14,7 +14,7 @@ import { usePremiumFeatures } from "./usePremiumFeatures";
 import { useAuthLoadingState } from "./useAuthLoadingState";
 import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthActionWrappers } from "./useAuthActionWrappers";
-import { isRunningAsPWA } from "@/utils/loginRedirectUtils";
+import { isRunningAsPWA, markLoginSuccess } from "@/utils/loginRedirectUtils";
 import { useLocation } from "react-router-dom";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -64,6 +64,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setOnboardedWrapper, 
     resetPasswordWrapper 
   } = useAuthActionWrappers(user, profileCore, profileActions, authCore);
+  
+  // Special handling for session restore and login success
+  useEffect(() => {
+    if (authEvent === "RESTORED_SESSION" || authEvent === "SIGN_IN_COMPLETE") {
+      if (user && profileLoaded) {
+        console.log("Auth session restored or login complete, marking as successful", { 
+          userId: user.id, 
+          authEvent, 
+          profileLoaded 
+        });
+        
+        // Update login success flags to ensure correct redirects
+        markLoginSuccess();
+      }
+    }
+  }, [user, authEvent, profileLoaded]);
   
   // Special handling for PWA navigation
   useEffect(() => {

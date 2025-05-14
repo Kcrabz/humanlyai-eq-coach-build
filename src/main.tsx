@@ -64,10 +64,18 @@ const initPwaFeatures = () => {
       
       // Force a load to the intended page when in PWA mode
       const desiredPath = sessionStorage.getItem('pwa_desired_path');
-      if (desiredPath && window.location.pathname === '/') {
-        console.log('Redirecting to desired path in PWA:', desiredPath);
-        window.location.href = desiredPath;
-        sessionStorage.removeItem('pwa_desired_path');
+      // Check if we just logged in
+      const justLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
+      
+      if ((desiredPath && window.location.pathname === '/') || justLoggedIn) {
+        const targetPath = justLoggedIn ? '/dashboard' : desiredPath;
+        console.log('Redirecting to target path in PWA:', targetPath);
+        window.location.href = targetPath;
+        if (justLoggedIn) {
+          sessionStorage.removeItem('just_logged_in');
+        } else if (desiredPath) {
+          sessionStorage.removeItem('pwa_desired_path');
+        }
       }
     }
   } catch (err) {

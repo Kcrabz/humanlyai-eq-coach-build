@@ -14,13 +14,16 @@ const DashboardPage = () => {
   const { user } = useAuth();
   const { isAdmin, isLoading: isAdminCheckLoading, refreshAdminStatus } = useAdminCheck();
   
-  // Add logging to verify dashboard rendering
-  console.log("Dashboard rendering:", { 
-    hasUser: !!user, 
-    userEmail: user?.email,
-    userOnboarded: user?.onboarded,
-    currentPath: window.location.pathname
-  });
+  // Add detailed logging to verify dashboard rendering and diagnose issues
+  useEffect(() => {
+    console.log("Dashboard mounted and rendering:", { 
+      hasUser: !!user, 
+      userEmail: user?.email,
+      userOnboarded: user?.onboarded,
+      currentPath: window.location.pathname,
+      timestamp: new Date().toISOString()
+    });
+  }, [user]);
   
   // Force refresh admin status when dashboard is loaded
   useEffect(() => {

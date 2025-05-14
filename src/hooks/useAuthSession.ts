@@ -48,7 +48,6 @@ export const useAuthSession = () => {
               console.log("PWA login successful, setting redirect flag");
               
               // Set a delayed redirect to dashboard for PWA mode
-              // This is picked up by the service worker registration handler
               localStorage.setItem('pwa_redirect_after_login', '/dashboard');
             }
           }, 300);
@@ -94,10 +93,15 @@ export const useAuthSession = () => {
     }
   }, [loginTimestamp]);
 
+  // Core authentication initialization and session management
   useEffect(() => {
     console.log("Setting up auth session listener");
     
     let isMounted = true;
+    let hasInitialized = false;
+    
+    // First set isLoading to true while we check the session
+    setIsLoading(true);
     
     // Set up the auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -119,50 +123,64 @@ export const useAuthSession = () => {
       }
     );
 
-    // THEN check for an existing session
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      console.log("Existing session check:", existingSession?.user?.id);
-      if (isMounted) {
-        setSession(existingSession);
-        
-        // If we have an existing session, set a "RESTORED_SESSION" event
-        if (existingSession) {
-          setAuthEvent('RESTORED_SESSION');
-          setProfileLoaded(true); // Assume profile is loaded for existing sessions
+    // THEN check for an existing session with a small delay to ensure listeners are ready
+    setTimeout(() => {
+      supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+        console.log("Existing session check:", existingSession?.user?.id);
+        if (isMounted) {
+          setSession(existingSession);
           
-          // For PWA mode, check if we need to handle redirects
-          if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
-            console.log("PWA session restored, may need to handle redirects");
-            localStorage.setItem('pwa_session_restored', 'true');
+          // If we have an existing session, set a "RESTORED_SESSION" event
+          if (existingSession) {
+            setAuthEvent('RESTORED_SESSION');
+            setProfileLoaded(true); // Assume profile is loaded for existing sessions
             
-            // Check for stored redirect path
-            const desiredPath = sessionStorage.getItem('pwa_desired_path');
-            if (desiredPath && window.location.pathname === '/' || window.location.pathname === '/login') {
-              console.log("Found stored redirect path for PWA:", desiredPath);
-              // Add slight delay to allow context to initialize
-              setTimeout(() => {
-                window.location.href = desiredPath;
-              }, 300);
+            // For PWA mode, check if we need to handle redirects
+            if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
+              console.log("PWA session restored, may need to handle redirects");
+              localStorage.setItem('pwa_session_restored', 'true');
+              
+              // Check for stored redirect path
+              const desiredPath = sessionStorage.getItem('pwa_desired_path');
+              if (desiredPath && window.location.pathname === '/' || window.location.pathname === '/login') {
+                console.log("Found stored redirect path for PWA:", desiredPath);
+                // Add slight delay to allow context to initialize
+                setTimeout(() => {
+                  window.location.href = desiredPath;
+                }, 300);
+              }
             }
           }
+          
+          // Make sure to set isLoading to false once session is checked
+          setIsLoading(false);
+          setInitialized(true);
+          hasInitialized = true;
         }
-        
-        // Make sure to set isLoading to false once session is checked
+      }).catch(error => {
+        console.error("Error getting session:", error);
+        if (isMounted) {
+          setIsLoading(false);
+          setInitialized(true);
+          hasInitialized = true;
+        }
+      });
+    }, 100); // Small delay to ensure auth listener is ready
+
+    // Safety timeout to prevent indefinite loading
+    const safetyTimeout = setTimeout(() => {
+      if (!hasInitialized && isMounted) {
+        console.warn("Safety timeout reached - forcing auth initialization");
         setIsLoading(false);
         setInitialized(true);
       }
-    }).catch(error => {
-      console.error("Error getting session:", error);
-      if (isMounted) {
-        setIsLoading(false);
-        setInitialized(true);
-      }
-    });
+    }, 3000);
 
     return () => {
       console.log("Cleaning up auth session listener");
       isMounted = false;
       subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
     };
   }, [updateSessionAfterEvent]);
 

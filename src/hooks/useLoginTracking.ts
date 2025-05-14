@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 
@@ -7,15 +7,19 @@ import { User } from "@/types";
  * Hook to track user login events and update engagement metrics
  */
 export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
+  // Use a ref to track whether login has already been recorded in this session
+  const loginRecordedRef = useRef<boolean>(false);
+  
   useEffect(() => {
-    // Only track when user is authenticated
-    if (!isAuthenticated || !user?.id) {
+    // Only track when user is authenticated and login hasn't been recorded yet
+    if (!isAuthenticated || !user?.id || loginRecordedRef.current) {
       return;
     }
 
     const trackLogin = async () => {
       try {
         console.log("Tracking login for user:", user.id);
+        loginRecordedRef.current = true;
         
         // First, record the login event
         const { error: recordError } = await supabase.rpc("record_user_login", { 
@@ -61,12 +65,27 @@ export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
         } catch (err) {
           console.error("Error recording login history:", err);
         }
+        
+        // Trigger streak update - could be moved out of this function if needed
+        try {
+          await supabase.functions.invoke('increment-streak', {
+            body: { user_id: user.id }
+          });
+          console.log("Streak updated successfully for user:", user.id);
+        } catch (err) {
+          console.error("Error updating streak:", err);
+        }
       } catch (err) {
         console.error("Error tracking login:", err);
       }
     };
 
     trackLogin();
+    
+    // Clean up function to reset login tracking if component unmounts
+    return () => {
+      loginRecordedRef.current = false;
+    };
   }, [isAuthenticated, user]);
 
   return null;
