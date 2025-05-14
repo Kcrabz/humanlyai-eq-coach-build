@@ -38,7 +38,7 @@ export const useAuthSession = () => {
                 setProfileLoaded(true);
                 setIsLoading(false);
               }
-            }, 200);
+            }, 300); // Increased from 200ms for more reliability
           }
         } catch (e) {
           console.warn("Could not parse stored session", e);
@@ -55,7 +55,7 @@ export const useAuthSession = () => {
     } catch (e) {
       console.warn("Error accessing localStorage", e);
     }
-  }, []);
+  }, [profileLoaded]);
 
   // Optimized session update handler
   const updateSessionAfterEvent = useCallback((event: string) => {
@@ -73,12 +73,12 @@ export const useAuthSession = () => {
           console.log("User signed in:", data.user.id);
           setAuthEvent('SIGN_IN_COMPLETE');
           
-          // Delaying these state updates slightly to ensure they happen after session is fully established
+          // Delaying these state updates to ensure they happen after session is fully established
           setTimeout(() => {
             setProfileLoaded(true);
             setSessionReady(true);
             setIsLoading(false); // Exit loading state on sign in
-          }, 50);
+          }, 100); // Increased from 50ms for more reliability
           
           // Handle PWA mode
           if (isRunningAsPWA()) {
@@ -100,6 +100,7 @@ export const useAuthSession = () => {
       localStorage.removeItem('pwa_auth_timestamp');
       localStorage.removeItem('pwa_redirect_after_login');
       sessionStorage.removeItem('pwa_desired_path');
+      sessionStorage.removeItem('auth_navigation_handling_login');
       
       // Clean cached profiles on logout
       localStorage.removeItem('cached_user_profile');
@@ -162,14 +163,14 @@ export const useAuthSession = () => {
       }
     });
 
-    // Safety timeout - 200ms max wait (increased slightly for reliability)
+    // Safety timeout - increased to 300ms max wait
     const safetyTimeout = setTimeout(() => {
       if (isMounted && isLoading) {
         console.log("Safety timeout triggered - forcing auth state to complete loading");
         setIsLoading(false);
         setInitialized(true);
       }
-    }, 200);
+    }, 300);
 
     return () => {
       isMounted = false;

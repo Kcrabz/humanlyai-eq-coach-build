@@ -1,59 +1,46 @@
 
 /**
  * Navigation utility functions for auth-related routing
+ * @deprecated Use AuthNavigationService from services/authNavigationService.ts instead
  */
+
+import { 
+  isOnOnboardingPage as serviceIsOnOnboardingPage,
+  isOnAuthPage as serviceIsOnAuthPage,
+  isOnChatPage as serviceIsOnChatPage,
+  isOnDashboardPage as serviceIsOnDashboardPage,
+  isRetakingAssessment as serviceIsRetakingAssessment
+} from "@/services/authNavigationService";
 
 /**
  * Determines if the current path is an onboarding page
+ * @deprecated Use AuthNavigationService.isOnOnboardingPage instead
  */
-export const isOnOnboardingPage = (pathname: string): boolean => {
-  return pathname === "/onboarding";
-};
+export const isOnOnboardingPage = serviceIsOnOnboardingPage;
 
 /**
  * Determines if the current path is an authentication page (login, signup, or password reset)
+ * @deprecated Use AuthNavigationService.isOnAuthPage instead
  */
-export const isOnAuthPage = (pathname: string): boolean => {
-  return pathname === "/login" || 
-         pathname === "/signup" || 
-         pathname === "/reset-password" || 
-         pathname === "/update-password" || 
-         pathname === "/forgot-password";
-};
+export const isOnAuthPage = serviceIsOnAuthPage;
 
 /**
  * Determines if the current path is the chat page
+ * @deprecated Use AuthNavigationService.isOnChatPage instead
  */
-export const isOnChatPage = (pathname: string): boolean => {
-  return pathname === "/chat";
-};
+export const isOnChatPage = serviceIsOnChatPage;
 
 /**
  * Determines if the current path is the dashboard page
+ * @deprecated Use AuthNavigationService.isOnDashboardPage instead
  */
-export const isOnDashboardPage = (pathname: string): boolean => {
-  return pathname === "/dashboard";
-};
+export const isOnDashboardPage = serviceIsOnDashboardPage;
 
 /**
  * Determines if the current URL is for retaking the assessment
- * Now supports both direct URL access and programmatic checking
+ * @deprecated Use AuthNavigationService.isRetakingAssessment instead
  */
-export const isRetakingAssessment = (searchParams?: string): boolean => {
-  // If search params are provided, parse them
-  if (searchParams) {
-    const urlSearchParams = new URLSearchParams(searchParams);
-    return urlSearchParams.get('step') === 'archetype';
-  }
-  
-  // Otherwise check current window location
-  if (typeof window !== 'undefined') {
-    const url = new URL(window.location.href);
-    return url.searchParams.get('step') === 'archetype';
-  }
-  
-  return false;
-};
+export const isRetakingAssessment = serviceIsRetakingAssessment;
 
 /**
  * Gets the current search params as an object

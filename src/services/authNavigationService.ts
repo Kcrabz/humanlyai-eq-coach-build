@@ -1,71 +1,156 @@
-
 import { NavigateFunction } from "react-router-dom";
 import { User } from "@/types";
-import { isOnAuthPage, isOnChatPage, isOnOnboardingPage, isOnDashboardPage, isRetakingAssessment } from "@/utils/navigationUtils";
+
+// Constants for timer management and authentication flow
+const LOGIN_REDIRECT_DELAY = 800; // ms to wait before redirecting after login
+const AUTH_STATE_STABILIZE_DELAY = 200; // ms to wait for auth state to stabilize
 
 /**
- * Handles authentication-based navigation decisions
- * @param user The current user
- * @param pathname Current URL pathname
- * @param navigate React Router navigation function
- * @param search URL search parameters
+ * Centralized auth navigation service
+ * This service centralizes all authentication-related navigation decisions
+ * to prevent conflicts between different components trying to redirect simultaneously
  */
-export const handleAuthNavigation = (
-  user: User | null, 
-  pathname: string, 
-  navigate: NavigateFunction,
-  search?: string
-): void => {
-  // Check if user is retaking assessment using the search parameter
-  const isRetaking = isRetakingAssessment(search);
-  
-  // Don't redirect from the homepage
-  if (pathname === "/") {
-    console.log("On homepage, skipping auth navigation checks");
-    return;
-  }
-  
-  console.log("Auth navigation handler running:", {
-    userId: user?.id,
-    pathname,
-    search,
-    isAuthenticated: !!user,
-    isOnboarded: user?.onboarded,
-    isRetaking,
-    currentTime: new Date().toISOString()
-  });
-
-  // Skip navigation handling for auth pages to prevent redirect loops
-  if (isOnAuthPage(pathname)) {
-    console.log("On auth page, skipping navigation handling");
-    return;
-  }
-
-  // Special case: User is retaking assessment, allow access to onboarding regardless of onboarded status
-  if (isRetaking && isOnOnboardingPage(pathname)) {
-    console.log("User is retaking assessment, allowing access to onboarding page");
-    return; // Exit early, don't redirect
-  }
-
-  // Not authenticated -> redirect to login (but only for protected pages)
-  if (!user) {
-    if (isOnChatPage(pathname) || isOnOnboardingPage(pathname) || isOnDashboardPage(pathname)) {
-      console.log("User is not authenticated on protected page, redirecting to login");
-      navigate("/login", { replace: true });
-    }
-  } 
-  // Authenticated but not onboarded -> redirect to onboarding
-  else if (user && user.onboarded === false && !isOnOnboardingPage(pathname)) {
-    console.log("User is authenticated but not onboarded, redirecting to onboarding");
-    navigate("/onboarding", { replace: true });
-  }
-  // Authenticated and onboarded -> redirect to dashboard from onboarding 
-  // UNLESS they're specifically trying to retake an assessment
-  else if (user && user.onboarded === true) {
-    // Only redirect from onboarding unless retaking assessment
-    if (isOnOnboardingPage(pathname) && !isRetaking) {
-      console.log("User is authenticated and onboarded on onboarding page, redirecting to dashboard");
+export const AuthNavigationService = {
+  /**
+   * Handle post-login navigation with proper delay to ensure auth state is stable
+   * @param navigate React Router navigation function
+   * @param userId Optional user ID for logging
+   */
+  handleSuccessfulLogin: (navigate: NavigateFunction, userId?: string): void => {
+    console.log(`AuthNavigationService: Handling successful login for user: ${userId || 'unknown'}`);
+    
+    // Mark that this service is handling the navigation to prevent conflicts
+    sessionStorage.setItem('auth_navigation_handling_login', 'true');
+    
+    // Use a longer delay to ensure auth state is fully loaded
+    setTimeout(() => {
+      console.log(`AuthNavigationService: Navigating to dashboard after login delay`);
       navigate("/dashboard", { replace: true });
+      
+      // Clear flag after navigation is triggered
+      setTimeout(() => {
+        sessionStorage.removeItem('auth_navigation_handling_login');
+      }, 1000);
+    }, LOGIN_REDIRECT_DELAY);
+  },
+  
+  /**
+   * Check if the navigation service is currently handling a login redirect
+   * Used by AuthenticationGuard to avoid interference
+   */
+  isHandlingLoginNavigation: (): boolean => {
+    return sessionStorage.getItem('auth_navigation_handling_login') === 'true';
+  },
+  
+  /**
+   * Handle navigation for authenticated users
+   * Directs to appropriate page based on onboarding status
+   */
+  handleAuthenticatedNavigation: (
+    user: User,
+    pathname: string,
+    navigate: NavigateFunction,
+    isRetaking: boolean = false
+  ): void => {
+    // Skip if navigation service is currently handling login
+    if (AuthNavigationService.isHandlingLoginNavigation()) {
+      console.log(`AuthNavigationService: Skipping navigation as login handler is active`);
+      return;
     }
+    
+    // Skip navigation for auth pages to prevent redirect loops
+    if (isOnAuthPage(pathname)) {
+      console.log("AuthNavigationService: On auth page, skipping navigation");
+      return;
+    }
+    
+    // Special case: User is retaking assessment, allow access to onboarding regardless of onboarded status
+    if (isRetaking && isOnOnboardingPage(pathname)) {
+      console.log("AuthNavigationService: User is retaking assessment, allowing access to onboarding page");
+      return;
+    }
+    
+    // Authenticated but not onboarded -> redirect to onboarding
+    if (user.onboarded === false && !isOnOnboardingPage(pathname)) {
+      console.log("AuthNavigationService: User is authenticated but not onboarded, redirecting to onboarding");
+      navigate("/onboarding", { replace: true });
+      return;
+    }
+    
+    // Authenticated and onboarded -> redirect from onboarding to dashboard UNLESS retaking assessment
+    if (user.onboarded === true && isOnOnboardingPage(pathname) && !isRetaking) {
+      console.log("AuthNavigationService: User is authenticated and onboarded on onboarding page, redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+    
+    // Authenticated users should be redirected from auth pages to dashboard
+    if (user.onboarded === true && isOnAuthPage(pathname)) {
+      console.log("AuthNavigationService: Authenticated user on auth page, redirecting to dashboard");
+      navigate("/dashboard", { replace: true });
+      return;
+    }
+  },
+  
+  /**
+   * Handle navigation for unauthenticated users
+   */
+  handleUnauthenticatedNavigation: (
+    pathname: string,
+    navigate: NavigateFunction
+  ): void => {
+    // Skip if navigation service is currently handling login
+    if (AuthNavigationService.isHandlingLoginNavigation()) {
+      return;
+    }
+    
+    // Skip navigation for auth pages and root to prevent redirect loops
+    if (isOnAuthPage(pathname) || pathname === "/") {
+      return;
+    }
+    
+    // Redirect from protected routes to login
+    console.log("AuthNavigationService: Unauthenticated user on protected route, redirecting to login");
+    navigate("/login", { replace: true });
   }
+};
+
+// Utility functions for path checking
+export const isOnOnboardingPage = (pathname: string): boolean => {
+  return pathname === "/onboarding";
+};
+
+export const isOnAuthPage = (pathname: string): boolean => {
+  return pathname === "/login" || 
+         pathname === "/signup" || 
+         pathname === "/reset-password" || 
+         pathname === "/update-password" || 
+         pathname === "/forgot-password";
+};
+
+export const isOnChatPage = (pathname: string): boolean => {
+  return pathname === "/chat";
+};
+
+export const isOnDashboardPage = (pathname: string): boolean => {
+  return pathname === "/dashboard";
+};
+
+/**
+ * Determines if the current URL is for retaking the assessment
+ */
+export const isRetakingAssessment = (searchParams?: string): boolean => {
+  // If search params are provided, parse them
+  if (searchParams) {
+    const urlSearchParams = new URLSearchParams(searchParams);
+    return urlSearchParams.get('step') === 'archetype';
+  }
+  
+  // Otherwise check current window location
+  if (typeof window !== 'undefined') {
+    const url = new URL(window.location.href);
+    return url.searchParams.get('step') === 'archetype';
+  }
+  
+  return false;
 };
