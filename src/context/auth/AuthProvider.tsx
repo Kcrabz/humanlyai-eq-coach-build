@@ -6,13 +6,13 @@ import { useAuthActionWrappers } from "./useAuthActionWrappers";
 import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthLoadingState } from "./useAuthLoadingState";
 import { usePremiumFeatures } from "./usePremiumFeatures";
-import { useLoginTracking } from "@/hooks/useLoginTracking"; // Updated import path
 import { useProfileCore } from "@/hooks/useProfileCore";
 import { useProfileActions } from "@/hooks/useProfileActions";
-import useAuthCore from "@/hooks/useAuthCore"; // Using default import
+import useAuthCore from "@/hooks/useAuthCore";
+import { isPwaMode, isMobileDevice, clearAuthFlowState } from "@/services/authFlowService";
 
 /**
- * AuthProvider - Enhanced with mobile/PWA detection
+ * AuthProvider - Using the centralized detection functions
  */
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Core auth state management
@@ -23,9 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     profileLoaded,
     initialized,
     loginTimestamp,
-    sessionReady,
-    isPwaMode,
-    isMobileDevice
+    sessionReady
   } = useAuthSession();
 
   // User state management
@@ -45,7 +43,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const profileActions = useProfileActions(setUser);
   
   // Auth core functionality
-  const authCore = useAuthCore(); // Using the default import
+  const authCore = useAuthCore();
 
   // Auth actions with error handling wrappers
   const {
@@ -66,26 +64,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   // Consolidated loading state
   const { isLoading } = useAuthLoadingState(isSessionLoading, isLoadingUser);
 
-  // Track login events for UX optimization - using updated hook
-  const { loginEvent } = useLoginTracking(!!user, user);
-
   // Process premium features and capabilities
   const { isPremiumMember, hasPremiumFeatures, userStreakData, userAchievements } = usePremiumFeatures(user);
 
   // Special logging for PWA/mobile
   useEffect(() => {
-    if (isPwaMode || isMobileDevice) {
+    if (isPwaMode() || isMobileDevice()) {
       console.log("AuthProvider: Special environment detected", {
-        isPwa: isPwaMode,
-        isMobile: isMobileDevice,
+        isPwa: isPwaMode(),
+        isMobile: isMobileDevice(),
         isAuthenticated: !!user,
         userId: user?.id,
         authEvent,
-        profileLoaded,
-        loginEvent
+        profileLoaded
       });
     }
-  }, [isPwaMode, isMobileDevice, user, authEvent, profileLoaded, loginEvent]);
+    
+    // Clear auth flow state on provider mount
+    clearAuthFlowState();
+  }, [user, authEvent, profileLoaded]);
 
   return (
     <AuthContext.Provider 
@@ -102,14 +99,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         updateProfile,
         forceUpdateProfile,
         authEvent,
-        loginEvent,
+        loginEvent: authEvent === 'SIGNED_IN' ? 'LOGIN_COMPLETE' : null,
         profileLoaded,
         initialized,
         loginTimestamp,
         hasPremiumFeatures,
         sessionReady,
-        isPwaMode,
-        isMobileDevice,
+        isPwaMode: isPwaMode(),
+        isMobileDevice: isMobileDevice(),
         setName,
         setArchetype,
         setCoachingMode,

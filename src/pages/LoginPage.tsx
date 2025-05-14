@@ -3,57 +3,66 @@ import { useEffect } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
-import { useLocation } from "react-router-dom";
-import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { 
+  getAuthFlowState, 
+  AuthFlowState,
+  isPwaMode,
+  isMobileDevice
+} from "@/services/authFlowService";
 
 const LoginPage = () => {
-  const { user, isAuthenticated, authEvent, isPwaMode, isMobileDevice } = useAuth();
+  const { user, isAuthenticated, authEvent } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   
+  // Handle navigation on successful login
   useEffect(() => {
-    // Log detailed information about mobile/PWA login state
-    if (isPwaMode || isMobileDevice) {
-      console.log("LoginPage: Running in special mode", { 
-        isPwa: isPwaMode,
-        isMobile: isMobileDevice,
+    // Check for auth flow state indicating successful login
+    const authState = getAuthFlowState();
+    const isLoginSuccess = authState?.state === AuthFlowState.SUCCESS;
+    
+    // Log detailed information for debugging
+    if (isPwaMode() || isMobileDevice()) {
+      console.log("LoginPage: Environment detection", { 
+        isPwa: isPwaMode(),
+        isMobile: isMobileDevice(),
         isAuthenticated, 
         userId: user?.id,
         authEvent,
-        pathname: location.pathname
+        pathname: location.pathname,
+        authState: authState?.state
       });
     }
     
-    // Only track authentication state for debugging
-    // All navigation is handled by AuthenticationGuard
+    // Handle authentication state
     if (isAuthenticated && user) {
       console.log("LoginPage: User already authenticated", { 
         id: user.id, 
         onboarded: user.onboarded,
-        isPwa: isPwaMode,
-        isMobile: isMobileDevice
+        isPwa: isPwaMode(),
+        isMobile: isMobileDevice()
       });
       
-      // Set navigation state to authenticated for tracking
-      AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
-        userId: user.id, 
-        onboarded: user.onboarded,
-        isPwa: isPwaMode,
-        isMobile: isMobileDevice,
-        fromLoginPage: true
-      });
-      
-      // In mobile/PWA mode, show a toast to indicate successful login
-      if ((isPwaMode || isMobileDevice) && authEvent === "SIGN_IN_COMPLETE") {
+      // If we have a successful login event and a user, redirect
+      if (authEvent === "SIGN_IN_COMPLETE" || isLoginSuccess) {
+        // Provide visual feedback
         toast.success("Login successful! Redirecting...");
         
-        // Set additional flags to ensure smooth navigation
-        sessionStorage.setItem('login_redirect_pending', 'true');
-        
-        // AuthenticationGuard will handle the actual navigation
+        // Add a delay to ensure UI state is updated
+        setTimeout(() => {
+          if (user.onboarded) {
+            console.log("LoginPage: Redirecting to dashboard");
+            navigate('/dashboard', { replace: true });
+          } else {
+            console.log("LoginPage: Redirecting to onboarding");
+            navigate('/onboarding', { replace: true });
+          }
+        }, 500);
       }
     }
-  }, [isAuthenticated, user, isPwaMode, isMobileDevice, authEvent, location.pathname]);
+  }, [isAuthenticated, user, authEvent, location.pathname, navigate]);
   
   return (
     <PageLayout>

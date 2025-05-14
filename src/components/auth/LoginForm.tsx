@@ -1,50 +1,126 @@
 
-import { Link } from "react-router-dom";
-import { useLoginForm } from "@/hooks/useLoginForm";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { AuthError } from "./AuthError";
 import { AuthSubmitButton } from "./AuthSubmitButton";
 import { RateLimitWarning } from "./rate-limit/RateLimitWarning";
 import { EmailPasswordFields } from "./login/EmailPasswordFields";
-import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
+import { clientRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
+import { 
+  loginUser,
+  isPwaMode,
+  isMobileDevice,
+  getAuthFlowState,
+  AuthFlowState 
+} from "@/services/authFlowService";
 
 export function LoginForm() {
-  const {
-    email,
-    password,
-    isSubmitting,
-    errorMessage,
-    rateLimitInfo,
-    handleEmailChange,
-    handlePasswordChange,
-    handleSubmit
-  } = useLoginForm();
-  
-  const { isPwaMode, isMobileDevice, authEvent, user } = useAuth();
-  const isSpecialMode = isPwaMode || isMobileDevice;
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loginStatus, setLoginStatus] = useState<string>('idle');
+  const [rateLimitInfo, setRateLimitInfo] = useState<{
+    isLimited: boolean;
+    attemptsRemaining: number;
+    resetTimeMs: number;
+  } | null>(null);
   
-  // Enhanced mobile login handling with visual feedback
+  const navigate = useNavigate();
+  const isSpecialMode = isPwaMode() || isMobileDevice();
+  
+  // Effect to check for previous login attempts
   useEffect(() => {
-    if (isSpecialMode) {
-      if (authEvent === 'SIGN_IN_COMPLETE') {
-        // Show toast for mobile users
-        toast.success("Login successful! Redirecting...");
-        
-        // Set login redirect flag for mobile
-        sessionStorage.setItem('login_redirect_pending', 'true');
-        sessionStorage.setItem('just_logged_in', 'true');
-        setLoginStatus('success');
-        
-        console.log("LoginForm: Mobile login successful, setting redirect pending flag", {
-          isPwa: isPwaMode,
-          isMobile: isMobileDevice,
-          hasUser: !!user
-        });
-      }
+    const authState = getAuthFlowState();
+    if (authState?.state === AuthFlowState.SUCCESS || 
+        authState?.state === AuthFlowState.REDIRECTING) {
+      setLoginStatus('success');
+      console.log("LoginForm: Found existing auth success state");
     }
-  }, [isSpecialMode, authEvent, isPwaMode, isMobileDevice, user]);
+    
+    // Check for success flags
+    if (sessionStorage.getItem('login_success') === 'true') {
+      setLoginStatus('success');
+      console.log("LoginForm: Found login success flag");
+    }
+  }, []);
+  
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value);
+    setErrorMessage(null);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value);
+    setErrorMessage(null);
+  };
+  
+  const validateForm = () => {
+    if (!email.trim()) {
+      setErrorMessage("Email is required");
+      return false;
+    }
+    
+    if (!password) {
+      setErrorMessage("Password is required");
+      return false;
+    }
+    
+    return true;
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (isSubmitting) return;
+    
+    // Check client-side rate limiting
+    const rateLimit = clientRateLimit('login_attempt', 5, 60000);
+    
+    if (rateLimit.isLimited) {
+      setRateLimitInfo(rateLimit);
+      setErrorMessage(`Too many login attempts. Please try again in ${Math.ceil((rateLimit.resetTimeMs - Date.now()) / 1000)} seconds.`);
+      return;
+    }
+    
+    setErrorMessage(null);
+    
+    if (!validateForm()) return;
+    
+    setIsSubmitting(true);
+    setLoginStatus('submitting');
+    
+    console.log(`Login attempt starting for: ${email}`, {
+      isPwa: isPwaMode(),
+      isMobile: isMobileDevice()
+    });
+    
+    try {
+      // Use the centralized login service
+      const success = await loginUser(email, password, navigate);
+      
+      if (success) {
+        setLoginStatus('success');
+        // Handled by the service
+      } else {
+        setLoginStatus('error');
+        const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
+        setRateLimitInfo(updatedRateLimit);
+        
+        if (updatedRateLimit.attemptsRemaining > 0) {
+          setErrorMessage(`Login failed. ${updatedRateLimit.attemptsRemaining} attempts remaining.`);
+        }
+      }
+    } catch (error) {
+      console.error(`Error during login:`, error);
+      setLoginStatus('error');
+      setErrorMessage(error instanceof Error ? error.message : "Login failed");
+      setRateLimitInfo(clientRateLimit('login_attempt', 5, 60000));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   return (
     <div className="w-full max-w-md space-y-6">
@@ -61,8 +137,9 @@ export function LoginForm() {
         {errorMessage && <AuthError message={errorMessage} />}
         
         {loginStatus === 'success' && (
-          <div className="bg-green-50 text-green-800 p-2 rounded border border-green-200 text-center">
-            Login successful! Please wait while we redirect you...
+          <div className="bg-green-50 text-green-800 p-3 rounded-md border border-green-200 text-center animate-pulse">
+            <p className="font-medium">Login successful!</p>
+            <p className="text-sm">Redirecting you to your dashboard...</p>
           </div>
         )}
         
@@ -78,15 +155,15 @@ export function LoginForm() {
         />
         
         <AuthSubmitButton 
-          isSubmitting={isSubmitting || loginStatus === 'success'} 
+          isSubmitting={isSubmitting} 
           text="Sign In" 
           loadingText={loginStatus === 'success' ? "Redirecting..." : "Signing in..."} 
           disabled={rateLimitInfo?.isLimited || loginStatus === 'success'}
         />
         
         {isSpecialMode && (
-          <div className="text-xs text-center text-muted-foreground">
-            <p>Using mobile mode: {isPwaMode ? "PWA" : "Mobile Browser"}</p>
+          <div className="text-xs text-center text-muted-foreground mt-2 bg-gray-50 p-1 rounded">
+            <p>{isPwaMode() ? "PWA Mode" : "Mobile Browser"} detected</p>
           </div>
         )}
       </form>

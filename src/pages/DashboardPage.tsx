@@ -8,7 +8,8 @@ import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { memo, useEffect, useState, Suspense } from "react";
 import { Loading } from "@/components/ui/loading";
-import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
+import { toast } from "sonner";
+import { clearAuthFlowState } from "@/services/authFlowService";
 
 // Memoize card components for performance
 const ActionCard = memo(({ 
@@ -82,16 +83,17 @@ const DashboardContent = memo(() => {
   const handleReferral = () => {
     const referralLink = `${window.location.origin}?ref=${user?.id}`;
     navigator.clipboard.writeText(referralLink);
+    toast.success("Referral link copied to clipboard!");
   };
   
   const openFeedbackForm = () => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
   
-  // Enhanced handler for chat navigation using our centralized service
+  // Simple handler for chat navigation
   const handleNavigateToChat = () => {
     console.log("DashboardPage: User clicked 'Chat with Kai' button");
-    AuthNavigationService.navigateToChat(navigate);
+    navigate("/chat");
   };
   
   return (
@@ -157,14 +159,19 @@ const DashboardPage = () => {
   const { isLoading, user } = useAuth();
   const [pageReady, setPageReady] = useState(false);
   
+  // Clear auth flow state when dashboard loads
+  useEffect(() => {
+    clearAuthFlowState();
+  }, []);
+  
   // Delay rendering content until auth is ready
   useEffect(() => {
-    if (!isLoading && user) {
-      // Signal ready state when dashboard loads
-      AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { 
-        userId: user.id,
-        timestamp: Date.now()
-      });
+    if (!isLoading) {
+      // User should be available at this point
+      if (user) {
+        console.log("Dashboard loaded for user:", user.id);
+        toast.success(`Welcome to your dashboard, ${user.name?.split(' ')[0] || 'User'}!`);
+      }
       
       // Short delay to ensure profile is loaded
       const timer = setTimeout(() => {
@@ -172,9 +179,6 @@ const DashboardPage = () => {
       }, 50);
       
       return () => clearTimeout(timer);
-    } else if (!isLoading && !user) {
-      // No user, so we're ready to show whatever content is appropriate
-      setPageReady(true);
     }
   }, [isLoading, user]);
 
