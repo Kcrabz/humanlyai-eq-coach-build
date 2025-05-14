@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { markLoginSuccess, forceRedirectToDashboard, isRunningAsPWA } from '@/utils/loginRedirectUtils';
 
 /**
- * Optimized hook for managing authentication session state with improved performance
+ * Optimized hook for managing authentication session state
  */
 export const useAuthSession = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -18,8 +18,7 @@ export const useAuthSession = () => {
   // Fast session restoration from localStorage before network requests
   useEffect(() => {
     try {
-      // Try to restore session from localStorage immediately 
-      // This provides an instant UI update without waiting for network
+      // Try to restore session from localStorage immediately for instant UI update
       const storedSession = localStorage.getItem('sb-auth-token');
       if (storedSession) {
         try {
@@ -39,27 +38,26 @@ export const useAuthSession = () => {
   }, []);
 
   // Optimized session update handler
-  const updateSessionAfterEvent = useCallback(async (event: string) => {
+  const updateSessionAfterEvent = useCallback((event: string) => {
     if (event === 'SIGNED_IN') {
-      try {
-        // Avoid redundant fetch - set immediately from event data
-        const timestamp = Date.now();
-        setLoginTimestamp(timestamp);
-        
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-        setAuthEvent('SIGN_IN_COMPLETE');
-        setProfileLoaded(false);
-        markLoginSuccess();
-        
-        // Handle PWA mode more efficiently
-        if (isRunningAsPWA()) {
-          localStorage.setItem('pwa_auth_timestamp', Date.now().toString());
-          localStorage.setItem('pwa_redirect_after_login', '/dashboard');
+      // Set login timestamp immediately
+      const timestamp = Date.now();
+      setLoginTimestamp(timestamp);
+      markLoginSuccess();
+      
+      // Update session without waiting for getSession
+      supabase.auth.getUser().then(({ data }) => {
+        if (data.user) {
+          setAuthEvent('SIGN_IN_COMPLETE');
+          setProfileLoaded(true);
+          
+          // Handle PWA mode
+          if (isRunningAsPWA()) {
+            localStorage.setItem('pwa_auth_timestamp', timestamp.toString());
+            localStorage.setItem('pwa_redirect_after_login', '/dashboard');
+          }
         }
-      } catch (error) {
-        console.error("Error updating session after sign in:", error);
-      }
+      }).catch(console.error);
     } else if (event === 'SIGNED_OUT') {
       setSession(null);
       setAuthEvent('SIGN_OUT_COMPLETE');
@@ -71,14 +69,13 @@ export const useAuthSession = () => {
     }
   }, []);
 
-  // Core authentication initialization with improved performance
+  // Core authentication initialization - optimized for performance
   useEffect(() => {
     let isMounted = true;
-    let hasInitialized = false;
     
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (event, newSession) => {
         if (!isMounted) return;
         
         // Immediate updates for critical events
@@ -93,7 +90,7 @@ export const useAuthSession = () => {
       }
     );
 
-    // Check existing session with minimal delay - now with no delay for faster load
+    // Check existing session with minimal delay
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       if (!isMounted) return;
       
@@ -103,7 +100,7 @@ export const useAuthSession = () => {
         setAuthEvent('RESTORED_SESSION');
         setProfileLoaded(true);
         
-        // Streamlined PWA handling
+        // PWA handling
         if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
           localStorage.setItem('pwa_session_restored', 'true');
           const desiredPath = sessionStorage.getItem('pwa_desired_path');
@@ -115,31 +112,29 @@ export const useAuthSession = () => {
       
       setIsLoading(false);
       setInitialized(true);
-      hasInitialized = true;
     }).catch(error => {
       console.error("Error getting session:", error);
       if (isMounted) {
         setIsLoading(false);
         setInitialized(true);
-        hasInitialized = true;
       }
     });
 
-    // Safety timeout to prevent indefinite loading - reduced to 1 second
+    // Safety timeout to prevent indefinite loading - 500ms max wait
     const safetyTimeout = setTimeout(() => {
-      if (!hasInitialized && isMounted) {
+      if (isMounted && isLoading) {
+        console.log("Safety timeout triggered - forcing auth state to complete loading");
         setIsLoading(false);
         setInitialized(true);
-        console.log("Auth initialization safety timeout triggered");
       }
-    }, 1000); // Reduced timeout for faster recovery
+    }, 500);
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
       clearTimeout(safetyTimeout);
     };
-  }, [updateSessionAfterEvent]);
+  }, [updateSessionAfterEvent, isLoading]);
 
   return { 
     session, 

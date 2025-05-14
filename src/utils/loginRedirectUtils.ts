@@ -6,7 +6,6 @@
 const LOGIN_SUCCESS_KEY = 'login_success_timestamp';
 const LOGIN_SESSION_KEY = 'login_success';
 const JUST_LOGGED_IN_KEY = 'just_logged_in';
-const FRESH_CHAT_KEY = 'fresh_chat_needed';
 
 /**
  * Sets a login success flag with a timestamp - optimized version
@@ -16,8 +15,6 @@ export const markLoginSuccess = (): void => {
   const timestamp = Date.now();
   localStorage.setItem(LOGIN_SUCCESS_KEY, timestamp.toString());
   sessionStorage.setItem(LOGIN_SESSION_KEY, 'true');
-  sessionStorage.setItem(FRESH_CHAT_KEY, 'true');
-  sessionStorage.removeItem('chat_cleared_for_session');
   sessionStorage.setItem(JUST_LOGGED_IN_KEY, 'true');
   
   // Efficient PWA mode handling
@@ -34,7 +31,6 @@ export const markLoginSuccess = (): void => {
 export const clearLoginSuccess = (): void => {
   localStorage.removeItem(LOGIN_SUCCESS_KEY);
   sessionStorage.removeItem(LOGIN_SESSION_KEY);
-  sessionStorage.removeItem(FRESH_CHAT_KEY);
   sessionStorage.removeItem(JUST_LOGGED_IN_KEY);
 };
 
@@ -49,7 +45,7 @@ export const wasLoginSuccessful = (): boolean => {
     return true;
   }
   
-  // Check localStorage with timestamp for longer persistence
+  // Check localStorage with timestamp
   const timestamp = localStorage.getItem(LOGIN_SUCCESS_KEY);
   if (timestamp) {
     const loginTime = parseInt(timestamp);
@@ -74,21 +70,6 @@ export const isFirstLoginAfterLoad = (): boolean => {
 };
 
 /**
- * Check if we need to show a fresh chat experience after login
- */
-export const shouldShowFreshChat = (): boolean => {
-  // Check if we need fresh chat
-  const needsFreshChat = sessionStorage.getItem(FRESH_CHAT_KEY) === 'true';
-  
-  // Only return true once per session
-  if (needsFreshChat) {
-    sessionStorage.removeItem(FRESH_CHAT_KEY);
-  }
-  
-  return needsFreshChat;
-};
-
-/**
  * Forces a redirect to dashboard using window.location - optimized
  */
 export const forceRedirectToDashboard = (): void => {
@@ -109,11 +90,11 @@ export const forceRedirectToDashboard = (): void => {
 };
 
 /**
- * Detect if the app is running as a PWA (standalone mode) - optimized
+ * Detect if the app is running as a PWA (standalone mode) - optimized with caching
  */
 export const isRunningAsPWA = (): boolean => {
   try {
-    // Cache the result for consistent checks within same render cycle
+    // Cache the result for consistent checks
     if (typeof window._isPwaMode !== 'undefined') {
       return window._isPwaMode;
     }
@@ -130,7 +111,7 @@ export const isRunningAsPWA = (): boolean => {
   }
 };
 
-// Add type definition to Window interface but don't redeclare isPwaMode
+// Add type definition to Window interface
 declare global {
   interface Window {
     _isPwaMode?: boolean;

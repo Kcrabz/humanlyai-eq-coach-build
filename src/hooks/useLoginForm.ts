@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
+import { markLoginSuccess } from "@/utils/loginRedirectUtils";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -71,13 +71,10 @@ export function useLoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isSubmitting) {
-      console.log("Form submission already in progress");
-      return;
-    }
+    if (isSubmitting) return;
     
     // Check client-side rate limiting
-    const rateLimit = clientRateLimit('login_attempt', 5, 60000); // 5 attempts per minute
+    const rateLimit = clientRateLimit('login_attempt', 5, 60000);
     
     if (rateLimit.isLimited) {
       setRateLimitInfo(rateLimit);
@@ -85,58 +82,48 @@ export function useLoginForm() {
       return;
     }
     
-    // Clear previous errors
     setErrorMessage(null);
     
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
     
     setIsSubmitting(true);
-    console.log(`Starting login process for: ${email}`);
     
     try {
-      // Check server-side rate limiting
-      const serverRateLimit = await checkRateLimit({
-        email,
-        endpoint: 'login',
-        period: 'minute',
-        maxRequests: 5 // 5 login attempts per minute
-      });
+      // Optimized: Check rate limit and login in parallel
+      const [serverRateLimitResponse, loginResponse] = await Promise.allSettled([
+        checkRateLimit({
+          email,
+          endpoint: 'login',
+          period: 'minute',
+          maxRequests: 5 
+        }),
+        login(email, password)
+      ]);
       
-      if (serverRateLimit.isLimited) {
+      // Extract rate limit result
+      if (serverRateLimitResponse.status === 'fulfilled' && serverRateLimitResponse.value.isLimited) {
         setErrorMessage(`Too many login attempts from this email. Please try again later.`);
         setRateLimitInfo({
           isLimited: true,
           attemptsRemaining: 0,
-          resetTimeMs: serverRateLimit.resetTime.getTime()
+          resetTimeMs: serverRateLimitResponse.value.resetTime.getTime()
         });
+        setIsSubmitting(false);
         return;
       }
       
-      const success = await login(email, password);
-      console.log(`Login result:`, { success });
+      // Extract login result
+      const success = loginResponse.status === 'fulfilled' ? loginResponse.value : false;
       
       if (success) {
         setLoginSuccess(true);
         
-        // Store login timestamp in localStorage for fallback redirect mechanism
-        const timestamp = Date.now();
-        localStorage.setItem('login_timestamp', timestamp.toString());
+        // Mark login success immediately to speed up redirections
+        markLoginSuccess();
         
-        toast.success("Login successful!");
-        
-        // Use alternate window location redirect as a fallback
-        // This will only execute if the React Router navigation fails
-        setTimeout(() => {
-          // Check if we're still on the login page after success
-          if (window.location.pathname === '/login') {
-            console.log("Fallback redirect: Using window.location to go to dashboard");
-            window.location.href = '/dashboard';
-          }
-        }, 1000);
+        // No need for timeout-based fallback redirection here
+        // AuthenticationGuard will handle redirections automatically
       } else {
-        // If login failed, update rate limit info
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);
         
@@ -146,13 +133,9 @@ export function useLoginForm() {
       }
     } catch (error) {
       console.error(`Error during login:`, error);
-      const message = error instanceof Error ? error.message : "Login failed";
-      setErrorMessage(message);
-      
-      // Update rate limit info after failure
+      setErrorMessage(error instanceof Error ? error.message : "Login failed");
       setRateLimitInfo(clientRateLimit('login_attempt', 5, 60000));
     } finally {
-      console.log(`Login process completed, resetting submission state`);
       setIsSubmitting(false);
     }
   };

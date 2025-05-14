@@ -2,26 +2,32 @@
 import { useState, useEffect } from "react";
 import { User } from "@/types";
 
-export function useAuthLoadingState(isSessionLoading: boolean, user: User | null, authEvent: string | null, profileLoaded: boolean) {
+export function useAuthLoadingState(
+  isSessionLoading: boolean, 
+  user: User | null, 
+  authEvent: string | null, 
+  profileLoaded: boolean
+) {
   // Consolidated loading state
   const [isLoading, setIsLoading] = useState(true);
   
-  // Update loading state when both session and profile are ready
+  // Fast-track loading state updates - optimize to complete faster
   useEffect(() => {
-    console.log("AuthContext loading state updated:", { 
-      isSessionLoading, 
-      user: user?.id,
-      hasSession: !!user,
-      authEvent,
-      profileLoaded
-    });
-    
-    // Only mark as loaded when session loading is complete
+    // Fast path: mark as loaded as soon as we know the session state
     if (!isSessionLoading) {
-      console.log("Auth state fully loaded, setting isLoading to false");
       setIsLoading(false);
     }
-  }, [isSessionLoading, user, authEvent, profileLoaded]);
+    
+    // Safety timeout: force loading to complete after max 500ms
+    const safetyTimeout = setTimeout(() => {
+      if (isLoading) {
+        console.log("Auth loading safety timeout triggered");
+        setIsLoading(false);
+      }
+    }, 500);
+    
+    return () => clearTimeout(safetyTimeout);
+  }, [isSessionLoading, isLoading]);
 
   return { isLoading };
 }

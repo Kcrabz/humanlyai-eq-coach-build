@@ -13,87 +13,61 @@ import {
 } from "@/utils/loginRedirectUtils";
 
 /**
- * Optimized authentication guard component with improved performance
+ * Optimized authentication guard with reduced checks for faster performance
  */
 export const AuthenticationGuard = () => {
-  const { user, isLoading, authEvent, profileLoaded } = useAuth();
+  const { user, isLoading, authEvent } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
   const isPWA = isRunningAsPWA();
   const justLoggedIn = isFirstLoginAfterLoad();
   
-  // Enhanced login detection for immediate feedback
+  // Handle immediate welcome toast for better UX
   useEffect(() => {
-    // Show welcome toast immediately when we detect login
     if (user && (authEvent === 'SIGN_IN_COMPLETE' || wasLoginSuccessful() || justLoggedIn)) {
+      // No need to block with toast.promise, use regular toast instead
       toast.success(`Welcome back${user.name ? `, ${user.name}` : ''}!`);
       
-      // Optimistic UI updates - mark login success early
       if (authEvent === 'SIGN_IN_COMPLETE') {
         markLoginSuccess();
       }
     }
   }, [user, authEvent, justLoggedIn]);
   
-  // Optimized main auth redirection effect
+  // Main auth redirection effect - simplified for performance
   useEffect(() => {
     // Skip if still loading auth state
-    if (isLoading) {
-      return;
-    }
+    if (isLoading) return;
     
     // Skip navigation for password reset pages
-    if (pathname === "/reset-password" || pathname === "/update-password") {
-      return;
-    }
+    if (pathname === "/reset-password" || pathname === "/update-password") return;
     
-    // Skip redirects if we're already on the right page to avoid redirect loops
+    // Skip redirects if we're already on the right page
     const isCurrentlyOnAuth = isOnAuthPage(pathname);
     
     if (user) {
-      console.log("AuthGuard: User detected", { 
-        authEvent, 
-        profileLoaded, 
-        onboarded: user.onboarded,
-        pathname 
-      });
-      
-      // Handle onboarded vs not onboarded states
+      // Priority path: Redirect to onboarding if not onboarded
       if (!user.onboarded && pathname !== "/onboarding") {
-        console.log("Redirecting user to onboarding");
         navigate("/onboarding", { replace: true });
         return;
       } 
       
-      // Handle successful login case with higher priority
-      if ((authEvent === "SIGN_IN_COMPLETE" || authEvent === "RESTORED_SESSION" || justLoggedIn || wasLoginSuccessful()) 
-          && user.onboarded && (isCurrentlyOnAuth || pathname === "/")) {
-        console.log("Login success detected, redirecting to dashboard");
-        
-        // Use immediate redirection methods for snappier UX
-        if (isPWA || justLoggedIn) {
-          forceRedirectToDashboard();
-        } else {
-          navigate("/dashboard", { replace: true });
-        }
-      }
-      // Handle already authenticated users on auth pages
-      else if (user.onboarded && isCurrentlyOnAuth) {
-        console.log("User is already authenticated, redirecting to dashboard");
-        if (isPWA) {
+      // Handle authenticated users on auth pages - direct them to dashboard
+      if (user.onboarded && isCurrentlyOnAuth) {
+        // Use fastest available redirect method
+        if ((isPWA || justLoggedIn) && location.pathname !== "/dashboard") {
           forceRedirectToDashboard();
         } else {
           navigate("/dashboard", { replace: true });
         }
       }
     } 
-    // Handle unauthenticated users trying to access protected routes
+    // Simple case: Unauthenticated users trying to access protected routes
     else if (!user && pathname !== "/" && !isCurrentlyOnAuth) {
-      console.log("User is not authenticated, redirecting to login");
       navigate("/login", { replace: true });
     }
-  }, [user, isLoading, pathname, navigate, authEvent, profileLoaded, isPWA, justLoggedIn]);
+  }, [user, isLoading, pathname, navigate, authEvent, isPWA, justLoggedIn]);
 
   return null;
 };

@@ -8,19 +8,11 @@ const Index = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Fast path for authenticated users to dashboard
+  // Fast path for authenticated users
   useEffect(() => {
     if (!isLoading) {
-      console.log("Index page loaded:", { 
-        isAuthenticated, 
-        userExists: !!user,
-        userOnboarded: user?.onboarded,
-        currentUrl: window.location.href 
-      });
-      
       // Redirect onboarding users immediately
       if (isAuthenticated && user?.onboarded === false) {
-        console.log("User is authenticated but not onboarded, redirecting to onboarding from Index");
         navigate("/onboarding", { replace: true });
         return;
       }
@@ -29,7 +21,6 @@ const Index = () => {
       // Uncomment if you want authenticated users to skip landing page
       /*
       if (isAuthenticated && user?.onboarded) {
-        console.log("User is authenticated and onboarded, redirecting to dashboard from Index");
         navigate("/dashboard", { replace: true });
         return;
       }

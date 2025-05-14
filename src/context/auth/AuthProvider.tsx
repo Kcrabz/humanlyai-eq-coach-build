@@ -14,11 +14,11 @@ import { usePremiumFeatures } from "./usePremiumFeatures";
 import { useAuthLoadingState } from "./useAuthLoadingState";
 import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthActionWrappers } from "./useAuthActionWrappers";
-import { isRunningAsPWA, markLoginSuccess } from "@/utils/loginRedirectUtils";
+import { markLoginSuccess } from "@/utils/loginRedirectUtils";
 import { useLocation } from "react-router-dom";
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // State for auth error handling - optimized with useCallback
+  // State for auth error handling
   const [error, setError] = useState<string | null>(null);
   const location = useLocation();
   
@@ -39,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAuthenticated = !!user;
   useLoginTracking(isAuthenticated, user);
   
-  // Handle loading state
+  // Handle loading state - simplified
   const { isLoading } = useAuthLoadingState(isSessionLoading, user, authEvent, profileLoaded);
   
   // Auth core for login/logout
@@ -59,7 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { isPremiumMember, userStreakData, userAchievements } = usePremiumFeatures(user);
   
   // Derived state
-  const { userHasArchetype, isAuthenticated: derivedIsAuthenticated, getUserSubscription } = useAuthDerivedState(user);
+  const { userHasArchetype, isAuthenticated: derivedIsAuthenticated, getUserSubscription } = 
+    useAuthDerivedState(user);
   
   // Action wrappers
   const { 
@@ -72,49 +73,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetPasswordWrapper 
   } = useAuthActionWrappers(user, profileCore, profileActions, authCore);
   
-  // Optimized session and login success handling - now faster with early marking
-  const handleSessionRestore = useCallback(() => {
-    if ((authEvent === "RESTORED_SESSION" || authEvent === "SIGN_IN_COMPLETE" || authEvent === "FAST_RESTORED_SESSION") 
-        && user && profileLoaded) {
-      console.log("Marking login success early for faster feedback");
+  // Early session restore handling - mark login success immediately
+  useEffect(() => {
+    if ((authEvent === "RESTORED_SESSION" || authEvent === "SIGN_IN_COMPLETE" || 
+        authEvent === "FAST_RESTORED_SESSION") && user) {
       markLoginSuccess();
     }
-  }, [authEvent, user, profileLoaded]);
-  
-  useEffect(() => {
-    handleSessionRestore();
-  }, [handleSessionRestore]);
+  }, [authEvent, user]);
   
   // Early short-circuit loading state for faster UI rendering
-  const quickLoadDelay = 500; // ms
   useEffect(() => {
-    // If loading takes too long, give early access after 500ms
+    // If loading takes too long, give early access after 300ms (faster than before)
     if (isSessionLoading) {
       const timer = setTimeout(() => {
-        console.log("Quick-loading auth state after timeout");
         if (session) {
           setProfileLoaded(true);
           setIsSessionLoading(false);
         }
-      }, quickLoadDelay);
+      }, 300); // Reduced from 500ms for faster UI loading
       
       return () => clearTimeout(timer);
     }
   }, [isSessionLoading, session, setProfileLoaded, setIsSessionLoading]);
-  
-  // Optimized PWA navigation handling
-  useEffect(() => {
-    if (isAuthenticated && isRunningAsPWA()) {
-      if (location.pathname !== '/login' && location.pathname !== '/signup') {
-        sessionStorage.setItem('pwa_last_path', location.pathname);
-      }
-      
-      if (user?.onboarded && (location.pathname === '/login' || location.pathname === '/signup')) {
-        const lastPath = sessionStorage.getItem('pwa_last_path') || '/dashboard';
-        sessionStorage.setItem('pwa_desired_path', lastPath);
-      }
-    }
-  }, [isAuthenticated, user, location.pathname]);
   
   // Memoize the context value to prevent unnecessary rerenders
   const contextValue: AuthContextType = useMemo(() => ({
@@ -142,12 +122,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userStreakData,
     userAchievements
   }), [
-    user, isLoading, error, authCore.login, authLogout, 
-    signup, resetPasswordWrapper, updateProfile, forceUpdateProfile,
-    setNameWrapper, setArchetypeWrapper, setCoachingModeWrapper, 
-    setOnboardedWrapper, setUser, authEvent, profileLoaded, 
-    isPremiumMember, userStreakData, userAchievements,
-    isAuthenticated, getUserSubscription, userHasArchetype
+    user, isLoading, error, isAuthenticated, authEvent, profileLoaded,
+    authCore.login, authLogout, signup, resetPasswordWrapper,
+    updateProfile, forceUpdateProfile, setNameWrapper, setArchetypeWrapper,
+    setCoachingModeWrapper, setOnboardedWrapper, setUser, getUserSubscription,
+    userHasArchetype, isPremiumMember, userStreakData, userAchievements
   ]);
 
   return (
