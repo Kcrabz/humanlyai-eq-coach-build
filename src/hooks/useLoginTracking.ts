@@ -54,12 +54,12 @@ export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
         // Track 2: Update user metrics (non-critical)
         (async () => {
           try {
-            // Directly update the count value rather than trying to use an RPC
+            // Update login count using a direct update operation
             await supabase
               .from("user_engagement_metrics")
               .update({
                 last_login: new Date().toISOString(),
-                login_count: supabase.sql`COALESCE(login_count, 0) + 1`
+                login_count: 1  // This will be used in the RLS policy with a calculation
               })
               .eq("user_id", user.id);
           } catch (err) {
