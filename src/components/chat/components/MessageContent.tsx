@@ -18,12 +18,10 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
   // If content is empty, render a non-breaking space to maintain height
   // but we return null if there's no content at all to help with conditional rendering in parent component
   if (isEmpty && (!content || content === "")) {
-    console.log("MessageContent: Rendering null for completely empty content");
     return null;
   }
   
   if (isEmpty) {
-    console.log("MessageContent: Rendering minimal placeholder for whitespace content");
     return <span className="inline-block min-h-[0.5em]">&nbsp;</span>;
   }
   

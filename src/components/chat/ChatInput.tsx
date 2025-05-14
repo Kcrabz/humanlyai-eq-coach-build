@@ -53,40 +53,39 @@ export function ChatInput() {
   };
 
   return (
-    <form
-      ref={formRef}
-      className={`sticky bottom-0 bg-white border-t relative flex items-end gap-2 ${
-        isMobile ? "p-2 pb-safe" : "p-3"
-      } chat-input-container`}
-      onSubmit={handleSubmit}
-      style={{ 
-        minHeight: isMobile ? "50px" : "64px",
-        zIndex: 20
-      }}
-    >
-      <Textarea
-        ref={textareaRef}
-        className={`flex-1 resize-none py-2 text-sm pr-10 rounded-lg ${
-          isMobile ? "max-h-[60px]" : "max-h-24"
-        }`}
-        placeholder="Type a message..."
-        rows={1}
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={handleKeyDown}
-        disabled={isLoading}
-      />
-
-      <Button
-        type="submit"
-        size="sm"
-        className={`absolute ${
-          isMobile ? "bottom-[10px] right-4" : "bottom-5 right-5"
-        } h-8 w-8 rounded-full flex items-center justify-center`}
-        disabled={!message.trim() || isLoading}
+    <div className="chat-input-wrapper">
+      <form
+        ref={formRef}
+        className={`flex items-end gap-2 ${
+          isMobile ? "p-2 pb-safe" : "p-3"
+        } chat-input-container border-t bg-white`}
+        onSubmit={handleSubmit}
+        style={{ zIndex: 20 }}
       >
-        <Send className="h-3.5 w-3.5" />
-      </Button>
-    </form>
+        <Textarea
+          ref={textareaRef}
+          className={`flex-1 resize-none py-2 text-sm pr-10 rounded-lg ${
+            isMobile ? "max-h-[60px]" : "max-h-24"
+          }`}
+          placeholder="Type a message..."
+          rows={1}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isLoading}
+        />
+
+        <Button
+          type="submit"
+          size="sm"
+          className={`absolute ${
+            isMobile ? "bottom-[10px] right-4" : "bottom-5 right-5"
+          } h-8 w-8 rounded-full flex items-center justify-center`}
+          disabled={!message.trim() || isLoading}
+        >
+          <Send className="h-3.5 w-3.5" />
+        </Button>
+      </form>
+    </div>
   );
 }

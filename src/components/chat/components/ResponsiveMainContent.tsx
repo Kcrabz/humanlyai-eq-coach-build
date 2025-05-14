@@ -21,26 +21,6 @@ export function ResponsiveMainContent({
   const { open: leftSidebarOpen } = useSidebar("left");
   const isMobile = useIsMobile();
   const [isPWA, setIsPWA] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
-  
-  // Handle viewport height changes (mobile browsers address bar appearing/disappearing)
-  const updateViewportHeight = () => {
-    setViewportHeight(window.innerHeight);
-  };
-  
-  // Use layout effect for smoother transition when keyboard appears
-  useLayoutEffect(() => {
-    updateViewportHeight();
-    window.addEventListener('resize', updateViewportHeight);
-    
-    // On some mobile browsers, we need to listen for orientation change as well
-    window.addEventListener('orientationchange', updateViewportHeight);
-    
-    return () => {
-      window.removeEventListener('resize', updateViewportHeight);
-      window.removeEventListener('orientationchange', updateViewportHeight);
-    };
-  }, []);
   
   // Detect if running as PWA
   useEffect(() => {
@@ -99,8 +79,8 @@ export function ResponsiveMainContent({
       style={{
         width: contentWidth,
         transition: 'width 0.3s ease',
-        height: isMobile ? '100svh' : '100%', // Use small viewport height for mobile
-        maxHeight: isMobile ? '100svh' : '100%'
+        height: isMobile ? '100dvh' : '100%', // Use dynamic viewport height for mobile
+        maxHeight: isMobile ? '100dvh' : '100%'
       }}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}

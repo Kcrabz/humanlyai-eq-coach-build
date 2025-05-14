@@ -14,8 +14,8 @@ export function ChatHeader({ hasCompletedAssessment, userArchetype, onStartAsses
   const isMobile = useIsMobile();
   
   return (
-    <div className={`enhanced-header flex items-center justify-between ${isMobile ? 'py-2 px-3' : 'p-3'}`}>
-      <div className="flex items-center gap-3">
+    <div className={`enhanced-header flex items-center justify-between ${isMobile ? 'py-1.5 px-2' : 'p-3'} shrink-0`}>
+      <div className="flex items-center gap-2">
         <ChatLeftSidebarTrigger />
         <h1 className={`font-medium bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent ${isMobile ? 'text-base' : 'text-lg'}`}>
           Kai | EQ Coach

@@ -37,27 +37,60 @@
   
   /* Smaller header on mobile */
   .enhanced-header {
-    min-height: 44px !important;
+    min-height: 42px !important;
     padding: 4px 8px !important;
     height: auto !important;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
   }
 
-  /* Optimize chat bubbles on mobile */
-  .chat-list-container {
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
-  }
-
-  /* Ensure space for input area */
-  .chat-content-container {
-    display: flex;
-    flex-direction: column;
-  }
-  
   /* Ensure the send button is properly positioned */
   .chat-input-container .absolute {
     bottom: 10px !important;
     right: 12px !important;
+  }
+}
+
+/* Fix layout structure */
+.chat-content-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chat-list-container {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-input-wrapper {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 20;
+  background: white;
+  width: 100%;
+}
+
+/* Mobile sizing */
+@media (max-width: 640px) {
+  html, body {
+    overflow: hidden;
+    height: 100%;
+  }
+
+  #root, .app-container, .main-content {
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .main-content {
+    display: flex;
+    flex-direction: column;
   }
 }
 

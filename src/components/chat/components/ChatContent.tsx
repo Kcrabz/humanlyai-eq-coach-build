@@ -18,7 +18,7 @@ export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatC
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex-1 overflow-hidden flex flex-col chat-content-container">
+    <div className="flex-1 flex flex-col overflow-hidden chat-content-container">
       {!hasCompletedAssessment && (
         <EQAssessmentAlert onStartAssessment={onStartAssessment} />
       )}
@@ -26,15 +26,17 @@ export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatC
       {/* Only show usage stats on desktop - saves space on mobile */}
       {!isMobile && <ChatUsage />}
       
-      <Suspense fallback={
-        <div className="flex-1 flex justify-center items-center">
-          <div className="animate-breathe rounded-full h-10 w-10 border-2 border-humanly-indigo/30 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-humanly-indigo"></div>
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <Suspense fallback={
+          <div className="flex-1 flex justify-center items-center">
+            <div className="animate-breathe rounded-full h-10 w-10 border-2 border-humanly-indigo/30 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-7 w-7 border-t-2 border-b-2 border-humanly-indigo"></div>
+            </div>
           </div>
-        </div>
-      }>
-        <ChatList />
-      </Suspense>
+        }>
+          <ChatList />
+        </Suspense>
+      </div>
       
       <ChatInput />
     </div>

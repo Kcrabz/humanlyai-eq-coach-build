@@ -16,13 +16,14 @@
 
 /* Main content area with responsive width */
 .main-content {
-  @apply flex-1 overflow-auto bg-gradient-to-br from-white to-humanly-pastel-lavender/10;
+  @apply flex-1 bg-gradient-to-br from-white to-humanly-pastel-lavender/10;
   transition: width 0.3s ease;
   width: 100%;
   flex-grow: 1;
   z-index: 10;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 /* Mobile-specific content fixes */
@@ -35,13 +36,14 @@
     flex-basis: 100% !important;
     display: flex;
     flex-direction: column;
-    height: 100svh !important;
+    height: 100dvh !important;
+    overflow: hidden;
   }
   
   /* Optimize total height use on mobile using dynamic viewport height */
   .main-content[data-mobile="true"] {
-    height: 100svh !important; /* Use small viewport height on mobile */
-    max-height: 100svh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
   }
   
   .mobile-main-content {
@@ -57,8 +59,9 @@
   /* Mobile-specific spacing for chat UI */
   .enhanced-header {
     padding: 4px 8px !important;
-    min-height: unset !important;
+    min-height: 42px !important;
     height: auto !important;
+    flex-shrink: 0;
   }
   
   /* Better positioning for the mobile send button */
@@ -77,11 +80,6 @@
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 8px);
   }
-  
-  /* Make sure content doesn't get hidden behind floating input */
-  .flex-1.overflow-y-auto {
-    padding-bottom: 4px !important;
-  }
 
   /* Better input container spacing */
   form.border-t {
@@ -96,7 +94,6 @@
     min-height: 0;
     overflow: hidden;
     flex-direction: column;
-    height: calc(100% - 44px); /* Subtract header height */
   }
 
   /* Chat list should scroll within available space */
@@ -104,16 +101,13 @@
     flex: 1 1 auto;
     overflow-y: auto;
     min-height: 0;
-    padding-top: 6px !important;
-    padding-bottom: 6px !important;
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
   }
   
   /* Fix chat input container */
   .chat-input-container {
-    position: sticky;
-    bottom: 0;
-    z-index: 20;
-    background: white;
+    flex-shrink: 0;
   }
 }
 

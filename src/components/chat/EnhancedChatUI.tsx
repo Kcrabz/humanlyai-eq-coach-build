@@ -46,9 +46,11 @@ export function EnhancedChatUI({
 
   return (
     <div className={`flex flex-col h-full ${className} enhanced-chat-ui`}>
-      <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-2 space-y-4' : 'p-4 space-y-6'}`}>
+      <div className={`flex-1 overflow-y-auto ${isMobile ? 'p-2 space-y-2' : 'p-4 space-y-6'} chat-list-container`}>
         {chatHistory.length === 0 ? (
-          <ChatWelcomeScreen sendSuggestedMessage={sendSuggestedMessage} />
+          <div className="h-full flex items-center justify-center">
+            <ChatWelcomeScreen sendSuggestedMessage={sendSuggestedMessage} />
+          </div>
         ) : (
           chatHistory.map((message) => (
             <ChatBubble 

@@ -24,6 +24,7 @@ body.pwa {
     padding-right: 8px !important;
     min-height: auto !important;
     height: auto !important;
+    flex-shrink: 0;
   }
   
   .pwa form {
@@ -37,8 +38,8 @@ body.pwa {
   
   /* Content area adjustments for PWA */
   .pwa .main-content {
-    height: 100svh !important; /* Small viewport height */
-    max-height: 100svh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
   }
   
   /* Better right sidebar positioning for PWA */
@@ -59,13 +60,14 @@ body.pwa {
 
   /* Fix for iOS keyboard appearance */
   .pwa .chat-content-container {
-    height: calc(100svh - 44px) !important; /* Subtract header height */
+    height: calc(100dvh - 42px) !important; /* Subtract header height */
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
   }
 
-  .pwa .chat-input-container {
+  .pwa .chat-input-wrapper {
     position: sticky;
     bottom: 0;
     background: white;
@@ -81,11 +83,24 @@ body.pwa {
       padding-right: env(safe-area-inset-right, 8px) !important;
     }
     
-    .pwa form {
+    .pwa .chat-input-wrapper {
       padding-bottom: env(safe-area-inset-bottom) !important;
       padding-left: env(safe-area-inset-left, 8px) !important;
       padding-right: env(safe-area-inset-right, 8px) !important;
     }
+  }
+
+  /* Ensure header is fixed sized */
+  .pwa .enhanced-header {
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  }
+  
+  /* Ensure the list takes available space */
+  .pwa .chat-list-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
   }
 }
 
@@ -112,7 +127,7 @@ body.pwa {
   
   /* Apply these in PWA context */
   .pwa .main-content {
-    height: 100svh !important;
+    height: 100dvh !important;
     height: -webkit-fill-available !important;
   }
   
@@ -121,11 +136,23 @@ body.pwa {
     display: flex;
     flex-direction: column;
     min-height: 0; /* Important for nested flexbox */
+    overflow: hidden;
   }
   
   .pwa .chat-list-container {
     flex: 1;
     overflow-y: auto;
     min-height: 0; /* Important for nested flexbox */
+  }
+  
+  /* Fix for full height in PWA mode */
+  @supports (-webkit-touch-callout: none) {
+    .pwa .main-content {
+      height: -webkit-fill-available !important;
+    }
+    
+    .pwa .chat-content-container {
+      height: calc(100% - 42px) !important; /* Adjust for header */
+    }
   }
 }
