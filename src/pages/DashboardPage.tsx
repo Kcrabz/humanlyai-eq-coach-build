@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { memo, useEffect, useState, Suspense } from "react";
 import { Loading } from "@/components/ui/loading";
+import { clearLoginSuccess } from "@/utils/loginRedirectUtils";
 
 // Memoize card components for performance
 const ActionCard = memo(({ 
@@ -87,9 +87,10 @@ const DashboardContent = memo(() => {
     window.open("https://docs.google.com/forms/d/e/1FAIpQLSc0P8UJzjOQXHMEldPkXgGBLEMhulCYdaOggLkZMhxzRtI5uQ/viewform?usp=sharing", "_blank");
   };
   
-  // Fix navigation to chat page with proper Link usage
+  // Updated navigation to chat page - using direct location change and clearing login success flag
   const handleChatNavigation = () => {
-    navigate('/chat');
+    clearLoginSuccess(); // Clear login success flag to avoid redirect loops
+    window.location.href = '/chat'; // Use direct location change
   };
   
   return (
