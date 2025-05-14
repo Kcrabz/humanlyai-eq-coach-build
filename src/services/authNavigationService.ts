@@ -1,3 +1,4 @@
+
 import { NavigateFunction } from "react-router-dom";
 import { User } from "@/types";
 
@@ -27,7 +28,7 @@ export const AuthNavigationService = {
   /**
    * Set the current navigation state
    */
-  setState: (state: NavigationState, metadata?: Record<string, any>): void => {
+  setState: function(state: NavigationState, metadata?: Record<string, any>): void {
     try {
       const data = {
         state,
@@ -45,7 +46,7 @@ export const AuthNavigationService = {
   /**
    * Get the current navigation state
    */
-  getState: (): { state: NavigationState, timestamp: number, [key: string]: any } | null => {
+  getState: function(): { state: NavigationState, timestamp: number, [key: string]: any } | null {
     try {
       const data = sessionStorage.getItem(NAV_STATE_KEY);
       if (data) {
@@ -60,7 +61,7 @@ export const AuthNavigationService = {
   /**
    * Clear the current navigation state
    */
-  clearState: (): void => {
+  clearState: function(): void {
     try {
       console.log("AuthNav: Clearing navigation state");
       sessionStorage.removeItem(NAV_STATE_KEY);
@@ -72,65 +73,65 @@ export const AuthNavigationService = {
   /**
    * Handle post-login navigation with proper state transitions
    */
-  handleSuccessfulAuth: (navigate: NavigateFunction, user: User | null, fromSignup: boolean = false): void => {
+  handleSuccessfulAuth: function(navigate: NavigateFunction, user: User | null, fromSignup: boolean = false): void {
     console.log(`AuthNav: Handling successful auth for user:`, { id: user?.id, onboarded: user?.onboarded, fromSignup });
     
-    this.setState(NavigationState.AUTHENTICATED, { userId: user?.id, fromSignup });
+    AuthNavigationService.setState(NavigationState.AUTHENTICATED, { userId: user?.id, fromSignup });
     
     // Wait for auth state to stabilize
     setTimeout(() => {
       // If user needs onboarding, go there first
       if (user && !user.onboarded) {
         console.log(`AuthNav: User needs onboarding, redirecting to onboarding`);
-        this.setState(NavigationState.ONBOARDING, { userId: user.id });
+        AuthNavigationService.setState(NavigationState.ONBOARDING, { userId: user.id });
         navigate("/onboarding", { replace: true });
         return;
       }
       
       // Otherwise go directly to dashboard
       console.log(`AuthNav: User is onboarded, redirecting to dashboard`);
-      this.setState(NavigationState.DASHBOARD_READY, { userId: user?.id });
+      AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { userId: user?.id });
       navigate("/dashboard", { replace: true });
       
       // Clear navigation state after redirect completes
-      setTimeout(() => this.clearState(), NAVIGATION_TIMEOUT);
+      setTimeout(() => AuthNavigationService.clearState(), NAVIGATION_TIMEOUT);
     }, 100);
   },
   
   /**
    * Navigate to chat page with intentional navigation marker
    */
-  navigateToChat: (navigate: NavigateFunction): void => {
+  navigateToChat: function(navigate: NavigateFunction): void {
     console.log("AuthNav: Explicitly navigating to chat from dashboard");
-    this.setState(NavigationState.NAVIGATING_TO_CHAT, { fromDashboard: true });
+    AuthNavigationService.setState(NavigationState.NAVIGATING_TO_CHAT, { fromDashboard: true });
     
     // Navigate and clear state after navigation completes
     navigate("/chat", { replace: false });
     
     setTimeout(() => {
-      this.clearState();
+      AuthNavigationService.clearState();
     }, NAVIGATION_TIMEOUT);
   },
   
   /**
    * Navigate to dashboard with navigation marker
    */
-  navigateToDashboard: (navigate: NavigateFunction): void => {
+  navigateToDashboard: function(navigate: NavigateFunction): void {
     console.log("AuthNav: Explicitly navigating to dashboard");
-    this.setState(NavigationState.DASHBOARD_READY);
+    AuthNavigationService.setState(NavigationState.DASHBOARD_READY);
     
     // Navigate and clear state after navigation completes
     navigate("/dashboard", { replace: true });
     
     setTimeout(() => {
-      this.clearState();
+      AuthNavigationService.clearState();
     }, NAVIGATION_TIMEOUT);
   },
   
   /**
    * Check if current state matches expected state
    */
-  isInState: (state: NavigationState): boolean => {
+  isInState: function(state: NavigationState): boolean {
     const navState = AuthNavigationService.getState();
     return navState?.state === state;
   },
@@ -138,7 +139,7 @@ export const AuthNavigationService = {
   /**
    * Check if navigation was intentionally directed to chat
    */
-  wasIntentionalNavigationToChat: (): boolean => {
+  wasIntentionalNavigationToChat: function(): boolean {
     const navState = AuthNavigationService.getState();
     return navState?.state === NavigationState.NAVIGATING_TO_CHAT && !!navState?.fromDashboard;
   },
@@ -146,7 +147,7 @@ export const AuthNavigationService = {
   /**
    * Check if current state is from a fresh authentication
    */
-  isFromAuthentication: (): boolean => {
+  isFromAuthentication: function(): boolean {
     const navState = AuthNavigationService.getState();
     if (!navState) return false;
     
@@ -161,9 +162,9 @@ export const AuthNavigationService = {
   /**
    * Clear all navigation flags and states
    */
-  resetAllNavigationState: (): void => {
+  resetAllNavigationState: function(): void {
     console.log("AuthNav: Resetting all navigation state");
-    this.clearState();
+    AuthNavigationService.clearState();
   }
 };
 
