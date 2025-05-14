@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import App from './App.tsx'
 import './index.css';
+import './styles/pwa/pwa-specific.css';
 
 // Create function for registering service worker to better handle errors
 const registerServiceWorker = async () => {
@@ -24,14 +25,6 @@ const registerServiceWorker = async () => {
           
           // Dispatch event on registration to handle PWA-specific UI adjustments
           window.dispatchEvent(new CustomEvent('pwa-registered'));
-          
-          // Check if we need to redirect after PWA installation
-          const redirectPath = localStorage.getItem('pwa_redirect_after_login');
-          if (redirectPath) {
-            console.log('Found pending PWA redirect after login to:', redirectPath);
-            window.location.href = redirectPath;
-            localStorage.removeItem('pwa_redirect_after_login');
-          }
         }
       },
       onRegisterError(error) {
@@ -43,50 +36,48 @@ const registerServiceWorker = async () => {
   }
 };
 
-// Handle PWA standalone mode detection
+// Enhanced PWA detection with proper class application
 const initPwaFeatures = () => {
   try {
     const isRunningAsPWA = window.matchMedia('(display-mode: standalone)').matches || 
                           (window.navigator as any).standalone === true;
     
+    // Apply the PWA class to both html and body for complete styling coverage
     if (isRunningAsPWA) {
-      document.body.classList.add('pwa-mode');
+      document.documentElement.classList.add('pwa');
+      document.body.classList.add('pwa');
       console.log('Running as installed PWA');
       
-      // Store current path in sessionStorage if we're on a path that requires login
-      // This helps post-login navigation in PWA environments
+      // Set PWA mode for the app, used by AuthenticationGuard
+      localStorage.setItem('is_pwa_mode', 'true');
+      
+      // Store pending paths if needed, but let AuthenticationGuard handle navigation
       if (window.location.pathname !== '/' && 
           window.location.pathname !== '/login' && 
           window.location.pathname !== '/signup') {
+        console.log('PWA: Storing desired path:', window.location.pathname);
         sessionStorage.setItem('pwa_desired_path', window.location.pathname);
-        console.log('Stored desired path for PWA:', window.location.pathname);
       }
-      
-      // Force a load to the intended page when in PWA mode
-      const desiredPath = sessionStorage.getItem('pwa_desired_path');
-      // Check if we just logged in
-      const justLoggedIn = sessionStorage.getItem('just_logged_in') === 'true';
-      
-      if ((desiredPath && window.location.pathname === '/') || justLoggedIn) {
-        const targetPath = justLoggedIn ? '/dashboard' : desiredPath;
-        console.log('Redirecting to target path in PWA:', targetPath);
-        window.location.href = targetPath;
-        if (justLoggedIn) {
-          sessionStorage.removeItem('just_logged_in');
-        } else if (desiredPath) {
-          sessionStorage.removeItem('pwa_desired_path');
-        }
-      }
+    } else {
+      // Ensure we're not in PWA mode
+      localStorage.removeItem('is_pwa_mode');
     }
   } catch (err) {
     console.error('Error detecting PWA mode:', err);
   }
 };
 
-// Utility function to detect if app is in PWA mode - properly defined as a window property
+// Enhanced utility function to detect if app is in PWA mode - properly defined as a window property
 window.isPwaMode = function(): boolean {
-  return window.matchMedia('(display-mode: standalone)').matches || 
-         (window.navigator as any).standalone === true;
+  try {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches || 
+      (window.navigator as any).standalone === true ||
+      localStorage.getItem('is_pwa_mode') === 'true'
+    );
+  } catch (e) {
+    return false;
+  }
 };
 
 // Initialize the application with error handling
@@ -104,15 +95,14 @@ const initializeApp = () => {
       </BrowserRouter>
     );
 
+    // Initialize PWA features first
+    initPwaFeatures();
+    
     // Register service worker after the app is loaded
     registerServiceWorker();
     
-    // Initialize PWA features
-    initPwaFeatures();
-    
     // Add additional PWA detection for login flow
     window.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM loaded, PWA status:', window.isPwaMode());
       if (window.isPwaMode()) {
         console.log('PWA detected on DOMContentLoaded, current path:', window.location.pathname);
       }

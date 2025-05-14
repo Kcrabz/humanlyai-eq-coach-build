@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { clientRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
@@ -16,8 +16,10 @@ export function useLoginForm() {
     resetTimeMs: number;
   } | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
+  const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
   
   const { login } = useAuth();
+  const isPwaMode = typeof window !== 'undefined' ? window.isPwaMode() : false;
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -43,6 +45,17 @@ export function useLoginForm() {
     return true;
   };
   
+  // Effect to record PWA login success
+  useEffect(() => {
+    if (loginTimestamp && isPwaMode) {
+      console.log("Recording PWA login timestamp:", loginTimestamp);
+      localStorage.setItem('pwa_login_timestamp', loginTimestamp.toString());
+      
+      // Mark as just logged in for special handling
+      sessionStorage.setItem('just_logged_in', 'true');
+    }
+  }, [loginTimestamp, isPwaMode]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -62,29 +75,45 @@ export function useLoginForm() {
     if (!validateForm()) return;
     
     setIsSubmitting(true);
-    console.log("Login attempt starting for:", email);
+    console.log(`Login attempt starting for: ${email} ${isPwaMode ? "(PWA mode)" : ""}`);
     
     try {
       // Clear existing navigation state
       AuthNavigationService.resetAllNavigationState();
       
       // Set authentication state
-      AuthNavigationService.setState(NavigationState.AUTHENTICATING, { email });
+      AuthNavigationService.setState(NavigationState.AUTHENTICATING, { 
+        email,
+        isPwa: isPwaMode
+      });
       
       // Use the enhanced login function
       const success = await login(email, password);
       
       if (success) {
-        console.log("Login successful, navigation will be handled by AuthenticationGuard");
-        toast.success("Login successful!");
+        console.log(`Login successful ${isPwaMode ? "(PWA mode)" : ""}, navigation will be handled by AuthenticationGuard`);
+        
+        // Record login timestamp for PWA handling
+        const timestamp = Date.now();
+        setLoginTimestamp(timestamp);
         
         // We don't navigate here, AuthenticationGuard will handle it
-        AuthNavigationService.setState(NavigationState.AUTHENTICATED);
+        AuthNavigationService.setState(NavigationState.AUTHENTICATED, {
+          timestamp,
+          isPwa: isPwaMode
+        });
+        
+        if (!isPwaMode) {
+          toast.success("Login successful!");
+        }
       } else {
         console.log("Login failed");
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);
-        AuthNavigationService.setState(NavigationState.ERROR, { reason: "login_failed" });
+        AuthNavigationService.setState(NavigationState.ERROR, { 
+          reason: "login_failed",
+          isPwa: isPwaMode
+        });
         
         if (updatedRateLimit.attemptsRemaining > 0) {
           setErrorMessage(`Login failed. ${updatedRateLimit.attemptsRemaining} attempts remaining.`);
@@ -96,7 +125,8 @@ export function useLoginForm() {
       setRateLimitInfo(clientRateLimit('login_attempt', 5, 60000));
       AuthNavigationService.setState(NavigationState.ERROR, { 
         reason: "login_error", 
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
+        isPwa: isPwaMode
       });
     } finally {
       setIsSubmitting(false);

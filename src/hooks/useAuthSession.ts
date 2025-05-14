@@ -17,6 +17,7 @@ export const useAuthSession = () => {
   const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
   const [authInitComplete, setAuthInitComplete] = useState(false);
+  const [pwaMode] = useState<boolean>(typeof window !== 'undefined' ? window.isPwaMode() : false);
 
   // Fast session restoration from localStorage before network requests
   useEffect(() => {
@@ -25,22 +26,25 @@ export const useAuthSession = () => {
       const storedSession = localStorage.getItem('sb-acboajrjgqqnfrtozssb-auth-token');
       if (storedSession) {
         try {
-          console.log("Found stored session token, attempting to restore");
+          console.log(`Found stored session token, attempting to restore ${pwaMode ? "(PWA mode)" : ""}`);
           const parsedSession = JSON.parse(storedSession);
           if (parsedSession?.currentSession) {
-            console.log("Fast session restoration from localStorage");
+            console.log(`Fast session restoration from localStorage ${pwaMode ? "(PWA mode)" : ""}`);
             setSession(parsedSession.currentSession);
             setAuthEvent('FAST_RESTORED_SESSION');
             setSessionReady(true);
             
+            // Use longer timeout for PWA mode
+            const timeoutMs = pwaMode ? 500 : 300;
+            
             // Don't exit loading state too quickly - we need to ensure profile data is loaded
             setTimeout(() => {
               if (!profileLoaded) {
-                console.log("Setting profile as loaded after fast session restore");
+                console.log(`Setting profile as loaded after fast session restore ${pwaMode ? "(PWA mode)" : ""}`);
                 setProfileLoaded(true);
                 setIsLoading(false);
               }
-            }, 300); // Increased from 200ms for more reliability
+            }, timeoutMs); 
           }
         } catch (e) {
           console.warn("Could not parse stored session", e);
@@ -49,19 +53,19 @@ export const useAuthSession = () => {
         // No session found - exit loading quickly
         setTimeout(() => {
           if (isLoading) {
-            console.log("No stored session found, exiting loading state");
+            console.log(`No stored session found, exiting loading state ${pwaMode ? "(PWA mode)" : ""}`);
             setIsLoading(false);
           }
-        }, 100);
+        }, pwaMode ? 200 : 100);
       }
     } catch (e) {
       console.warn("Error accessing localStorage", e);
     }
-  }, [profileLoaded, isLoading]);
+  }, [profileLoaded, isLoading, pwaMode]);
 
   // Optimized session update handler
   const updateSessionAfterEvent = useCallback((event: string) => {
-    console.log("Auth event:", event);
+    console.log(`Auth event: ${event} ${pwaMode ? "(PWA mode)" : ""}`);
     
     if (event === 'SIGNED_IN') {
       // Set login timestamp immediately
@@ -72,26 +76,32 @@ export const useAuthSession = () => {
       // Signal authentication to navigation system
       AuthNavigationService.setState(NavigationState.AUTHENTICATED, {
         timestamp,
-        authEvent: event
+        authEvent: event,
+        isPwa: pwaMode
       });
       
       // Update session without waiting for getSession
       supabase.auth.getUser().then(({ data }) => {
         if (data.user) {
-          console.log("User signed in:", data.user.id);
+          console.log(`User signed in: ${data.user.id} ${pwaMode ? "(PWA mode)" : ""}`);
           setAuthEvent('SIGN_IN_COMPLETE');
+          
+          // For PWA mode, use a longer delay to ensure complete session restoration
+          const delayMs = pwaMode ? 300 : 100;
           
           // Delaying these state updates to ensure they happen after session is fully established
           setTimeout(() => {
             setProfileLoaded(true);
             setSessionReady(true);
             setIsLoading(false); // Exit loading state on sign in
-          }, 100); // Increased from 50ms for more reliability
+          }, delayMs);
           
           // Handle PWA mode
-          if (isRunningAsPWA()) {
+          if (pwaMode) {
             localStorage.setItem('pwa_auth_timestamp', timestamp.toString());
-            localStorage.setItem('pwa_redirect_after_login', '/dashboard');
+            
+            // Special handling for just-logged-in state in PWA
+            sessionStorage.setItem('just_logged_in', 'true');
           }
         }
       }).catch(error => {
@@ -109,26 +119,29 @@ export const useAuthSession = () => {
       AuthNavigationService.resetAllNavigationState();
       localStorage.removeItem('login_success_timestamp');
       localStorage.removeItem('pwa_auth_timestamp');
-      localStorage.removeItem('pwa_redirect_after_login');
       sessionStorage.removeItem('pwa_desired_path');
       sessionStorage.removeItem('auth_navigation_handling_login');
+      
+      // Also clear PWA-specific flags
+      localStorage.removeItem('is_pwa_mode');
+      sessionStorage.removeItem('just_logged_in');
       
       // Clean cached profiles on logout
       localStorage.removeItem('cached_user_profile');
     }
-  }, []);
+  }, [pwaMode]);
 
   // Core authentication initialization - optimized for performance
   useEffect(() => {
     let isMounted = true;
-    console.log("Setting up auth state listener");
+    console.log(`Setting up auth state listener ${pwaMode ? "(PWA mode)" : ""}`);
     
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         if (!isMounted) return;
         
-        console.log("Auth state change event:", event);
+        console.log(`Auth state change event: ${event} ${pwaMode ? "(PWA mode)" : ""}`);
         
         // Immediate updates for critical events
         if (event !== 'INITIAL_SESSION') {
@@ -142,11 +155,14 @@ export const useAuthSession = () => {
       }
     );
 
+    // Use longer timeouts for PWA mode
+    const sessionTimeoutMs = pwaMode ? 1000 : 500;
+
     // Check existing session with minimal delay
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       if (!isMounted) return;
       
-      console.log("Retrieved session from Supabase:", existingSession ? "Yes" : "No");
+      console.log(`Retrieved session from Supabase: ${existingSession ? "Yes" : "No"} ${pwaMode ? "(PWA mode)" : ""}`);
       setSession(existingSession);
       
       if (existingSession) {
@@ -157,15 +173,19 @@ export const useAuthSession = () => {
         // Update navigation state
         AuthNavigationService.setState(NavigationState.AUTHENTICATED, {
           restored: true,
-          timestamp: Date.now()
+          timestamp: Date.now(),
+          isPwa: pwaMode
         });
         
-        // PWA handling
-        if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
-          localStorage.setItem('pwa_session_restored', 'true');
+        // PWA handling - enhanced for mobile devices
+        if (pwaMode) {
           const desiredPath = sessionStorage.getItem('pwa_desired_path');
-          if (desiredPath && (window.location.pathname === '/' || window.location.pathname === '/login')) {
-            window.location.href = desiredPath;
+          console.log(`PWA session restored, desired path: ${desiredPath || 'none'}`);
+          
+          if (desiredPath) {
+            console.log(`PWA: Setting stored path flag for: ${desiredPath}`);
+            // Let AuthenticationGuard handle the actual navigation
+            localStorage.setItem('pwa_has_pending_navigation', 'true');
           }
         }
       }
@@ -182,22 +202,23 @@ export const useAuthSession = () => {
       }
     });
 
-    // Safety timeout - increased to 300ms max wait
+    // Safety timeout - increased for PWA mode
+    const safetyTimeoutMs = pwaMode ? 1000 : 500;
     const safetyTimeout = setTimeout(() => {
       if (isMounted && isLoading) {
-        console.log("Safety timeout triggered - forcing auth state to complete loading");
+        console.log(`Safety timeout triggered - forcing auth state to complete loading ${pwaMode ? "(PWA mode)" : ""}`);
         setIsLoading(false);
         setInitialized(true);
         setAuthInitComplete(true);
       }
-    }, 500); // Increased timeout for more reliability
+    }, safetyTimeoutMs);
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
       clearTimeout(safetyTimeout);
     };
-  }, [updateSessionAfterEvent, isLoading]);
+  }, [updateSessionAfterEvent, isLoading, pwaMode]);
 
   return { 
     session, 

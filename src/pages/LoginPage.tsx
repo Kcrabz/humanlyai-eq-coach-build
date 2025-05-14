@@ -5,27 +5,47 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
 import { useLocation } from "react-router-dom";
 import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
+import { toast } from "sonner";
 
 const LoginPage = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, authEvent } = useAuth();
   const location = useLocation();
+  const isPwaMode = typeof window !== 'undefined' ? window.isPwaMode() : false;
   
   useEffect(() => {
+    // Log detailed information about PWA login state
+    if (isPwaMode) {
+      console.log("LoginPage: Running in PWA mode", { 
+        isAuthenticated, 
+        userId: user?.id,
+        authEvent,
+        pathname: location.pathname
+      });
+    }
+    
     // Only track authentication state for debugging
     // All navigation is handled by AuthenticationGuard
     if (isAuthenticated && user) {
       console.log("LoginPage: User already authenticated", { 
         id: user.id, 
-        onboarded: user.onboarded 
+        onboarded: user.onboarded,
+        isPwaMode
       });
       
       // Set navigation state to authenticated for tracking
       AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
         userId: user.id, 
-        onboarded: user.onboarded 
+        onboarded: user.onboarded,
+        isPwa: isPwaMode
       });
+      
+      // In PWA mode, show a toast to indicate successful login
+      if (isPwaMode && authEvent === "SIGN_IN_COMPLETE") {
+        toast.success("Login successful! Redirecting...");
+        // AuthenticationGuard will handle the actual navigation
+      }
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, isPwaMode, authEvent, location.pathname]);
   
   return (
     <PageLayout>

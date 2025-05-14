@@ -14,7 +14,11 @@ import {
   isPublicPage
 } from "@/services/authNavigationService";
 
-const NAVIGATION_DEBOUNCE_MS = 300;
+// Increased for mobile devices which may need more time
+const NAVIGATION_DEBOUNCE_MS = 500;
+
+// PWA-specific timeouts
+const PWA_NAVIGATION_TIMEOUT = 800;
 
 /**
  * Centralized authentication guard that controls all navigation in the app
@@ -29,11 +33,12 @@ export const AuthenticationGuard = () => {
   const navigatingRef = useRef(false);
   const lastNavigationTimeRef = useRef(0);
   const [isInitialized, setIsInitialized] = useState(false);
+  const isPwaMode = typeof window !== 'undefined' ? window.isPwaMode() : false;
   
   // Initialize the component
   useEffect(() => {
     if (!isInitialized && !isLoading) {
-      console.log("AuthGuard: Initialized");
+      console.log("AuthGuard: Initialized", { isPwaMode });
       setIsInitialized(true);
     }
   }, [isLoading, isInitialized]);
@@ -51,7 +56,7 @@ export const AuthenticationGuard = () => {
   // Prevent navigation loops with debouncing
   const shouldSkipNavigation = () => {
     const now = Date.now();
-    if (now - lastNavigationTimeRef.current < NAVIGATION_DEBOUNCE_MS) {
+    if (now - lastNavigationTimeRef.current < (isPwaMode ? PWA_NAVIGATION_TIMEOUT : NAVIGATION_DEBOUNCE_MS)) {
       console.log("AuthGuard: Skipping navigation - debounce period active");
       return true;
     }
@@ -62,8 +67,28 @@ export const AuthenticationGuard = () => {
   const recordNavigation = (to: string) => {
     lastNavigationTimeRef.current = Date.now();
     navigatingRef.current = true;
-    console.log(`AuthGuard: Navigating to ${to}`);
+    console.log(`AuthGuard: Navigating to ${to}${isPwaMode ? " (PWA mode)" : ""}`);
   };
+
+  // Handle PWA post-login navigation
+  useEffect(() => {
+    if (isPwaMode && user && pathname === "/login" && authEvent === "SIGN_IN_COMPLETE") {
+      console.log("AuthGuard: PWA detected successful login, preparing navigation");
+      
+      // Use a longer timeout for PWA to ensure session is fully established
+      setTimeout(() => {
+        if (user.onboarded) {
+          console.log("AuthGuard: PWA redirecting to dashboard after login");
+          recordNavigation('/dashboard');
+          navigate('/dashboard', { replace: true });
+        } else {
+          console.log("AuthGuard: PWA redirecting to onboarding after login");
+          recordNavigation('/onboarding');
+          navigate('/onboarding', { replace: true });
+        }
+      }, 300);
+    }
+  }, [user, isPwaMode, pathname, authEvent, navigate]);
   
   // Main navigation logic - consolidated and centralized
   useEffect(() => {
@@ -86,7 +111,7 @@ export const AuthenticationGuard = () => {
     
     // Don't interrupt an ongoing navigation
     const currentNavState = AuthNavigationService.getState();
-    if (currentNavState && Date.now() - currentNavState.timestamp < 1000) {
+    if (currentNavState && Date.now() - currentNavState.timestamp < (isPwaMode ? 1500 : 1000)) {
       console.log(`AuthGuard: Navigation already in progress (${currentNavState.state}), skipping guard checks`);
       return;
     }
@@ -96,7 +121,8 @@ export const AuthenticationGuard = () => {
       isAuthenticated: !!user, 
       onboarded: user?.onboarded,
       isRetaking: isRetakingAssessment(searchParams),
-      profileLoaded
+      profileLoaded,
+      isPwaMode
     });
     
     // Reset navigation reference
@@ -106,6 +132,20 @@ export const AuthenticationGuard = () => {
     if (user && !profileLoaded) {
       console.log("AuthGuard: User exists but profile not fully loaded yet, waiting");
       return;
+    }
+    
+    // Check for PWA-specific redirects first
+    if (isPwaMode && user && sessionStorage.getItem('pwa_desired_path')) {
+      const desiredPath = sessionStorage.getItem('pwa_desired_path');
+      console.log(`AuthGuard: PWA has stored path: ${desiredPath}`);
+      
+      if (desiredPath && pathname === "/login") {
+        console.log(`AuthGuard: PWA redirecting to stored path: ${desiredPath}`);
+        sessionStorage.removeItem('pwa_desired_path');
+        recordNavigation(desiredPath);
+        navigate(desiredPath, { replace: true });
+        return;
+      }
     }
     
     // CASE 1: Not authenticated users
@@ -180,7 +220,7 @@ export const AuthenticationGuard = () => {
         return;
       }
     }
-  }, [user, isLoading, pathname, navigate, location.search, authEvent, profileLoaded, isInitialized]);
+  }, [user, isLoading, pathname, navigate, location.search, authEvent, profileLoaded, isInitialized, isPwaMode]);
   
   // We don't render anything - this is purely for navigation control
   return null;
