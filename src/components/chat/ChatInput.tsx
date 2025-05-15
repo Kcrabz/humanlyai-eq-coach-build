@@ -50,11 +50,14 @@ export function ChatInput() {
 
   return (
     <form 
-      className="p-3 border-t flex items-end gap-2 relative" 
+      className="border-t flex items-end gap-2 relative chat-input"
       onSubmit={handleSubmit}
       style={{
-        // Only apply safe area inset padding on iOS devices
-        paddingBottom: isIOS ? `calc(0.75rem + env(safe-area-inset-bottom, 0px))` : "0.75rem"
+        position: "sticky",
+        bottom: 0,
+        background: "white",
+        padding: "8px",
+        zIndex: 10,
       }}
     >
       <Textarea

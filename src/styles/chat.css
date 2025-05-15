@@ -31,6 +31,27 @@
   }
 }
 
+/* Chat wrapper with flex layout */
+.chat-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+/* Chat messages with scrolling */
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Chat input sticky positioning */
+.chat-input {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  z-index: 10;
+}
+
 /* Chat markdown content styling with improved readability */
 .chat-md p {
   @apply mb-3 leading-relaxed break-words;
@@ -113,11 +134,6 @@
     overflow-x: auto;
   }
   
-  /* Mobile chat input styling */
-  form.p-3 {
-    padding: 12px 16px;
-  }
-  
   /* Chat container viewport height fix for mobile - use dvh */
   .flex-1.overflow-hidden.flex.flex-col {
     height: 100dvh;
@@ -127,8 +143,8 @@
   @supports (padding: env(safe-area-inset-bottom)) {
     @media (max-width: 767px) {
       /* iOS specific chat input padding */
-      .ios-device form.p-3 {
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+      .ios-device .chat-input {
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
       }
       
       /* iOS specific send button positioning */

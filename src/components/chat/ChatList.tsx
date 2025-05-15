@@ -28,33 +28,6 @@ export function ChatList() {
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     setIsIOS(isIOSDevice);
   }, []);
-  
-  // Handle viewport height adjustments for mobile devices
-  useEffect(() => {
-    // Only run on mobile devices
-    if (!isMobile || !chatContainerRef.current) return;
-    
-    // Handle viewport height changes due to keyboard
-    const handleResize = () => {
-      if (chatContainerRef.current) {
-        // Use visual viewport height to handle keyboard properly
-        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        chatContainerRef.current.style.height = `${vh}px`;
-      }
-    };
-    
-    // Listen for visual viewport changes (keyboard opening/closing)
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      handleResize(); // Initial sizing
-    }
-    
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
-    };
-  }, [isMobile]);
 
   // Force scroll to bottom on sidebar state change
   useEffect(() => {
@@ -91,11 +64,7 @@ export function ChatList() {
   return (
     <div 
       ref={chatContainerRef}
-      className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-4'} space-y-6`} 
-      style={{
-        // Only apply safe area inset padding on iOS devices
-        paddingBottom: isIOS && isMobile ? 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' : undefined
-      }}
+      className="flex-1 overflow-y-auto p-3 space-y-6 chat-messages"
     >
       {validMessages.length === 0 ? (
         <EmptyChatState />

@@ -24,12 +24,31 @@ body.pwa {
   }
 }
 
+/* Flexbox layout for chat containers in PWA mode */
+.pwa .chat-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+.pwa .chat-messages {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.pwa .chat-input {
+  position: sticky;
+  bottom: 0;
+  background: white;
+  z-index: 10;
+}
+
 /* iOS specific safe area fixes - only applied on iOS */
 @supports (padding: env(safe-area-inset-bottom)) {
   @media (max-width: 767px) {
     /* Better spacing for iOS devices */
-    .ios-device form.p-3 {
-      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    .ios-device .chat-input {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
     }
     
     .ios-device .main-content {
@@ -37,7 +56,7 @@ body.pwa {
     }
     
     /* Better send button positioning on iOS */
-    .ios-device .send-button-mobile {
+    .ios-device .chat-input .send-button-mobile {
       bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     }
   }
