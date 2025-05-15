@@ -35,12 +35,14 @@ body.pwa {
   /* Content area adjustments for PWA */
   .pwa .main-content {
     padding-bottom: env(safe-area-inset-bottom, 0);
+    height: 100dvh; /* Use dynamic viewport height */
   }
   
   /* Better right sidebar positioning for PWA */
   .pwa .user-sidebar[data-mobile="true"] {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
+    height: 100dvh; /* Use dynamic viewport height */
   }
   
   /* Progress page tabs improvements for PWA */
@@ -120,4 +122,13 @@ body.pwa {
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
+
+/* iOS specific safe area fixes */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
 }

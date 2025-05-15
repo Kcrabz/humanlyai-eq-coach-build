@@ -28,6 +28,15 @@ export function ResponsiveMainContent({
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                           (window.navigator as any).standalone === true;
       setIsPWA(isStandalone);
+      
+      // Add class to html and body for PWA specific styling
+      if (isStandalone) {
+        document.documentElement.classList.add('pwa');
+        document.body.classList.add('pwa');
+      } else {
+        document.documentElement.classList.remove('pwa');
+        document.body.classList.remove('pwa');
+      }
     };
     
     // Check on initial render
@@ -67,7 +76,8 @@ export function ResponsiveMainContent({
   const contentStyle = {
     width: contentWidth,
     transition: 'width 0.3s ease',
-    marginRight: '0'
+    marginRight: '0',
+    height: isMobile ? '100dvh' : '100vh' // Use dynamic viewport height for mobile
   };
 
   return (

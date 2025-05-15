@@ -119,6 +119,11 @@
     padding: 12px 16px;
   }
   
+  /* Chat container viewport height fix for mobile */
+  .flex-1.overflow-hidden.flex.flex-col {
+    height: 100dvh;
+  }
+  
   /* Mobile send button positioning */
   .send-button-mobile {
     position: absolute;

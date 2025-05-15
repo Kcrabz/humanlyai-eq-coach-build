@@ -10,6 +10,7 @@ export function ChatList() {
   const { messages, isLoading } = useChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const firstRenderRef = useRef(true);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
   const [isPWA, setIsPWA] = useState(false);
   
@@ -28,7 +29,28 @@ export function ChatList() {
       window.matchMedia('(display-mode: standalone)').matches || 
       (window.navigator as any).standalone === true
     );
-  }, []);
+    
+    // Handle viewport height changes due to keyboard
+    const handleResize = () => {
+      if (isMobile && chatContainerRef.current) {
+        // Use visual viewport height to handle keyboard properly
+        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        chatContainerRef.current.style.height = `${vh}px`;
+      }
+    };
+    
+    // Listen for visual viewport changes (keyboard opening/closing)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      handleResize(); // Initial sizing
+    }
+    
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
+    };
+  }, [isMobile]);
 
   // Force scroll to bottom on sidebar state change
   useEffect(() => {
@@ -64,8 +86,12 @@ export function ChatList() {
 
   return (
     <div 
+      ref={chatContainerRef}
       className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-4'} space-y-6`} 
       data-pwa={isPWA ? "true" : "false"}
+      style={{
+        paddingBottom: isMobile ? 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' : undefined
+      }}
     >
       {validMessages.length === 0 ? (
         <EmptyChatState />
