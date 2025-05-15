@@ -12,7 +12,7 @@ export function ChatList() {
   const firstRenderRef = useRef(true);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
-  const [isPWA, setIsPWA] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   
   // Get sidebar states to force re-render when they change
   const { open: rightSidebarOpen } = useSidebar("right");
@@ -23,16 +23,20 @@ export function ChatList() {
   // Filter out any empty messages to prevent blank bubbles
   const validMessages = messages.filter(msg => msg.content && msg.content.trim());
 
-  // Detect if running in PWA mode
+  // Detect iOS devices
   useEffect(() => {
-    setIsPWA(
-      window.matchMedia('(display-mode: standalone)').matches || 
-      (window.navigator as any).standalone === true
-    );
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(isIOSDevice);
+  }, []);
+  
+  // Handle viewport height adjustments for mobile devices
+  useEffect(() => {
+    // Only run on mobile devices
+    if (!isMobile || !chatContainerRef.current) return;
     
     // Handle viewport height changes due to keyboard
     const handleResize = () => {
-      if (isMobile && chatContainerRef.current) {
+      if (chatContainerRef.current) {
         // Use visual viewport height to handle keyboard properly
         const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         chatContainerRef.current.style.height = `${vh}px`;
@@ -88,9 +92,9 @@ export function ChatList() {
     <div 
       ref={chatContainerRef}
       className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-4'} space-y-6`} 
-      data-pwa={isPWA ? "true" : "false"}
       style={{
-        paddingBottom: isMobile ? 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' : undefined
+        // Only apply safe area inset padding on iOS devices
+        paddingBottom: isIOS && isMobile ? 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' : undefined
       }}
     >
       {validMessages.length === 0 ? (

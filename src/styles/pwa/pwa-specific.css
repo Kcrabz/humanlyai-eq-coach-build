@@ -16,51 +16,36 @@ body.pwa {
   /* Enhanced header with safe area for PWA */
   .pwa .enhanced-header {
     padding-top: env(safe-area-inset-top, 0px);
-    padding-left: 16px;
-    padding-right: 16px;
   }
   
-  /* Improve form spacing for PWA */
-  .pwa form.p-3 {
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-    padding-left: 16px;
-    padding-right: 16px;
+  /* PWA update notification styling */
+  .pwa-update-notification {
+    bottom: env(safe-area-inset-bottom, 16px);
   }
-  
-  /* Better spacing for PWA send button */
-  .pwa .send-button-mobile {
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
-    right: 20px;
-  }
-  
-  /* Content area adjustments for PWA */
-  .pwa .main-content {
-    padding-bottom: env(safe-area-inset-bottom, 0);
-    height: 100dvh; /* Use dynamic viewport height */
-  }
-  
-  /* Better right sidebar positioning for PWA */
-  .pwa .user-sidebar[data-mobile="true"] {
-    padding-top: env(safe-area-inset-top, 0px);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    height: 100dvh; /* Use dynamic viewport height */
-  }
-  
-  /* Progress page tabs improvements for PWA */
-  .pwa .TabsList {
-    overflow-x: auto;
-    scrollbar-width: none; /* Firefox */
-  }
-  
-  .pwa .TabsList::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Edge */
+}
+
+/* iOS specific safe area fixes - only applied on iOS */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 767px) {
+    /* Better spacing for iOS devices */
+    .ios-device form.p-3 {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+    }
+    
+    .ios-device .main-content {
+      height: 100dvh; /* Use dynamic viewport height on iOS */
+    }
+    
+    /* Better send button positioning on iOS */
+    .ios-device .send-button-mobile {
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    }
   }
 }
 
 /* Update notification styling */
 .pwa-update-notification {
   position: fixed;
-  bottom: env(safe-area-inset-bottom, 16px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
@@ -68,7 +53,7 @@ body.pwa {
   max-width: 360px;
 }
 
-/* iOS specific safe area fixes */
+/* Simple helper classes for safe area insets */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }

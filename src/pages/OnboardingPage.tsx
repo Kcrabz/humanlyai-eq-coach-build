@@ -7,21 +7,22 @@ import { OnboardingLoader } from "@/components/onboarding/OnboardingLoader";
 import { OnboardingProvider } from "@/context/OnboardingContext";
 import { useAuth } from "@/context/AuthContext";
 import { isRetakingAssessment } from "@/utils/navigationUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const OnboardingPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
-  const [isPWA, setIsPWA] = useState(false);
+  const isMobile = useIsMobile();
+  const [isIOS, setIsIOS] = useState(false);
   
   // Check if user is specifically retaking the assessment
   const isRetaking = isRetakingAssessment(location.search);
   
-  // Detect if running as PWA
+  // Detect if device is iOS
   useEffect(() => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                        (window.navigator as any).standalone === true;
-    setIsPWA(isStandalone);
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(isIOSDevice);
   }, []);
   
   useEffect(() => {
@@ -31,11 +32,11 @@ const OnboardingPage = () => {
         userOnboarded: user?.onboarded,
         isLoading,
         isRetaking,
-        isPWA,
+        isIOS,
         search: location.search
       });
     }
-  }, [isAuthenticated, user, isLoading, isRetaking, location, isPWA]);
+  }, [isAuthenticated, user, isLoading, isRetaking, location, isIOS]);
   
   if (isLoading) {
     return (
@@ -45,9 +46,12 @@ const OnboardingPage = () => {
     );
   }
   
+  // Determine the appropriate height unit based on device
+  const heightClass = isIOS || isMobile ? 'min-h-[100dvh]' : 'min-h-screen';
+  
   return (
     <PageLayout>
-      <div className={`bg-gradient-to-b from-white to-humanly-gray-lightest min-h-${isPWA ? '100dvh' : '100vh'}`}>
+      <div className={`bg-gradient-to-b from-white to-humanly-gray-lightest ${heightClass}`}>
         <OnboardingProvider>
           <OnboardingContainer />
         </OnboardingProvider>

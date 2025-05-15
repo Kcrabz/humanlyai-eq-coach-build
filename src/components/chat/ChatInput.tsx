@@ -10,13 +10,12 @@ export function ChatInput() {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { sendMessage, isLoading } = useChat();
-  const [isPWA, setIsPWA] = useState(false);
-
-  // Detect if running as PWA - simplified for reliability
+  const [isIOS, setIsIOS] = useState(false);
+  
+  // Detect iOS
   useEffect(() => {
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                        (window.navigator as any).standalone === true;
-    setIsPWA(isStandalone);
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(isIOSDevice);
   }, []);
 
   // Adjust textarea height based on content
@@ -54,7 +53,8 @@ export function ChatInput() {
       className="p-3 border-t flex items-end gap-2 relative" 
       onSubmit={handleSubmit}
       style={{
-        paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))`
+        // Only apply safe area inset padding on iOS devices
+        paddingBottom: isIOS ? `calc(0.75rem + env(safe-area-inset-bottom, 0px))` : "0.75rem"
       }}
     >
       <Textarea

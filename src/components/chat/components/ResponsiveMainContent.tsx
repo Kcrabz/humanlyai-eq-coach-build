@@ -20,27 +20,12 @@ export function ResponsiveMainContent({
   const { open: rightSidebarOpen } = useSidebar("right");
   const { open: leftSidebarOpen } = useSidebar("left");
   const isMobile = useIsMobile();
-  const [isPWA, setIsPWA] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   
-  // Detect if running as PWA - simplified for reliability
+  // Detect if device is iOS
   useEffect(() => {
-    const checkPWA = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
-                          (window.navigator as any).standalone === true;
-      setIsPWA(isStandalone);
-    };
-    
-    // Check on initial render
-    checkPWA();
-    
-    // Also listen for changes
-    const mediaQueryList = window.matchMedia('(display-mode: standalone)');
-    const handleChange = () => checkPWA();
-    mediaQueryList.addEventListener('change', handleChange);
-    
-    return () => {
-      mediaQueryList.removeEventListener('change', handleChange);
-    };
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(isIOSDevice);
   }, []);
   
   // On mobile, we don't want to adjust the width based on sidebars
@@ -51,20 +36,19 @@ export function ResponsiveMainContent({
       ? 'calc(100% - 16rem)'
       : '100%';
 
-  // Use dynamic viewport height for mobile
+  // Only use dynamic viewport height for mobile and iOS
   const contentStyle = {
     width: contentWidth,
     transition: 'width 0.3s ease',
     marginRight: '0',
-    height: isMobile ? '100dvh' : '100vh'
+    height: isMobile || isIOS ? '100dvh' : '100vh'
   };
 
   return (
     <div 
       className="flex-1 flex flex-col overflow-hidden main-content"
       style={contentStyle}
-      data-pwa={isPWA ? "true" : "false"}
-      data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
+      data-ios={isIOS ? "true" : "false"}
     >
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}
