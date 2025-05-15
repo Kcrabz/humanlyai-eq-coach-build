@@ -13,22 +13,23 @@ body.pwa {
 
 /* PWA-specific mobile optimizations */
 @media (max-width: 767px) {
+  /* Enhanced header with safe area for PWA */
   .pwa .enhanced-header {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: 8px;
+    padding-top: env(safe-area-inset-top, 0px);
     padding-left: 16px;
     padding-right: 16px;
   }
   
+  /* Improve form spacing for PWA */
   .pwa form.p-3 {
-    padding-bottom: env(safe-area-inset-bottom, 16px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
     padding-left: 16px;
     padding-right: 16px;
   }
   
   /* Better spacing for PWA send button */
   .pwa .send-button-mobile {
-    bottom: calc(env(safe-area-inset-bottom, 16px) + 10px);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
     right: 20px;
   }
   
@@ -40,8 +41,8 @@ body.pwa {
   
   /* Better right sidebar positioning for PWA */
   .pwa .user-sidebar[data-mobile="true"] {
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
     height: 100dvh; /* Use dynamic viewport height */
   }
   
@@ -54,19 +55,6 @@ body.pwa {
   .pwa .TabsList::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Edge */
   }
-  
-  /* Segmented control improvements for Progress page */
-  .pwa .ToggleGroup {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-  
-  .pwa .ToggleGroupItem {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
-  }
 }
 
 /* Update notification styling */
@@ -78,50 +66,6 @@ body.pwa {
   z-index: 100;
   width: 90%;
   max-width: 360px;
-}
-
-/* Additional styles for progress page tabs on mobile */
-@media (max-width: 767px) {
-  /* Make tabs container scrollable horizontally */
-  .overflow-x-auto::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .overflow-x-auto {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    padding-bottom: 5px;
-  }
-  
-  /* Add a little fade effect to indicate more content */
-  .overflow-x-auto::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 12px;
-    width: 24px;
-    background: linear-gradient(to right, transparent, white);
-    pointer-events: none;
-    z-index: 10;
-  }
-  
-  /* Segmented control specific styles */
-  .ToggleGroup {
-    display: flex;
-    width: 100%;
-  }
-  
-  .ToggleGroupItem {
-    padding-left: 2px;
-    padding-right: 2px;
-    font-size: 0.75rem; /* text-xs equivalent */
-    flex: 1;
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 }
 
 /* iOS specific safe area fixes */

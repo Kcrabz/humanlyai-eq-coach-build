@@ -22,44 +22,24 @@ export function ResponsiveMainContent({
   const isMobile = useIsMobile();
   const [isPWA, setIsPWA] = useState(false);
   
-  // Detect if running as PWA
+  // Detect if running as PWA - simplified for reliability
   useEffect(() => {
     const checkPWA = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                           (window.navigator as any).standalone === true;
       setIsPWA(isStandalone);
-      
-      // Add class to html and body for PWA specific styling
-      if (isStandalone) {
-        document.documentElement.classList.add('pwa');
-        document.body.classList.add('pwa');
-      } else {
-        document.documentElement.classList.remove('pwa');
-        document.body.classList.remove('pwa');
-      }
     };
     
     // Check on initial render
     checkPWA();
     
-    // Also check when display mode changes
+    // Also listen for changes
     const mediaQueryList = window.matchMedia('(display-mode: standalone)');
     const handleChange = () => checkPWA();
-    
-    // Use the correct event listener based on browser support
-    if (mediaQueryList.addEventListener) {
-      mediaQueryList.addEventListener('change', handleChange);
-    } else if ((mediaQueryList as any).addListener) {
-      // Older browsers
-      (mediaQueryList as any).addListener(handleChange);
-    }
+    mediaQueryList.addEventListener('change', handleChange);
     
     return () => {
-      if (mediaQueryList.removeEventListener) {
-        mediaQueryList.removeEventListener('change', handleChange);
-      } else if ((mediaQueryList as any).removeListener) {
-        (mediaQueryList as any).removeListener(handleChange);
-      }
+      mediaQueryList.removeEventListener('change', handleChange);
     };
   }, []);
   
@@ -67,22 +47,21 @@ export function ResponsiveMainContent({
   // as they should overlay instead of pushing content
   const contentWidth = isMobile 
     ? '100%' 
-    : (rightSidebarOpen && !isPWA)
+    : rightSidebarOpen
       ? 'calc(100% - 16rem)'
-      : (rightSidebarOpen && isPWA)
-        ? 'calc(100% - 14.5rem)'
-        : '100%';
+      : '100%';
 
+  // Use dynamic viewport height for mobile
   const contentStyle = {
     width: contentWidth,
     transition: 'width 0.3s ease',
     marginRight: '0',
-    height: isMobile ? '100dvh' : '100vh' // Use dynamic viewport height for mobile
+    height: isMobile ? '100dvh' : '100vh'
   };
 
   return (
     <div 
-      className="flex-1 flex flex-col overflow-hidden main-content relative"
+      className="flex-1 flex flex-col overflow-hidden main-content"
       style={contentStyle}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}

@@ -12,7 +12,7 @@ export function ChatInput() {
   const { sendMessage, isLoading } = useChat();
   const [isPWA, setIsPWA] = useState(false);
 
-  // Detect if running as PWA
+  // Detect if running as PWA - simplified for reliability
   useEffect(() => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                         (window.navigator as any).standalone === true;
@@ -51,7 +51,7 @@ export function ChatInput() {
 
   return (
     <form 
-      className={`p-3 border-t flex items-end gap-2 relative ${isPWA ? 'pb-safe' : ''}`}
+      className="p-3 border-t flex items-end gap-2 relative" 
       onSubmit={handleSubmit}
       style={{
         paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))`

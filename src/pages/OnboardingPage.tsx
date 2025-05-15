@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { OnboardingContainer } from "@/components/onboarding/OnboardingContainer";
@@ -12,9 +12,17 @@ const OnboardingPage = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const [isPWA, setIsPWA] = useState(false);
   
   // Check if user is specifically retaking the assessment
   const isRetaking = isRetakingAssessment(location.search);
+  
+  // Detect if running as PWA
+  useEffect(() => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        (window.navigator as any).standalone === true;
+    setIsPWA(isStandalone);
+  }, []);
   
   useEffect(() => {
     if (!isLoading) {
@@ -23,11 +31,11 @@ const OnboardingPage = () => {
         userOnboarded: user?.onboarded,
         isLoading,
         isRetaking,
-        search: location.search,
-        state: location.state
+        isPWA,
+        search: location.search
       });
     }
-  }, [isAuthenticated, user, isLoading, isRetaking, location]);
+  }, [isAuthenticated, user, isLoading, isRetaking, location, isPWA]);
   
   if (isLoading) {
     return (
@@ -39,7 +47,7 @@ const OnboardingPage = () => {
   
   return (
     <PageLayout>
-      <div className="bg-gradient-to-b from-white to-humanly-gray-lightest min-h-screen">
+      <div className={`bg-gradient-to-b from-white to-humanly-gray-lightest min-h-${isPWA ? '100dvh' : '100vh'}`}>
         <OnboardingProvider>
           <OnboardingContainer />
         </OnboardingProvider>

@@ -1,3 +1,4 @@
+
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
@@ -23,14 +24,6 @@ const registerServiceWorker = async () => {
           
           // Dispatch event on registration to handle PWA-specific UI adjustments
           window.dispatchEvent(new CustomEvent('pwa-registered'));
-          
-          // Check if we need to redirect after PWA installation
-          const redirectPath = localStorage.getItem('pwa_redirect_after_login');
-          if (redirectPath) {
-            console.log('Found pending PWA redirect after login to:', redirectPath);
-            window.location.href = redirectPath;
-            localStorage.removeItem('pwa_redirect_after_login');
-          }
         }
       },
       onRegisterError(error) {
@@ -49,32 +42,19 @@ const initPwaFeatures = () => {
                           (window.navigator as any).standalone === true;
     
     if (isRunningAsPWA) {
-      document.body.classList.add('pwa-mode');
+      document.documentElement.classList.add('pwa');
+      document.body.classList.add('pwa');
       console.log('Running as installed PWA');
-      
-      // Store current path in sessionStorage if we're on a path that requires login
-      // This helps post-login navigation in PWA environments
-      if (window.location.pathname !== '/' && 
-          window.location.pathname !== '/login' && 
-          window.location.pathname !== '/signup') {
-        sessionStorage.setItem('pwa_desired_path', window.location.pathname);
-        console.log('Stored desired path for PWA:', window.location.pathname);
-      }
-      
-      // Force a load to the intended page when in PWA mode
-      const desiredPath = sessionStorage.getItem('pwa_desired_path');
-      if (desiredPath && window.location.pathname === '/') {
-        console.log('Redirecting to desired path in PWA:', desiredPath);
-        window.location.href = desiredPath;
-        sessionStorage.removeItem('pwa_desired_path');
-      }
+    } else {
+      document.documentElement.classList.remove('pwa');
+      document.body.classList.remove('pwa');
     }
   } catch (err) {
     console.error('Error detecting PWA mode:', err);
   }
 };
 
-// Utility function to detect if app is in PWA mode - properly defined as a window property
+// Utility function to detect if app is in PWA mode
 window.isPwaMode = function(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches || 
          (window.navigator as any).standalone === true;
@@ -101,13 +81,9 @@ const initializeApp = () => {
     // Initialize PWA features
     initPwaFeatures();
     
-    // Add additional PWA detection for login flow
-    window.addEventListener('DOMContentLoaded', () => {
-      console.log('DOM loaded, PWA status:', window.isPwaMode());
-      if (window.isPwaMode()) {
-        console.log('PWA detected on DOMContentLoaded, current path:', window.location.pathname);
-      }
-    });
+    // Setup event listener for display mode changes
+    const mediaQueryList = window.matchMedia('(display-mode: standalone)');
+    mediaQueryList.addEventListener('change', initPwaFeatures);
     
   } catch (err) {
     console.error('Failed to initialize application:', err);

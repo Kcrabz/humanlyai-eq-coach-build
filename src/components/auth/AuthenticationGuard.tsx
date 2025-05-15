@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { isOnAuthPage } from "@/utils/navigationUtils";
 import { toast } from "sonner";
-import { forceRedirectToDashboard, isRunningAsPWA } from "@/utils/loginRedirectUtils";
 
 /**
  * Global authentication guard component that handles all redirects based on auth state
@@ -15,7 +14,6 @@ export const AuthenticationGuard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
-  const isPWA = isRunningAsPWA();
   
   // Debug logging for session state
   useEffect(() => {
@@ -25,20 +23,14 @@ export const AuthenticationGuard = () => {
       userOnboarded: user?.onboarded,
       authEvent,
       profileLoaded,
-      isPWA,
       timestamp: new Date().toISOString()
     });
-    
-    // For PWA environments, store info about current path if authenticated
-    if (isPWA && user && user.onboarded) {
-      console.log("AuthGuard: Authenticated in PWA, may need to store path:", pathname);
-    }
-  }, [user, pathname, authEvent, profileLoaded, isPWA]);
+  }, [user, pathname, authEvent, profileLoaded]);
 
   // Skip redirects for password reset/update pages
   const isPasswordResetPage = pathname === "/reset-password" || pathname === "/update-password";
   
-  // Handle redirects based on authentication status - with loop protection and PWA awareness
+  // Handle redirects based on authentication status - with loop protection
   useEffect(() => {
     // Only proceed when auth is fully ready
     if (isLoading) {
@@ -69,41 +61,25 @@ export const AuthenticationGuard = () => {
       shouldGoToOnboarding,
       shouldGoToDashboard,
       shouldGoToLogin,
-      isPWA,
       pathname
     });
 
     // Handle successful login with direct redirect - but only from auth pages
     if (user && (authEvent === "SIGN_IN_COMPLETE" || authEvent === "RESTORED_SESSION") && profileLoaded) {
-      console.log("AuthGuard: Auth event detected, handling login redirect", { authEvent, isPWA });
+      console.log("AuthGuard: Auth event detected, handling login redirect", { authEvent });
       
       if (!user.onboarded) {
         // Redirect to onboarding if not already there
         if (pathname !== "/onboarding") {
           console.log("AuthGuard: User not onboarded, redirecting to onboarding");
-          
-          // For PWA, use a more direct approach to avoid navigation issues
-          if (isPWA) {
-            window.location.href = "/onboarding";
-          } else {
-            navigate("/onboarding", { replace: true });
-          }
+          navigate("/onboarding", { replace: true });
         }
       } else if (isCurrentlyOnAuth) {
         // Only redirect to dashboard after successful login if we're on an auth page
         if (pathname !== "/dashboard") {
           console.log("AuthGuard: User onboarded and on auth page, redirecting to dashboard");
-          
-          // Use direct window.location for PWA to avoid React Router issues
-          if (isPWA) {
-            // For PWA, we'll save the desired path and use forceRedirectToDashboard
-            // which implements additional PWA-specific handling
-            forceRedirectToDashboard();
-            toast.success(`Welcome back, ${user.name || 'Friend'}!`);
-          } else {
-            navigate("/dashboard", { replace: true });
-            toast.success(`Welcome back, ${user.name || 'Friend'}!`);
-          }
+          navigate("/dashboard", { replace: true });
+          toast.success(`Welcome back, ${user.name || 'Friend'}!`);
         }
       }
       return;
@@ -116,25 +92,13 @@ export const AuthenticationGuard = () => {
     }
     else if (shouldGoToOnboarding) {
       console.log("AuthGuard: Redirecting to onboarding");
-      
-      // For PWA, use direct location change
-      if (isPWA) {
-        window.location.href = "/onboarding";
-      } else {
-        navigate("/onboarding", { replace: true });
-      }
+      navigate("/onboarding", { replace: true });
     }
     else if (shouldGoToDashboard) {
       console.log("AuthGuard: Redirecting to dashboard");
-      
-      // For PWA, use direct location change
-      if (isPWA) {
-        forceRedirectToDashboard();
-      } else {
-        navigate("/dashboard", { replace: true });
-      }
+      navigate("/dashboard", { replace: true });
     }
-  }, [user, isLoading, pathname, navigate, authEvent, profileLoaded, isPasswordResetPage, isPWA]);
+  }, [user, isLoading, pathname, navigate, authEvent, profileLoaded, isPasswordResetPage]);
 
   // This component doesn't render anything, just handles redirects
   return null;
