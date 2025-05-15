@@ -5,9 +5,7 @@
  * and handles navigation after successful authentication.
  */
 
-import { User } from "@/types";
 import { NavigateFunction } from "react-router-dom";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 // Login flow states
@@ -103,11 +101,11 @@ export const isMobileDevice = (): boolean => {
 };
 
 /**
- * Unified login handler to ensure consistent behavior
+ * Unified login handler to ensure consistent behavior - no toasts
  */
 export const handleSuccessfulLogin = async (
   navigate: NavigateFunction, 
-  user: User | null
+  user: any
 ): Promise<void> => {
   // Early return if already redirecting
   if (getAuthFlowState()?.state === AuthFlowState.REDIRECTING) {
@@ -121,9 +119,6 @@ export const handleSuccessfulLogin = async (
     isMobile: isMobileDevice()
   });
   
-  // Always show toast - better user experience
-  toast.success("Login successful!");
-  
   // Mark login success for other components to detect
   sessionStorage.setItem('login_success', 'true');
   sessionStorage.setItem('just_logged_in', 'true');
@@ -135,10 +130,7 @@ export const handleSuccessfulLogin = async (
       timestamp: Date.now() 
     });
     
-    // Wait a moment to ensure session is fully established
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    // Route based on onboarding status
+    // Route based on onboarding status - direct navigation
     if (user && !user.onboarded) {
       console.log("AuthFlow: Redirecting to onboarding");
       navigate("/onboarding", { replace: true });
@@ -179,7 +171,7 @@ export const logAuthError = (source: string, error: any): void => {
 };
 
 /**
- * Simplified login function that integrates with the flow service
+ * Simplified login function that integrates with the flow service - no toasts
  */
 export const loginUser = async (
   email: string, 
@@ -197,13 +189,11 @@ export const loginUser = async (
     
     if (error) {
       logAuthError("login", error);
-      toast.error("Login failed", { description: error.message });
       return false;
     }
     
     if (!data?.user) {
       logAuthError("login", "No user data returned");
-      toast.error("Login failed", { description: "No user data returned" });
       return false;
     }
     
@@ -232,7 +222,6 @@ export const loginUser = async (
     return true;
   } catch (error) {
     logAuthError("login", error);
-    toast.error("Login failed", { description: String(error) });
     return false;
   }
 };

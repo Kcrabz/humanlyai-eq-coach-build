@@ -4,12 +4,10 @@ import { AuthForm } from "@/components/auth/AuthForm";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { 
   getAuthFlowState, 
   AuthFlowState,
-  isPwaMode,
-  isMobileDevice
+  clearAuthFlowState
 } from "@/services/authFlowService";
 
 const LoginPage = () => {
@@ -17,52 +15,28 @@ const LoginPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   
-  // Handle navigation on successful login
+  // Handle navigation on successful login - simplified
   useEffect(() => {
-    // Check for auth flow state indicating successful login
-    const authState = getAuthFlowState();
-    const isLoginSuccess = authState?.state === AuthFlowState.SUCCESS;
+    // Clear any stale auth flow state on component mount
+    clearAuthFlowState();
     
-    // Log detailed information for debugging
-    if (isPwaMode() || isMobileDevice()) {
-      console.log("LoginPage: Environment detection", { 
-        isPwa: isPwaMode(),
-        isMobile: isMobileDevice(),
-        isAuthenticated, 
-        userId: user?.id,
-        authEvent,
-        pathname: location.pathname,
-        authState: authState?.state
-      });
-    }
-    
-    // Handle authentication state
+    // If user is authenticated, redirect to appropriate page
     if (isAuthenticated && user) {
-      console.log("LoginPage: User already authenticated", { 
+      console.log("LoginPage: User authenticated, redirecting", { 
         id: user.id, 
-        onboarded: user.onboarded,
-        isPwa: isPwaMode(),
-        isMobile: isMobileDevice()
+        onboarded: user.onboarded
       });
       
-      // If we have a successful login event and a user, redirect
-      if (authEvent === "SIGN_IN_COMPLETE" || isLoginSuccess) {
-        // Provide visual feedback
-        toast.success("Login successful! Redirecting...");
-        
-        // Add a delay to ensure UI state is updated
-        setTimeout(() => {
-          if (user.onboarded) {
-            console.log("LoginPage: Redirecting to dashboard");
-            navigate('/dashboard', { replace: true });
-          } else {
-            console.log("LoginPage: Redirecting to onboarding");
-            navigate('/onboarding', { replace: true });
-          }
-        }, 500);
+      // Direct navigation without delays or toasts
+      if (user.onboarded) {
+        console.log("LoginPage: Redirecting to dashboard");
+        navigate('/dashboard', { replace: true });
+      } else {
+        console.log("LoginPage: Redirecting to onboarding");
+        navigate('/onboarding', { replace: true });
       }
     }
-  }, [isAuthenticated, user, authEvent, location.pathname, navigate]);
+  }, [isAuthenticated, user, navigate]);
   
   return (
     <PageLayout>

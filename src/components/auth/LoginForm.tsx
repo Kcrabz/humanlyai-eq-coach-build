@@ -6,7 +6,6 @@ import { AuthSubmitButton } from "./AuthSubmitButton";
 import { RateLimitWarning } from "./rate-limit/RateLimitWarning";
 import { EmailPasswordFields } from "./login/EmailPasswordFields";
 import { clientRateLimit } from "@/utils/rateLimiting";
-import { toast } from "sonner";
 import { 
   loginUser,
   isPwaMode,

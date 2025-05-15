@@ -8,7 +8,6 @@ import { useAuth } from "@/context/AuthContext";
 import { useAdminCheck } from "@/hooks/useAdminCheck";
 import { memo, useEffect, useState, Suspense } from "react";
 import { Loading } from "@/components/ui/loading";
-import { toast } from "sonner";
 import { clearAuthFlowState } from "@/services/authFlowService";
 
 // Memoize card components for performance
@@ -83,7 +82,7 @@ const DashboardContent = memo(() => {
   const handleReferral = () => {
     const referralLink = `${window.location.origin}?ref=${user?.id}`;
     navigator.clipboard.writeText(referralLink);
-    toast.success("Referral link copied to clipboard!");
+    // No toast notification
   };
   
   const openFeedbackForm = () => {
@@ -170,7 +169,7 @@ const DashboardPage = () => {
       // User should be available at this point
       if (user) {
         console.log("Dashboard loaded for user:", user.id);
-        toast.success(`Welcome to your dashboard, ${user.name?.split(' ')[0] || 'User'}!`);
+        // Removed welcome toast
       }
       
       // Short delay to ensure profile is loaded

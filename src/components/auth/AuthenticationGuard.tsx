@@ -2,7 +2,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
 import { 
   isPwaMode, 
   isMobileDevice, 
@@ -70,20 +69,16 @@ export const AuthenticationGuard = () => {
         console.log("AuthGuard: Detected stuck login screen with auth success");
         
         // Force navigation to appropriate page
-        setTimeout(() => {
-          if (user.onboarded) {
-            console.log("AuthGuard: Emergency redirect to dashboard");
-            toast.success("Redirecting to dashboard...");
-            navigate("/dashboard", { replace: true });
-          } else {
-            console.log("AuthGuard: Emergency redirect to onboarding");
-            toast.success("Redirecting to onboarding...");
-            navigate("/onboarding", { replace: true });
-          }
-          
-          // Clear any stale auth flow state
-          clearAuthFlowState();
-        }, 500);
+        if (user.onboarded) {
+          console.log("AuthGuard: Emergency redirect to dashboard");
+          navigate("/dashboard", { replace: true });
+        } else {
+          console.log("AuthGuard: Emergency redirect to onboarding");
+          navigate("/onboarding", { replace: true });
+        }
+        
+        // Clear any stale auth flow state
+        clearAuthFlowState();
       }
     }
   }, [pathname, user, navigate]);
@@ -95,17 +90,14 @@ export const AuthenticationGuard = () => {
       
       // Only redirect from auth pages
       if (isOnAuthPage(pathname)) {
-        // Add small delay to ensure user data is fully loaded
-        setTimeout(() => {
-          if (user.onboarded) {
-            console.log("AuthGuard: Auth event redirect to dashboard");
-            navigate("/dashboard", { replace: true });
-          } else {
-            console.log("AuthGuard: Auth event redirect to onboarding");
-            navigate("/onboarding", { replace: true });
-          }
-          clearAuthFlowState();
-        }, 300);
+        if (user.onboarded) {
+          console.log("AuthGuard: Auth event redirect to dashboard");
+          navigate("/dashboard", { replace: true });
+        } else {
+          console.log("AuthGuard: Auth event redirect to onboarding");
+          navigate("/onboarding", { replace: true });
+        }
+        clearAuthFlowState();
       }
     }
   }, [authEvent, user, isLoading, pathname, navigate]);
