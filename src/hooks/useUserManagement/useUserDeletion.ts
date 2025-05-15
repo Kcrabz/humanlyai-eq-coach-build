@@ -20,7 +20,7 @@ export const useUserDeletion = (setIsLoading: (isLoading: boolean) => void, setU
       // Optimistically remove the user from the local state
       setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
       
-      // Removed success toast
+      toast.success(`User ${userId} deleted successfully`);
     } catch (err) {
       console.error("Error deleting user:", err);
       toast.error("Failed to delete user", { 

@@ -1,44 +1,32 @@
 
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import LandingPage from "./LandingPage";
 import { useAuth } from "@/context/AuthContext";
-import { Loading } from "@/components/ui/loading";
-import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 const Index = () => {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
 
-  // Track authentication state but let AuthenticationGuard handle navigation
   useEffect(() => {
-    if (!isLoading && isAuthenticated && user) {
-      // Record navigation state - navigation handled by AuthenticationGuard
-      console.log("Root page - User authenticated:", { 
-        id: user.id, 
-        onboarded: user.onboarded 
+    if (!isLoading) {
+      console.log("Index page loaded:", { 
+        isAuthenticated, 
+        userExists: !!user,
+        userOnboarded: user?.onboarded,
+        currentUrl: window.location.href 
       });
       
-      if (!user.onboarded) {
-        AuthNavigationService.setState(NavigationState.ONBOARDING, { 
-          userId: user.id, 
-          fromRoot: true 
-        });
-      } else {
-        AuthNavigationService.setState(NavigationState.DASHBOARD_READY, { 
-          userId: user.id, 
-          fromRoot: true 
-        });
+      // We're removing the automatic redirection to chat for authenticated users
+      // This allows them to view the landing page even when logged in
+      
+      // Only redirect if the user is not onboarded yet
+      if (isAuthenticated && user?.onboarded === false) {
+        console.log("User is authenticated but not onboarded, redirecting to onboarding from Index");
+        navigate("/onboarding", { replace: true });
       }
     }
-  }, [isAuthenticated, user, isLoading]);
-
-  // Show loading while checking auth state
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loading size="large" />
-      </div>
-    );
-  }
+  }, [isAuthenticated, user, isLoading, navigate]);
 
   return <LandingPage />;
 };

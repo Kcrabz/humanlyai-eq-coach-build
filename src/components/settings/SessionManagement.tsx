@@ -1,7 +1,4 @@
 
-import { SessionManagement as ActualSessionManagement } from "./sessions/SessionManagement";
+import { SessionManagement } from './sessions/SessionManagement';
 
-export const SessionManagement = () => {
-  // Re-export the component from sessions directory
-  return <ActualSessionManagement />;
-};
+export default SessionManagement;

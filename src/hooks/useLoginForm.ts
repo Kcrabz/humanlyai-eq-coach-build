@@ -1,9 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { clientRateLimit } from "@/utils/rateLimiting";
+import { clientRateLimit, checkRateLimit } from "@/utils/rateLimiting";
 import { toast } from "sonner";
-import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
 
 export function useLoginForm() {
   const [email, setEmail] = useState("");
@@ -16,10 +15,34 @@ export function useLoginForm() {
     resetTimeMs: number;
   } | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(0);
-  const [loginTimestamp, setLoginTimestamp] = useState<number | null>(null);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   
-  const { login, isPwaMode, isMobileDevice } = useAuth();
-  const isSpecialMode = isPwaMode || isMobileDevice;
+  const { login } = useAuth();
+  
+  // Clear login form success flag when component mounts
+  useEffect(() => {
+    localStorage.removeItem('login_form_success');
+  }, []);
+  
+  // Timer for rate limit countdown
+  useEffect(() => {
+    if (!rateLimitInfo?.isLimited) return;
+    
+    const calculateTimeRemaining = () => {
+      const now = Date.now();
+      const remaining = Math.max(0, rateLimitInfo.resetTimeMs - now);
+      setTimeRemaining(Math.ceil(remaining / 1000)); // Convert to seconds
+      
+      if (remaining <= 0) {
+        setRateLimitInfo(null);
+      }
+    };
+    
+    calculateTimeRemaining();
+    const interval = setInterval(calculateTimeRemaining, 1000);
+    
+    return () => clearInterval(interval);
+  }, [rateLimitInfo]);
   
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
@@ -45,33 +68,16 @@ export function useLoginForm() {
     return true;
   };
   
-  // Effect to record mobile/PWA login success
-  useEffect(() => {
-    if (loginTimestamp && isSpecialMode) {
-      console.log("Recording special mode login timestamp:", loginTimestamp, {
-        isPwa: isPwaMode,
-        isMobile: isMobileDevice
-      });
-      
-      if (isPwaMode) {
-        localStorage.setItem('pwa_login_timestamp', loginTimestamp.toString());
-        sessionStorage.setItem('just_logged_in', 'true');
-      }
-      
-      if (isMobileDevice) {
-        localStorage.setItem('mobile_login_timestamp', loginTimestamp.toString());
-        sessionStorage.setItem('mobile_just_logged_in', 'true');
-      }
-    }
-  }, [loginTimestamp, isSpecialMode, isPwaMode, isMobileDevice]);
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isSubmitting) return;
+    if (isSubmitting) {
+      console.log("Form submission already in progress");
+      return;
+    }
     
     // Check client-side rate limiting
-    const rateLimit = clientRateLimit('login_attempt', 5, 60000);
+    const rateLimit = clientRateLimit('login_attempt', 5, 60000); // 5 attempts per minute
     
     if (rateLimit.isLimited) {
       setRateLimitInfo(rateLimit);
@@ -79,69 +85,60 @@ export function useLoginForm() {
       return;
     }
     
+    // Clear previous errors
     setErrorMessage(null);
     
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
     
     setIsSubmitting(true);
-    console.log(`Login attempt starting for: ${email}`, {
-      isPwa: isPwaMode,
-      isMobile: isMobileDevice
-    });
+    console.log(`Starting login process for: ${email}`);
     
     try {
-      // Clear existing navigation state
-      AuthNavigationService.resetAllNavigationState();
-      
-      // Set authentication state
-      AuthNavigationService.setState(NavigationState.AUTHENTICATING, { 
+      // Check server-side rate limiting
+      const serverRateLimit = await checkRateLimit({
         email,
-        isPwa: isPwaMode,
-        isMobile: isMobileDevice
+        endpoint: 'login',
+        period: 'minute',
+        maxRequests: 5 // 5 login attempts per minute
       });
       
-      // Use the enhanced login function
+      if (serverRateLimit.isLimited) {
+        setErrorMessage(`Too many login attempts from this email. Please try again later.`);
+        setRateLimitInfo({
+          isLimited: true,
+          attemptsRemaining: 0,
+          resetTimeMs: serverRateLimit.resetTime.getTime()
+        });
+        return;
+      }
+      
       const success = await login(email, password);
+      console.log(`Login result:`, { success });
       
       if (success) {
-        console.log(`Login successful`, {
-          isPwa: isPwaMode,
-          isMobile: isMobileDevice
-        });
+        setLoginSuccess(true);
         
-        // Record login timestamp for special handling
+        // Store login timestamp in localStorage for fallback redirect mechanism
         const timestamp = Date.now();
-        setLoginTimestamp(timestamp);
+        localStorage.setItem('login_timestamp', timestamp.toString());
         
-        // Set special flags for mobile/PWA
-        if (isPwaMode) {
-          sessionStorage.setItem('pwa_login_complete', 'true');
-        }
+        toast.success("Login successful!");
         
-        if (isMobileDevice) {
-          sessionStorage.setItem('mobile_login_complete', 'true');
-        }
-        
-        // AuthenticationGuard will handle navigation
-        AuthNavigationService.setState(NavigationState.AUTHENTICATED, {
-          timestamp,
-          isPwa: isPwaMode,
-          isMobile: isMobileDevice,
-          loginSuccess: true
-        });
-        
-        if (!isSpecialMode) {
-          toast.success("Login successful!");
-        }
+        // Use alternate window location redirect as a fallback
+        // This will only execute if the React Router navigation fails
+        setTimeout(() => {
+          // Check if we're still on the login page after success
+          if (window.location.pathname === '/login') {
+            console.log("Fallback redirect: Using window.location to go to dashboard");
+            window.location.href = '/dashboard';
+          }
+        }, 1000);
       } else {
-        console.log("Login failed");
+        // If login failed, update rate limit info
         const updatedRateLimit = clientRateLimit('login_attempt', 5, 60000);
         setRateLimitInfo(updatedRateLimit);
-        AuthNavigationService.setState(NavigationState.ERROR, { 
-          reason: "login_failed",
-          isPwa: isPwaMode,
-          isMobile: isMobileDevice
-        });
         
         if (updatedRateLimit.attemptsRemaining > 0) {
           setErrorMessage(`Login failed. ${updatedRateLimit.attemptsRemaining} attempts remaining.`);
@@ -149,15 +146,13 @@ export function useLoginForm() {
       }
     } catch (error) {
       console.error(`Error during login:`, error);
-      setErrorMessage(error instanceof Error ? error.message : "Login failed");
+      const message = error instanceof Error ? error.message : "Login failed";
+      setErrorMessage(message);
+      
+      // Update rate limit info after failure
       setRateLimitInfo(clientRateLimit('login_attempt', 5, 60000));
-      AuthNavigationService.setState(NavigationState.ERROR, { 
-        reason: "login_error", 
-        error: error instanceof Error ? error.message : "Unknown error",
-        isPwa: isPwaMode,
-        isMobile: isMobileDevice
-      });
     } finally {
+      console.log(`Login process completed, resetting submission state`);
       setIsSubmitting(false);
     }
   };
@@ -169,6 +164,7 @@ export function useLoginForm() {
     errorMessage,
     rateLimitInfo,
     timeRemaining,
+    loginSuccess,
     handleEmailChange,
     handlePasswordChange,
     handleSubmit

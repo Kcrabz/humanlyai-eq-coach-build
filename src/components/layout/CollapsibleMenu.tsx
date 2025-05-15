@@ -38,7 +38,7 @@ export function CollapsibleMenu() {
         {/* Repositioned toggle button */}
         <MenuToggleButton isOpen={isOpen} />
         
-        <CollapsibleContent className="mt-2 enhanced-header animate-slide-up max-h-[80vh] overflow-y-auto">
+        <CollapsibleContent className="mt-2 enhanced-header animate-slide-up">
           <div className="container mx-auto py-4 px-4 sm:px-6">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between">
               {/* Brand logo */}

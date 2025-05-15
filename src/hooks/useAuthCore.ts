@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { updateUserProfileInDatabase } from "@/services/authService";
 
-const useAuthCore = () => {
+const useAuthCore = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   const [error, setError] = useState<string | null>(null);
 
   /**
@@ -37,12 +37,7 @@ const useAuthCore = () => {
       }
       
       console.log("Login successful for:", email, "User data:", data.user.id);
-      
-      // Immediately store a success flag to ensure redirects work properly
-      localStorage.setItem('login_success_timestamp', Date.now().toString());
-      sessionStorage.setItem('login_success', 'true');
-      sessionStorage.setItem('just_logged_in', 'true');
-      
+      toast.success("Logged in successfully");
       return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
@@ -100,7 +95,8 @@ const useAuthCore = () => {
       const success = await updateUserProfileInDatabase(authUser.id, updates);
       
       if (success) {
-        // Update local state handled by caller
+        // Update local state
+        setUser((prevUser) => prevUser ? { ...prevUser, ...updates } : null);
         toast.success("Profile updated successfully");
       }
       
@@ -122,5 +118,4 @@ const useAuthCore = () => {
   };
 };
 
-// Export as default instead of named export
 export default useAuthCore;

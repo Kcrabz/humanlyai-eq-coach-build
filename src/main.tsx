@@ -1,11 +1,8 @@
-
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
 import App from './App.tsx'
 import './index.css';
-import './styles/pwa/pwa-specific.css';
-import { isPwaMode, isMobileDevice } from '@/services/authFlowService';
 
 // Create function for registering service worker to better handle errors
 const registerServiceWorker = async () => {
@@ -26,6 +23,14 @@ const registerServiceWorker = async () => {
           
           // Dispatch event on registration to handle PWA-specific UI adjustments
           window.dispatchEvent(new CustomEvent('pwa-registered'));
+          
+          // Check if we need to redirect after PWA installation
+          const redirectPath = localStorage.getItem('pwa_redirect_after_login');
+          if (redirectPath) {
+            console.log('Found pending PWA redirect after login to:', redirectPath);
+            window.location.href = redirectPath;
+            localStorage.removeItem('pwa_redirect_after_login');
+          }
         }
       },
       onRegisterError(error) {
@@ -37,63 +42,43 @@ const registerServiceWorker = async () => {
   }
 };
 
-// Enhanced PWA detection with proper class application
+// Handle PWA standalone mode detection
 const initPwaFeatures = () => {
   try {
-    // Detect PWA mode with multiple checks to ensure reliability
-    const isAppInPwaMode = isPwaMode();
-    const isAppOnMobileDevice = isMobileDevice();
+    const isRunningAsPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                          (window.navigator as any).standalone === true;
     
-    console.log("PWA detection:", {
-      isStandalone: window.matchMedia('(display-mode: standalone)').matches,
-      isMobileUserAgent: isAppOnMobileDevice,
-      standalone: (window.navigator as any).standalone,
-      matchMedia: window.matchMedia('(display-mode: standalone)').matches,
-      userAgent: navigator.userAgent,
-      previouslyDetected: localStorage.getItem('is_pwa_mode') === 'true'
-    });
-    
-    // Apply the PWA class to both html and body for complete styling coverage
-    if (isAppInPwaMode) {
-      document.documentElement.classList.add('pwa');
-      document.body.classList.add('pwa');
+    if (isRunningAsPWA) {
+      document.body.classList.add('pwa-mode');
       console.log('Running as installed PWA');
       
-      // Set PWA mode for the app
-      localStorage.setItem('is_pwa_mode', 'true');
-      
-      // Store pending paths if needed
+      // Store current path in sessionStorage if we're on a path that requires login
+      // This helps post-login navigation in PWA environments
       if (window.location.pathname !== '/' && 
           window.location.pathname !== '/login' && 
           window.location.pathname !== '/signup') {
-        console.log('PWA: Storing desired path:', window.location.pathname);
         sessionStorage.setItem('pwa_desired_path', window.location.pathname);
+        console.log('Stored desired path for PWA:', window.location.pathname);
       }
-    } 
-    
-    // For mobile devices, add special mobile-related classes
-    if (isAppOnMobileDevice) {
-      document.documentElement.classList.add('mobile');
-      document.body.classList.add('mobile');
-      localStorage.setItem('is_mobile_device', 'true');
       
-      // If not in PWA mode, make sure the flag is cleared
-      if (!isAppInPwaMode) {
-        localStorage.removeItem('is_pwa_mode');
+      // Force a load to the intended page when in PWA mode
+      const desiredPath = sessionStorage.getItem('pwa_desired_path');
+      if (desiredPath && window.location.pathname === '/') {
+        console.log('Redirecting to desired path in PWA:', desiredPath);
+        window.location.href = desiredPath;
+        sessionStorage.removeItem('pwa_desired_path');
       }
-    } else {
-      // Ensure we're not in mobile mode
-      localStorage.removeItem('is_mobile_device');
     }
   } catch (err) {
     console.error('Error detecting PWA mode:', err);
   }
 };
 
-// Attach detection functions to window for global access
-// These will use the centralized functions in authFlowService
-window.isPwaMode = isPwaMode;
-window.isMobileDevice = isMobileDevice;
+// Utility function to detect if app is in PWA mode - properly defined as a window property
+window.isPwaMode = function(): boolean {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         (window.navigator as any).standalone === true;
+};
 
 // Initialize the application with error handling
 const initializeApp = () => {
@@ -104,22 +89,23 @@ const initializeApp = () => {
       return;
     }
 
-    // Initialize PWA features first
-    initPwaFeatures();
-
     createRoot(root).render(
       <BrowserRouter>
         <App />
       </BrowserRouter>
     );
-    
+
     // Register service worker after the app is loaded
     registerServiceWorker();
     
+    // Initialize PWA features
+    initPwaFeatures();
+    
     // Add additional PWA detection for login flow
     window.addEventListener('DOMContentLoaded', () => {
-      if (isPwaMode() || isMobileDevice()) {
-        console.log('Mobile/PWA detected on DOMContentLoaded, current path:', window.location.pathname);
+      console.log('DOM loaded, PWA status:', window.isPwaMode());
+      if (window.isPwaMode()) {
+        console.log('PWA detected on DOMContentLoaded, current path:', window.location.pathname);
       }
     });
     
@@ -138,14 +124,6 @@ const initializeApp = () => {
     }
   }
 };
-
-// Add type definition for Window interface
-declare global {
-  interface Window {
-    isPwaMode: () => boolean;
-    isMobileDevice: () => boolean;
-  }
-}
 
 // Initialize the application
 initializeApp();

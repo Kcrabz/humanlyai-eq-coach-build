@@ -35,7 +35,7 @@ export function PersonalInfoEditor({ className }: PersonalInfoEditorProps) {
       const success = await forceUpdateProfile(updates);
       
       if (success) {
-        // Removed success toast
+        toast.success("Profile information updated successfully");
       } else {
         toast.error("Failed to update profile information");
       }

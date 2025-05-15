@@ -1,124 +1,130 @@
 
-import { ReactNode, useEffect } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import AuthContext from "./AuthContext";
 import { useAuthSession } from "@/hooks/useAuthSession";
-import { useAuthActionWrappers } from "./useAuthActionWrappers";
-import { useAuthDerivedState } from "./useAuthDerivedState";
-import { useAuthLoadingState } from "./useAuthLoadingState";
-import { usePremiumFeatures } from "./usePremiumFeatures";
+import useAuthActions from "@/hooks/useAuthActions";
+import useAuthCore from "@/hooks/useAuthCore";
+import { useAuthSignup } from "@/hooks/useAuthSignup";
 import { useProfileCore } from "@/hooks/useProfileCore";
 import { useProfileActions } from "@/hooks/useProfileActions";
-import useAuthCore from "@/hooks/useAuthCore";
-import { isPwaMode, isMobileDevice, clearAuthFlowState } from "@/services/authFlowService";
+import { useProfileState } from "@/hooks/useProfileState";
+import { AuthContextType } from "@/types/auth";
+import { useLoginTracking } from "./useLoginTracking";
+import { usePremiumFeatures } from "./usePremiumFeatures";
+import { useAuthLoadingState } from "./useAuthLoadingState";
+import { useAuthDerivedState } from "./useAuthDerivedState";
+import { useAuthActionWrappers } from "./useAuthActionWrappers";
+import { isRunningAsPWA } from "@/utils/loginRedirectUtils";
+import { useLocation } from "react-router-dom";
 
-/**
- * AuthProvider - Using the centralized detection functions
- */
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // Core auth state management
-  const {
-    session,
-    isLoading: isSessionLoading,
-    authEvent,
-    profileLoaded,
-    initialized,
-    loginTimestamp,
-    sessionReady
-  } = useAuthSession();
-
-  // User state management
-  const {
-    user,
-    isLoadingUser,
-    setUser,
-    setUserProfile,
-    userHasArchetype,
-    getUserSubscription
-  } = useAuthDerivedState(session, profileLoaded);
-
-  // Core profile functionality
-  const profileCore = useProfileCore(setUser);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // State for auth error handling
+  const [error, setError] = useState<string | null>(null);
+  const location = useLocation();
   
-  // Profile action handlers
+  // Auth session
+  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading, authEvent, profileLoaded, setProfileLoaded } = useAuthSession();
+  
+  // Profile state with unified loading
+  const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
+  
+  // Track login events - Fix: Pass isAuthenticated boolean and user object
+  const isAuthenticated = !!user;
+  useLoginTracking(isAuthenticated, user);
+  
+  // Handle loading state
+  const { isLoading } = useAuthLoadingState(isSessionLoading, user, authEvent, profileLoaded);
+  
+  // Auth core for login/logout
+  const authCore = useAuthCore(setUser);
+  
+  // Auth signup - Pass the function through directly without wrapping it
+  const { signup } = useAuthSignup(setUser);
+  
+  // Auth actions
+  const { logout: authLogout } = useAuthActions();
+  
+  // Profile hooks
+  const profileCore = useProfileCore(setUser);
   const profileActions = useProfileActions(setUser);
   
-  // Auth core functionality
-  const authCore = useAuthCore();
-
-  // Auth actions with error handling wrappers
-  const {
-    login,
-    logout,
+  // Premium features
+  const { isPremiumMember, userStreakData, userAchievements } = usePremiumFeatures(user);
+  
+  // Derived state
+  const { userHasArchetype, isAuthenticated: derivedIsAuthenticated, getUserSubscription } = useAuthDerivedState(user);
+  
+  // Action wrappers
+  const { 
+    updateProfile, 
+    forceUpdateProfile, 
+    setNameWrapper, 
+    setArchetypeWrapper, 
+    setCoachingModeWrapper, 
+    setOnboardedWrapper, 
+    resetPasswordWrapper 
+  } = useAuthActionWrappers(user, profileCore, profileActions, authCore);
+  
+  // Special handling for PWA navigation
+  useEffect(() => {
+    if (isAuthenticated && isRunningAsPWA()) {
+      console.log("Authenticated in PWA, current path:", location.pathname);
+      
+      // Store current path for PWA after successful authentication
+      // This helps with navigation after login in PWA mode
+      if (location.pathname !== '/login' && location.pathname !== '/signup') {
+        sessionStorage.setItem('pwa_last_path', location.pathname);
+        console.log("Stored last path for PWA:", location.pathname);
+      }
+      
+      // Store desired path for PWA after successful authentication
+      if (user?.onboarded) {
+        if (location.pathname === '/login' || location.pathname === '/signup') {
+          // After login/signup in PWA mode, direct to dashboard or last stored path
+          const lastPath = sessionStorage.getItem('pwa_last_path') || '/dashboard';
+          console.log("Storing redirect target for PWA post-auth:", lastPath);
+          sessionStorage.setItem('pwa_desired_path', lastPath);
+        }
+      }
+    }
+  }, [isAuthenticated, user, location.pathname]);
+  
+  // Memoize the context value to prevent unnecessary rerenders
+  const contextValue: AuthContextType = useMemo(() => ({
+    user,
+    isLoading,
+    error,
+    isAuthenticated,
+    authEvent: authEvent as "SIGN_IN_COMPLETE" | "RESTORED_SESSION" | "SIGN_OUT_COMPLETE" | null,
+    profileLoaded,
+    login: authCore.login,
+    logout: authLogout,
     signup,
-    resetPassword,
-    updatePassword,
-    updateUserProfile,
+    resetPassword: resetPasswordWrapper,
     updateProfile,
     forceUpdateProfile,
-    setName,
-    setArchetype,
-    setCoachingMode,
-    setOnboarded
-  } = useAuthActionWrappers(setUser, profileCore, profileActions, authCore);
-
-  // Consolidated loading state
-  const { isLoading } = useAuthLoadingState(isSessionLoading, isLoadingUser);
-
-  // Process premium features and capabilities
-  const { isPremiumMember, hasPremiumFeatures, userStreakData, userAchievements } = usePremiumFeatures(user);
-
-  // Special logging for PWA/mobile
-  useEffect(() => {
-    if (isPwaMode() || isMobileDevice()) {
-      console.log("AuthProvider: Special environment detected", {
-        isPwa: isPwaMode(),
-        isMobile: isMobileDevice(),
-        isAuthenticated: !!user,
-        userId: user?.id,
-        authEvent,
-        profileLoaded
-      });
-    }
-    
-    // Clear auth flow state on provider mount
-    clearAuthFlowState();
-  }, [user, authEvent, profileLoaded]);
+    setName: setNameWrapper,
+    setArchetype: setArchetypeWrapper,
+    setCoachingMode: setCoachingModeWrapper,
+    setOnboarded: setOnboardedWrapper,
+    setUser,
+    getUserSubscription,
+    userHasArchetype,
+    // Premium member features
+    isPremiumMember,
+    userStreakData,
+    userAchievements
+  }), [
+    user, isLoading, error, authCore.login, authLogout, 
+    signup, resetPasswordWrapper, updateProfile, forceUpdateProfile,
+    setNameWrapper, setArchetypeWrapper, setCoachingModeWrapper, 
+    setOnboardedWrapper, setUser, authEvent, profileLoaded, 
+    isPremiumMember, userStreakData, userAchievements,
+    isAuthenticated, getUserSubscription, userHasArchetype
+  ]);
 
   return (
-    <AuthContext.Provider 
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        logout,
-        signup,
-        resetPassword,
-        updatePassword,
-        updateUserProfile,
-        updateProfile,
-        forceUpdateProfile,
-        authEvent,
-        loginEvent: authEvent === 'SIGNED_IN' ? 'LOGIN_COMPLETE' : null,
-        profileLoaded,
-        initialized,
-        loginTimestamp,
-        hasPremiumFeatures,
-        sessionReady,
-        isPwaMode: isPwaMode(),
-        isMobileDevice: isMobileDevice(),
-        setName,
-        setArchetype,
-        setCoachingMode,
-        setOnboarded,
-        setUser,
-        isPremiumMember,
-        userStreakData,
-        userAchievements,
-        getUserSubscription,
-        userHasArchetype
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

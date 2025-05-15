@@ -1,33 +1,34 @@
 
 /**
- * Enhanced utility functions for login success tracking
- * with more reliable timeout handling and better debugging
- * and improved PWA support
+ * Utility functions to help with login redirection
  */
-
-const LOGIN_SUCCESS_KEY = 'login_success_timestamp';
-const LOGIN_SUCCESS_DURATION = 90 * 1000; // Extended to 90 seconds for mobile/PWA
 
 /**
  * Sets a login success flag with a timestamp
  */
 export const markLoginSuccess = (): void => {
-  // Store minimal timestamp data
   const timestamp = Date.now();
-  localStorage.setItem(LOGIN_SUCCESS_KEY, timestamp.toString());
+  localStorage.setItem('login_success_timestamp', timestamp.toString());
   
-  const isPwa = isRunningAsPWA();
-  console.log(`Login success marked at ${new Date(timestamp).toISOString()} ${isPwa ? "(PWA mode)" : ""}`, {
-    key: LOGIN_SUCCESS_KEY,
-    duration: `${LOGIN_SUCCESS_DURATION}ms`,
-    path: window.location.pathname
-  });
+  // Also set a session storage flag which is cleared when browser closes
+  sessionStorage.setItem('login_success', 'true');
+  
+  // Set a flag to indicate that the chat should be reset for fresh experience
+  sessionStorage.setItem('fresh_chat_needed', 'true');
+  
+  // Remove any previous chat clearing flag to ensure we clear on new login
+  sessionStorage.removeItem('chat_cleared_for_session');
+
+  console.log("Login success marked with timestamp", { timestamp });
   
   // Special handling for PWA mode
-  if (isPwa) {
-    console.log("Setting PWA login success flags");
-    localStorage.setItem('pwa_login_success', 'true');
-    sessionStorage.setItem('just_logged_in', 'true');
+  if (window.isPwaMode()) {
+    console.log("Login success detected in PWA mode");
+    
+    // Store dashboard as the default redirect path if nothing else is specified
+    if (!sessionStorage.getItem('pwa_desired_path')) {
+      sessionStorage.setItem('pwa_desired_path', '/dashboard');
+    }
   }
 };
 
@@ -35,75 +36,73 @@ export const markLoginSuccess = (): void => {
  * Clears the login success flag
  */
 export const clearLoginSuccess = (): void => {
-  const isPwa = isRunningAsPWA();
-  console.log(`Clearing login success flag ${isPwa ? "(PWA mode)" : ""}`, {
-    hadFlag: !!localStorage.getItem(LOGIN_SUCCESS_KEY),
-    path: window.location.pathname
-  });
-  
-  // Clear all login success related flags
-  localStorage.removeItem(LOGIN_SUCCESS_KEY);
-  localStorage.removeItem('pwa_login_success');
-  sessionStorage.removeItem('just_logged_in');
+  localStorage.removeItem('login_success_timestamp');
+  sessionStorage.removeItem('login_success');
+  sessionStorage.removeItem('fresh_chat_needed');
 };
 
 /**
- * Checks if login was successful recently (within extended window)
- * Window extended to 90 seconds for mobile/PWA to ensure redirect logic has time to complete
+ * Checks if login was successful recently (within last 5 minutes)
  */
 export const wasLoginSuccessful = (): boolean => {
-  const timestamp = localStorage.getItem(LOGIN_SUCCESS_KEY);
-  const isPwa = isRunningAsPWA();
-  
-  if (timestamp) {
-    const loginTime = parseInt(timestamp);
-    const cutoffTime = Date.now() - LOGIN_SUCCESS_DURATION;
-    const isRecent = loginTime > cutoffTime;
-    
-    console.log(`Checking login success ${isPwa ? "(PWA mode)" : ""}:`, {
-      isRecent,
-      loginTime: new Date(loginTime).toISOString(),
-      age: `${Math.round((Date.now() - loginTime) / 1000)}s`,
-      cutoff: `${LOGIN_SUCCESS_DURATION / 1000}s`,
-      path: window.location.pathname
-    });
-    
-    return isRecent;
+  // First check session storage (cleared when browser closes)
+  if (sessionStorage.getItem('login_success') === 'true') {
+    return true;
   }
   
-  // Special case for PWA mode: check additional flag
-  if (isPwa && localStorage.getItem('pwa_login_success') === 'true') {
-    console.log("PWA login success flag found, considering login successful");
-    return true;
+  // Then check localStorage with timestamp
+  const timestamp = localStorage.getItem('login_success_timestamp');
+  if (timestamp) {
+    const loginTime = parseInt(timestamp);
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    return loginTime > fiveMinutesAgo;
   }
   
   return false;
 };
 
 /**
- * Detect if the app is running as a PWA (standalone mode)
+ * Forces a redirect to dashboard using window.location
+ * This is a fallback method when React Router navigation fails
  */
-export const isRunningAsPWA = (): boolean => {
-  try {
-    // Check both standard detection and our custom flag
-    const isPwa = window.matchMedia('(display-mode: standalone)').matches || 
-      (window.navigator as any).standalone === true ||
-      localStorage.getItem('is_pwa_mode') === 'true';
+export const forceRedirectToDashboard = (): void => {
+  console.log("Forcing redirect to dashboard using window.location");
+  
+  // If in PWA mode, use a slight delay to ensure state is properly updated
+  if (window.isPwaMode()) {
+    // For PWA, store the redirect in localStorage to persist across page loads
+    localStorage.setItem('pwa_redirect_after_login', '/dashboard');
+    console.log("Set localStorage redirect for PWA");
     
-    if (isPwa) {
-      // Ensure our PWA flag is set for consistency
-      localStorage.setItem('is_pwa_mode', 'true');
-    }
-    
-    return isPwa;
-  } catch (e) {
-    return false;
+    // Use timeout to give a chance for other processes to complete
+    setTimeout(() => {
+      window.location.href = '/dashboard';
+    }, 100);
+  } else {
+    window.location.href = '/dashboard';
   }
 };
 
-// Add type definition for Window interface
-declare global {
-  interface Window {
-    _isPwaMode?: boolean;
+/**
+ * Checks if a fresh chat experience is needed after login
+ * Returns true once, then clears the flag
+ */
+export const shouldShowFreshChat = (): boolean => {
+  const freshChatNeeded = sessionStorage.getItem('fresh_chat_needed') === 'true';
+  
+  // Clear the flag after checking so it only returns true once
+  if (freshChatNeeded) {
+    sessionStorage.removeItem('fresh_chat_needed');
+    console.log("Fresh chat experience triggered");
   }
-}
+  
+  return freshChatNeeded;
+};
+
+/**
+ * Detect if the app is running as a PWA (standalone mode)
+ */
+export const isRunningAsPWA = (): boolean => {
+  return window.matchMedia('(display-mode: standalone)').matches || 
+         (window.navigator as any).standalone === true;
+};

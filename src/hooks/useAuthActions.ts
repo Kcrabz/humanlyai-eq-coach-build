@@ -60,7 +60,7 @@ export const useAuthActions = () => {
         window.location.href = "/";
       }
       
-      // Removed success toast
+      toast.success("Logged out successfully");
     } catch (error) {
       console.error("Error during logout:", error);
       toast.error("Failed to log out");

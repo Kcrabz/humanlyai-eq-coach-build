@@ -1,40 +1,27 @@
 
 import { useEffect } from "react";
 import { AuthForm } from "@/components/auth/AuthForm";
+import { AuthRedirect } from "@/components/auth/AuthRedirect";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { useAuth } from "@/context/AuthContext";
-import { AuthNavigationService, NavigationState } from "@/services/authNavigationService";
+import { useNavigate } from "react-router-dom";
 
 const SignupPage = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   
+  // Direct users to onboarding if they're authenticated but not onboarded
   useEffect(() => {
-    // Only track authentication state for debugging
-    // All navigation is handled by AuthenticationGuard
-    if (isAuthenticated && user) {
-      console.log("SignupPage: User already authenticated", { 
-        id: user.id, 
-        onboarded: user.onboarded 
-      });
-      
-      // Set navigation state for newly registered users
-      AuthNavigationService.setState(NavigationState.AUTHENTICATED, { 
-        userId: user.id,
-        fromSignup: true
-      });
-      
-      // If user needs onboarding, mark state
+    if (!isLoading && user) {
       if (!user.onboarded) {
-        AuthNavigationService.setState(NavigationState.ONBOARDING, { 
-          userId: user.id, 
-          fromSignup: true 
-        });
+        navigate("/onboarding", { replace: true });
       }
     }
-  }, [isAuthenticated, user]);
+  }, [user, isLoading, navigate]);
   
   return (
     <PageLayout>
+      <AuthRedirect />
       <div className="flex min-h-screen items-center justify-center py-12 animate-scale-fade-in">
         <div className="relative z-10">
           <div className="absolute -z-10 w-full h-full top-0 left-0 transform -translate-x-4 -translate-y-4 bg-humanly-pastel-lavender/40 rounded-3xl blur-xl"></div>

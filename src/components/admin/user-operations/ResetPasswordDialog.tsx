@@ -31,7 +31,9 @@ export const ResetPasswordDialog = ({ user, open, onOpenChange }: ResetPasswordD
         throw new Error(response.error);
       }
 
-      // Removed success toast
+      toast.success("Password reset email sent", { 
+        description: `A password reset link has been sent to ${user.email}` 
+      });
       onOpenChange(false);
     } catch (error) {
       console.error("Failed to reset password:", error);

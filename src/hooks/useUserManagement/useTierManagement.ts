@@ -25,7 +25,7 @@ export const useTierManagement = (setIsLoading: (isLoading: boolean) => void, se
         )
       );
       
-      // Removed success toast
+      toast.success(`User ${userId} updated to ${tier}`);
     } catch (err) {
       console.error("Error updating user tier:", err);
       toast.error("Failed to update user tier", { 
@@ -39,7 +39,7 @@ export const useTierManagement = (setIsLoading: (isLoading: boolean) => void, se
   // Upgrade all users to premium
   const upgradeAllUsersToPremium = useCallback(async (fetchUsers: (onboardedValue?: string) => Promise<void>, onboardedFilter: string) => {
     try {
-      // Removed info toast
+      toast.info("Upgrading all users to premium...");
       
       const { data, error } = await supabase
         .from('profiles')
@@ -52,7 +52,7 @@ export const useTierManagement = (setIsLoading: (isLoading: boolean) => void, se
       // Refresh the user list without changing the filters
       await fetchUsers(onboardedFilter);
       
-      // Removed success toast
+      toast.success(`Upgraded ${data?.length || 0} users to premium`);
       return true;
     } catch (err) {
       console.error("Error upgrading users:", err);

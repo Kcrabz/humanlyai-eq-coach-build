@@ -1,202 +1,141 @@
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { 
-  isPwaMode, 
-  isMobileDevice, 
-  getAuthFlowState, 
-  AuthFlowState,
-  clearAuthFlowState
-} from "@/services/authFlowService";
-import { 
-  isOnAuthPage, 
-  isOnOnboardingPage, 
-  isOnChatPage, 
-  isOnDashboardPage,
-  isRetakingAssessment,
-  isPublicPage
-} from "@/services/authNavigationService";
+import { isOnAuthPage } from "@/utils/navigationUtils";
+import { toast } from "sonner";
+import { forceRedirectToDashboard, isRunningAsPWA } from "@/utils/loginRedirectUtils";
 
 /**
- * AuthenticationGuard - Simplified and more reliable version
- * that works with the centralized auth flow service
+ * Global authentication guard component that handles all redirects based on auth state
+ * With improved protection against redirect loops
  */
 export const AuthenticationGuard = () => {
-  const { 
-    user, 
-    isLoading, 
-    authEvent, 
-    profileLoaded
-  } = useAuth();
-  
+  const { user, isLoading, authEvent, profileLoaded } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const pathname = location.pathname;
-  const searchParams = location.search;
-  const [isInitialized, setIsInitialized] = useState(false);
-  const lastNavigationTimeRef = useRef(0);
-  const navigationLockRef = useRef(false);
+  const isPWA = isRunningAsPWA();
   
-  // Check if in special mode (PWA or mobile)
-  const isSpecialMode = isPwaMode() || isMobileDevice();
-  
-  // Initialize the component
+  // Debug logging for session state
   useEffect(() => {
-    if (!isInitialized && !isLoading) {
-      console.log("AuthGuard: Initialized", { 
-        isPwaMode: isPwaMode(), 
-        isMobileDevice: isMobileDevice(),
-        currentPath: pathname,
-        user: user ? { id: user.id, onboarded: user.onboarded } : 'none',
-        authEvent
-      });
-      
-      setIsInitialized(true);
-    }
-  }, [isLoading, isInitialized, pathname, user, authEvent]);
-
-  // EMERGENCY CASE: Handle stuck login screens
-  useEffect(() => {
-    // If we're on login page but have successful auth flags
-    if (pathname === "/login") {
-      const authState = getAuthFlowState();
-      const isLoginSuccess = 
-        sessionStorage.getItem('login_success') === 'true' || 
-        authState?.state === AuthFlowState.SUCCESS;
-      
-      if (isLoginSuccess && user) {
-        console.log("AuthGuard: Detected stuck login screen with auth success");
-        
-        // Force navigation to appropriate page
-        if (user.onboarded) {
-          console.log("AuthGuard: Emergency redirect to dashboard");
-          navigate("/dashboard", { replace: true });
-        } else {
-          console.log("AuthGuard: Emergency redirect to onboarding");
-          navigate("/onboarding", { replace: true });
-        }
-        
-        // Clear any stale auth flow state
-        clearAuthFlowState();
-      }
-    }
-  }, [pathname, user, navigate]);
-  
-  // Special handling for redirections on auth events
-  useEffect(() => {
-    if (authEvent === "SIGNED_IN" && user && !isLoading) {
-      console.log("AuthGuard: Auth event SIGNED_IN detected");
-      
-      // Only redirect from auth pages
-      if (isOnAuthPage(pathname)) {
-        if (user.onboarded) {
-          console.log("AuthGuard: Auth event redirect to dashboard");
-          navigate("/dashboard", { replace: true });
-        } else {
-          console.log("AuthGuard: Auth event redirect to onboarding");
-          navigate("/onboarding", { replace: true });
-        }
-        clearAuthFlowState();
-      }
-    }
-  }, [authEvent, user, isLoading, pathname, navigate]);
-
-  // Prevent navigation loops with debouncing
-  const shouldSkipNavigation = (): boolean => {
-    // If navigation is locked, skip
-    if (navigationLockRef.current) {
-      return true;
-    }
-    
-    // Check debounce period
-    const now = Date.now();
-    const debounceTime = isSpecialMode ? 1500 : 500;
-    if (now - lastNavigationTimeRef.current < debounceTime) {
-      return true;
-    }
-    return false;
-  };
-  
-  // Record navigation
-  const recordNavigation = (to: string): void => {
-    lastNavigationTimeRef.current = Date.now();
-    console.log(`AuthGuard: Navigating to ${to}`, {
-      from: pathname,
-      isPwa: isPwaMode(),
-      isMobile: isMobileDevice(),
-      user: user ? { id: user.id, onboarded: user.onboarded } : 'none',
+    console.log("AuthGuard: Auth state changed", { 
+      isAuthenticated: !!user, 
+      pathname,
+      userOnboarded: user?.onboarded,
+      authEvent,
+      profileLoaded,
+      isPWA,
       timestamp: new Date().toISOString()
     });
-  };
+    
+    // For PWA environments, store info about current path if authenticated
+    if (isPWA && user && user.onboarded) {
+      console.log("AuthGuard: Authenticated in PWA, may need to store path:", pathname);
+    }
+  }, [user, pathname, authEvent, profileLoaded, isPWA]);
 
-  // MAIN NAVIGATION LOGIC - Simplified for reliability
-  useEffect(() => {
-    // Skip if still loading auth state or not initialized
-    if (isLoading || !isInitialized) {
-      return;
-    }
-    
-    // Skip special auth paths
-    if (pathname === "/reset-password" || pathname === "/update-password") {
-      return;
-    }
-    
-    // Skip debounced navigations
-    if (shouldSkipNavigation()) {
-      return;
-    }
-    
-    // Wait for profile data to be loaded before making navigation decisions
-    if (user && !profileLoaded) {
-      return;
-    }
-    
-    // CASE 1: Not authenticated users
-    if (!user) {
-      // If on a public page, allow access
-      if (isPublicPage(pathname)) {
-        return;
-      }
-      
-      // Redirect to login from protected pages
-      recordNavigation('/login');
-      navigate("/login", { replace: true });
-      return;
-    }
-    
-    // CASE 2: Authenticated but not onboarded
-    if (user && !user.onboarded) {
-      // Already on onboarding page
-      if (isOnOnboardingPage(pathname)) {
-        return;
-      }
-      
-      // Direct to onboarding
-      recordNavigation('/onboarding');
-      navigate("/onboarding", { replace: true });
-      return;
-    }
-    
-    // CASE 3: Authenticated and onboarded
-    if (user && user.onboarded) {
-      // Redirect from auth pages to dashboard
-      if (isOnAuthPage(pathname)) {
-        console.log("AuthGuard: Authenticated user on auth page, redirecting to dashboard");
-        recordNavigation('/dashboard');
-        navigate("/dashboard", { replace: true });
-        return;
-      }
-      
-      // Redirect from onboarding unless retaking assessment
-      if (isOnOnboardingPage(pathname) && !isRetakingAssessment(searchParams)) {
-        recordNavigation('/dashboard');
-        navigate("/dashboard", { replace: true });
-        return;
-      }
-    }
-  }, [user, isLoading, pathname, navigate, searchParams, profileLoaded, isInitialized]);
+  // Skip redirects for password reset/update pages
+  const isPasswordResetPage = pathname === "/reset-password" || pathname === "/update-password";
   
-  // We don't render anything - this is purely for navigation control
+  // Handle redirects based on authentication status - with loop protection and PWA awareness
+  useEffect(() => {
+    // Only proceed when auth is fully ready
+    if (isLoading) {
+      console.log("AuthGuard: Auth state is still loading, waiting...");
+      return;
+    }
+    
+    // Skip any redirects for password reset/update pages regardless of auth state
+    if (isPasswordResetPage) {
+      console.log("AuthGuard: On password reset/update page, skipping redirects");
+      return;
+    }
+    
+    // Critical: Wait for profile to load after sign-in before redirecting
+    if (authEvent === 'SIGN_IN_COMPLETE' && !profileLoaded) {
+      console.log("AuthGuard: Auth complete but waiting for profile to load");
+      return;
+    }
+
+    // Skip any redirects if we're already on the right page to prevent loops
+    const isCurrentlyOnAuth = isOnAuthPage(pathname);
+    const shouldGoToOnboarding = user && !user.onboarded && pathname !== "/onboarding";
+    const shouldGoToDashboard = user && user.onboarded && isCurrentlyOnAuth;
+    const shouldGoToLogin = !user && pathname !== "/" && !isCurrentlyOnAuth;
+    
+    console.log("AuthGuard: Navigation logic check", {
+      isCurrentlyOnAuth,
+      shouldGoToOnboarding,
+      shouldGoToDashboard,
+      shouldGoToLogin,
+      isPWA,
+      pathname
+    });
+
+    // Handle successful login with direct redirect - but only from auth pages
+    if (user && (authEvent === "SIGN_IN_COMPLETE" || authEvent === "RESTORED_SESSION") && profileLoaded) {
+      console.log("AuthGuard: Auth event detected, handling login redirect", { authEvent, isPWA });
+      
+      if (!user.onboarded) {
+        // Redirect to onboarding if not already there
+        if (pathname !== "/onboarding") {
+          console.log("AuthGuard: User not onboarded, redirecting to onboarding");
+          
+          // For PWA, use a more direct approach to avoid navigation issues
+          if (isPWA) {
+            window.location.href = "/onboarding";
+          } else {
+            navigate("/onboarding", { replace: true });
+          }
+        }
+      } else if (isCurrentlyOnAuth) {
+        // Only redirect to dashboard after successful login if we're on an auth page
+        if (pathname !== "/dashboard") {
+          console.log("AuthGuard: User onboarded and on auth page, redirecting to dashboard");
+          
+          // Use direct window.location for PWA to avoid React Router issues
+          if (isPWA) {
+            // For PWA, we'll save the desired path and use forceRedirectToDashboard
+            // which implements additional PWA-specific handling
+            forceRedirectToDashboard();
+            toast.success(`Welcome back, ${user.name || 'Friend'}!`);
+          } else {
+            navigate("/dashboard", { replace: true });
+            toast.success(`Welcome back, ${user.name || 'Friend'}!`);
+          }
+        }
+      }
+      return;
+    }
+
+    // Non-login redirects - carefully managed to prevent loops
+    if (shouldGoToLogin) {
+      console.log("AuthGuard: Redirecting unauthenticated user to login");
+      navigate("/login", { replace: true });
+    }
+    else if (shouldGoToOnboarding) {
+      console.log("AuthGuard: Redirecting to onboarding");
+      
+      // For PWA, use direct location change
+      if (isPWA) {
+        window.location.href = "/onboarding";
+      } else {
+        navigate("/onboarding", { replace: true });
+      }
+    }
+    else if (shouldGoToDashboard) {
+      console.log("AuthGuard: Redirecting to dashboard");
+      
+      // For PWA, use direct location change
+      if (isPWA) {
+        forceRedirectToDashboard();
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
+    }
+  }, [user, isLoading, pathname, navigate, authEvent, profileLoaded, isPasswordResetPage, isPWA]);
+
+  // This component doesn't render anything, just handles redirects
   return null;
 };

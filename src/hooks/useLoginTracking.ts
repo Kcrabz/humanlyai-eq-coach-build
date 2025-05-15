@@ -1,65 +1,63 @@
 
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
-import { getAuthFlowState, AuthFlowState } from "@/services/authFlowService";
 
 /**
- * Simplified hook for tracking login events
+ * Hook to track user login events and update engagement metrics
  */
-export function useLoginTracking(isAuthenticated: boolean, user: User | null) {
-  // Use a ref to prevent duplicate tracking in same session
-  const loginTrackedRef = useRef<boolean>(false);
-  
+export function useLoginTracking(user: User | null, authEvent: string | null) {
   useEffect(() => {
-    // Skip if not authenticated, no user, or already tracked in this session
-    if (!isAuthenticated || !user?.id || loginTrackedRef.current) {
+    // Only track when user logs in or session is restored
+    if (!user?.id || !["SIGN_IN_COMPLETE", "RESTORED_SESSION"].includes(authEvent || "")) {
       return;
     }
 
-    // Mark as tracked immediately to prevent duplicate tracking
-    loginTrackedRef.current = true;
-    
-    console.log("Login tracking for user:", user.id);
-    
-    // Record login in background
     const trackLogin = async () => {
       try {
-        // Record login event
-        await supabase.rpc("record_user_login", { 
+        // First, record the login event
+        const { error: recordError } = await supabase.rpc("record_user_login", { 
           user_id_param: user.id,
           user_agent_param: navigator.userAgent
         });
-        
-        console.log("Login event recorded successfully");
-        
-        // Update streak
-        await supabase.functions.invoke('increment-streak', {
-          body: { user_id: user.id }
-        });
-        
-        console.log("Streak updated successfully");
+
+        if (recordError) {
+          console.error("Error recording login:", recordError);
+          
+          // Fallback: Update metrics directly if the RPC fails
+          const { error: updateError } = await supabase
+            .from("user_engagement_metrics")
+            .update({
+              last_login: new Date().toISOString(),
+              // We'll increment login_count in a separate query if RPC failed
+            })
+            .eq("user_id", user.id);
+            
+          if (updateError) {
+            console.error("Error updating login metrics:", updateError);
+          }
+        } else {
+          console.log("Login event recorded for user:", user.id);
+        }
+
+        // Record the login in user_login_history
+        const { error: historyError } = await supabase
+          .from("user_login_history")
+          .insert({
+            user_id: user.id,
+            user_agent: navigator.userAgent
+          });
+
+        if (historyError) {
+          console.error("Error recording login history:", historyError);
+        }
       } catch (err) {
-        console.error("Error in login tracking:", err);
-        // Don't block auth flow, just log the error
+        console.error("Error tracking login:", err);
       }
     };
 
-    // Use setTimeout to avoid blocking the UI thread
-    setTimeout(trackLogin, 100);
-    
-    return () => {
-      loginTrackedRef.current = false;
-    };
-  }, [isAuthenticated, user]);
+    trackLogin();
+  }, [user?.id, authEvent]);
 
-  // Check auth flow state for login event
-  const authState = getAuthFlowState();
-  const loginEvent = 
-    authState?.state === AuthFlowState.SUCCESS || 
-    authState?.state === AuthFlowState.COMPLETE 
-      ? "LOGIN_COMPLETE" 
-      : null;
-
-  return { loginEvent };
+  return null;
 }

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
+import { useSearchParams, useLocation } from "react-router-dom";
 import { OnboardingProgress } from "./OnboardingProgress";
 import { NameInput } from "./NameInput";
 import { GoalSelector } from "./GoalSelector";
@@ -11,7 +11,7 @@ import { useAuth } from "@/context/AuthContext";
 import { CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { isRetakingAssessment } from "@/services/authNavigationService";
+import { isRetakingAssessment } from "@/utils/navigationUtils";
 import { OnboardingLoader } from "./OnboardingLoader";
 import { AuthenticationRequired } from "./AuthenticationRequired";
 
@@ -33,6 +33,18 @@ export const OnboardingContainer = () => {
       goToStep(targetStep as any);
     }
   }, [searchParams, goToStep]);
+
+  useEffect(() => {
+    console.log("Onboarding container auth check:", {
+      isAuthenticated,
+      userOnboarded: user?.onboarded,
+      isLoading,
+      currentStep,
+      isRetaking,
+      search: location.search,
+      state: location.state
+    });
+  }, [user, isLoading, currentStep, isAuthenticated, isRetaking, location]);
   
   if (isLoading) {
     return <OnboardingLoader />;
