@@ -10,7 +10,7 @@ export function ChatInput() {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { sendMessage, isLoading } = useChat();
-  const { isIOS, getIOSPadding } = useIOSDetection();
+  const { isIOS, getIOSPadding, iosClass } = useIOSDetection();
   
   // Adjust textarea height based on content
   useEffect(() => {
@@ -44,7 +44,7 @@ export function ChatInput() {
 
   return (
     <form 
-      className={`border-t flex items-end gap-2 relative chat-input ${isIOS ? 'ios-device' : ''}`}
+      className={`border-t flex items-end gap-2 relative chat-input ${iosClass}`}
       onSubmit={handleSubmit}
       style={{
         position: "sticky",
@@ -55,7 +55,7 @@ export function ChatInput() {
         zIndex: 10,
         boxShadow: "0 -2px 4px rgba(0,0,0,0.05)",
         borderTop: "1px solid #eee",
-        marginBottom: 0 // Ensure no extra margin
+        marginBottom: 0
       }}
     >
       <Textarea

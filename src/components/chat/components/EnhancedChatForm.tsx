@@ -1,7 +1,6 @@
 
 import { FormEvent, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { MessageSquare } from "lucide-react";
 import { ChatErrorBanner } from "@/components/chat/ChatErrorBanner";
 import { useIOSDetection } from "@/hooks/use-ios-detection";
 import { ChatSendButton } from "./ChatSendButton";
@@ -28,7 +27,7 @@ export function EnhancedChatForm({
   isPremiumMember
 }: EnhancedChatFormProps) {
   const [message, setMessage] = useState("");
-  const { isIOS, getIOSPadding } = useIOSDetection();
+  const { isIOS, getIOSPadding, iosClass } = useIOSDetection();
   
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -38,7 +37,7 @@ export function EnhancedChatForm({
   };
   
   return (
-    <div className={`border-t bg-background chat-input ${isIOS ? 'ios-device' : ''}`}>
+    <div className={`border-t bg-background chat-input ${iosClass}`}>
       {error && (
         <ChatErrorBanner 
           error={error}

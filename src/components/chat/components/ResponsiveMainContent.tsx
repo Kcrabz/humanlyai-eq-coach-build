@@ -3,7 +3,7 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { ChatHeader } from "./ChatHeader";
 import { ChatContent } from "../ChatContent";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEffect, useState } from "react";
+import { useIOSDetection } from "@/hooks/use-ios-detection";
 
 interface ResponsiveMainContentProps {
   hasCompletedAssessment: boolean;
@@ -20,13 +20,7 @@ export function ResponsiveMainContent({
   const { open: rightSidebarOpen } = useSidebar("right");
   const { open: leftSidebarOpen } = useSidebar("left");
   const isMobile = useIsMobile();
-  const [isIOS, setIsIOS] = useState(false);
-  
-  // Detect if device is iOS
-  useEffect(() => {
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
-  }, []);
+  const { isIOS, iosClass } = useIOSDetection();
   
   // On mobile, we don't want to adjust the width based on sidebars
   // as they should overlay instead of pushing content
@@ -38,7 +32,7 @@ export function ResponsiveMainContent({
 
   return (
     <div 
-      className="flex-1 flex flex-col overflow-hidden main-content"
+      className={`flex-1 flex flex-col overflow-hidden main-content ${iosClass}`}
       style={{
         width: contentWidth,
         transition: 'width 0.3s ease',
@@ -46,7 +40,6 @@ export function ResponsiveMainContent({
         height: '100dvh', // Use dvh for all devices for consistent behavior
         marginBottom: 0
       }}
-      data-ios={isIOS ? "true" : "false"}
     >
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}

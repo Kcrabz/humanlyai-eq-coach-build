@@ -6,6 +6,7 @@ import { CollapsibleMenu } from "@/components/layout/CollapsibleMenu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InstallPWA } from "@/components/pwa/InstallPWA";
 import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
+import { useIOSDetection } from "@/hooks/use-ios-detection";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -16,13 +17,7 @@ interface PageLayoutProps {
 export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const [isIOS, setIsIOS] = useState(false);
-  
-  // Detect if device is iOS
-  useEffect(() => {
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
-  }, []);
+  const { isIOS } = useIOSDetection();
   
   // On chat page, the sidebar handle the menu separately
   const isOnChatPage = location.pathname === "/chat";
