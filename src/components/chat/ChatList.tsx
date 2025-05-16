@@ -65,6 +65,7 @@ export function ChatList() {
     <div 
       ref={chatContainerRef}
       className="flex-1 overflow-y-auto p-3 space-y-6 chat-messages"
+      style={{ paddingBottom: isIOS ? "max(env(safe-area-inset-bottom, 0px), 16px)" : "16px" }}
     >
       {validMessages.length === 0 ? (
         <EmptyChatState />

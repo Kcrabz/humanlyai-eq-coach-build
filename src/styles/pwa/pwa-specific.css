@@ -1,3 +1,4 @@
+
 /* Base PWA styles */
 html.pwa {
   overscroll-behavior-y: none;
@@ -27,7 +28,7 @@ body.pwa {
 .pwa .chat-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100dvh; /* Use dvh instead of vh */
 }
 
 .pwa .chat-messages {
@@ -40,10 +41,11 @@ body.pwa {
   bottom: 0;
   background: white;
   padding: 8px;
-  padding-bottom: max(env(safe-area-inset-bottom), 16px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px); /* Fix iOS safe area inset */
   z-index: 10;
   box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
   border-top: 1px solid #eee;
+  margin-bottom: 0; /* Ensure no extra margin */
 }
 
 /* iOS specific safe area fixes - only applied on iOS */
@@ -51,7 +53,7 @@ body.pwa {
   @media (max-width: 767px) {
     /* Better spacing for iOS devices */
     .ios-device .chat-input {
-      padding-bottom: max(env(safe-area-inset-bottom), 16px);
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px); /* Consistent format */
     }
     
     .ios-device .main-content {
@@ -60,7 +62,7 @@ body.pwa {
     
     /* Better send button positioning on iOS */
     .ios-device .chat-input .send-button-mobile {
-      bottom: max(env(safe-area-inset-bottom), 10px);
+      bottom: max(env(safe-area-inset-bottom, 0px), 10px); /* Consistent format */
     }
   }
 }
@@ -77,9 +79,9 @@ body.pwa {
 
 /* Simple helper classes for safe area insets */
 .pb-safe {
-  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
 }
 
 .mb-safe {
-  margin-bottom: max(env(safe-area-inset-bottom), 0px);
+  margin-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
 }

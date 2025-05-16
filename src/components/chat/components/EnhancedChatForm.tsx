@@ -58,7 +58,8 @@ export function EnhancedChatForm({
         onSubmit={handleSubmit} 
         className="flex gap-2 p-3"
         style={{
-          paddingBottom: isIOS ? "max(env(safe-area-inset-bottom), 12px)" : "12px",
+          paddingBottom: isIOS ? "max(env(safe-area-inset-bottom, 0px), 12px)" : "12px",
+          marginBottom: 0
         }}
       >
         <Textarea
@@ -99,7 +100,7 @@ export function EnhancedChatForm({
         <div 
           className="ml-3 mb-3 text-xs text-muted-foreground"
           style={{
-            marginBottom: isIOS ? "max(env(safe-area-inset-bottom, 12px), 12px)" : "12px"
+            marginBottom: isIOS ? "max(env(safe-area-inset-bottom, 0px), 12px)" : "12px"
           }}
         >
           <p>

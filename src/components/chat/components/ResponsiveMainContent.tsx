@@ -43,7 +43,8 @@ export function ResponsiveMainContent({
         width: contentWidth,
         transition: 'width 0.3s ease',
         marginRight: '0',
-        height: '100dvh' // Use dvh for all devices for consistent behavior
+        height: '100dvh', // Use dvh for all devices for consistent behavior
+        marginBottom: 0
       }}
       data-ios={isIOS ? "true" : "false"}
     >

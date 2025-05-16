@@ -57,10 +57,11 @@ export function ChatInput() {
         bottom: 0,
         background: "white",
         padding: "8px",
-        paddingBottom: isIOS ? "max(env(safe-area-inset-bottom), 16px)" : "16px",
+        paddingBottom: isIOS ? "max(env(safe-area-inset-bottom, 0px), 16px)" : "16px",
         zIndex: 10,
         boxShadow: "0 -2px 4px rgba(0,0,0,0.05)",
-        borderTop: "1px solid #eee"
+        borderTop: "1px solid #eee",
+        marginBottom: 0 // Ensure no extra margin
       }}
     >
       <Textarea

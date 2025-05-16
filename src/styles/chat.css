@@ -36,7 +36,7 @@
 .chat-wrapper {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
+  height: 100dvh; /* Use dvh instead of vh */
 }
 
 /* Chat messages with scrolling */
@@ -53,6 +53,7 @@
   z-index: 10;
   box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
   border-top: 1px solid #eee;
+  margin-bottom: 0; /* Ensure no extra margin */
 }
 
 /* Chat markdown content styling with improved readability */
@@ -147,12 +148,12 @@
     @media (max-width: 767px) {
       /* iOS specific chat input padding */
       .ios-device .chat-input {
-        padding-bottom: max(env(safe-area-inset-bottom), 16px);
+        padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
       }
       
       /* iOS specific send button positioning */
       .ios-device .absolute.right-5.bottom-5 {
-        bottom: max(env(safe-area-inset-bottom), 16px);
+        bottom: max(env(safe-area-inset-bottom, 0px), 16px);
       }
     }
   }
