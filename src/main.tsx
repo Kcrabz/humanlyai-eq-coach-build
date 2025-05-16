@@ -54,20 +54,6 @@ const initPwaFeatures = () => {
   }
 };
 
-// Detect iOS devices and add necessary classes
-const detectIOSDevice = () => {
-  try {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    if (isIOS) {
-      document.documentElement.classList.add('ios-device');
-      document.body.classList.add('ios-device');
-      console.log('iOS device detected');
-    }
-  } catch (err) {
-    console.error('Error detecting iOS device:', err);
-  }
-};
-
 // Utility function to detect if app is in PWA mode
 window.isPwaMode = function(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches || 
@@ -94,9 +80,6 @@ const initializeApp = () => {
     
     // Initialize PWA features
     initPwaFeatures();
-    
-    // Detect iOS devices
-    detectIOSDevice();
     
     // Setup event listener for display mode changes
     const mediaQueryList = window.matchMedia('(display-mode: standalone)');

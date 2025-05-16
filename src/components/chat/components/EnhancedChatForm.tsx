@@ -1,9 +1,10 @@
 
 import { FormEvent, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Loading } from "@/components/ui/loading";
+import { MessageSquare } from "lucide-react";
 import { ChatErrorBanner } from "@/components/chat/ChatErrorBanner";
-import { useIOSDetection } from "@/hooks/use-ios-detection";
-import { ChatSendButton } from "./ChatSendButton";
 
 interface EnhancedChatFormProps {
   onSubmit: (content: string) => void;
@@ -27,7 +28,6 @@ export function EnhancedChatForm({
   isPremiumMember
 }: EnhancedChatFormProps) {
   const [message, setMessage] = useState("");
-  const { isIOS, getIOSPadding, iosClass } = useIOSDetection();
   
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -37,7 +37,7 @@ export function EnhancedChatForm({
   };
   
   return (
-    <div className={`border-t bg-background chat-input ${iosClass}`}>
+    <div className="border-t p-3 bg-background">
       {error && (
         <ChatErrorBanner 
           error={error}
@@ -47,19 +47,12 @@ export function EnhancedChatForm({
         />
       )}
       
-      <form 
-        onSubmit={handleSubmit} 
-        className="flex gap-2 p-3"
-        style={{
-          paddingBottom: getIOSPadding("8px"), // Reduced from 12px to 8px
-          marginBottom: 0
-        }}
-      >
+      <form onSubmit={handleSubmit} className="flex gap-2 pr-10">
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder={placeholder}
-          className="min-h-[40px] resize-none soft-input text-sm" // Height reduced from 50px to 40px
+          className="min-h-[50px] resize-none soft-input text-sm"
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
@@ -68,29 +61,29 @@ export function EnhancedChatForm({
           }}
           disabled={isLoading}
         />
-        <ChatSendButton
-          isLoading={isLoading}
-          isDisabled={!message.trim()}
+        <Button 
+          type="submit"
+          size="sm"
+          disabled={isLoading || !message.trim()}
           className="self-end soft-button-primary h-8"
-          showIcon={true}
-          iconOnly={false}
-          text="Send"
-        />
+        >
+          {isLoading ? <Loading size="small" /> : 
+            <>
+              <MessageSquare className="h-3.5 w-3.5 mr-1" />
+              Send
+            </>
+          }
+        </Button>
       </form>
       
       {isLoading && (
-        <p className="text-xs text-muted-foreground ml-3 mb-1 animate-pulse"> {/* Changed mb-2 to mb-1 */}
+        <p className="text-xs text-muted-foreground mt-1.5 animate-pulse">
           Kai is thinking...
         </p>
       )}
       
       {!isPremiumMember && (
-        <div 
-          className="ml-3 mb-2 text-xs text-muted-foreground" /* Changed from mb-3 to mb-2 */
-          style={{
-            marginBottom: getIOSPadding("6px") /* Changed from 12px to 6px */
-          }}
-        >
+        <div className="mt-1.5 text-xs text-muted-foreground">
           <p>
             <a href="/pricing" className="text-humanly-teal hover:underline">Upgrade to Premium</a> to unlock EQ tracking, streak records, and breakthrough detection.
           </p>

@@ -2,16 +2,23 @@
 // Updating the ChatInput component with improved mobile spacing
 import React, { useState, useRef, useEffect } from "react";
 import { useChat } from "@/context/ChatContext";
+import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useIOSDetection } from "@/hooks/use-ios-detection";
-import { ChatSendButton } from "./components/ChatSendButton";
+import { Send } from "lucide-react";
 
 export function ChatInput() {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { sendMessage, isLoading } = useChat();
-  const { isIOS, getIOSPadding, iosClass } = useIOSDetection();
-  
+  const [isPWA, setIsPWA] = useState(false);
+
+  // Detect if running as PWA - simplified for reliability
+  useEffect(() => {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                        (window.navigator as any).standalone === true;
+    setIsPWA(isStandalone);
+  }, []);
+
   // Adjust textarea height based on content
   useEffect(() => {
     if (textareaRef.current) {
@@ -44,18 +51,10 @@ export function ChatInput() {
 
   return (
     <form 
-      className={`border-t flex items-end gap-2 relative chat-input ${iosClass}`}
+      className="p-3 border-t flex items-end gap-2 relative" 
       onSubmit={handleSubmit}
       style={{
-        position: "sticky",
-        bottom: 0,
-        background: "white",
-        padding: "8px",
-        paddingBottom: getIOSPadding("8px"), // Reduced from 16px to 8px
-        zIndex: 10,
-        boxShadow: "0 -2px 4px rgba(0,0,0,0.05)",
-        borderTop: "1px solid #eee",
-        marginBottom: 0
+        paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))`
       }}
     >
       <Textarea
@@ -69,12 +68,14 @@ export function ChatInput() {
         disabled={isLoading}
       />
       
-      <ChatSendButton
-        isLoading={isLoading}
-        isDisabled={!message.trim()}
-        iconOnly={true}
-        className="absolute right-5 bottom-3.5 h-8 w-8 rounded-full flex items-center justify-center" // Changed bottom from 5 to 3.5
-      />
+      <Button 
+        type="submit" 
+        size="sm"
+        className="absolute right-5 bottom-5 h-8 w-8 rounded-full flex items-center justify-center"
+        disabled={!message.trim() || isLoading}
+      >
+        <Send className="h-3.5 w-3.5" />
+      </Button>
     </form>
   );
 }

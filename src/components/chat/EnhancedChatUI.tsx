@@ -43,8 +43,8 @@ export function EnhancedChatUI({
   }, [chatHistory, isLoading]);
 
   return (
-    <div className={`flex flex-col h-full chat-wrapper ${className}`} style={{ height: '100dvh' }}>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 chat-messages">
+    <div className={`flex flex-col h-full ${className}`}>
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {chatHistory.length === 0 ? (
           <ChatWelcomeScreen sendSuggestedMessage={sendSuggestedMessage} />
         ) : (

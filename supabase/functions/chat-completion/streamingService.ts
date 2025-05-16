@@ -4,7 +4,7 @@ import { handleOpenAIApiError, handleGeneralError } from "./openaiErrorHandler.t
 
 // Call OpenAI API with streaming support
 export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
-  console.log("Streaming from OpenAI with model: gpt-4.1-turbo");
+  console.log("Streaming from OpenAI with model: gpt-4o");
   
   try {
     // Log first few messages to help with debugging
@@ -25,7 +25,7 @@ export async function* streamOpenAI(openAiApiKey: string, messages: any[]) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-turbo',
+        model: 'gpt-4o',
         messages: messages,
         max_tokens: 500,
         stream: true

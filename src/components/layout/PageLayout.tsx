@@ -6,7 +6,6 @@ import { CollapsibleMenu } from "@/components/layout/CollapsibleMenu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { InstallPWA } from "@/components/pwa/InstallPWA";
 import { OfflineIndicator } from "@/components/pwa/OfflineIndicator";
-import { useIOSDetection } from "@/hooks/use-ios-detection";
 
 interface PageLayoutProps {
   children: ReactNode;
@@ -17,7 +16,28 @@ interface PageLayoutProps {
 export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
   const location = useLocation();
   const isMobile = useIsMobile();
-  const { isIOS } = useIOSDetection();
+  const [isPWA, setIsPWA] = useState(false);
+  
+  // Detect if running as PWA
+  useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          (window.navigator as any).standalone === true;
+      setIsPWA(isStandalone);
+    };
+    
+    // Initial check
+    checkPWA();
+    
+    // Listen for changes
+    const mediaQueryList = window.matchMedia('(display-mode: standalone)');
+    const handleChange = () => checkPWA();
+    mediaQueryList.addEventListener('change', handleChange);
+    
+    return () => {
+      mediaQueryList.removeEventListener('change', handleChange);
+    };
+  }, []);
   
   // On chat page, the sidebar handle the menu separately
   const isOnChatPage = location.pathname === "/chat";
@@ -25,12 +45,9 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
   // Don't show menu on onboarding pages
   // On chat page, don't show menu as it's handled by the chat sidebar
   const shouldShowMenu = !location.pathname.includes("/onboarding") && !isOnChatPage;
-  
-  // Use dvh only for iOS & mobile devices to fix viewport issues
-  const minHeightClass = isIOS || isMobile ? "min-h-[100dvh]" : "min-h-screen";
 
   return (
-    <div className={`${minHeightClass} flex flex-col relative overflow-hidden`}>
+    <div className={`min-h-${isMobile ? '100dvh' : '100vh'} flex flex-col relative overflow-hidden`}>
       {/* Background blobs */}
       <>
         <div className="fixed top-20 -left-32 w-64 h-64 bg-humanly-pastel-peach blob-animation -z-10 opacity-30 blob"></div>
@@ -54,13 +71,9 @@ export function PageLayout({ children, fullWidth = false }: PageLayoutProps) {
         <CollapsibleMenu />
       )}
       
-      <main 
-        className={`flex-1 ${fullWidth ? "" : "container py-8"}`} 
-        style={{
-          // Only apply safe area inset padding on iOS devices
-          paddingBottom: isIOS && isMobile ? `env(safe-area-inset-bottom, 0px)` : undefined
-        }}
-      >
+      <main className={`flex-1 ${fullWidth ? "" : "container py-8"}`} style={{
+        paddingBottom: isPWA ? `env(safe-area-inset-bottom, 0px)` : undefined
+      }}>
         {children}
       </main>
     </div>

@@ -85,7 +85,7 @@ export async function handleChatCompletion(req: Request, reqBody: any) {
         Authorization: `Bearer ${openAiApiKey}`,
       },
       body: JSON.stringify({
-        model: "gpt-4.1-turbo",
+        model: "gpt-4o-mini",
         messages,
       }),
     });

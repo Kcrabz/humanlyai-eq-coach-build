@@ -1,9 +1,9 @@
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { ChatHeader } from "./ChatHeader";
-import { ChatContent } from "../ChatContent";
+import { ChatContent } from "./ChatContent";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useIOSDetection } from "@/hooks/use-ios-detection";
+import { useEffect, useState } from "react";
 
 interface ResponsiveMainContentProps {
   hasCompletedAssessment: boolean;
@@ -20,7 +20,28 @@ export function ResponsiveMainContent({
   const { open: rightSidebarOpen } = useSidebar("right");
   const { open: leftSidebarOpen } = useSidebar("left");
   const isMobile = useIsMobile();
-  const { isIOS, iosClass } = useIOSDetection();
+  const [isPWA, setIsPWA] = useState(false);
+  
+  // Detect if running as PWA - simplified for reliability
+  useEffect(() => {
+    const checkPWA = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                          (window.navigator as any).standalone === true;
+      setIsPWA(isStandalone);
+    };
+    
+    // Check on initial render
+    checkPWA();
+    
+    // Also listen for changes
+    const mediaQueryList = window.matchMedia('(display-mode: standalone)');
+    const handleChange = () => checkPWA();
+    mediaQueryList.addEventListener('change', handleChange);
+    
+    return () => {
+      mediaQueryList.removeEventListener('change', handleChange);
+    };
+  }, []);
   
   // On mobile, we don't want to adjust the width based on sidebars
   // as they should overlay instead of pushing content
@@ -30,16 +51,20 @@ export function ResponsiveMainContent({
       ? 'calc(100% - 16rem)'
       : '100%';
 
+  // Use dynamic viewport height for mobile
+  const contentStyle = {
+    width: contentWidth,
+    transition: 'width 0.3s ease',
+    marginRight: '0',
+    height: isMobile ? '100dvh' : '100vh'
+  };
+
   return (
     <div 
-      className={`flex-1 flex flex-col overflow-hidden main-content ${iosClass}`}
-      style={{
-        width: contentWidth,
-        transition: 'width 0.3s ease',
-        marginRight: '0',
-        height: '100dvh', // Use dvh for all devices for consistent behavior
-        marginBottom: 0
-      }}
+      className="flex-1 flex flex-col overflow-hidden main-content"
+      style={contentStyle}
+      data-pwa={isPWA ? "true" : "false"}
+      data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
     >
       <ChatHeader 
         hasCompletedAssessment={hasCompletedAssessment}
