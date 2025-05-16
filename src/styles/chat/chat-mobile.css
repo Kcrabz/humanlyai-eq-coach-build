@@ -1,0 +1,49 @@
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  .chat-md p, .chat-md li, .chat-md blockquote, .chat-md code {
+    max-width: 100%;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  .chat-md pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  
+  /* Chat container viewport height fix for mobile - use dvh */
+  .flex-1.overflow-hidden.flex.flex-col {
+    height: 100dvh;
+  }
+  
+  /* Enhanced chat bubble */
+  .enhanced-chat-bubble {
+    max-width: 85% !important;
+    word-break: break-word;
+  }
+
+  /* Mobile optimization for new chat button */
+  .enhanced-header .gap-2 {
+    @apply text-xs px-2 py-1;
+  }
+  
+  .enhanced-header .gap-2 svg {
+    @apply h-3.5 w-3.5;
+  }
+}
+
+/* iOS-specific fixes */
+@supports (padding: env(safe-area-inset-bottom)) {
+  @media (max-width: 767px) {
+    /* iOS specific chat input padding */
+    .ios-device .chat-input {
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+    }
+    
+    /* iOS specific send button positioning */
+    .ios-device .absolute.right-5.bottom-5 {
+      bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+    }
+  }
+}

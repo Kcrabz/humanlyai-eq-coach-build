@@ -1,0 +1,38 @@
+
+/* Enhanced chat bubble */
+.enhanced-chat-bubble {
+  @apply rounded-xl shadow-sm transition-all duration-300;
+}
+
+.enhanced-chat-user {
+  @apply bg-gradient-to-br from-humanly-indigo to-humanly-indigo-dark/90 text-white;
+}
+
+.enhanced-chat-ai {
+  @apply bg-gradient-to-br from-white to-humanly-pastel-lavender/20 text-gray-800 border border-humanly-pastel-lavender/20;
+}
+
+/* User message specific styling with better contrast */
+.prose-invert {
+  @apply text-white;
+}
+
+.prose-invert h1, 
+.prose-invert h2, 
+.prose-invert h3, 
+.prose-invert h4,
+.prose-invert h5,
+.prose-invert h6,
+.prose-invert p,
+.prose-invert ul,
+.prose-invert ol,
+.prose-invert li,
+.prose-invert strong,
+.prose-invert em {
+  @apply text-white;
+}
+
+/* Ensure links in user bubbles are properly styled */
+.prose-invert a {
+  @apply text-white underline decoration-white/70 hover:decoration-white;
+}

@@ -1,0 +1,69 @@
+
+/* Chat markdown content styling with improved readability */
+.chat-md p {
+  @apply mb-3 leading-relaxed break-words;
+}
+
+.chat-md h1, .chat-md h2, .chat-md h3 {
+  @apply font-medium mb-2 mt-3;
+}
+
+.chat-md h1 {
+  @apply text-lg;
+}
+
+.chat-md h2 {
+  @apply text-base;
+}
+
+.chat-md h3 {
+  @apply text-sm;
+}
+
+.chat-md ul, .chat-md ol {
+  @apply my-3 ml-4 space-y-1;
+}
+
+.chat-md ul {
+  @apply list-disc;
+}
+
+.chat-md ol {
+  @apply list-decimal;
+}
+
+.chat-md li {
+  @apply mb-1;
+}
+
+.chat-md blockquote {
+  @apply border-l-4 border-humanly-indigo bg-humanly-pastel-lavender/10 pl-4 py-2 my-3 rounded-r;
+}
+
+.chat-md code {
+  @apply bg-humanly-pastel-lavender/10 text-humanly-indigo-dark px-1 py-0.5 rounded break-words;
+}
+
+.chat-md pre {
+  @apply bg-humanly-gray-lightest p-3 rounded-lg my-3 overflow-auto;
+}
+
+.chat-md pre code {
+  @apply bg-transparent p-0;
+}
+
+.chat-md a {
+  @apply text-humanly-indigo underline hover:text-humanly-indigo-dark;
+}
+
+.chat-md table {
+  @apply w-full my-3 border-collapse rounded-lg overflow-hidden;
+}
+
+.chat-md table th, .chat-md table td {
+  @apply border border-gray-50 p-2;
+}
+
+.chat-md table th {
+  @apply bg-humanly-pastel-lavender/10 text-humanly-indigo-dark;
+}
