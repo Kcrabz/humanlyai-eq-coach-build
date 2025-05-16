@@ -1,7 +1,7 @@
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { ChatHeader } from "./ChatHeader";
-import { ChatContent } from "./ChatContent";
+import { ChatContent } from "../ChatContent";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
 
