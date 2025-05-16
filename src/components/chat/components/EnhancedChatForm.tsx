@@ -54,7 +54,13 @@ export function EnhancedChatForm({
         />
       )}
       
-      <form onSubmit={handleSubmit} className="flex gap-2 p-3">
+      <form 
+        onSubmit={handleSubmit} 
+        className="flex gap-2 p-3"
+        style={{
+          paddingBottom: isIOS ? "max(env(safe-area-inset-bottom), 12px)" : "12px",
+        }}
+      >
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
@@ -90,7 +96,12 @@ export function EnhancedChatForm({
       )}
       
       {!isPremiumMember && (
-        <div className="ml-3 mb-3 text-xs text-muted-foreground">
+        <div 
+          className="ml-3 mb-3 text-xs text-muted-foreground"
+          style={{
+            marginBottom: isIOS ? "max(env(safe-area-inset-bottom, 12px), 12px)" : "12px"
+          }}
+        >
           <p>
             <a href="/pricing" className="text-humanly-teal hover:underline">Upgrade to Premium</a> to unlock EQ tracking, streak records, and breakthrough detection.
           </p>

@@ -59,7 +59,7 @@
   @media (max-width: 767px) {
     /* Better positioning for the mobile send button on iOS */
     .ios-device .chat-input {
-      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+      padding-bottom: max(env(safe-area-inset-bottom), 16px);
     }
     
     /* Ensure the chat input has proper spacing on iOS */

@@ -57,6 +57,7 @@ export function ChatInput() {
         bottom: 0,
         background: "white",
         padding: "8px",
+        paddingBottom: isIOS ? "max(env(safe-area-inset-bottom), 16px)" : "16px",
         zIndex: 10,
       }}
     >

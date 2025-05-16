@@ -40,6 +40,8 @@ body.pwa {
   position: sticky;
   bottom: 0;
   background: white;
+  padding: 8px;
+  padding-bottom: max(env(safe-area-inset-bottom), 16px);
   z-index: 10;
 }
 
@@ -48,7 +50,7 @@ body.pwa {
   @media (max-width: 767px) {
     /* Better spacing for iOS devices */
     .ios-device .chat-input {
-      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+      padding-bottom: max(env(safe-area-inset-bottom), 16px);
     }
     
     .ios-device .main-content {
@@ -57,7 +59,7 @@ body.pwa {
     
     /* Better send button positioning on iOS */
     .ios-device .chat-input .send-button-mobile {
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+      bottom: max(env(safe-area-inset-bottom), 10px);
     }
   }
 }
@@ -74,9 +76,9 @@ body.pwa {
 
 /* Simple helper classes for safe area insets */
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
 }
 
 .mb-safe {
-  margin-bottom: env(safe-area-inset-bottom, 0px);
+  margin-bottom: max(env(safe-area-inset-bottom), 0px);
 }

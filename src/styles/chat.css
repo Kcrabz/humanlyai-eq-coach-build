@@ -144,12 +144,12 @@
     @media (max-width: 767px) {
       /* iOS specific chat input padding */
       .ios-device .chat-input {
-        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+        padding-bottom: max(env(safe-area-inset-bottom), 16px);
       }
       
       /* iOS specific send button positioning */
       .ios-device .absolute.right-5.bottom-5 {
-        bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+        bottom: max(env(safe-area-inset-bottom), 16px);
       }
     }
   }
