@@ -31,6 +31,11 @@
   .enhanced-header .gap-2 svg {
     @apply h-3.5 w-3.5;
   }
+  
+  /* Reduce bottom spacing */
+  .chat-messages {
+    padding-bottom: 0.5rem !important; /* Reduced padding at bottom of message list */
+  }
 }
 
 /* iOS-specific fixes */
@@ -38,12 +43,12 @@
   @media (max-width: 767px) {
     /* iOS specific chat input padding */
     .ios-device .chat-input {
-      padding-bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+      padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px); /* Reduced from 16px to 8px */
     }
     
     /* iOS specific send button positioning */
     .ios-device .absolute.right-5.bottom-5 {
-      bottom: max(env(safe-area-inset-bottom, 0px), 16px);
+      bottom: max(env(safe-area-inset-bottom, 0px), 8px); /* Reduced from 16px to 8px */
     }
   }
 }

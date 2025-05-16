@@ -10,6 +10,7 @@
 .chat-messages {
   flex: 1;
   overflow-y: auto;
+  padding-bottom: 0.5rem; /* Reduced padding at bottom of messages */
 }
 
 /* Chat input sticky positioning */
@@ -21,6 +22,7 @@
   box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
   border-top: 1px solid #eee;
   margin-bottom: 0; /* Ensure no extra margin */
+  padding: 8px; /* Set consistent padding */
 }
 
 /* New chat button styling */

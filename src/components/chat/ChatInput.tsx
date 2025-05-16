@@ -51,7 +51,7 @@ export function ChatInput() {
         bottom: 0,
         background: "white",
         padding: "8px",
-        paddingBottom: getIOSPadding("16px"),
+        paddingBottom: getIOSPadding("8px"), // Reduced from 16px to 8px
         zIndex: 10,
         boxShadow: "0 -2px 4px rgba(0,0,0,0.05)",
         borderTop: "1px solid #eee",
@@ -73,7 +73,7 @@ export function ChatInput() {
         isLoading={isLoading}
         isDisabled={!message.trim()}
         iconOnly={true}
-        className="absolute right-5 bottom-5 h-8 w-8 rounded-full flex items-center justify-center"
+        className="absolute right-5 bottom-3.5 h-8 w-8 rounded-full flex items-center justify-center" // Changed bottom from 5 to 3.5
       />
     </form>
   );
