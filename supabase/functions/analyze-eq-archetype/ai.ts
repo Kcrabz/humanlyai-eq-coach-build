@@ -2,7 +2,7 @@
 import { ARCHETYPE_MAPPING } from "./constants.ts";
 
 /**
- * Analyze quiz answers using OpenAI GPT-4o
+ * Analyze quiz answers using OpenAI GPT-4.1
  */
 export async function analyzeWithAI(
   formattedAnswers: string,
@@ -15,7 +15,7 @@ export async function analyzeWithAI(
   rawResponse: string;
 }> {
   try {
-    // System prompt for GPT-4o
+    // System prompt for GPT-4.1
     const systemPrompt = `You are Kai, the HumanlyAI Coach — an expert in Emotional Intelligence. A user has answered 15 questions on a scale from 1 (Strongly Disagree) to 5 (Strongly Agree). Based on their pattern of responses, identify which EQ Archetype best matches them:
 
 - Reflector: Highly introspective, tends to overthink, hesitant to act
@@ -36,7 +36,7 @@ Tip: [Simple practice they can begin with today]
 Here are the user's answers:
 ${formattedAnswers}`;
 
-    // Call OpenAI API using GPT-4o model
+    // Call OpenAI API using GPT-4.1 model
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -44,7 +44,7 @@ ${formattedAnswers}`;
         "Authorization": `Bearer ${openAiApiKey}`
       },
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: "gpt-4.1-turbo",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: "Please analyze my EQ based on my quiz answers." }

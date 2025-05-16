@@ -3,7 +3,7 @@ import { handleOpenAIApiError, handleGeneralError } from "./openaiErrorHandler.t
 
 // Call OpenAI API (non-streaming version for fallback)
 export async function callOpenAI(openAiApiKey: string, messages: any[]) {
-  console.log("Calling OpenAI with model: gpt-4o");
+  console.log("Calling OpenAI with model: gpt-4.1-turbo");
   
   try {
     // Log first few messages to help with debugging
@@ -26,7 +26,7 @@ export async function callOpenAI(openAiApiKey: string, messages: any[]) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4.1-turbo',
         messages: messages,
         max_tokens: 500
       }),

@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.170.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.23.0";
 import { corsHeaders, errorResponse, successResponse, BreakthroughResponse } from "./utils.ts";
@@ -69,7 +68,7 @@ async function detectBreakthrough(message: string): Promise<BreakthroughResponse
         "Authorization": `Bearer ${OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo-1106",
+        model: "gpt-4.1-turbo",
         messages: [
           {
             role: "system",
