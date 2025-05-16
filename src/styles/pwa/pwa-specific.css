@@ -1,4 +1,3 @@
-
 /* Base PWA styles */
 html.pwa {
   overscroll-behavior-y: none;
@@ -43,6 +42,8 @@ body.pwa {
   padding: 8px;
   padding-bottom: max(env(safe-area-inset-bottom), 16px);
   z-index: 10;
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+  border-top: 1px solid #eee;
 }
 
 /* iOS specific safe area fixes - only applied on iOS */
