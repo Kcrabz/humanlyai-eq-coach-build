@@ -1,10 +1,10 @@
 
-import { FormEvent, useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { FormEvent, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { Loading } from "@/components/ui/loading";
 import { MessageSquare } from "lucide-react";
 import { ChatErrorBanner } from "@/components/chat/ChatErrorBanner";
+import { useIOSDetection } from "@/hooks/use-ios-detection";
+import { ChatSendButton } from "./ChatSendButton";
 
 interface EnhancedChatFormProps {
   onSubmit: (content: string) => void;
@@ -28,13 +28,7 @@ export function EnhancedChatForm({
   isPremiumMember
 }: EnhancedChatFormProps) {
   const [message, setMessage] = useState("");
-  const [isIOS, setIsIOS] = useState(false);
-  
-  // Detect iOS devices
-  useEffect(() => {
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
-  }, []);
+  const { isIOS, getIOSPadding } = useIOSDetection();
   
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -44,7 +38,7 @@ export function EnhancedChatForm({
   };
   
   return (
-    <div className="border-t bg-background chat-input">
+    <div className={`border-t bg-background chat-input ${isIOS ? 'ios-device' : ''}`}>
       {error && (
         <ChatErrorBanner 
           error={error}
@@ -58,7 +52,7 @@ export function EnhancedChatForm({
         onSubmit={handleSubmit} 
         className="flex gap-2 p-3"
         style={{
-          paddingBottom: isIOS ? "max(env(safe-area-inset-bottom, 0px), 12px)" : "12px",
+          paddingBottom: getIOSPadding("12px"),
           marginBottom: 0
         }}
       >
@@ -75,19 +69,14 @@ export function EnhancedChatForm({
           }}
           disabled={isLoading}
         />
-        <Button 
-          type="submit"
-          size="sm"
-          disabled={isLoading || !message.trim()}
+        <ChatSendButton
+          isLoading={isLoading}
+          isDisabled={!message.trim()}
           className="self-end soft-button-primary h-8"
-        >
-          {isLoading ? <Loading size="small" /> : 
-            <>
-              <MessageSquare className="h-3.5 w-3.5 mr-1" />
-              Send
-            </>
-          }
-        </Button>
+          showIcon={true}
+          iconOnly={false}
+          text="Send"
+        />
       </form>
       
       {isLoading && (
@@ -100,7 +89,7 @@ export function EnhancedChatForm({
         <div 
           className="ml-3 mb-3 text-xs text-muted-foreground"
           style={{
-            marginBottom: isIOS ? "max(env(safe-area-inset-bottom, 0px), 12px)" : "12px"
+            marginBottom: getIOSPadding("12px")
           }}
         >
           <p>

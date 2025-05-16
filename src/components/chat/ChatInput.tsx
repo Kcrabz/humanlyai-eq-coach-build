@@ -2,22 +2,16 @@
 // Updating the ChatInput component with improved mobile spacing
 import React, { useState, useRef, useEffect } from "react";
 import { useChat } from "@/context/ChatContext";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Send } from "lucide-react";
+import { useIOSDetection } from "@/hooks/use-ios-detection";
+import { ChatSendButton } from "./components/ChatSendButton";
 
 export function ChatInput() {
   const [message, setMessage] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { sendMessage, isLoading } = useChat();
-  const [isIOS, setIsIOS] = useState(false);
+  const { isIOS, getIOSPadding } = useIOSDetection();
   
-  // Detect iOS
-  useEffect(() => {
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-    setIsIOS(isIOSDevice);
-  }, []);
-
   // Adjust textarea height based on content
   useEffect(() => {
     if (textareaRef.current) {
@@ -50,14 +44,14 @@ export function ChatInput() {
 
   return (
     <form 
-      className="border-t flex items-end gap-2 relative chat-input"
+      className={`border-t flex items-end gap-2 relative chat-input ${isIOS ? 'ios-device' : ''}`}
       onSubmit={handleSubmit}
       style={{
         position: "sticky",
         bottom: 0,
         background: "white",
         padding: "8px",
-        paddingBottom: isIOS ? "max(env(safe-area-inset-bottom, 0px), 16px)" : "16px",
+        paddingBottom: getIOSPadding("16px"),
         zIndex: 10,
         boxShadow: "0 -2px 4px rgba(0,0,0,0.05)",
         borderTop: "1px solid #eee",
@@ -75,14 +69,12 @@ export function ChatInput() {
         disabled={isLoading}
       />
       
-      <Button 
-        type="submit" 
-        size="sm"
+      <ChatSendButton
+        isLoading={isLoading}
+        isDisabled={!message.trim()}
+        iconOnly={true}
         className="absolute right-5 bottom-5 h-8 w-8 rounded-full flex items-center justify-center"
-        disabled={!message.trim() || isLoading}
-      >
-        <Send className="h-3.5 w-3.5" />
-      </Button>
+      />
     </form>
   );
 }
