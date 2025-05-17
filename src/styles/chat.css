@@ -148,7 +148,7 @@
   }
   
   .mobile-message-bubble.user {
-    background-color: theme('colors.humanly.indigo');
+    background-color: theme('colors.humanly.indigo.DEFAULT');
     color: white;
   }
   
