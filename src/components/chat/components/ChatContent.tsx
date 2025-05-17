@@ -1,9 +1,7 @@
 
 import { lazy, Suspense } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { EQAssessmentAlert } from "./EQAssessmentAlert";
-import { MobileChatInterface } from "@/components/chat/MobileChatInterface";
 
 // Lazy load components that aren't immediately visible
 const ChatList = lazy(() => import("@/components/chat/ChatList").then(module => ({ default: module.ChatList })));
@@ -16,14 +14,6 @@ interface ChatContentProps {
 }
 
 export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatContentProps) {
-  const isMobile = useIsMobile();
-  
-  // Return mobile interface for small screens
-  if (isMobile) {
-    return <MobileChatInterface />;
-  }
-  
-  // Return desktop interface
   return (
     <div className="flex-1 overflow-hidden flex flex-col">
       {!hasCompletedAssessment && <EQAssessmentAlert onStartAssessment={onStartAssessment} />}

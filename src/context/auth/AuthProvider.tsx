@@ -23,22 +23,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const location = useLocation();
   
   // Auth session
-  const { 
-    session, 
-    isLoading: isSessionLoading, 
-    setIsLoading: setIsSessionLoading, 
-    authEvent, 
-    profileLoaded, 
-    setProfileLoaded 
-  } = useAuthSession();
+  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading, authEvent, profileLoaded, setProfileLoaded } = useAuthSession();
   
   // Profile state with unified loading
-  const { 
-    user, 
-    setUser 
-  } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
+  const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
   
-  // Track login events
+  // Track login events - Fix: Pass isAuthenticated boolean and user object
   const isAuthenticated = !!user;
   useLoginTracking(isAuthenticated, user);
   
@@ -48,7 +38,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Auth core for login/logout
   const authCore = useAuthCore(setUser);
   
-  // Auth signup
+  // Auth signup - Pass the function through directly without wrapping it
   const { signup } = useAuthSignup(setUser);
   
   // Auth actions
@@ -81,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("Authenticated in PWA, current path:", location.pathname);
       
       // Store current path for PWA after successful authentication
+      // This helps with navigation after login in PWA mode
       if (location.pathname !== '/login' && location.pathname !== '/signup') {
         sessionStorage.setItem('pwa_last_path', location.pathname);
         console.log("Stored last path for PWA:", location.pathname);
