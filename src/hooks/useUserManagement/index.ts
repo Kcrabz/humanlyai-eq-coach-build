@@ -9,6 +9,7 @@ import { useTierManagement } from './useTierManagement';
 import { useUserFilters } from './useUserFilters';
 import { useFetchUsers } from './useFetchUsers';
 import { UserTableData } from './types';
+import { SubscriptionTier } from '@/types';
 
 export const useUserManagement = (
   initialFilter?: { type: string; value: string },
@@ -55,7 +56,7 @@ export const useUserManagement = (
   );
   
   // Handle updates to user tier with optimistic UI update
-  const handleUpdateTier = useCallback(async (userId: string, tier: any) => {
+  const handleUpdateTier = useCallback(async (userId: string, tier: SubscriptionTier): Promise<void> => {
     // Optimistic UI update
     setUsers(prev => prev.map(user => 
       user.id === userId ? { ...user, subscription_tier: tier } : user
@@ -63,24 +64,33 @@ export const useUserManagement = (
     
     try {
       await updateUserTier(userId, tier);
-      return true;
     } catch (error) {
       console.error("Error updating user tier:", error);
       // Revert optimistic update on error
-      await fetchUsers(onboardedFilter, { searchTerm, tierFilter, archetypeFilter });
-      return false;
+      await fetchUsers(onboardedFilter);
     }
-  }, [updateUserTier, fetchUsers, onboardedFilter, searchTerm, tierFilter, archetypeFilter]);
+  }, [updateUserTier, fetchUsers, onboardedFilter]);
   
   // Handle user deletion by removing from UI
   const handleUserDeleted = useCallback((userId: string) => {
     setUsers(prev => prev.filter(user => user.id !== userId));
   }, []);
   
-  // Effect to fetch users on mount or filter changes
-  // Moved to the component that uses this hook for more control over when fetches happen
+  // Handle upgrading all users to premium
+  const handleUpgradeAllUsersToPremium = useCallback(async (): Promise<boolean> => {
+    try {
+      const result = await upgradeAllUsersToPremium();
+      if (result) {
+        // Refresh users list after the upgrade
+        await fetchUsers(onboardedFilter);
+      }
+      return result;
+    } catch (error) {
+      console.error("Error in bulk upgrade:", error);
+      return false;
+    }
+  }, [upgradeAllUsersToPremium, fetchUsers, onboardedFilter]);
   
-  // Return all the data and functions
   return {
     users,
     isLoading,
@@ -97,6 +107,6 @@ export const useUserManagement = (
     fetchUsers,
     handleUpdateTier,
     handleUserDeleted,
-    upgradeAllUsersToPremium
+    upgradeAllUsersToPremium: handleUpgradeAllUsersToPremium
   };
 };

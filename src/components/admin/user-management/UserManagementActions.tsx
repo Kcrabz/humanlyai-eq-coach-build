@@ -92,7 +92,13 @@ export const UserManagementActions = () => {
     
     try {
       setUpgradeLoading(true);
-      await upgradeAllUsersToPremium();
+      const success = await upgradeAllUsersToPremium();
+      if (!success) {
+        toast.error("Some users could not be upgraded");
+      }
+    } catch (error) {
+      console.error("Error upgrading users:", error);
+      toast.error("Failed to upgrade users");
     } finally {
       setUpgradeLoading(false);
     }

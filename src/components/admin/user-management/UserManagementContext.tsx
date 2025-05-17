@@ -98,7 +98,7 @@ export const UserManagementProvider = ({
     return fetchUsers(onboardedFilter);
   }, [fetchUsers, onboardedFilter]);
 
-  const value = {
+  const value: UserManagementContextType = {
     users,
     isLoading,
     initialLoadDone,

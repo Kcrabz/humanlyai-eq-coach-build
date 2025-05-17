@@ -44,7 +44,7 @@ const UserManagementLayoutComponent = ({ onResetFilter }: UserManagementLayoutPr
   }, [resetFilters, onResetFilter]);
 
   // Handle refresh with stable dependencies and loading state
-  const handleRefresh = useCallback(() => {
+  const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
     
     setIsRefreshing(true);
@@ -53,18 +53,16 @@ const UserManagementLayoutComponent = ({ onResetFilter }: UserManagementLayoutPr
     // Notify the user that refresh is happening
     toast.info("Refreshing user data...");
     
-    // Call fetchUsers and handle the async operation properly
-    fetchUsers()
-      .then(() => {
-        toast.success("User data refreshed successfully");
-      })
-      .catch((error) => {
-        console.error("Error refreshing user data:", error);
-        toast.error("Failed to refresh user data");
-      })
-      .finally(() => {
-        setIsRefreshing(false);
-      });
+    try {
+      // Call fetchUsers and handle the async operation properly
+      await fetchUsers();
+      toast.success("User data refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing user data:", error);
+      toast.error("Failed to refresh user data");
+    } finally {
+      setIsRefreshing(false);
+    }
   }, [fetchUsers, isRefreshing]);
 
   return (

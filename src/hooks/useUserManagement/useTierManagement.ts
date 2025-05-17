@@ -4,11 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SubscriptionTier } from "@/types";
 
-export const useTierManagement = (setIsLoading: (isLoading: boolean) => void, setUsers: React.Dispatch<React.SetStateAction<any[]>>) => {
+export const useTierManagement = () => {
   // Update a user's subscription tier
-  const handleUpdateTier = useCallback(async (userId: string, tier: SubscriptionTier) => {
+  const updateUserTier = useCallback(async (userId: string, tier: SubscriptionTier): Promise<void> => {
     try {
-      setIsLoading(true);
       const { error } = await supabase
         .from('profiles')
         .update({ subscription_tier: tier })
@@ -18,26 +17,18 @@ export const useTierManagement = (setIsLoading: (isLoading: boolean) => void, se
         throw error;
       }
       
-      // Optimistically update the user's tier in the local state
-      setUsers(prevUsers =>
-        prevUsers.map(user =>
-          user.id === userId ? { ...user, subscription_tier: tier } : user
-        )
-      );
-      
       toast.success(`User ${userId} updated to ${tier}`);
     } catch (err) {
       console.error("Error updating user tier:", err);
       toast.error("Failed to update user tier", { 
         description: "There was a problem updating the user's subscription" 
       });
-    } finally {
-      setIsLoading(false);
+      throw err; // Re-throw to allow proper error handling upstream
     }
-  }, [setIsLoading, setUsers]);
+  }, []);
 
   // Upgrade all users to premium
-  const upgradeAllUsersToPremium = useCallback(async (fetchUsers: (onboardedValue?: string) => Promise<void>, onboardedFilter: string) => {
+  const upgradeAllUsersToPremium = useCallback(async (): Promise<boolean> => {
     try {
       toast.info("Upgrading all users to premium...");
       
@@ -48,9 +39,6 @@ export const useTierManagement = (setIsLoading: (isLoading: boolean) => void, se
         .select('id');
         
       if (error) throw error;
-      
-      // Refresh the user list without changing the filters
-      await fetchUsers(onboardedFilter);
       
       toast.success(`Upgraded ${data?.length || 0} users to premium`);
       return true;
@@ -64,7 +52,7 @@ export const useTierManagement = (setIsLoading: (isLoading: boolean) => void, se
   }, []);
 
   return {
-    handleUpdateTier,
+    updateUserTier,
     upgradeAllUsersToPremium
   };
 };
