@@ -1,11 +1,12 @@
 
+import { memo } from "react";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { UserTableProps } from "./types";
 import { UserTableHeader } from "./UserTableHeader";
 import { UserTableRow } from "./UserTableRow";
 import { LoadingRows } from "./LoadingRows";
 
-export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: UserTableProps) => {
+const UserTableComponent = ({ users, isLoading, onUpdateTier, onUserDeleted }: UserTableProps) => {
   return (
     <div className="rounded-md border">
       <Table>
@@ -34,3 +35,5 @@ export const UserTable = ({ users, isLoading, onUpdateTier, onUserDeleted }: Use
     </div>
   );
 };
+
+export const UserTable = memo(UserTableComponent);

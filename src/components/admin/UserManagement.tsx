@@ -1,5 +1,5 @@
 
-import { useState, memo, useEffect, useRef } from "react";
+import { useState, memo, useEffect, useRef, useCallback } from "react";
 import { UserManagementLayout } from "./user-management/UserManagementLayout";
 import { UserManagementProvider } from "./user-management/UserManagementContext";
 
@@ -8,6 +8,7 @@ interface UserManagementProps {
   onResetFilter?: () => void;
 }
 
+// Main component is already memoized
 const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagementProps) => {
   const isMountedRef = useRef(false);
   const [mountingComplete, setMountingComplete] = useState(false);
@@ -39,4 +40,5 @@ const UserManagementComponent = ({ initialFilter, onResetFilter }: UserManagemen
   );
 };
 
+// Component is already wrapped in memo
 export const UserManagement = memo(UserManagementComponent);

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { memo } from "react";
 import { UserStats } from "@/hooks/useUserStats";
 import { StatCard } from "./StatCard";
 
@@ -8,7 +8,7 @@ interface StatsOverviewProps {
   onFilterClick: (filterType: string, filterValue: string) => void;
 }
 
-export const StatsOverview = ({ stats, onFilterClick }: StatsOverviewProps) => {
+const StatsOverviewComponent = ({ stats, onFilterClick }: StatsOverviewProps) => {
   // Handle click on a stat card
   const handleStatClick = (filterType: string, filterValue: string) => {
     onFilterClick(filterType, filterValue);
@@ -41,3 +41,5 @@ export const StatsOverview = ({ stats, onFilterClick }: StatsOverviewProps) => {
     </div>
   );
 };
+
+export const StatsOverview = memo(StatsOverviewComponent);

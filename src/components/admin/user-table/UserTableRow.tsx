@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { UserOperations } from "../user-operations";
 import { SubscriptionTier } from "@/types";
@@ -14,7 +15,7 @@ interface UserTableRowProps {
   onUserDeleted?: (userId: string) => void;
 }
 
-export const UserTableRow = ({ 
+const UserTableRowComponent = ({ 
   user, 
   onUpdateTier, 
   onUserDeleted 
@@ -41,3 +42,5 @@ export const UserTableRow = ({
     </TableRow>
   );
 };
+
+export const UserTableRow = memo(UserTableRowComponent);

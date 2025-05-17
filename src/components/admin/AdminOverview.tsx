@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SubscriptionPieChart } from "./charts/SubscriptionPieChart";
 import { ArchetypeBarChart } from "./charts/ArchetypeBarChart";
@@ -23,6 +23,18 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
     onFilterChange({ type, value });
   };
 
+  // Memoize the subscription data transformation
+  const subscriptionData = useMemo(() => {
+    if (!stats?.tierCounts) return [];
+    return Object.entries(stats.tierCounts).map(([name, value]) => ({ name, value }));
+  }, [stats?.tierCounts]);
+
+  // Memoize the archetype data transformation
+  const archetypeData = useMemo(() => {
+    if (!stats?.archetypeCounts) return [];
+    return Object.entries(stats.archetypeCounts).map(([name, value]) => ({ name, value }));
+  }, [stats?.archetypeCounts]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -30,16 +42,6 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
       </div>
     );
   }
-
-  // Transform tier counts to array format required by SubscriptionPieChart
-  const subscriptionData = stats?.tierCounts
-    ? Object.entries(stats.tierCounts).map(([name, value]) => ({ name, value }))
-    : [];
-
-  // Transform archetype counts to array format required by ArchetypeBarChart
-  const archetypeData = stats?.archetypeCounts
-    ? Object.entries(stats.archetypeCounts).map(([name, value]) => ({ name, value }))
-    : [];
 
   return (
     <div className="space-y-6">
