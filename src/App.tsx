@@ -1,6 +1,6 @@
 
 // Import existing providers
-import { AuthProvider } from "./context/auth/AuthProvider"; 
+import { AuthProvider } from "./context/AuthContext"; // Updated import path 
 import { ThemeProvider } from "./context/ThemeContext";
 import { Toaster } from "@/components/ui/toaster";
 import { ReactNode } from "react";
