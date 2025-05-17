@@ -36,7 +36,7 @@ const mockUser = {
   name: "Test User",
   email: "test@example.com",
   onboarded: true,
-  subscription_tier: "free", // Added the required subscription_tier property
+  subscription_tier: "free" as const, // Added the required subscription_tier property with the correct type
 };
 
 // Mock the AuthContext

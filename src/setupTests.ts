@@ -1,6 +1,9 @@
 
 // This file is automatically loaded by Jest before running tests
 
+// Import jest-dom to add custom DOM element matchers
+import '@testing-library/jest-dom';
+
 // Mock for window.matchMedia which isn't available in test environment
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
