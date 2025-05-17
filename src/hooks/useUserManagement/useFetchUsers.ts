@@ -26,21 +26,13 @@ export const useFetchUsers = (
     fetchInProgressRef.current = true;
     setIsLoading(true);
     
-    try {
-      console.log("Fetching users with filters:", { 
-        searchTerm: filters.searchTerm, 
-        tierFilter: filters.tierFilter, 
-        archetypeFilter: filters.archetypeFilter, 
-        onboardedValue 
-      });
-      
+    try {      
       // First, get all user IDs and data
       let userIds: string[] = [], emailData: any[] = [];
       try {
         const result = await userData.fetchUserData();
         userIds = result.userIds;
         emailData = result.emailData;
-        console.log("User email data fetched:", emailData.length);
       } catch (error) {
         console.warn("Failed to fetch user data:", error);
         toast.error("Failed to load user data", { 
@@ -94,11 +86,6 @@ export const useFetchUsers = (
         const userId = user.id;
         const tokenData = usageData[userId] || { usage: 0, limit: 0 };
         
-        // Debug specific user data
-        if (!user.email || user.email === 'Unknown') {
-          console.log("Missing email for user:", userId, user);
-        }
-        
         return {
           id: userId,
           email: user.email || "Unknown email",
@@ -136,9 +123,6 @@ export const useFetchUsers = (
         const onboardedStatus = onboardedValue === "true";
         userList = userList.filter(user => user.onboarded === onboardedStatus);
       }
-      
-      // Add the requested test log
-      console.log("Final merged user data", userList);
       
       // Set the filtered user list
       setUsers(userList);

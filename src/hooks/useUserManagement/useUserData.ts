@@ -35,19 +35,11 @@ export const useUserData = () => {
       // Fetch emails from the admin edge function
       const emailMap = await fetchUserEmails(userIds);
       
-      // Debug what emails were fetched
-      console.log("Email map from fetchUserEmails:", emailMap);
-      
       // Add emails to the profiles
-      const emailData = profiles.map(profile => {
-        const userEmail = emailMap.get(profile.id) || 'Unknown';
-        console.log(`User ${profile.id}: email=${userEmail}`);
-        
-        return {
-          ...profile,
-          email: userEmail
-        };
-      });
+      const emailData = profiles.map(profile => ({
+        ...profile,
+        email: emailMap.get(profile.id) || 'Unknown'
+      }));
 
       return { userIds, emailData };
     } catch (error) {

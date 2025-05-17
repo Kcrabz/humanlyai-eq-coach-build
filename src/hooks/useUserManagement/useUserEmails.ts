@@ -6,9 +6,7 @@ export const useUserEmails = () => {
   const fetchUserEmails = async (userIds: string[]) => {
     if (!userIds.length) return new Map();
     
-    try {
-      console.log("Fetching emails for users:", userIds.length);
-      
+    try {      
       const { data, error } = await supabase.functions.invoke('admin-get-user-emails', {
         body: { userIds },
       });
@@ -20,17 +18,12 @@ export const useUserEmails = () => {
 
       // Create a map of user IDs to emails
       const emailMap = new Map();
-      if (data && data.data) {
-        console.log("Email data received:", data.data.length);
-        data.data.forEach((item: { id: string; email: string }) => {
+      if (data && Array.isArray(data)) {
+        data.forEach((item: { id: string; email: string }) => {
           if (item && item.id && item.email) {
             emailMap.set(item.id, item.email);
-          } else {
-            console.log("Invalid email data item:", item);
           }
         });
-      } else {
-        console.warn("No email data returned from admin function");
       }
 
       return emailMap;
