@@ -17,6 +17,16 @@ export const useFetchUsers = (
   const abortControllerRef = useRef<AbortController | null>(null);
   // Track the last successful fetch ID to prevent race conditions
   const lastFetchIdRef = useRef<number>(0);
+  // Cache for user data to avoid unnecessary fetches
+  const dataCache = useRef<{
+    timestamp: number;
+    users: any[];
+    filters: { searchTerm: string, tierFilter: string, archetypeFilter: string, onboardedValue: string } | null;
+  }>({
+    timestamp: 0,
+    users: [],
+    filters: null
+  });
 
   // Main function to fetch users with filters
   const fetchUsers = useCallback(async (onboardedValue = "all", filters: { 
@@ -26,6 +36,24 @@ export const useFetchUsers = (
   } = { searchTerm: "", tierFilter: "all", archetypeFilter: "all" }) => {
     // Return early if not admin or fetch already in progress
     if (!isAdmin) return Promise.resolve();
+    
+    // Check if we have a recent cache with the same filters
+    const now = Date.now();
+    const CACHE_TTL = 10000; // 10 seconds cache
+    const cacheValid = 
+      dataCache.current.timestamp > 0 && 
+      now - dataCache.current.timestamp < CACHE_TTL &&
+      dataCache.current.filters !== null &&
+      dataCache.current.filters.searchTerm === filters.searchTerm &&
+      dataCache.current.filters.tierFilter === filters.tierFilter &&
+      dataCache.current.filters.archetypeFilter === filters.archetypeFilter &&
+      dataCache.current.filters.onboardedValue === onboardedValue;
+
+    if (cacheValid && dataCache.current.users.length > 0) {
+      console.log("Using cached user data from", new Date(dataCache.current.timestamp).toISOString());
+      setUsers(dataCache.current.users);
+      return Promise.resolve();
+    }
     
     // If a fetch is already in progress, cancel it to prevent race conditions
     if (fetchInProgressRef.current) {
@@ -164,6 +192,13 @@ export const useFetchUsers = (
       }
       
       console.log(`Fetch #${fetchId} completed successfully with ${userList.length} users`);
+      
+      // Update cache
+      dataCache.current = {
+        timestamp: now,
+        users: userList,
+        filters: { ...filters, onboardedValue }
+      };
       
       // Set the filtered user list
       setUsers(userList);

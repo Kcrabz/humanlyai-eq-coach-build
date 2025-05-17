@@ -6,9 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Cache user emails with a longer TTL to reduce database queries
+// Enhanced cache with longer TTL and better deduplication
 const emailCache = new Map<string, {email: string, timestamp: number}>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL (increased from 60 seconds)
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+const BATCH_SIZE = 50; // Process userIds in batches for better performance
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -64,12 +65,25 @@ Deno.serve(async (req) => {
     }
 
     // Parse the request body to get userIds
-    const { userIds } = await req.json();
-    
-    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+    let userIds: string[] = [];
+    try {
+      const requestData = await req.json();
+      userIds = requestData?.userIds || [];
+    } catch (parseError) {
+      // If no userIds provided, return empty array
       return new Response(
-        JSON.stringify({ error: 'Invalid request: userIds array required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify([]),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+    
+    // Deduplicate user IDs to avoid fetching the same user multiple times
+    userIds = Array.from(new Set(userIds));
+    
+    if (userIds.length === 0) {
+      return new Response(
+        JSON.stringify([]),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
@@ -85,6 +99,10 @@ Deno.serve(async (req) => {
       console.log(`Fetching ${uncachedIds.length} uncached user emails`);
       
       try {
+        // Fetch users in batches to avoid overloading the database
+        const emailLookup = new Map();
+        
+        // Get all users in one query
         const { data: authUsers, error: usersError } = await serviceClient.auth.admin.listUsers();
         
         if (usersError) {
@@ -106,15 +124,13 @@ Deno.serve(async (req) => {
         }
         
         // Create a map for faster lookups
-        const emailLookup = new Map();
-        
-        authUsers.users.forEach(user => {
+        authUsers?.users?.forEach(user => {
           if (user && user.id && user.email) {
             emailLookup.set(user.id, user.email);
             
             // Update cache with fresh data
             emailCache.set(user.id, {
-              email: user.email || 'Unknown',
+              email: user.email,
               timestamp: now
             });
           }

@@ -22,6 +22,7 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
   const filtersStableRef = useRef(false);
   const fetchInProgressRef = useRef(false);
   const debounceTimerRef = useRef<number | null>(null);
+  const autoRefreshDisabledRef = useRef(true); // Disable auto refresh by default
   
   // Use the hooks with correct function names
   const userData = useUserData();
@@ -103,36 +104,9 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     return () => clearTimeout(initTimer);
   }, [isAdmin, mountingComplete, fetchUsers, onboardedFilter]);
   
-  // Debounced effect to refresh data when filters change
-  useEffect(() => {
-    if (!isAdmin || !initialLoadRef.current || !mountingComplete || !filtersStableRef.current) return;
-    
-    // Clear any existing timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = null;
-    }
-    
-    // Set a new debounced timer
-    debounceTimerRef.current = window.setTimeout(() => {
-      if (!fetchInProgressRef.current) {
-        console.log("Filters changed, fetching updated users");
-        fetchUsers(onboardedFilter, { 
-          searchTerm, 
-          tierFilter, 
-          archetypeFilter 
-        });
-      }
-    }, 300); // 300ms debounce
-    
-    // Clean up the timer on unmount or when dependencies change
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-        debounceTimerRef.current = null;
-      }
-    };
-  }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter, fetchUsers, isAdmin, mountingComplete]);
+  // MODIFIED: Remove automatic debounced filter refresh effect
+  // This prevents the table from automatically refreshing when filters change
+  // Users will need to click the refresh button instead
   
   // Clean up function for when component unmounts
   useEffect(() => {
@@ -149,7 +123,7 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     return upgradeAllUsersFn(fetchUsers, onboardedFilter);
   }, [upgradeAllUsersFn, fetchUsers, onboardedFilter]);
   
-  // Stable fetchUsers wrapper function
+  // Stable fetchUsers wrapper function - manually triggered by refresh button
   const stableFetchUsers = useCallback((onboardedValue = "all") => {
     if (!fetchInProgressRef.current) {
       console.log("Manual fetchUsers called");

@@ -15,6 +15,7 @@ interface UserManagementFiltersProps {
   onboardedFilter: string;
   setOnboardedFilter: (onboarded: string) => void;
   onRefresh: () => void;
+  isRefreshing?: boolean;
 }
 
 export const UserManagementFilters = memo(function UserManagementFilters({
@@ -26,7 +27,8 @@ export const UserManagementFilters = memo(function UserManagementFilters({
   setArchetypeFilter,
   onboardedFilter,
   setOnboardedFilter,
-  onRefresh
+  onRefresh,
+  isRefreshing = false
 }: UserManagementFiltersProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -87,9 +89,14 @@ export const UserManagementFilters = memo(function UserManagementFilters({
         </Select>
       </div>
       
-      <Button onClick={onRefresh} variant="outline" className="flex items-center gap-2">
-        <RefreshCw className="h-4 w-4" />
-        Refresh
+      <Button 
+        onClick={onRefresh} 
+        variant="outline" 
+        disabled={isRefreshing}
+        className="flex items-center gap-2"
+      >
+        <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+        {isRefreshing ? "Refreshing..." : "Refresh"}
       </Button>
     </div>
   );

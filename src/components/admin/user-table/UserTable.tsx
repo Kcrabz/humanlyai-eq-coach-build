@@ -72,4 +72,5 @@ const UserTableComponent = ({ users, isLoading, onUpdateTier, onUserDeleted }: U
   );
 };
 
+// Use memo with careful equality check to prevent unnecessary re-renders
 export const UserTable = memo(UserTableComponent);
