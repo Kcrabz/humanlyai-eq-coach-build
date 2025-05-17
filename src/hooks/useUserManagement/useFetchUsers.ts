@@ -97,6 +97,9 @@ export const useFetchUsers = (
         userList = userList.filter(user => user.onboarded === onboardedStatus);
       }
       
+      // Add the requested test log
+      console.log("Final merged user data", userList);
+      
       // Set the filtered user list
       setUsers(userList);
     } catch (error) {
