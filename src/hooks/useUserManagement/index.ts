@@ -18,6 +18,7 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
   const { isAdmin } = useAdminCheck();
   const initialLoadRef = useRef(false);
   const filtersStableRef = useRef(false);
+  const fetchInProgressRef = useRef(false);
   
   // Use the hooks with correct function names
   const userData = useUserData();
@@ -45,7 +46,8 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     userData, 
     lastLogins, 
     chatActivity, 
-    fetchTokenUsageData
+    fetchTokenUsageData,
+    fetchInProgressRef
   );
   
   // Handle tier management
@@ -88,7 +90,7 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     if (!isAdmin || !mountingComplete) return;
     
     const loadInitialData = async () => {
-      if (!initialLoadRef.current) {
+      if (!initialLoadRef.current && !fetchInProgressRef.current) {
         initialLoadRef.current = true;
         await fetchUsers(onboardedFilter, stableFilters.current);
       }
@@ -97,11 +99,17 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     loadInitialData();
   }, [isAdmin, mountingComplete, fetchUsers, onboardedFilter]);
   
-  // Direct effect to refresh data when filters change
+  // Effect to refresh data when filters change - with debounce to prevent rapid reloads
   useEffect(() => {
-    if (!isAdmin || !initialLoadRef.current || !mountingComplete) return;
+    if (!isAdmin || !initialLoadRef.current || !mountingComplete || !filtersStableRef.current) return;
     
-    fetchUsers(onboardedFilter, { searchTerm, tierFilter, archetypeFilter });
+    const timer = setTimeout(() => {
+      if (!fetchInProgressRef.current) {
+        fetchUsers(onboardedFilter, { searchTerm, tierFilter, archetypeFilter });
+      }
+    }, 300); // 300ms debounce
+    
+    return () => clearTimeout(timer);
   }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter, fetchUsers, isAdmin, mountingComplete]);
   
   return {
@@ -117,7 +125,12 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     setOnboardedFilter,
     activeFilter,
     resetFilters,
-    fetchUsers: (onboardedValue = "all") => fetchUsers(onboardedValue, stableFilters.current),
+    fetchUsers: (onboardedValue = "all") => {
+      if (!fetchInProgressRef.current) {
+        return fetchUsers(onboardedValue, stableFilters.current);
+      }
+      return Promise.resolve();
+    },
     handleUpdateTier,
     handleUserDeleted,
     upgradeAllUsersToPremium

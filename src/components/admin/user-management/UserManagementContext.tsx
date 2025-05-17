@@ -66,7 +66,7 @@ export const UserManagementProvider = ({
       setInitialLoadDone(true);
     }
 
-    // Safety timeout
+    // Safety timeout - ensure we don't get stuck in loading state
     const safetyTimeout = setTimeout(() => {
       if (!initialLoadDone) {
         setInitialLoadDone(true);

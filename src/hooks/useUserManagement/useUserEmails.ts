@@ -13,7 +13,7 @@ export const useUserEmails = () => {
 
       if (error) {
         console.error("Error fetching user emails:", error);
-        throw error;
+        return new Map();
       }
 
       // Create a map of user IDs to emails

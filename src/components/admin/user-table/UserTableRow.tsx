@@ -21,11 +21,11 @@ const UserTableRowComponent = ({
   onUpdateTier, 
   onUserDeleted 
 }: UserTableRowProps) => {
-  // Ensure we have a valid email or fallback
+  // Use a default value if email is missing or invalid
   const displayEmail = user.email && user.email !== 'Unknown' ? user.email : "Unknown email";
   
   return (
-    <TableRow key={user.id}>
+    <TableRow>
       <TableCell className="font-medium">{displayEmail}</TableCell>
       <TableCell>{user.name || "-"}</TableCell>
       <TableCell>

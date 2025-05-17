@@ -11,10 +11,9 @@ export const useFetchUsers = (
   userData: { fetchUserData: () => Promise<{ userIds: string[], emailData: any[] }> },
   lastLogins: { fetchLastLogins: (userIds: string[]) => Promise<Map<string, any>> },
   chatActivity: { fetchChatActivity: (userIds: string[]) => Promise<Map<string, any>> },
-  fetchTokenUsageData: (userIds: string[]) => Promise<Record<string, { usage: number; limit: number }>>
+  fetchTokenUsageData: (userIds: string[]) => Promise<Record<string, { usage: number; limit: number }>>,
+  fetchInProgressRef: React.MutableRefObject<boolean>
 ) => {
-  const fetchInProgressRef = useRef(false);
-
   // Main function to fetch users with filters
   const fetchUsers = useCallback(async (onboardedValue = "all", filters: { 
     searchTerm: string,
@@ -56,29 +55,31 @@ export const useFetchUsers = (
       let userLastLogins: Map<string, any> = new Map();
       let userChatActivity: Map<string, any> = new Map();
       
-      // Fetch token usage with error handling
       try {
-        usageData = await fetchTokenUsageData(userIds);
+        // Use Promise.allSettled to prevent one failing promise from affecting others
+        const [usageResult, loginsResult, activityResult] = await Promise.allSettled([
+          fetchTokenUsageData(userIds),
+          lastLogins.fetchLastLogins(userIds),
+          chatActivity.fetchChatActivity(userIds)
+        ]);
+        
+        // Handle token usage result
+        if (usageResult.status === 'fulfilled') {
+          usageData = usageResult.value;
+        }
+        
+        // Handle logins result
+        if (loginsResult.status === 'fulfilled') {
+          userLastLogins = loginsResult.value;
+        }
+        
+        // Handle chat activity result
+        if (activityResult.status === 'fulfilled') {
+          userChatActivity = activityResult.value;
+        }
       } catch (error) {
-        console.warn("Failed to fetch token usage data:", error);
-        // Continue with empty usage data
-        usageData = {};
-      }
-      
-      // Fetch last logins with error handling
-      try {
-        userLastLogins = await lastLogins.fetchLastLogins(userIds);
-      } catch (error) {
-        console.warn("Failed to fetch login data:", error);
-        // Continue with empty login data
-      }
-      
-      // Fetch chat activity with error handling
-      try {
-        userChatActivity = await chatActivity.fetchChatActivity(userIds);
-      } catch (error) {
-        console.warn("Failed to fetch chat activity:", error);
-        // Continue with empty chat activity
+        console.warn("Error fetching supplementary data:", error);
+        // Continue with processing, using what data we have
       }
       
       // Combine all data to create the final user list
@@ -135,7 +136,7 @@ export const useFetchUsers = (
       setIsLoading(false);
       fetchInProgressRef.current = false;
     }
-  }, [isAdmin, userData, lastLogins, chatActivity, fetchTokenUsageData, setIsLoading, setUsers]);
+  }, [isAdmin, userData, lastLogins, chatActivity, fetchTokenUsageData, setIsLoading, setUsers, fetchInProgressRef]);
 
   return { fetchUsers };
 };

@@ -5,27 +5,20 @@ import { UserTableProps } from "./types";
 import { UserTableHeader } from "./UserTableHeader";
 import { UserTableRow } from "./UserTableRow";
 import { LoadingRows } from "./LoadingRows";
-import { useUserManagementContext } from "../user-management/UserManagementContext";
 
 const UserTableComponent = ({ users, isLoading, onUpdateTier, onUserDeleted }: UserTableProps) => {
-  const { refreshUsers } = useUserManagementContext();
-  
-  // Handle refresh after operations
+  // Memoize handlers to prevent re-renders
   const handleUserDeleted = useCallback((userId: string) => {
     if (onUserDeleted) {
       onUserDeleted(userId);
     }
-    // Also refresh the data to ensure consistency
-    refreshUsers();
-  }, [onUserDeleted, refreshUsers]);
+  }, [onUserDeleted]);
   
   const handleUpdateTier = useCallback(async (userId: string, tier: any) => {
     if (onUpdateTier) {
       await onUpdateTier(userId, tier);
-      // Refresh user data after tier update
-      await refreshUsers();
     }
-  }, [onUpdateTier, refreshUsers]);
+  }, [onUpdateTier]);
 
   return (
     <div className="rounded-md border">
