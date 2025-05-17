@@ -1,12 +1,8 @@
 
-// Mock ResizeObserver which isn't available in the test environment
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));
+// Import jest-dom to add custom DOM element matchers
+import '@testing-library/jest-dom';
 
-// Mock window.matchMedia
+// Mock for window.matchMedia which isn't available in test environment
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: jest.fn().mockImplementation(query => ({
@@ -19,4 +15,19 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
+});
+
+// Mock for ResizeObserver
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+// Mock for window.scrollTo
+window.scrollTo = jest.fn();
+
+// Clear all mocks automatically between tests
+afterEach(() => {
+  jest.clearAllMocks();
 });
