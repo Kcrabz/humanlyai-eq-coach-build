@@ -40,6 +40,7 @@ export const useFetchUsers = (
         const result = await userData.fetchUserData();
         userIds = result.userIds;
         emailData = result.emailData;
+        console.log("User email data fetched:", emailData.length);
       } catch (error) {
         console.warn("Failed to fetch user data:", error);
         toast.error("Failed to load user data", { 
@@ -92,6 +93,11 @@ export const useFetchUsers = (
       let userList = emailData.map(user => {
         const userId = user.id;
         const tokenData = usageData[userId] || { usage: 0, limit: 0 };
+        
+        // Debug specific user data
+        if (!user.email || user.email === 'Unknown') {
+          console.log("Missing email for user:", userId, user);
+        }
         
         return {
           id: userId,

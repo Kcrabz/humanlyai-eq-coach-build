@@ -23,7 +23,7 @@ const UserTableRowComponent = ({
 }: UserTableRowProps) => {
   return (
     <TableRow key={user.id}>
-      <TableCell className="font-medium">{user.email}</TableCell>
+      <TableCell className="font-medium">{user.email || "Unknown email"}</TableCell>
       <TableCell>{user.name || "-"}</TableCell>
       <TableCell>
         <SubscriptionCell user={user} />
