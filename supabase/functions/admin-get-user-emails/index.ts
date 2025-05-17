@@ -6,9 +6,9 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Cache user emails in memory to reduce database queries
+// Cache user emails with a longer TTL to reduce database queries
 const emailCache = new Map<string, {email: string, timestamp: number}>();
-const CACHE_TTL = 60 * 1000; // 60 seconds cache TTL
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL (increased from 60 seconds)
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -80,28 +80,48 @@ Deno.serve(async (req) => {
       return !cachedItem || (now - cachedItem.timestamp > CACHE_TTL);
     });
     
-    let users = [];
-    
     // If we have uncached IDs, fetch them
     if (uncachedIds.length > 0) {
       console.log(`Fetching ${uncachedIds.length} uncached user emails`);
-      const { data: authUsers, error: usersError } = await serviceClient.auth.admin.listUsers();
       
-      if (usersError) {
-        console.error("Error fetching users:", usersError);
-        return new Response(
-          JSON.stringify({ error: usersError.message }),
-          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      // Update cache with fresh data
-      authUsers.users.forEach(user => {
-        emailCache.set(user.id, {
-          email: user.email || 'Unknown',
-          timestamp: now
+      try {
+        const { data: authUsers, error: usersError } = await serviceClient.auth.admin.listUsers();
+        
+        if (usersError) {
+          console.error("Error fetching users:", usersError);
+          
+          // Still return cached results even if we hit an error for new users
+          const result = userIds.map(id => {
+            const cachedItem = emailCache.get(id);
+            return {
+              id,
+              email: cachedItem ? cachedItem.email : 'Unknown'
+            };
+          });
+          
+          return new Response(
+            JSON.stringify(result),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
+        // Create a map for faster lookups
+        const emailLookup = new Map();
+        
+        authUsers.users.forEach(user => {
+          if (user && user.id && user.email) {
+            emailLookup.set(user.id, user.email);
+            
+            // Update cache with fresh data
+            emailCache.set(user.id, {
+              email: user.email || 'Unknown',
+              timestamp: now
+            });
+          }
         });
-      });
+      } catch (fetchError) {
+        console.error("Error fetching auth users:", fetchError);
+      }
     } else {
       console.log('All requested user emails found in cache');
     }
