@@ -1,5 +1,6 @@
 
 import { useCallback } from "react";
+import { CHAT_CLEARED_SESSION, FRESH_CHAT_NEEDED } from "@/constants/storageKeys";
 
 /**
  * Hook with utilities for chat session management in storage
@@ -25,21 +26,21 @@ export const useSessionStorage = () => {
    * Checks if chat has been cleared for current session
    */
   const isChatClearedForSession = useCallback(() => {
-    return sessionStorage.getItem('chat_cleared_for_session') === 'true';
+    return sessionStorage.getItem(CHAT_CLEARED_SESSION) === 'true';
   }, []);
 
   /**
    * Checks if a fresh chat experience is needed
    */
   const isFreshChatNeeded = useCallback(() => {
-    return sessionStorage.getItem('fresh_chat_needed') === 'true';
+    return sessionStorage.getItem(FRESH_CHAT_NEEDED) === 'true';
   }, []);
 
   /**
    * Marks that chat has been cleared for this session
    */
   const markChatClearedForSession = useCallback(() => {
-    sessionStorage.setItem('chat_cleared_for_session', 'true');
+    sessionStorage.setItem(CHAT_CLEARED_SESSION, 'true');
     console.log("Chat cleared for session flag set");
   }, []);
 
@@ -47,8 +48,8 @@ export const useSessionStorage = () => {
    * Clears chat session flags to force a reload of history
    */
   const clearChatSessionFlags = useCallback(() => {
-    sessionStorage.removeItem('chat_cleared_for_session');
-    sessionStorage.removeItem('fresh_chat_needed');
+    sessionStorage.removeItem(CHAT_CLEARED_SESSION);
+    sessionStorage.removeItem(FRESH_CHAT_NEEDED);
     console.log("Chat session flags cleared to force history refresh");
   }, []);
 

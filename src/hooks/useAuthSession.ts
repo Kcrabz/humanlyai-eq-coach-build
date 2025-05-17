@@ -3,6 +3,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { markLoginSuccess, forceRedirectToDashboard, isRunningAsPWA } from '@/utils/loginRedirectUtils';
+import { 
+  LOGIN_SUCCESS_TIMESTAMP, 
+  PWA_AUTH_TIMESTAMP,
+  PWA_REDIRECT_AFTER_LOGIN,
+  PWA_SESSION_RESTORED,
+  PWA_DESIRED_PATH
+} from '@/constants/storageKeys';
 
 /**
  * Hook for managing authentication session state with improved initialization and sign-in handling
@@ -71,7 +78,7 @@ export const useAuthSession = () => {
 
   // Check for login success via localStorage as a fallback
   useEffect(() => {
-    const storedTimestamp = localStorage.getItem('login_success_timestamp');
+    const storedTimestamp = localStorage.getItem(LOGIN_SUCCESS_TIMESTAMP);
     if (storedTimestamp && !loginTimestamp) {
       const timestamp = parseInt(storedTimestamp);
       // Only use stored timestamp if it's recent (last 5 minutes)
@@ -80,12 +87,12 @@ export const useAuthSession = () => {
         console.log("Restored login success state from localStorage", { timestamp });
       } else {
         // Clear expired login timestamp
-        localStorage.removeItem('login_success_timestamp');
+        localStorage.removeItem(LOGIN_SUCCESS_TIMESTAMP);
       }
     }
     
     // Check for PWA auth timestamp as additional fallback
-    const pwaAuthTimestamp = localStorage.getItem('pwa_auth_timestamp');
+    const pwaAuthTimestamp = localStorage.getItem(PWA_AUTH_TIMESTAMP);
     if (pwaAuthTimestamp && isRunningAsPWA()) {
       const timestamp = parseInt(pwaAuthTimestamp);
       if (Date.now() - timestamp < 5 * 60 * 1000) {
@@ -131,12 +138,12 @@ export const useAuthSession = () => {
           setProfileLoaded(true); // Assume profile is loaded for existing sessions
           
           // For PWA mode, check if we need to handle redirects
-          if (isRunningAsPWA() && !localStorage.getItem('pwa_session_restored')) {
+          if (isRunningAsPWA() && !localStorage.getItem(PWA_SESSION_RESTORED)) {
             console.log("PWA session restored, may need to handle redirects");
-            localStorage.setItem('pwa_session_restored', 'true');
+            localStorage.setItem(PWA_SESSION_RESTORED, 'true');
             
             // Check for stored redirect path
-            const desiredPath = sessionStorage.getItem('pwa_desired_path');
+            const desiredPath = sessionStorage.getItem(PWA_DESIRED_PATH);
             if (desiredPath && window.location.pathname === '/' || window.location.pathname === '/login') {
               console.log("Found stored redirect path for PWA:", desiredPath);
               // Add slight delay to allow context to initialize

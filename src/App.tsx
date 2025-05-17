@@ -7,6 +7,7 @@ import { ReactNode } from "react";
 import AppRoutes from "./AppRoutes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChatMemoryProvider } from "./context/ChatMemoryContext";
+import { THEME_STORAGE_KEY } from "./constants/storageKeys";
 
 // Create a new query client
 const queryClient = new QueryClient();
@@ -14,7 +15,7 @@ const queryClient = new QueryClient();
 // Provider wrapper component for better organization
 function AppProviders({ children }: { children: ReactNode }) {
   return (
-    <ThemeProvider defaultTheme="light" storageKey="humanly-theme">
+    <ThemeProvider defaultTheme="light" storageKey={THEME_STORAGE_KEY}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <ChatMemoryProvider>

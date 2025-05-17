@@ -1,4 +1,14 @@
 
+import { 
+  LOGIN_SUCCESS_TIMESTAMP, 
+  LOGIN_SUCCESS_SESSION,
+  FRESH_CHAT_NEEDED,
+  CHAT_CLEARED_SESSION,
+  PWA_DESIRED_PATH,
+  PWA_AUTH_TIMESTAMP,
+  PWA_REDIRECT_AFTER_LOGIN
+} from "@/constants/storageKeys";
+
 /**
  * Utility functions to help with login redirection
  */
@@ -8,16 +18,16 @@
  */
 export const markLoginSuccess = (): void => {
   const timestamp = Date.now();
-  localStorage.setItem('login_success_timestamp', timestamp.toString());
+  localStorage.setItem(LOGIN_SUCCESS_TIMESTAMP, timestamp.toString());
   
   // Also set a session storage flag which is cleared when browser closes
-  sessionStorage.setItem('login_success', 'true');
+  sessionStorage.setItem(LOGIN_SUCCESS_SESSION, 'true');
   
   // Set a flag to indicate that the chat should be reset for fresh experience
-  sessionStorage.setItem('fresh_chat_needed', 'true');
+  sessionStorage.setItem(FRESH_CHAT_NEEDED, 'true');
   
   // Remove any previous chat clearing flag to ensure we clear on new login
-  sessionStorage.removeItem('chat_cleared_for_session');
+  sessionStorage.removeItem(CHAT_CLEARED_SESSION);
 
   console.log("Login success marked with timestamp", { timestamp });
   
@@ -26,8 +36,8 @@ export const markLoginSuccess = (): void => {
     console.log("Login success detected in PWA mode");
     
     // Store dashboard as the default redirect path if nothing else is specified
-    if (!sessionStorage.getItem('pwa_desired_path')) {
-      sessionStorage.setItem('pwa_desired_path', '/dashboard');
+    if (!sessionStorage.getItem(PWA_DESIRED_PATH)) {
+      sessionStorage.setItem(PWA_DESIRED_PATH, '/dashboard');
     }
   }
 };
@@ -36,9 +46,9 @@ export const markLoginSuccess = (): void => {
  * Clears the login success flag
  */
 export const clearLoginSuccess = (): void => {
-  localStorage.removeItem('login_success_timestamp');
-  sessionStorage.removeItem('login_success');
-  sessionStorage.removeItem('fresh_chat_needed');
+  localStorage.removeItem(LOGIN_SUCCESS_TIMESTAMP);
+  sessionStorage.removeItem(LOGIN_SUCCESS_SESSION);
+  sessionStorage.removeItem(FRESH_CHAT_NEEDED);
 };
 
 /**
@@ -46,12 +56,12 @@ export const clearLoginSuccess = (): void => {
  */
 export const wasLoginSuccessful = (): boolean => {
   // First check session storage (cleared when browser closes)
-  if (sessionStorage.getItem('login_success') === 'true') {
+  if (sessionStorage.getItem(LOGIN_SUCCESS_SESSION) === 'true') {
     return true;
   }
   
   // Then check localStorage with timestamp
-  const timestamp = localStorage.getItem('login_success_timestamp');
+  const timestamp = localStorage.getItem(LOGIN_SUCCESS_TIMESTAMP);
   if (timestamp) {
     const loginTime = parseInt(timestamp);
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
@@ -88,11 +98,11 @@ export const forceRedirectToDashboard = (): void => {
  * Returns true once, then clears the flag
  */
 export const shouldShowFreshChat = (): boolean => {
-  const freshChatNeeded = sessionStorage.getItem('fresh_chat_needed') === 'true';
+  const freshChatNeeded = sessionStorage.getItem(FRESH_CHAT_NEEDED) === 'true';
   
   // Clear the flag after checking so it only returns true once
   if (freshChatNeeded) {
-    sessionStorage.removeItem('fresh_chat_needed');
+    sessionStorage.removeItem(FRESH_CHAT_NEEDED);
     console.log("Fresh chat experience triggered");
   }
   

@@ -3,6 +3,7 @@ import { useCallback, useRef } from "react";
 import { ChatMessage } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { useSessionStorage } from "./useSessionStorage";
+import { getChatMessagesKey } from "@/constants/storageKeys";
 
 /**
  * Hook for handling chat message persistence
@@ -25,9 +26,8 @@ export const useChatStorage = (user: any, messages: ChatMessage[], isLoadingHist
     // Set a timeout to save after 1 second of inactivity
     savePendingRef.current = setTimeout(() => {
       // Always save to localStorage for all users
-      const storageKey = user.subscription_tier === 'premium' 
-        ? `chat_messages_${user.id}`
-        : `chat_messages_${user.id}_${getSessionId(user.id, user.subscription_tier)}`;
+      const sessionId = getSessionId(user.id, user.subscription_tier);
+      const storageKey = getChatMessagesKey(user.id, sessionId);
         
       localStorage.setItem(storageKey, JSON.stringify(messages));
       
