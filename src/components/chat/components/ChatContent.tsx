@@ -15,14 +15,14 @@ interface ChatContentProps {
 
 export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatContentProps) {
   return (
-    <div className="flex-1 overflow-hidden flex flex-col">
+    <div className="flex-1 overflow-hidden flex flex-col min-h-0">
       {!hasCompletedAssessment && <EQAssessmentAlert onStartAssessment={onStartAssessment} />}
       
       {/* Use ChatUsage directly, not in Suspense */}
       <ChatUsage />
       
       <Suspense fallback={
-        <div className="flex-1 flex justify-center items-center">
+        <div className="flex-1 flex justify-center items-center min-h-0">
           <div className="animate-breathe rounded-full h-14 w-14 border-2 border-humanly-indigo/30 flex items-center justify-center">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-humanly-indigo"></div>
           </div>
@@ -31,7 +31,9 @@ export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatC
         <ChatList />
       </Suspense>
       
-      <ChatInput />
+      <div className="sticky bottom-0 bg-white z-10 pb-[env(safe-area-inset-bottom)]">
+        <ChatInput />
+      </div>
     </div>
   );
 }

@@ -51,7 +51,7 @@ export function ChatInput() {
 
   return (
     <form 
-      className="p-3 border-t flex items-end gap-2 relative" 
+      className="p-3 border-t flex items-end gap-2 bg-white" 
       onSubmit={handleSubmit}
       style={{
         paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))`

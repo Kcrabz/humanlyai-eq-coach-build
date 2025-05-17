@@ -39,12 +39,14 @@ export function EnhancedChatUI({
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   }, [chatHistory, isLoading]);
 
   return (
-    <div className={`flex flex-col h-full ${className}`}>
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+    <div className={`flex flex-col h-screen overflow-hidden ${className}`}>
+      <div className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
         {chatHistory.length === 0 ? (
           <ChatWelcomeScreen sendSuggestedMessage={sendSuggestedMessage} />
         ) : (
@@ -58,16 +60,18 @@ export function EnhancedChatUI({
         <div ref={messagesEndRef} />
       </div>
       
-      <EnhancedChatForm
-        onSubmit={handleSubmit}
-        placeholder={getDynamicPlaceholder()}
-        isLoading={isLoading}
-        error={error}
-        isQuotaError={isQuotaError}
-        isInvalidKeyError={isInvalidKeyError}
-        onRetry={handleRetry}
-        isPremiumMember={isPremiumMember}
-      />
+      <div className="sticky bottom-0 bg-white z-10 pb-[env(safe-area-inset-bottom)]">
+        <EnhancedChatForm
+          onSubmit={handleSubmit}
+          placeholder={getDynamicPlaceholder()}
+          isLoading={isLoading}
+          error={error}
+          isQuotaError={isQuotaError}
+          isInvalidKeyError={isInvalidKeyError}
+          onRetry={handleRetry}
+          isPremiumMember={isPremiumMember}
+        />
+      </div>
     </div>
   );
 }

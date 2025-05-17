@@ -64,15 +64,19 @@ export function ChatList() {
     }
   }, [rightSidebarOpen, leftSidebarOpen, prevRightState, prevLeftState]);
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change with improved timing
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
   }, [validMessages]);
 
   // If there are messages and this is the first render, scroll to the most recent message
   useEffect(() => {
     if (validMessages.length > 0 && firstRenderRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 100);
       firstRenderRef.current = false;
     }
   }, [validMessages]);
@@ -87,7 +91,7 @@ export function ChatList() {
   return (
     <div 
       ref={chatContainerRef}
-      className={`flex-1 overflow-y-auto ${isMobile ? 'p-3' : 'p-4'} space-y-6`} 
+      className="flex-1 overflow-y-auto min-h-0 p-3 md:p-4 space-y-6" 
       data-pwa={isPWA ? "true" : "false"}
       style={{
         paddingBottom: isMobile ? 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' : undefined
