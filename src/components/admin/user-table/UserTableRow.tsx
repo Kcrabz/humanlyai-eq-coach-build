@@ -8,6 +8,7 @@ import { LastLoginCell } from "./cells/LastLoginCell";
 import { ChatActivityCell } from "./cells/ChatActivityCell";
 import { TokenUsageCell } from "./cells/TokenUsageCell";
 import { SubscriptionCell } from "./cells/SubscriptionCell";
+import { ArchetypeCell } from "./cells/ArchetypeCell";
 
 interface UserTableRowProps {
   user: UserTableData;
@@ -27,7 +28,7 @@ const UserTableRowComponent = ({
       <TableCell>
         <SubscriptionCell user={user} />
       </TableCell>
-      <TableCell>{user.eq_archetype || "Not set"}</TableCell>
+      <TableCell><ArchetypeCell user={user} /></TableCell>
       <TableCell><LastLoginCell user={user} /></TableCell>
       <TableCell><ChatActivityCell user={user} /></TableCell>
       <TableCell><TokenUsageCell user={user} /></TableCell>
