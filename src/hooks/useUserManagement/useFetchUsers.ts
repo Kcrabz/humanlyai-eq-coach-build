@@ -35,24 +35,58 @@ export const useFetchUsers = (
       });
       
       // First, get all user IDs and data
-      const { userIds, emailData } = await userData.fetchUserData();
-      
-      if (userIds.length === 0) {
+      let userIds: string[] = [], emailData: any[] = [];
+      try {
+        const result = await userData.fetchUserData();
+        userIds = result.userIds;
+        emailData = result.emailData;
+      } catch (error) {
+        console.warn("Failed to fetch user data:", error);
+        toast.error("Failed to load user data", { 
+          description: "There was a problem fetching basic user information" 
+        });
         setUsers([]);
+        setIsLoading(false);
+        fetchInProgressRef.current = false;
         return;
       }
       
-      // Then fetch token usage data for all users in parallel
-      const usagePromise = fetchTokenUsageData(userIds);
-      const loginPromise = lastLogins.fetchLastLogins(userIds);
-      const activityPromise = chatActivity.fetchChatActivity(userIds);
+      if (userIds.length === 0) {
+        setUsers([]);
+        setIsLoading(false);
+        fetchInProgressRef.current = false;
+        return;
+      }
       
-      // Wait for all promises to resolve
-      const [usageData, userLastLogins, userChatActivity] = await Promise.all([
-        usagePromise,
-        loginPromise,
-        activityPromise
-      ]);
+      // Then fetch token usage data, logins, and chat activity in parallel with error handling
+      let usageData: Record<string, { usage: number; limit: number }> = {};
+      let userLastLogins: Map<string, any> = new Map();
+      let userChatActivity: Map<string, any> = new Map();
+      
+      // Fetch token usage with error handling
+      try {
+        usageData = await fetchTokenUsageData(userIds);
+      } catch (error) {
+        console.warn("Failed to fetch token usage data:", error);
+        // Continue with empty usage data
+        usageData = {};
+      }
+      
+      // Fetch last logins with error handling
+      try {
+        userLastLogins = await lastLogins.fetchLastLogins(userIds);
+      } catch (error) {
+        console.warn("Failed to fetch login data:", error);
+        // Continue with empty login data
+      }
+      
+      // Fetch chat activity with error handling
+      try {
+        userChatActivity = await chatActivity.fetchChatActivity(userIds);
+      } catch (error) {
+        console.warn("Failed to fetch chat activity:", error);
+        // Continue with empty chat activity
+      }
       
       // Combine all data to create the final user list
       let userList = emailData.map(user => {
