@@ -1,6 +1,5 @@
 
 import { useCallback, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 // This hook handles the core logic of fetching users with filters
@@ -14,18 +13,39 @@ export const useFetchUsers = (
   fetchTokenUsageData: (userIds: string[]) => Promise<Record<string, { usage: number; limit: number }>>,
   fetchInProgressRef: React.MutableRefObject<boolean>
 ) => {
+  // Track the fetch abort controller to cancel previous requests
+  const abortControllerRef = useRef<AbortController | null>(null);
+  // Track the last successful fetch ID to prevent race conditions
+  const lastFetchIdRef = useRef<number>(0);
+
   // Main function to fetch users with filters
   const fetchUsers = useCallback(async (onboardedValue = "all", filters: { 
     searchTerm: string,
     tierFilter: string,
     archetypeFilter: string
   } = { searchTerm: "", tierFilter: "all", archetypeFilter: "all" }) => {
-    if (!isAdmin || fetchInProgressRef.current) return;
+    // Return early if not admin or fetch already in progress
+    if (!isAdmin) return Promise.resolve();
     
+    // If a fetch is already in progress, cancel it to prevent race conditions
+    if (fetchInProgressRef.current) {
+      console.log("Cancelling previous fetch - new fetch requested");
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    }
+    
+    // Set up a new abort controller for this fetch
+    abortControllerRef.current = new AbortController();
     fetchInProgressRef.current = true;
     setIsLoading(true);
     
+    // Generate a unique ID for this fetch operation
+    const fetchId = ++lastFetchIdRef.current;
+    
     try {      
+      console.log(`Starting user data fetch #${fetchId}`);
+      
       // First, get all user IDs and data
       let userIds: string[] = [], emailData: any[] = [];
       try {
@@ -40,14 +60,20 @@ export const useFetchUsers = (
         setUsers([]);
         setIsLoading(false);
         fetchInProgressRef.current = false;
-        return;
+        return Promise.resolve();
+      }
+      
+      // If the current fetch is no longer the latest, discard results
+      if (fetchId !== lastFetchIdRef.current) {
+        console.log(`Fetch #${fetchId} superseded by newer fetch, discarding results`);
+        return Promise.resolve();
       }
       
       if (userIds.length === 0) {
         setUsers([]);
         setIsLoading(false);
         fetchInProgressRef.current = false;
-        return;
+        return Promise.resolve();
       }
       
       // Then fetch token usage data, logins, and chat activity in parallel with error handling
@@ -82,6 +108,12 @@ export const useFetchUsers = (
         // Continue with processing, using what data we have
       }
       
+      // If the current fetch is no longer the latest, discard results
+      if (fetchId !== lastFetchIdRef.current) {
+        console.log(`Fetch #${fetchId} supplementary data superseded by newer fetch, discarding results`);
+        return Promise.resolve();
+      }
+      
       // Combine all data to create the final user list
       let userList = emailData.map(user => {
         const userId = user.id;
@@ -107,7 +139,7 @@ export const useFetchUsers = (
       
       if (searchTermLower) {
         userList = userList.filter(user =>
-          user.email.toLowerCase().includes(searchTermLower) ||
+          (user.email && user.email.toLowerCase().includes(searchTermLower)) ||
           (user.name && user.name.toLowerCase().includes(searchTermLower))
         );
       }
@@ -125,16 +157,30 @@ export const useFetchUsers = (
         userList = userList.filter(user => user.onboarded === onboardedStatus);
       }
       
+      // Final check if this fetch is still valid
+      if (fetchId !== lastFetchIdRef.current) {
+        console.log(`Fetch #${fetchId} final results superseded by newer fetch, discarding`);
+        return Promise.resolve();
+      }
+      
+      console.log(`Fetch #${fetchId} completed successfully with ${userList.length} users`);
+      
       // Set the filtered user list
       setUsers(userList);
+      return Promise.resolve();
     } catch (error) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users", { 
         description: "There was a problem fetching user data" 
       });
+      return Promise.resolve();
     } finally {
-      setIsLoading(false);
-      fetchInProgressRef.current = false;
+      // Clean up
+      if (fetchId === lastFetchIdRef.current) {
+        setIsLoading(false);
+        fetchInProgressRef.current = false;
+        abortControllerRef.current = null;
+      }
     }
   }, [isAdmin, userData, lastLogins, chatActivity, fetchTokenUsageData, setIsLoading, setUsers, fetchInProgressRef]);
 

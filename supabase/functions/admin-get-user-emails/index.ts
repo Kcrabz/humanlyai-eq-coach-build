@@ -6,6 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Cache user emails in memory to reduce database queries
+const emailCache = new Map<string, {email: string, timestamp: number}>();
+const CACHE_TTL = 60 * 1000; // 60 seconds cache TTL
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -58,26 +62,61 @@ Deno.serve(async (req) => {
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    // Parse the request body to get userIds
+    const { userIds } = await req.json();
     
-    // Get all users with their emails
-    const { data: authUsers, error: usersError } = await serviceClient.auth.admin.listUsers();
-    
-    if (usersError) {
-      console.error("Error fetching users:", usersError);
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
       return new Response(
-        JSON.stringify({ error: usersError.message }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Invalid request: userIds array required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
     
-    // Format the user data to include only id and email
-    const users = authUsers.users.map(user => ({
-      id: user.id,
-      email: user.email
-    }));
+    // Filter out ids we already have in cache (that haven't expired)
+    const now = Date.now();
+    const uncachedIds = userIds.filter(id => {
+      const cachedItem = emailCache.get(id);
+      return !cachedItem || (now - cachedItem.timestamp > CACHE_TTL);
+    });
+    
+    let users = [];
+    
+    // If we have uncached IDs, fetch them
+    if (uncachedIds.length > 0) {
+      console.log(`Fetching ${uncachedIds.length} uncached user emails`);
+      const { data: authUsers, error: usersError } = await serviceClient.auth.admin.listUsers();
+      
+      if (usersError) {
+        console.error("Error fetching users:", usersError);
+        return new Response(
+          JSON.stringify({ error: usersError.message }),
+          { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      // Update cache with fresh data
+      authUsers.users.forEach(user => {
+        emailCache.set(user.id, {
+          email: user.email || 'Unknown',
+          timestamp: now
+        });
+      });
+    } else {
+      console.log('All requested user emails found in cache');
+    }
+    
+    // Return the combined data from cache
+    const result = userIds.map(id => {
+      const cachedItem = emailCache.get(id);
+      return {
+        id,
+        email: cachedItem ? cachedItem.email : 'Unknown'
+      };
+    });
     
     return new Response(
-      JSON.stringify(users),
+      JSON.stringify(result),
       { 
         status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

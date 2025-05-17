@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useUserData } from "./useUserData";
 import { useLastLogins } from "./useLastLogins";
 import { useChatActivity } from "./useChatActivity";
@@ -16,9 +16,12 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
   const [users, setUsers] = useState<UserTableData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { isAdmin } = useAdminCheck();
+  
+  // Track loading and initialization states with refs
   const initialLoadRef = useRef(false);
   const filtersStableRef = useRef(false);
   const fetchInProgressRef = useRef(false);
+  const debounceTimerRef = useRef<number | null>(null);
   
   // Use the hooks with correct function names
   const userData = useUserData();
@@ -38,7 +41,7 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
   // Handle user deletions
   const { handleUserDeleted } = useUserDeletion(setIsLoading, setUsers);
   
-  // Fetch users with the core filters
+  // Fetch users with the core filters - pass fetchInProgressRef to prevent overlapping requests
   const { fetchUsers } = useFetchUsers(
     isAdmin, 
     setIsLoading, 
@@ -56,12 +59,7 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     upgradeAllUsersToPremium: upgradeAllUsersFn
   } = useTierManagement(setIsLoading, setUsers);
 
-  // Wrapper for upgradeAllUsersToPremium to include fetchUsers dependency
-  const upgradeAllUsersToPremium = () => {
-    return upgradeAllUsersFn(fetchUsers, onboardedFilter);
-  };
-  
-  // Stable version of the filters for dependency tracking
+  // Stable reference for filters to avoid unnecessary re-renders
   const stableFilters = useRef({
     searchTerm,
     tierFilter,
@@ -84,33 +82,81 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     }
   }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter]);
   
-  // Handle initial data fetch - only once
+  // Handle initial data fetch - only once when mounting is complete
   useEffect(() => {
-    // Skip effect during initial render and if not an admin or still mounting
+    // Skip effect during initial render, if not an admin, or if still mounting
     if (!isAdmin || !mountingComplete) return;
     
     const loadInitialData = async () => {
       if (!initialLoadRef.current && !fetchInProgressRef.current) {
+        console.log("Loading initial user data");
         initialLoadRef.current = true;
         await fetchUsers(onboardedFilter, stableFilters.current);
       }
     };
     
-    loadInitialData();
+    // Use a short timeout to ensure we don't start fetching during render
+    const initTimer = setTimeout(() => {
+      loadInitialData();
+    }, 50);
+    
+    return () => clearTimeout(initTimer);
   }, [isAdmin, mountingComplete, fetchUsers, onboardedFilter]);
   
-  // Effect to refresh data when filters change - with debounce to prevent rapid reloads
+  // Debounced effect to refresh data when filters change
   useEffect(() => {
     if (!isAdmin || !initialLoadRef.current || !mountingComplete || !filtersStableRef.current) return;
     
-    const timer = setTimeout(() => {
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
+    }
+    
+    // Set a new debounced timer
+    debounceTimerRef.current = window.setTimeout(() => {
       if (!fetchInProgressRef.current) {
-        fetchUsers(onboardedFilter, { searchTerm, tierFilter, archetypeFilter });
+        console.log("Filters changed, fetching updated users");
+        fetchUsers(onboardedFilter, { 
+          searchTerm, 
+          tierFilter, 
+          archetypeFilter 
+        });
       }
     }, 300); // 300ms debounce
     
-    return () => clearTimeout(timer);
+    // Clean up the timer on unmount or when dependencies change
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
+      }
+    };
   }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter, fetchUsers, isAdmin, mountingComplete]);
+  
+  // Clean up function for when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear any timers or in-progress operations
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+  
+  // Wrapper for upgradeAllUsersToPremium to include fetchUsers dependency
+  const upgradeAllUsersToPremium = useCallback(() => {
+    return upgradeAllUsersFn(fetchUsers, onboardedFilter);
+  }, [upgradeAllUsersFn, fetchUsers, onboardedFilter]);
+  
+  // Stable fetchUsers wrapper function
+  const stableFetchUsers = useCallback((onboardedValue = "all") => {
+    if (!fetchInProgressRef.current) {
+      console.log("Manual fetchUsers called");
+      return fetchUsers(onboardedValue, stableFilters.current);
+    }
+    return Promise.resolve();
+  }, [fetchUsers]);
   
   return {
     users,
@@ -125,12 +171,7 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     setOnboardedFilter,
     activeFilter,
     resetFilters,
-    fetchUsers: (onboardedValue = "all") => {
-      if (!fetchInProgressRef.current) {
-        return fetchUsers(onboardedValue, stableFilters.current);
-      }
-      return Promise.resolve();
-    },
+    fetchUsers: stableFetchUsers,
     handleUpdateTier,
     handleUserDeleted,
     upgradeAllUsersToPremium

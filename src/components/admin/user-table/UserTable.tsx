@@ -20,29 +20,52 @@ const UserTableComponent = ({ users, isLoading, onUpdateTier, onUserDeleted }: U
     }
   }, [onUpdateTier]);
 
-  return (
-    <div className="rounded-md border">
-      <Table>
-        <UserTableHeader />
-        <TableBody>
-          {isLoading ? (
+  // Early return while loading to prevent flash of empty content
+  if (isLoading) {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <UserTableHeader />
+          <TableBody>
             <LoadingRows />
-          ) : users.length === 0 ? (
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
+  // Empty state
+  if (!users || users.length === 0) {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <UserTableHeader />
+          <TableBody>
             <TableRow>
               <TableCell colSpan={9} className="text-center py-6">
                 No users found
               </TableCell>
             </TableRow>
-          ) : (
-            users.map(user => (
-              <UserTableRow 
-                key={user.id}
-                user={user}
-                onUpdateTier={handleUpdateTier}
-                onUserDeleted={handleUserDeleted}
-              />
-            ))
-          )}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
+
+  // Render users
+  return (
+    <div className="rounded-md border">
+      <Table>
+        <UserTableHeader />
+        <TableBody>
+          {users.map(user => (
+            <UserTableRow 
+              key={user.id}
+              user={user}
+              onUpdateTier={handleUpdateTier}
+              onUserDeleted={handleUserDeleted}
+            />
+          ))}
         </TableBody>
       </Table>
     </div>

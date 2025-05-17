@@ -1,5 +1,4 @@
-
-import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from "react";
 import { SubscriptionTier } from "@/types";
 import { UserTableData } from "@/hooks/useUserManagement/types";
 import { useUserManagement } from "@/hooks/useUserManagement";
@@ -36,7 +35,12 @@ export const UserManagementProvider = ({
   initialFilter?: { type: string; value: string };
   mountingComplete: boolean;
 }) => {
+  // Track whether initial load has completed
   const [initialLoadDone, setInitialLoadDone] = useState(false);
+  // Keep track if we already triggered the initial load
+  const initialLoadTriggeredRef = useRef(false);
+  // Safety timeout ID
+  const safetyTimeoutRef = useRef<number | null>(null);
   
   const {
     users,
@@ -59,24 +63,36 @@ export const UserManagementProvider = ({
 
   // Track initial load with a safety timeout
   useEffect(() => {
-    if (!initialLoadDone && !isLoading && users.length > 0) {
-      setInitialLoadDone(true);
-    } else if (!initialLoadDone && !isLoading) {
-      // If we're not loading and there are no users, still mark as done
-      setInitialLoadDone(true);
-    }
-
-    // Safety timeout - ensure we don't get stuck in loading state
-    const safetyTimeout = setTimeout(() => {
+    // If we're done loading and have users, or we're not loading anymore, mark as done
+    if ((!isLoading && users.length > 0) || (initialLoadTriggeredRef.current && !isLoading)) {
       if (!initialLoadDone) {
         setInitialLoadDone(true);
       }
-    }, 5000); // 5 seconds safety timeout
+    }
 
-    return () => clearTimeout(safetyTimeout);
+    // Safety timeout - ensure we don't get stuck in loading state
+    if (!initialLoadDone && !safetyTimeoutRef.current) {
+      safetyTimeoutRef.current = window.setTimeout(() => {
+        setInitialLoadDone(true);
+      }, 5000); // 5 seconds safety timeout
+    }
+
+    return () => {
+      if (safetyTimeoutRef.current) {
+        clearTimeout(safetyTimeoutRef.current);
+        safetyTimeoutRef.current = null;
+      }
+    };
   }, [users, isLoading, initialLoadDone]);
 
-  // Add a refreshUsers function to reload data with current filters
+  // Track if initial load has been triggered
+  useEffect(() => {
+    if (mountingComplete && !initialLoadTriggeredRef.current) {
+      initialLoadTriggeredRef.current = true;
+    }
+  }, [mountingComplete]);
+
+  // Add a refreshUsers function to reload data with current filters - memoized to prevent recreating
   const refreshUsers = useCallback(async () => {
     return fetchUsers(onboardedFilter);
   }, [fetchUsers, onboardedFilter]);
@@ -95,7 +111,7 @@ export const UserManagementProvider = ({
     setOnboardedFilter,
     activeFilter,
     resetFilters,
-    fetchUsers: (onboardedValue = "all") => fetchUsers(onboardedValue),
+    fetchUsers,
     refreshUsers,
     handleUpdateTier,
     handleUserDeleted,

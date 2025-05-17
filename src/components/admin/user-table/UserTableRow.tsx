@@ -21,13 +21,24 @@ const UserTableRowComponent = ({
   onUpdateTier, 
   onUserDeleted 
 }: UserTableRowProps) => {
-  // Use a default value if email is missing or invalid
-  const displayEmail = user.email && user.email !== 'Unknown' ? user.email : "Unknown email";
+  // Safe access of user data with fallbacks
+  const userId = user?.id;
+  const isValid = !!userId;
+  
+  // If we have an invalid user object, don't render the row
+  if (!isValid) {
+    return null;
+  }
+  
+  // Use a default value if email is missing or invalid, sanitizing for safety
+  const displayEmail = user.email && typeof user.email === 'string' && user.email !== 'Unknown' 
+    ? user.email 
+    : "Unknown email";
   
   return (
     <TableRow>
-      <TableCell className="font-medium">{displayEmail}</TableCell>
-      <TableCell>{user.name || "-"}</TableCell>
+      <TableCell className="font-medium max-w-[200px] truncate" title={displayEmail}>{displayEmail}</TableCell>
+      <TableCell className="max-w-[150px] truncate" title={user.name || "-"}>{user.name || "-"}</TableCell>
       <TableCell>
         <SubscriptionCell user={user} />
       </TableCell>
