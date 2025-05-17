@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,7 +68,17 @@ export const EmailPreferences: React.FC<EmailPreferencesProps> = ({ className })
 
     try {
       setSaving(true);
-      const success = await emailService.updatePreferences(preferences);
+      
+      // Extract only the boolean preference fields to match Record<string, boolean>
+      const booleanPreferences: Record<string, boolean> = {
+        daily_nudges: !!preferences.daily_nudges,
+        weekly_summary: !!preferences.weekly_summary,
+        achievement_notifications: !!preferences.achievement_notifications,
+        challenge_reminders: !!preferences.challenge_reminders,
+        inactivity_reminders: !!preferences.inactivity_reminders
+      };
+      
+      const success = await emailService.updatePreferences(booleanPreferences);
 
       if (success) {
         toast("Preferences updated", {
