@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useUserData } from "./useUserData";
 import { useLastLogins } from "./useLastLogins";
@@ -14,11 +15,9 @@ import { useFetchUsers } from "./useFetchUsers";
 export const useUserManagement = (initialFilter?: FilterState, mountingComplete = false) => {
   const [users, setUsers] = useState<UserTableData[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [shouldFetch, setShouldFetch] = useState(false);
   const { isAdmin } = useAdminCheck();
   const initialLoadRef = useRef(false);
   const filtersStableRef = useRef(false);
-  const filtersChangedRef = useRef(false);
   
   // Use the hooks with correct function names
   const userData = useUserData();
@@ -70,26 +69,26 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
   
   // Update stable filters reference when filters change
   useEffect(() => {
-    if (filtersStableRef.current) {
-      filtersChangedRef.current = true;
-    }
-    
     stableFilters.current = {
       searchTerm,
       tierFilter,
       archetypeFilter,
       onboardedFilter
     };
+    
+    // Mark filters as stable after first render
+    if (!filtersStableRef.current) {
+      filtersStableRef.current = true;
+    }
   }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter]);
   
-  // Handle initial data fetch
+  // Handle initial data fetch - only once
   useEffect(() => {
     // Skip effect during initial render and if not an admin or still mounting
     if (!isAdmin || !mountingComplete) return;
     
     const loadInitialData = async () => {
       if (!initialLoadRef.current) {
-        console.log("Initial data fetch for users");
         initialLoadRef.current = true;
         await fetchUsers(onboardedFilter, stableFilters.current);
       }
@@ -98,45 +97,12 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     loadInitialData();
   }, [isAdmin, mountingComplete, fetchUsers, onboardedFilter]);
   
-  // Direct effect to refresh data when filters change - per user request
+  // Direct effect to refresh data when filters change
   useEffect(() => {
     if (!isAdmin || !initialLoadRef.current || !mountingComplete) return;
     
-    console.log("Filter values changed, refreshing data");
     fetchUsers(onboardedFilter, { searchTerm, tierFilter, archetypeFilter });
   }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter, fetchUsers, isAdmin, mountingComplete]);
-  
-  // Trigger filter changes with debouncing - keeping existing logic
-  useEffect(() => {
-    if (!isAdmin || !initialLoadRef.current) return;
-    
-    // Skip if mounting is not complete
-    if (!mountingComplete) return;
-    
-    // Skip the first filter initialization
-    if (!filtersStableRef.current) return;
-    
-    console.log("Filters changed, setting fetch timer");
-    
-    // Set a flag to fetch data
-    setShouldFetch(true);
-  }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter, isAdmin, mountingComplete]);
-  
-  // Handle delayed fetch after filters change
-  useEffect(() => {
-    if (!shouldFetch || !filtersChangedRef.current || !mountingComplete) return;
-    
-    console.log("Filters debounce timer triggered, fetching users");
-    
-    // Reset the flag
-    setShouldFetch(false);
-    
-    // Perform the fetch with current filters
-    fetchUsers(onboardedFilter, stableFilters.current);
-    
-    // Reset the filters changed flag
-    filtersChangedRef.current = false;
-  }, [shouldFetch, fetchUsers, onboardedFilter, mountingComplete]);
   
   return {
     users,

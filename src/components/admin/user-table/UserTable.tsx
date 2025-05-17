@@ -1,5 +1,5 @@
 
-import { memo, useEffect } from "react";
+import { memo, useCallback } from "react";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { UserTableProps } from "./types";
 import { UserTableHeader } from "./UserTableHeader";
@@ -11,21 +11,21 @@ const UserTableComponent = ({ users, isLoading, onUpdateTier, onUserDeleted }: U
   const { refreshUsers } = useUserManagementContext();
   
   // Handle refresh after operations
-  const handleUserDeleted = (userId: string) => {
+  const handleUserDeleted = useCallback((userId: string) => {
     if (onUserDeleted) {
       onUserDeleted(userId);
     }
     // Also refresh the data to ensure consistency
     refreshUsers();
-  };
+  }, [onUserDeleted, refreshUsers]);
   
-  const handleUpdateTier = async (userId: string, tier: any) => {
+  const handleUpdateTier = useCallback(async (userId: string, tier: any) => {
     if (onUpdateTier) {
       await onUpdateTier(userId, tier);
       // Refresh user data after tier update
       await refreshUsers();
     }
-  };
+  }, [onUpdateTier, refreshUsers]);
 
   return (
     <div className="rounded-md border">

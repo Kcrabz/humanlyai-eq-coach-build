@@ -1,5 +1,5 @@
 
-import { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, ReactNode, useEffect } from "react";
 import { SubscriptionTier } from "@/types";
 import { UserTableData } from "@/hooks/useUserManagement/types";
 import { useUserManagement } from "@/hooks/useUserManagement";
@@ -19,7 +19,7 @@ interface UserManagementContextType {
   activeFilter: { type: string; value: string } | null;
   resetFilters: () => void;
   fetchUsers: (onboardedValue?: string) => void;
-  refreshUsers: () => Promise<void>;  // Added refresh function
+  refreshUsers: () => Promise<void>;
   handleUpdateTier: (userId: string, tier: SubscriptionTier) => Promise<void>;
   handleUserDeleted: (userId: string) => void;
   upgradeAllUsersToPremium: () => Promise<boolean>;
@@ -58,10 +58,11 @@ export const UserManagementProvider = ({
   } = useUserManagement(initialFilter, mountingComplete);
 
   // Track initial load with a safety timeout
-  useState(() => {
+  useEffect(() => {
     if (!initialLoadDone && !isLoading && users.length > 0) {
       setInitialLoadDone(true);
     } else if (!initialLoadDone && !isLoading) {
+      // If we're not loading and there are no users, still mark as done
       setInitialLoadDone(true);
     }
 
@@ -73,7 +74,7 @@ export const UserManagementProvider = ({
     }, 5000); // 5 seconds safety timeout
 
     return () => clearTimeout(safetyTimeout);
-  });
+  }, [users, isLoading, initialLoadDone]);
 
   // Add a refreshUsers function to reload data with current filters
   const refreshUsers = useCallback(async () => {
@@ -95,7 +96,7 @@ export const UserManagementProvider = ({
     activeFilter,
     resetFilters,
     fetchUsers: (onboardedValue = "all") => fetchUsers(onboardedValue),
-    refreshUsers,  // Added refresh function to the context
+    refreshUsers,
     handleUpdateTier,
     handleUserDeleted,
     upgradeAllUsersToPremium
