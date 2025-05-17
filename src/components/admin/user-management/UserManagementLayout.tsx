@@ -21,6 +21,8 @@ const UserManagementLayoutComponent = ({ onResetFilter }: UserManagementLayoutPr
     setTierFilter,
     archetypeFilter,
     setArchetypeFilter,
+    onboardedFilter,
+    setOnboardedFilter,
     activeFilter,
     resetFilters,
     fetchUsers,
@@ -57,6 +59,8 @@ const UserManagementLayoutComponent = ({ onResetFilter }: UserManagementLayoutPr
             setTierFilter={setTierFilter}
             archetypeFilter={archetypeFilter}
             setArchetypeFilter={setArchetypeFilter}
+            onboardedFilter={onboardedFilter}
+            setOnboardedFilter={setOnboardedFilter}
             onRefresh={handleRefresh}
           />
         </div>

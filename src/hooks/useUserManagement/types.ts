@@ -1,5 +1,4 @@
 
-
 export interface FilterState {
   type: string;
   value: string;

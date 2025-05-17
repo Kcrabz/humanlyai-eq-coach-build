@@ -14,6 +14,8 @@ interface UserManagementContextType {
   setTierFilter: (tier: string) => void;
   archetypeFilter: string;
   setArchetypeFilter: (archetype: string) => void;
+  onboardedFilter: string;
+  setOnboardedFilter: (onboarded: string) => void;
   activeFilter: { type: string; value: string } | null;
   resetFilters: () => void;
   fetchUsers: (onboardedValue?: string) => void;
@@ -44,6 +46,8 @@ export const UserManagementProvider = ({
     setTierFilter,
     archetypeFilter,
     setArchetypeFilter,
+    onboardedFilter,
+    setOnboardedFilter,
     activeFilter,
     resetFilters,
     fetchUsers,
@@ -80,6 +84,8 @@ export const UserManagementProvider = ({
     setTierFilter,
     archetypeFilter,
     setArchetypeFilter,
+    onboardedFilter,
+    setOnboardedFilter,
     activeFilter,
     resetFilters,
     fetchUsers,
