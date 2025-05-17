@@ -91,11 +91,8 @@ export function ChatList() {
   return (
     <div 
       ref={chatContainerRef}
-      className="flex-1 overflow-y-auto min-h-0 p-3 md:p-4 space-y-6" 
+      className="flex flex-col flex-1 overflow-y-auto min-h-0 p-3 md:p-4 space-y-6 w-full max-w-full" 
       data-pwa={isPWA ? "true" : "false"}
-      style={{
-        paddingBottom: isMobile ? 'calc(0.75rem + env(safe-area-inset-bottom, 0px))' : undefined
-      }}
     >
       {validMessages.length === 0 ? (
         <EmptyChatState />

@@ -58,6 +58,13 @@
   form textarea {
     padding-right: 40px;
   }
+  
+  /* Fix border and overflow issues */
+  .flex-1.overflow-hidden.flex.flex-col {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+  }
 }
 
 /* Footer styling */

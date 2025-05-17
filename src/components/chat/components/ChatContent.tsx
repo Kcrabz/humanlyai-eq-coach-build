@@ -15,7 +15,7 @@ interface ChatContentProps {
 
 export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatContentProps) {
   return (
-    <div className="flex-1 overflow-hidden flex flex-col min-h-0">
+    <div className="flex-1 overflow-hidden flex flex-col min-h-0 w-full overflow-x-hidden">
       {!hasCompletedAssessment && <EQAssessmentAlert onStartAssessment={onStartAssessment} />}
       
       {/* Use ChatUsage directly, not in Suspense */}
@@ -31,7 +31,7 @@ export function ChatContent({ hasCompletedAssessment, onStartAssessment }: ChatC
         <ChatList />
       </Suspense>
       
-      <div className="sticky bottom-0 bg-white z-10 pb-[env(safe-area-inset-bottom)]">
+      <div className="sticky bottom-0 bg-white z-10">
         <ChatInput />
       </div>
     </div>

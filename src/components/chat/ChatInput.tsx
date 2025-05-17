@@ -51,11 +51,8 @@ export function ChatInput() {
 
   return (
     <form 
-      className="p-3 border-t flex items-end gap-2 bg-white" 
+      className="p-3 border-t flex items-end gap-2 bg-white pb-[env(safe-area-inset-bottom, 0.75rem)]" 
       onSubmit={handleSubmit}
-      style={{
-        paddingBottom: `calc(0.75rem + env(safe-area-inset-bottom, 0px))`
-      }}
     >
       <Textarea
         ref={textareaRef}

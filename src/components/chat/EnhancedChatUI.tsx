@@ -45,7 +45,7 @@ export function EnhancedChatUI({
   }, [chatHistory, isLoading]);
 
   return (
-    <div className={`flex flex-col h-screen overflow-hidden ${className}`}>
+    <div className={`flex flex-col h-screen overflow-hidden w-full overflow-x-hidden ${className}`}>
       <div className="flex-1 overflow-y-auto p-4 space-y-6 min-h-0">
         {chatHistory.length === 0 ? (
           <ChatWelcomeScreen sendSuggestedMessage={sendSuggestedMessage} />
@@ -60,7 +60,7 @@ export function EnhancedChatUI({
         <div ref={messagesEndRef} />
       </div>
       
-      <div className="sticky bottom-0 bg-white z-10 pb-[env(safe-area-inset-bottom)]">
+      <div className="sticky bottom-0 bg-white z-10">
         <EnhancedChatForm
           onSubmit={handleSubmit}
           placeholder={getDynamicPlaceholder()}
