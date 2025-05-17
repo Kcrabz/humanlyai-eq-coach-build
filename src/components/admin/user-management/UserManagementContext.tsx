@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useCallback, ReactNode, useEffect, useRef } from "react";
 import { SubscriptionTier } from "@/types";
 import { UserTableData } from "@/hooks/useUserManagement/types";
@@ -17,7 +18,7 @@ interface UserManagementContextType {
   setOnboardedFilter: (onboarded: string) => void;
   activeFilter: { type: string; value: string } | null;
   resetFilters: () => void;
-  fetchUsers: (onboardedValue?: string) => void;
+  fetchUsers: (onboardedValue?: string) => Promise<void>;
   refreshUsers: () => Promise<void>;
   handleUpdateTier: (userId: string, tier: SubscriptionTier) => Promise<void>;
   handleUserDeleted: (userId: string) => void;

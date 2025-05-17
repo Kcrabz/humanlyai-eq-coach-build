@@ -208,7 +208,7 @@ export const useFetchUsers = (
       toast.error("Failed to load users", { 
         description: "There was a problem fetching user data" 
       });
-      return Promise.resolve();
+      return Promise.reject(error);
     } finally {
       // Clean up
       if (fetchId === lastFetchIdRef.current) {

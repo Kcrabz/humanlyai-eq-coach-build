@@ -53,6 +53,7 @@ const UserManagementLayoutComponent = ({ onResetFilter }: UserManagementLayoutPr
     // Notify the user that refresh is happening
     toast.info("Refreshing user data...");
     
+    // Call fetchUsers and handle the async operation properly
     fetchUsers()
       .then(() => {
         toast.success("User data refreshed successfully");

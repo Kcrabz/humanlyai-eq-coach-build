@@ -1,137 +1,86 @@
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import { useUserData } from "./useUserData";
-import { useLastLogins } from "./useLastLogins";
-import { useChatActivity } from "./useChatActivity";
-import { useChatUserIds } from "./useChatUserIds";
-import { useUserFilters } from "./useUserFilters";
-import { FilterState, UserTableData } from "./types";
-import { useAdminCheck } from "../useAdminCheck";
-import { useTokenUsage } from "./useTokenUsage";
-import { useTierManagement } from "./useTierManagement";
-import { useUserDeletion } from "./useUserDeletion";
-import { useFetchUsers } from "./useFetchUsers";
+import { useCallback, useState, useRef, useMemo } from 'react';
+import { useAdminCheck } from '@/hooks/useAdminCheck';
+import { useUserData } from './useUserData';
+import { useLastLogins } from './useLastLogins';
+import { useChatActivity } from './useChatActivity';
+import { useTokenUsage } from './useTokenUsage';
+import { useTierManagement } from './useTierManagement';
+import { useUserFilters } from './useUserFilters';
+import { useFetchUsers } from './useFetchUsers';
+import { UserTableData } from './types';
 
-export const useUserManagement = (initialFilter?: FilterState, mountingComplete = false) => {
-  const [users, setUsers] = useState<UserTableData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+export const useUserManagement = (
+  initialFilter?: { type: string; value: string },
+  mountingComplete = true
+) => {
   const { isAdmin } = useAdminCheck();
+  const [users, setUsers] = useState<UserTableData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Track loading and initialization states with refs
-  const initialLoadRef = useRef(false);
-  const filtersStableRef = useRef(false);
-  const fetchInProgressRef = useRef(false);
-  const debounceTimerRef = useRef<number | null>(null);
-  const autoRefreshDisabledRef = useRef(true); // Disable auto refresh by default
+  // Fetch reference to track in-progress fetch operations
+  const fetchInProgressRef = useRef<boolean>(false);
   
-  // Use the hooks with correct function names
+  // Services for user data
   const userData = useUserData();
   const lastLogins = useLastLogins();
   const chatActivity = useChatActivity();
-  const chatUserIds = useChatUserIds();
-  const { tokenUsageData, fetchTokenUsageData } = useTokenUsage();
+  const { fetchTokenUsageData } = useTokenUsage();
+  const { updateUserTier, upgradeAllUsersToPremium } = useTierManagement();
   
-  const { 
-    searchTerm, setSearchTerm, 
-    tierFilter, setTierFilter, 
-    archetypeFilter, setArchetypeFilter,
-    onboardedFilter, setOnboardedFilter,
-    activeFilter, resetFilters
+  // Filters with initial values if provided
+  const {
+    searchTerm,
+    setSearchTerm,
+    tierFilter, 
+    setTierFilter,
+    archetypeFilter,
+    setArchetypeFilter,
+    onboardedFilter,
+    setOnboardedFilter,
+    activeFilter,
+    resetFilters
   } = useUserFilters(initialFilter);
-
-  // Handle user deletions
-  const { handleUserDeleted } = useUserDeletion(setIsLoading, setUsers);
   
-  // Fetch users with the core filters - pass fetchInProgressRef to prevent overlapping requests
+  // Get the fetch function that makes API calls
   const { fetchUsers } = useFetchUsers(
     isAdmin, 
-    setIsLoading, 
-    setUsers, 
-    userData, 
-    lastLogins, 
-    chatActivity, 
+    setIsLoading,
+    setUsers,
+    userData,
+    lastLogins,
+    chatActivity,
     fetchTokenUsageData,
     fetchInProgressRef
   );
   
-  // Handle tier management
-  const { 
-    handleUpdateTier,
-    upgradeAllUsersToPremium: upgradeAllUsersFn
-  } = useTierManagement(setIsLoading, setUsers);
-
-  // Stable reference for filters to avoid unnecessary re-renders
-  const stableFilters = useRef({
-    searchTerm,
-    tierFilter,
-    archetypeFilter,
-    onboardedFilter
-  });
-  
-  // Update stable filters reference when filters change
-  useEffect(() => {
-    stableFilters.current = {
-      searchTerm,
-      tierFilter,
-      archetypeFilter,
-      onboardedFilter
-    };
+  // Handle updates to user tier with optimistic UI update
+  const handleUpdateTier = useCallback(async (userId: string, tier: any) => {
+    // Optimistic UI update
+    setUsers(prev => prev.map(user => 
+      user.id === userId ? { ...user, subscription_tier: tier } : user
+    ));
     
-    // Mark filters as stable after first render
-    if (!filtersStableRef.current) {
-      filtersStableRef.current = true;
+    try {
+      await updateUserTier(userId, tier);
+      return true;
+    } catch (error) {
+      console.error("Error updating user tier:", error);
+      // Revert optimistic update on error
+      await fetchUsers(onboardedFilter, { searchTerm, tierFilter, archetypeFilter });
+      return false;
     }
-  }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter]);
+  }, [updateUserTier, fetchUsers, onboardedFilter, searchTerm, tierFilter, archetypeFilter]);
   
-  // Handle initial data fetch - only once when mounting is complete
-  useEffect(() => {
-    // Skip effect during initial render, if not an admin, or if still mounting
-    if (!isAdmin || !mountingComplete) return;
-    
-    const loadInitialData = async () => {
-      if (!initialLoadRef.current && !fetchInProgressRef.current) {
-        console.log("Loading initial user data");
-        initialLoadRef.current = true;
-        await fetchUsers(onboardedFilter, stableFilters.current);
-      }
-    };
-    
-    // Use a short timeout to ensure we don't start fetching during render
-    const initTimer = setTimeout(() => {
-      loadInitialData();
-    }, 50);
-    
-    return () => clearTimeout(initTimer);
-  }, [isAdmin, mountingComplete, fetchUsers, onboardedFilter]);
-  
-  // MODIFIED: Remove automatic debounced filter refresh effect
-  // This prevents the table from automatically refreshing when filters change
-  // Users will need to click the refresh button instead
-  
-  // Clean up function for when component unmounts
-  useEffect(() => {
-    return () => {
-      // Clear any timers or in-progress operations
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
+  // Handle user deletion by removing from UI
+  const handleUserDeleted = useCallback((userId: string) => {
+    setUsers(prev => prev.filter(user => user.id !== userId));
   }, []);
   
-  // Wrapper for upgradeAllUsersToPremium to include fetchUsers dependency
-  const upgradeAllUsersToPremium = useCallback(() => {
-    return upgradeAllUsersFn(fetchUsers, onboardedFilter);
-  }, [upgradeAllUsersFn, fetchUsers, onboardedFilter]);
+  // Effect to fetch users on mount or filter changes
+  // Moved to the component that uses this hook for more control over when fetches happen
   
-  // Stable fetchUsers wrapper function - manually triggered by refresh button
-  const stableFetchUsers = useCallback((onboardedValue = "all") => {
-    if (!fetchInProgressRef.current) {
-      console.log("Manual fetchUsers called");
-      return fetchUsers(onboardedValue, stableFilters.current);
-    }
-    return Promise.resolve();
-  }, [fetchUsers]);
-  
+  // Return all the data and functions
   return {
     users,
     isLoading,
@@ -145,7 +94,7 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     setOnboardedFilter,
     activeFilter,
     resetFilters,
-    fetchUsers: stableFetchUsers,
+    fetchUsers,
     handleUpdateTier,
     handleUserDeleted,
     upgradeAllUsersToPremium
