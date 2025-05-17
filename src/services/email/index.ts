@@ -1,6 +1,6 @@
 
 import { getEmailPreferences, updatePreferences, optOutAll } from "./preferences";
-import { triggerEmail } from "./sender";
+import { triggerEmail, resendEmail, sendTestEmail } from "./sender";
 import { getEmailLogs } from "./logs";
 import type { EmailPreference, EmailLog, TriggerEmailOptions } from "./types";
 
@@ -9,6 +9,8 @@ export const emailService = {
   updatePreferences,
   optOutAll,
   triggerEmail,
+  resendEmail,
+  sendTestEmail,
   getEmailLogs,
 };
 

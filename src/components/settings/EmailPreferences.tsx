@@ -22,7 +22,7 @@ const defaultPreferences = {
 
 export const EmailPreferences: React.FC<EmailPreferencesProps> = ({ className }) => {
   const { user } = useAuth();
-  const [preferences, setPreferences] = useState(defaultPreferences);
+  const [preferences, setPreferences] = useState<Partial<EmailPreference>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -36,21 +36,18 @@ export const EmailPreferences: React.FC<EmailPreferencesProps> = ({ className })
 
     try {
       setLoading(true);
-      const { data, error } = await emailService.getEmailPreferences();
+      // Use createIfMissing=true to ensure preferences are stored for future updates
+      const { data, error } = await emailService.getEmailPreferences(undefined, true);
 
       if (error) {
         console.error("Error loading preferences:", error);
         toast.error("Please try again later");
         return;
       }
-
-      // Ensure we have values for all required properties by merging with defaults
-      const safeData = {
-        ...defaultPreferences,
-        ...(data || {})
-      };
       
-      setPreferences(safeData);
+      if (data) {
+        setPreferences(data);
+      }
     } catch (err) {
       console.error("Error in loadPreferences:", err);
     } finally {

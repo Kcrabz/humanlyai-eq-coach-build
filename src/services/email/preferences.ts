@@ -7,11 +7,26 @@ import {
 } from "./utils/errorHandler";
 
 /**
+ * Default email preferences when a user doesn't have any saved
+ */
+const DEFAULT_EMAIL_PREFERENCES: Omit<EmailPreference, 'id' | 'user_id' | 'created_at' | 'updated_at'> = {
+  daily_nudges: true,
+  weekly_summary: true,
+  achievement_notifications: true,
+  challenge_reminders: true,
+  inactivity_reminders: true
+};
+
+/**
  * Get email preferences for the current user or specified user
  * @param userId Optional user ID, if not provided uses the current user
+ * @param createIfMissing Whether to create a preferences record if none exists (default: false)
  * @returns User's email preferences
  */
-export async function getEmailPreferences(userId?: string): Promise<{ data: EmailPreference | null, error: any }> {
+export async function getEmailPreferences(
+  userId?: string, 
+  createIfMissing = false
+): Promise<{ data: EmailPreference | null, error: any }> {
   try {
     const currentUserId = userId || (await supabase.auth.getUser()).data.user?.id;
     
@@ -27,6 +42,42 @@ export async function getEmailPreferences(userId?: string): Promise<{ data: Emai
       .select("*")
       .eq("user_id", currentUserId)
       .maybeSingle();
+    
+    // If no preferences exist and createIfMissing is true, create default preferences
+    if (!data && !error && createIfMissing) {
+      const { data: newPrefs, error: createError } = await supabase
+        .from("email_preferences")
+        .insert({
+          user_id: currentUserId,
+          ...DEFAULT_EMAIL_PREFERENCES,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+        
+      if (createError) {
+        console.error("Error creating default email preferences:", createError);
+      }
+      
+      return { 
+        data: newPrefs || {
+          user_id: currentUserId,
+          ...DEFAULT_EMAIL_PREFERENCES
+        } as EmailPreference,
+        error: createError
+      };
+    }
+    
+    // If no preferences exist but we're not creating them, return defaults
+    if (!data && !error) {
+      return {
+        data: {
+          user_id: currentUserId,
+          ...DEFAULT_EMAIL_PREFERENCES
+        } as EmailPreference,
+        error: null
+      };
+    }
     
     return { data, error };
   } catch (error) {
