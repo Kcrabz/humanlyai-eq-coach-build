@@ -1,7 +1,7 @@
 
 import { useSidebar } from "@/components/ui/sidebar";
 import { ChatHeader } from "./ChatHeader";
-import { ChatContent } from "./ChatContent";
+import { ChatContent } from "../ChatContent";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
 
@@ -51,18 +51,13 @@ export function ResponsiveMainContent({
       ? 'calc(100% - 16rem)'
       : '100%';
 
-  // Use dynamic viewport height for mobile
-  const contentStyle = {
-    width: contentWidth,
-    transition: 'width 0.3s ease',
-    marginRight: '0',
-    height: isMobile ? '100dvh' : '100vh'
-  };
-
   return (
     <div 
-      className="flex-1 flex flex-col overflow-hidden main-content"
-      style={contentStyle}
+      className="flex flex-col overflow-hidden main-content"
+      style={{ 
+        width: contentWidth,
+        transition: 'width 0.3s ease'
+      }}
       data-pwa={isPWA ? "true" : "false"}
       data-right-sidebar-open={rightSidebarOpen ? "true" : "false"}
     >

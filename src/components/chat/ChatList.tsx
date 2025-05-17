@@ -29,28 +29,7 @@ export function ChatList() {
       window.matchMedia('(display-mode: standalone)').matches || 
       (window.navigator as any).standalone === true
     );
-    
-    // Handle viewport height changes due to keyboard
-    const handleResize = () => {
-      if (isMobile && chatContainerRef.current) {
-        // Use visual viewport height to handle keyboard properly
-        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        chatContainerRef.current.style.height = `${vh}px`;
-      }
-    };
-    
-    // Listen for visual viewport changes (keyboard opening/closing)
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      handleResize(); // Initial sizing
-    }
-    
-    return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
-    };
-  }, [isMobile]);
+  }, []);
 
   // Force scroll to bottom on sidebar state change
   useEffect(() => {
@@ -91,7 +70,7 @@ export function ChatList() {
   return (
     <div 
       ref={chatContainerRef}
-      className="flex flex-col flex-1 overflow-y-auto min-h-0 p-3 md:p-4 space-y-6 w-full max-w-full" 
+      className="flex flex-col flex-1 overflow-y-auto min-h-0 p-3 md:p-4 space-y-6 w-full" 
       data-pwa={isPWA ? "true" : "false"}
     >
       {validMessages.length === 0 ? (
