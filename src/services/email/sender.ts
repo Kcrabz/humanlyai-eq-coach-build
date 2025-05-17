@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TriggerEmailOptions } from "./types";
@@ -186,7 +187,7 @@ export async function resendEmail(emailLogId: string): Promise<boolean> {
       emailLog.user_id,
       `resend_${emailLog.email_type}`,
       emailLog.template_name,
-      'resending',
+      'sending',  // Changed from 'resending' to 'sending' to match allowed values
       {
         ...emailData,
         originalEmailId: emailLogId,

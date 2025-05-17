@@ -127,11 +127,23 @@ export async function updateEmailLog(
         .eq('id', logId)
         .single();
       
-      updateData.email_data = {
-        ...(existingLog?.email_data || {}),
-        ...(data || {}),
-        ...(errorMessage ? { error: errorMessage } : {})
-      };
+      if (existingLog && existingLog.email_data) {
+        // Make sure email_data is an object before spreading
+        const existingData = typeof existingLog.email_data === 'object' ? 
+          existingLog.email_data : {};
+        
+        updateData.email_data = {
+          ...existingData,
+          ...(data || {}),
+          ...(errorMessage ? { error: errorMessage } : {})
+        };
+      } else {
+        // If no existing data or it's not an object, create new
+        updateData.email_data = {
+          ...(data || {}),
+          ...(errorMessage ? { error: errorMessage } : {})
+        };
+      }
     }
     
     const { error } = await supabase
