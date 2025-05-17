@@ -55,6 +55,21 @@ body.pwa {
   .pwa .TabsList::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Edge */
   }
+  
+  /* Mobile chat interface adjustments for PWA */
+  .pwa .mobile-chat-header {
+    padding-top: env(safe-area-inset-top, 0px);
+    height: calc(60px + env(safe-area-inset-top, 0px));
+  }
+  
+  .pwa .mobile-input-container {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  
+  .pwa .mobile-message-area {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom, 0px));
+    margin-top: calc(60px + env(safe-area-inset-top, 0px));
+  }
 }
 
 /* Update notification styling */
@@ -75,4 +90,9 @@ body.pwa {
 
 .mb-safe {
   margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Mobile chat interface specific styles for PWA */
+.pwa .mobile-chat-interface {
+  height: 100dvh;
 }
