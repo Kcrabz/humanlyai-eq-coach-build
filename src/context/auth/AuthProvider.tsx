@@ -23,10 +23,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const location = useLocation();
   
   // Auth session
-  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading, authEvent, profileLoaded, setProfileLoaded } = useAuthSession();
+  const { 
+    session, 
+    isLoading: isSessionLoading, 
+    setIsLoading: setIsSessionLoading, 
+    authEvent, 
+    profileLoaded, 
+    setProfileLoaded 
+  } = useAuthSession();
   
   // Profile state with unified loading
-  const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
+  const { 
+    user, 
+    setUser 
+  } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
   
   // Track login events - Fix: Pass isAuthenticated boolean and user object
   const isAuthenticated = !!user;
