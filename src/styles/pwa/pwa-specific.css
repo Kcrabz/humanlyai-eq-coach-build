@@ -11,6 +11,17 @@ body.pwa {
   -webkit-user-select: none;
 }
 
+/* Mobile Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .min-h-safari-fix {
+    min-height: 85vh;
+  }
+  
+  .h-safari-fix {
+    height: 100dvh;
+  }
+}
+
 /* PWA-specific mobile optimizations */
 @media (max-width: 767px) {
   /* Enhanced header with safe area for PWA */

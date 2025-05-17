@@ -1,5 +1,4 @@
-
-import { useEffect, lazy, Suspense, useRef } from "react";
+import { useEffect, lazy, Suspense, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { ChatProvider } from "@/context/ChatContext";
@@ -26,6 +25,36 @@ const ChatPage = () => {
   
   // Keep track of previous coaching mode to detect changes
   const prevCoachingModeRef = useRef<string | undefined>(undefined);
+  const [isMobileSafari, setIsMobileSafari] = useState(false);
+  const [userInteracted, setUserInteracted] = useState(false);
+
+  // Detect Mobile Safari
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isSafari = /Safari/i.test(ua) && !/Chrome/i.test(ua);
+    const isMobile = /iPhone|iPad|iPod/i.test(ua);
+    setIsMobileSafari(isSafari && isMobile);
+  }, []);
+
+  // Handle user interaction to fix Safari height bug
+  useEffect(() => {
+    if (!isMobileSafari) return;
+    
+    const handleInteraction = () => {
+      setUserInteracted(true);
+    };
+
+    // Listen for interactions that should trigger height fix
+    document.addEventListener('touchstart', handleInteraction, { once: true });
+    document.addEventListener('scroll', handleInteraction, { once: true });
+    document.addEventListener('click', handleInteraction, { once: true });
+
+    return () => {
+      document.removeEventListener('touchstart', handleInteraction);
+      document.removeEventListener('scroll', handleInteraction);
+      document.removeEventListener('click', handleInteraction);
+    };
+  }, [isMobileSafari]);
 
   // Optimize auth check to use fewer rerenders
   useEffect(() => {
@@ -78,6 +107,11 @@ const ChatPage = () => {
   const archetype = userArchetype && userArchetype !== undefined ? ARCHETYPES[userArchetype] : null;
   const hasCompletedAssessment = !!userArchetype && userArchetype !== undefined;
 
+  // Determine the height class based on browser and interaction state
+  const heightClass = isMobileSafari && !userInteracted 
+    ? "min-h-[85vh]" 
+    : "h-[100dvh]";
+
   return (
     <PageLayout fullWidth>
       {/* Add the default SidebarProvider at the top level */}
@@ -88,7 +122,7 @@ const ChatPage = () => {
               {/* PWA update notification */}
               <UpdateNotification reloadPage={handleReload} />
               
-              <div className="flex h-[100dvh] overflow-hidden w-full">
+              <div className={`flex ${heightClass} overflow-hidden w-full`}>
                 {/* Left Sidebar */}
                 <Suspense fallback={<div className="w-64 zen-sidebar animate-pulse"></div>}>
                   <EnhancedChatSidebar />
