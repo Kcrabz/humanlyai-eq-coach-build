@@ -1,5 +1,6 @@
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 
 interface StatCardProps {
   title: string;
@@ -10,7 +11,12 @@ interface StatCardProps {
 
 export const StatCard = ({ title, value, description, onClick }: StatCardProps) => {
   return (
-    <Card className="hover:shadow-md transition-all cursor-pointer" onClick={onClick}>
+    <EnhancedCard 
+      clickable 
+      withHoverEffect 
+      onClick={onClick}
+      className="hover:shadow-md transition-all"
+    >
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
       </CardHeader>
@@ -18,6 +24,6 @@ export const StatCard = ({ title, value, description, onClick }: StatCardProps) 
         <div className="text-3xl font-bold">{value}</div>
         <p className="text-xs text-muted-foreground">{description}</p>
       </CardContent>
-    </Card>
+    </EnhancedCard>
   );
 };

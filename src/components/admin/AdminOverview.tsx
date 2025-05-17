@@ -1,6 +1,7 @@
 
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { SubscriptionPieChart } from "./charts/SubscriptionPieChart";
 import { ArchetypeBarChart } from "./charts/ArchetypeBarChart";
 import { StatsOverview } from "./stats/StatsOverview";
@@ -65,7 +66,7 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
       </Alert>
 
       <div className="grid gap-6 md:grid-cols-2">
-        <Card>
+        <EnhancedCard>
           <CardHeader>
             <CardTitle className="flex items-center">
               <Users className="mr-2 h-5 w-5" /> Subscription Tiers
@@ -77,9 +78,9 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
               onPieElementClick={(tier) => handleFilterClick('tier', tier)}
             />
           </CardContent>
-        </Card>
+        </EnhancedCard>
         
-        <Card>
+        <EnhancedCard>
           <CardHeader>
             <CardTitle className="flex items-center">
               <User className="mr-2 h-5 w-5" /> Archetypes Distribution
@@ -107,7 +108,7 @@ export const AdminOverview = ({ onFilterChange }: AdminOverviewProps) => {
               </TabsContent>
             </Tabs>
           </CardContent>
-        </Card>
+        </EnhancedCard>
       </div>
     </div>
   );

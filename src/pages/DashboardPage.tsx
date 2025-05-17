@@ -1,7 +1,8 @@
 
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { Card, CardContent } from "@/components/ui/card";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, TrendingUp, Users, Shield, MessageSquare } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -56,7 +57,7 @@ const DashboardPage = () => {
         
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-scale-fade-in">
           {/* Chat with Kai */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-indigo/10">
+          <EnhancedCard className="border-humanly-indigo/10">
             <CardContent className="p-0">
               <Button 
                 variant="ghost" 
@@ -71,10 +72,10 @@ const DashboardPage = () => {
                 </div>
               </Button>
             </CardContent>
-          </Card>
+          </EnhancedCard>
           
           {/* Track Your Growth */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-teal/10">
+          <EnhancedCard className="border-humanly-teal/10">
             <CardContent className="p-0">
               <Button 
                 variant="ghost" 
@@ -89,10 +90,10 @@ const DashboardPage = () => {
                 </div>
               </Button>
             </CardContent>
-          </Card>
+          </EnhancedCard>
           
           {/* Help a Friend */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-rose/20">
+          <EnhancedCard className="border-humanly-pastel-rose/20">
             <CardContent className="p-0">
               <Button 
                 variant="ghost" 
@@ -107,10 +108,10 @@ const DashboardPage = () => {
                 </div>
               </Button>
             </CardContent>
-          </Card>
+          </EnhancedCard>
           
           {/* Give Feedback - new card for beta testers */}
-          <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-humanly-pastel-blue/20">
+          <EnhancedCard className="border-humanly-pastel-blue/20">
             <CardContent className="p-0">
               <Button 
                 variant="ghost" 
@@ -125,11 +126,11 @@ const DashboardPage = () => {
                 </div>
               </Button>
             </CardContent>
-          </Card>
+          </EnhancedCard>
           
           {/* Admin Portal - Only visible for admin users */}
           {isAdmin && (
-            <Card className="hover:shadow-md transition-all duration-300 hover:-translate-y-1 border-gray-400/20">
+            <EnhancedCard className="border-gray-400/20">
               <CardContent className="p-0">
                 <Button 
                   variant="ghost" 
@@ -147,7 +148,7 @@ const DashboardPage = () => {
                   </div>
                 </Button>
               </CardContent>
-            </Card>
+            </EnhancedCard>
           )}
         </div>
       </div>
