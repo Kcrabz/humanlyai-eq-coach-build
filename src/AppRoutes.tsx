@@ -16,26 +16,41 @@ import UpdatePasswordPage from "./pages/UpdatePasswordPage";
 import UserProgressPage from "./pages/UserProgressPage";
 import AdminPage from "./pages/AdminPage";
 
+// Define route groups
+const publicRoutes = [
+  { path: "/", element: <LandingPage /> },
+  { path: "/login", element: <LoginPage /> },
+  { path: "/signup", element: <SignupPage /> },
+  { path: "/reset-password", element: <ResetPasswordPage /> },
+  { path: "/update-password", element: <UpdatePasswordPage /> },
+  { path: "/pricing", element: <PricingPage /> }
+];
+
+const protectedRoutes = [
+  { path: "/chat", element: <ChatPage /> },
+  { path: "/onboarding", element: <OnboardingPage /> },
+  { path: "/settings", element: <SettingsPage /> },
+  { path: "/dashboard", element: <DashboardPage /> },
+  { path: "/progress", element: <UserProgressPage /> },
+  { path: "/admin", element: <AdminPage /> }
+];
+
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/signup" element={<SignupPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/update-password" element={<UpdatePasswordPage />} />
-      <Route path="/pricing" element={<PricingPage />} />
+      {/* Map over public routes */}
+      {publicRoutes.map(route => (
+        <Route key={route.path} path={route.path} element={route.element} />
+      ))}
       
       {/* Protected Routes */}
       <Route element={<ProtectedRoute>{<Outlet />}</ProtectedRoute>}>
-        <Route path="/chat" element={<ChatPage />} />
-        <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/progress" element={<UserProgressPage />} />
-        <Route path="/admin" element={<AdminPage />} />
+        {protectedRoutes.map(route => (
+          <Route key={route.path} path={route.path} element={route.element} />
+        ))}
       </Route>
       
+      {/* 404 Route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
