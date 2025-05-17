@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useUserManagementContext } from "../user-management/UserManagementContext";
 
 interface ResetPasswordDialogProps {
   user: User;
@@ -14,6 +15,7 @@ interface ResetPasswordDialogProps {
 
 export const ResetPasswordDialog = ({ user, open, onOpenChange }: ResetPasswordDialogProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const { refreshUsers } = useUserManagementContext();
 
   const handleResetPassword = async () => {
     if (!user.email) {
@@ -35,6 +37,9 @@ export const ResetPasswordDialog = ({ user, open, onOpenChange }: ResetPasswordD
         description: `A password reset link has been sent to ${user.email}` 
       });
       onOpenChange(false);
+      
+      // Refresh the user list to reflect the updated status
+      await refreshUsers();
     } catch (error) {
       console.error("Failed to reset password:", error);
       toast.error("Failed to reset password", { 

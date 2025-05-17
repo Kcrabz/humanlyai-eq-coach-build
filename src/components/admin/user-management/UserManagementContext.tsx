@@ -19,6 +19,7 @@ interface UserManagementContextType {
   activeFilter: { type: string; value: string } | null;
   resetFilters: () => void;
   fetchUsers: (onboardedValue?: string) => void;
+  refreshUsers: () => Promise<void>;  // Added refresh function
   handleUpdateTier: (userId: string, tier: SubscriptionTier) => Promise<void>;
   handleUserDeleted: (userId: string) => void;
   upgradeAllUsersToPremium: () => Promise<boolean>;
@@ -74,6 +75,11 @@ export const UserManagementProvider = ({
     return () => clearTimeout(safetyTimeout);
   });
 
+  // Add a refreshUsers function to reload data with current filters
+  const refreshUsers = useCallback(async () => {
+    return fetchUsers(onboardedFilter);
+  }, [fetchUsers, onboardedFilter]);
+
   const value = {
     users,
     isLoading,
@@ -88,7 +94,8 @@ export const UserManagementProvider = ({
     setOnboardedFilter,
     activeFilter,
     resetFilters,
-    fetchUsers,
+    fetchUsers: (onboardedValue = "all") => fetchUsers(onboardedValue),
+    refreshUsers,  // Added refresh function to the context
     handleUpdateTier,
     handleUserDeleted,
     upgradeAllUsersToPremium
