@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useUserData } from "./useUserData";
 import { useLastLogins } from "./useLastLogins";
@@ -99,7 +98,15 @@ export const useUserManagement = (initialFilter?: FilterState, mountingComplete 
     loadInitialData();
   }, [isAdmin, mountingComplete, fetchUsers, onboardedFilter]);
   
-  // Trigger filter changes with debouncing
+  // Direct effect to refresh data when filters change - per user request
+  useEffect(() => {
+    if (!isAdmin || !initialLoadRef.current || !mountingComplete) return;
+    
+    console.log("Filter values changed, refreshing data");
+    fetchUsers(onboardedFilter, { searchTerm, tierFilter, archetypeFilter });
+  }, [searchTerm, tierFilter, archetypeFilter, onboardedFilter, fetchUsers, isAdmin, mountingComplete]);
+  
+  // Trigger filter changes with debouncing - keeping existing logic
   useEffect(() => {
     if (!isAdmin || !initialLoadRef.current) return;
     
