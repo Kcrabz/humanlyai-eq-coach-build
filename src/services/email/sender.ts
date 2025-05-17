@@ -17,6 +17,28 @@ export async function triggerEmail(options: TriggerEmailOptions): Promise<boolea
     
     toast.info("Sending email...");
     
+    // Log the send attempt before actually sending
+    const { data: logResult, error: logError } = await supabase
+      .from("email_logs")
+      .insert({
+        user_id: userId,
+        email_type: emailType,
+        template_name: templateName,
+        email_data: {
+          ...data,
+          subject,
+          to
+        },
+        status: 'sending'
+      })
+      .select('id')
+      .single();
+      
+    if (logError) {
+      console.error("Failed to log email attempt:", logError);
+      // Continue with sending even if logging fails
+    }
+    
     // Ensure the appUrl is set in the data
     const emailData = {
       ...data,
@@ -34,7 +56,24 @@ export async function triggerEmail(options: TriggerEmailOptions): Promise<boolea
       },
     });
 
+    // Update the log record based on the result
     if (error) {
+      // Update log with error status if we were able to create a log
+      if (logResult?.id) {
+        await supabase
+          .from("email_logs")
+          .update({
+            status: 'failed',
+            email_data: {
+              ...data, 
+              subject,
+              to,
+              error: error.message || "Unknown error"
+            }
+          })
+          .eq('id', logResult.id);
+      }
+      
       handleEmailError(
         error, 
         EmailErrorType.SEND_FAILURE, 
@@ -43,9 +82,39 @@ export async function triggerEmail(options: TriggerEmailOptions): Promise<boolea
       return false;
     }
 
+    // Update log with success status if we were able to create a log
+    if (logResult?.id) {
+      await supabase
+        .from("email_logs")
+        .update({
+          status: 'sent'
+        })
+        .eq('id', logResult.id);
+    }
+
     toast.success("Email sent successfully");
     return true;
   } catch (err) {
+    // Attempt to log the error directly to the database
+    try {
+      await supabase
+        .from("email_logs")
+        .insert({
+          user_id: options.userId,
+          email_type: options.emailType,
+          template_name: options.templateName,
+          status: 'error',
+          email_data: {
+            ...options.data,
+            subject: options.subject,
+            to: options.to,
+            error: err instanceof Error ? err.message : "Unknown error"
+          }
+        });
+    } catch (logErr) {
+      console.error("Failed to log email error:", logErr);
+    }
+    
     handleEmailError(
       err, 
       EmailErrorType.SEND_FAILURE, 
@@ -107,6 +176,28 @@ export async function resendEmail(emailLogId: string): Promise<boolean> {
     // Get subject with safe fallback
     const originalSubject = emailData?.subject || 'Notification from Humanly';
     
+    // Log a new attempt for this resend
+    const { data: logResult, error: logError } = await supabase
+      .from("email_logs")
+      .insert({
+        user_id: emailLog.user_id,
+        email_type: `resend_${emailLog.email_type}`,
+        template_name: emailLog.template_name,
+        status: 'resending',
+        email_data: {
+          ...emailData,
+          originalEmailId: emailLogId,
+          originalSentAt: emailLog.sent_at,
+          isResend: true
+        }
+      })
+      .select('id')
+      .single();
+    
+    if (logError) {
+      console.error("Failed to log resend attempt:", logError);
+    }
+    
     return await triggerEmail({
       userId: emailLog.user_id,
       emailType: emailLog.email_type,
@@ -120,6 +211,24 @@ export async function resendEmail(emailLogId: string): Promise<boolean> {
       }
     });
   } catch (err) {
+    // Try to log the error directly to the database
+    try {
+      await supabase
+        .from("email_logs")
+        .insert({
+          user_id: "system", // We don't know the user ID in this catch block
+          email_type: "resend_error",
+          template_name: "error",
+          status: 'error',
+          email_data: {
+            error: err instanceof Error ? err.message : "Unknown error during resend",
+            emailLogId
+          }
+        });
+    } catch (logErr) {
+      console.error("Failed to log resend error:", logErr);
+    }
+    
     handleEmailError(
       err, 
       EmailErrorType.SEND_FAILURE, 
@@ -164,6 +273,25 @@ export async function sendTestEmail(userId: string, recipientEmail?: string): Pr
   
   const [result, error] = await withEmailErrorHandling(
     async () => {
+      // Log the test attempt before sending
+      const { error: logError } = await supabase
+        .from("email_logs")
+        .insert({
+          user_id: userId,
+          email_type: 'test_email',
+          template_name: templateName,
+          status: 'sending',
+          email_data: {
+            ...emailData,
+            subject,
+            recipientEmail
+          }
+        });
+        
+      if (logError) {
+        console.error("Failed to log test email attempt:", logError);
+      }
+      
       return await triggerEmail({
         userId,
         emailType: 'test_email',
