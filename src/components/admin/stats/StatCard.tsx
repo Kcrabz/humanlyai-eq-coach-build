@@ -2,7 +2,7 @@
 import { CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 
-interface StatCardProps {
+export interface StatCardProps {
   title: string;
   value: number;
   description: string;

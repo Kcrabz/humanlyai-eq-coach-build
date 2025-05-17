@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "./card";
 import { cn } from "@/lib/utils";
 
-interface EnhancedCardProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface EnhancedCardProps extends React.HTMLAttributes<HTMLDivElement> {
   className?: string;
   clickable?: boolean;
   active?: boolean;
@@ -35,9 +35,13 @@ export const EnhancedCard = React.forwardRef<HTMLDivElement, EnhancedCardProps>(
 );
 EnhancedCard.displayName = "EnhancedCard";
 
+export interface EnhancedCardContentProps extends React.ComponentPropsWithoutRef<typeof CardContent> {
+  className?: string;
+}
+
 export const EnhancedCardContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentPropsWithoutRef<typeof CardContent>
+  EnhancedCardContentProps
 >(({ className, ...props }, ref) => (
   <CardContent 
     ref={ref} 
@@ -47,11 +51,14 @@ export const EnhancedCardContent = React.forwardRef<
 ));
 EnhancedCardContent.displayName = "EnhancedCardContent";
 
+export interface EnhancedCardHeaderProps extends React.ComponentPropsWithoutRef<typeof CardHeader> {
+  className?: string;
+  showBorder?: boolean;
+}
+
 export const EnhancedCardHeader = React.forwardRef<
   HTMLDivElement,
-  React.ComponentPropsWithoutRef<typeof CardHeader> & { 
-    showBorder?: boolean 
-  }
+  EnhancedCardHeaderProps
 >(({ className, showBorder, ...props }, ref) => (
   <CardHeader 
     ref={ref} 
@@ -65,11 +72,14 @@ export const EnhancedCardHeader = React.forwardRef<
 ));
 EnhancedCardHeader.displayName = "EnhancedCardHeader";
 
+export interface EnhancedCardFooterProps extends React.ComponentPropsWithoutRef<typeof CardFooter> {
+  className?: string;
+  showBorder?: boolean;
+}
+
 export const EnhancedCardFooter = React.forwardRef<
   HTMLDivElement,
-  React.ComponentPropsWithoutRef<typeof CardFooter> & { 
-    showBorder?: boolean 
-  }
+  EnhancedCardFooterProps
 >(({ className, showBorder, ...props }, ref) => (
   <CardFooter 
     ref={ref} 
