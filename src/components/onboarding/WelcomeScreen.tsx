@@ -18,15 +18,22 @@ export const WelcomeScreen = () => {
     Array(titleWords.length).fill(false)
   );
   
-  // Create array of words for the main content
-  const contentWords = "I'm Kai—your EQ coach. I'm here to help you get better at the stuff that actually matters. Communicating clearly. Managing your emotions. Responding instead of reacting. No therapy talk. No fake hype. Just honest coaching to help you grow. Before we begin, I'll ask you a few quick questions. It helps me get to know you—and tailor the coaching experience to how you naturally operate.".split(" ");
+  // Create array of sentences for content
+  const contentSentences = [
+    "I'm Kai—your EQ coach.",
+    "I'm here to help you get better at the stuff that actually matters.",
+    "Communicating clearly. Managing your emotions. Responding instead of reacting.",
+    "No therapy talk. No fake hype. Just honest coaching to help you grow.",
+    "Before we begin, I'll ask you a few quick questions.",
+    "It helps me get to know you—and tailor the coaching experience to how you naturally operate."
+  ];
   
-  // State to track visibility of content words
-  const [visibleContentWords, setVisibleContentWords] = useState<boolean[]>(
-    Array(contentWords.length).fill(false)
+  // State to track visibility of content sentences
+  const [visibleSentences, setVisibleSentences] = useState<boolean[]>(
+    Array(contentSentences.length).fill(false)
   );
   
-  // Set up animation timing for the word-by-word appearance
+  // Set up animation timing for the word-by-word and sentence-by-sentence appearance
   useEffect(() => {
     // Small delay before starting title animation
     const titleTimer = setTimeout(() => {
@@ -46,14 +53,15 @@ export const WelcomeScreen = () => {
       }, delay);
     });
     
-    // Animate content words with a delay after title
-    const baseContentDelay = 500; // Base delay before starting content animation
+    // Animate content sentences with specified timing
+    const initialDelay = 800; // 0.8s initial delay as requested
+    const sentenceStagger = 1200; // 1.2s stagger between sentences
     
-    contentWords.forEach((_, index) => {
-      const delay = baseContentDelay + 1000 + (index * 40); // 40ms stagger as requested (0.04s)
+    contentSentences.forEach((_, index) => {
+      const delay = initialDelay + (index * sentenceStagger);
       
       setTimeout(() => {
-        setVisibleContentWords(prev => {
+        setVisibleSentences(prev => {
           const updated = [...prev];
           updated[index] = true;
           return updated;
@@ -66,7 +74,7 @@ export const WelcomeScreen = () => {
   
   return (
     <motion.div 
-      className="max-w-2xl mx-auto py-8 px-4 text-center"
+      className="max-w-2xl mx-auto py-8 px-4 text-center flex flex-col items-center justify-center min-h-[60vh]"
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -105,25 +113,24 @@ export const WelcomeScreen = () => {
           ))}
         </motion.h1>
         
-        {/* New animated content block that replaces TypewriterText components */}
-        <div className="mx-auto max-w-xl p-4 mb-10">
-          <p className="text-lg md:text-xl font-medium text-humanly-gray-dark leading-relaxed text-center">
-            {contentWords.map((word, index) => (
-              <span
+        {/* New animated content block with sentence-by-sentence animation */}
+        <div className="mx-auto max-w-2xl p-4 mb-10 bg-gradient-to-b from-white to-humanly-pastel-mint/10 rounded-xl">
+          <div className="text-base md:text-xl font-medium text-humanly-gray-dark leading-relaxed text-center space-y-4">
+            {contentSentences.map((sentence, index) => (
+              <motion.p
                 key={index}
-                className={`inline-block transition-all duration-300 ease-out ${
-                  visibleContentWords[index] ? 'opacity-100' : 'opacity-0'
-                }`}
-                style={{
-                  transitionDelay: `${index * 0.04}s`,
-                  marginRight: '0.25em',
-                  transform: visibleContentWords[index] ? 'translateY(0)' : 'translateY(10px)',
+                initial={{ opacity: 0, y: 15 }}
+                animate={visibleSentences[index] ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+                transition={{ 
+                  duration: 0.6,
+                  ease: "easeOut"
                 }}
+                className="mb-3"
               >
-                {word}
-              </span>
+                {sentence}
+              </motion.p>
             ))}
-          </p>
+          </div>
         </div>
         
         <div className="relative group">
