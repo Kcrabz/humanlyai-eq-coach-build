@@ -159,7 +159,7 @@ export const useAuth = () => {
   return context;
 };
 
-// Enable HMR for this module
+// Enable Hot Module Replacement
 if (import.meta.hot) {
   import.meta.hot.accept();
 }
