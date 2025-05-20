@@ -107,5 +107,8 @@ initializeApp();
 
 // Enable Hot Module Replacement (HMR)
 if (import.meta.hot) {
-  import.meta.hot.accept();
+  import.meta.hot.accept('./App', () => {
+    console.log('HMR update for App component');
+    initializeApp();
+  });
 }

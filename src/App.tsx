@@ -1,6 +1,6 @@
 
 // Import existing providers
-import { AuthProvider } from "./context/auth/AuthProvider"; // Updated import path 
+import { AuthProvider } from "./context/auth/AuthProvider"; 
 import { ThemeProvider } from "./context/ThemeContext";
 import { Toaster } from "@/components/ui/toaster";
 import { ReactNode } from "react";
@@ -10,7 +10,14 @@ import { ChatMemoryProvider } from "./context/ChatMemoryContext";
 import { THEME_STORAGE_KEY } from "./constants/storageKeys";
 
 // Create a new query client
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 30000,
+    },
+  },
+});
 
 // Provider wrapper component for better organization
 function AppProviders({ children }: { children: ReactNode }) {
@@ -37,3 +44,8 @@ function App() {
 }
 
 export default App;
+
+// Enable Hot Module Replacement
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}

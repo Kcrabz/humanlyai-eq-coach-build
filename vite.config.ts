@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -11,10 +10,11 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     hmr: {
-      // Properly configure HMR to make sure it works reliably
+      // Enhanced HMR settings to avoid refresh issues
       timeout: 120000,
       overlay: true,
       protocol: 'ws',
+      clientPort: 443, // Allow secure connections
     },
   },
   plugins: [
@@ -185,5 +185,8 @@ export default defineConfig(({ mode }) => ({
     esbuildOptions: {
       target: 'esnext'
     }
+  },
+  experimental: {
+    hmrPartialAccept: true,
   }
 }));
