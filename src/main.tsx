@@ -1,3 +1,4 @@
+
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { registerSW } from 'virtual:pwa-register'
@@ -103,8 +104,3 @@ const initializeApp = () => {
 
 // Initialize the application
 initializeApp();
-
-// Enable Hot Module Replacement (HMR) with simpler configuration
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}

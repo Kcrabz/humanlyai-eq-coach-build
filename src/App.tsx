@@ -1,3 +1,4 @@
+
 // Import existing providers
 import { AuthProvider } from "./context/auth/AuthProvider"; 
 import { ThemeProvider } from "./context/ThemeContext";
@@ -14,8 +15,8 @@ const queryClient = new QueryClient({
     queries: {
       retry: 1,
       staleTime: 30000,
-      refetchOnWindowFocus: false, // Disable automatic refetching when window gains focus
-      refetchOnReconnect: true, // Enable refetching when reconnecting
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
     },
     mutations: {
       retry: 1,
@@ -24,7 +25,6 @@ const queryClient = new QueryClient({
 });
 
 // Set up global error handling using proper API
-// Use meta property for error handling which is the correct way in latest TanStack Query
 queryClient.setDefaultOptions({
   queries: {
     meta: {
@@ -67,8 +67,3 @@ function App() {
 }
 
 export default App;
-
-// Enable Hot Module Replacement
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}

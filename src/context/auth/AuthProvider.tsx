@@ -16,7 +16,6 @@ import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthActionWrappers } from "./useAuthActionWrappers";
 import { isRunningAsPWA } from "@/utils/loginRedirectUtils";
 import { useLocation } from "react-router-dom";
-import { toast } from "sonner";
 
 /**
  * AuthProvider component that manages authentication state and provides it via context

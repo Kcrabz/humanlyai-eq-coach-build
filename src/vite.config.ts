@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -10,12 +11,12 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     hmr: {
-      // Using standard HMR configuration
+      // Simple HMR configuration for better compatibility
       overlay: true,
     },
   },
   plugins: [
-    // Use React SWC plugin with default configuration
+    // Use React SWC plugin with the correct configuration for HMR
     react(),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
@@ -182,5 +183,5 @@ export default defineConfig(({ mode }) => ({
     esbuildOptions: {
       target: 'esnext'
     }
-  },
+  }
 }));
