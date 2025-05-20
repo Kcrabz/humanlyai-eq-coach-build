@@ -4,10 +4,43 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { TypewriterText } from "./TypewriterText";
 import { useAnimationTiming } from "@/hooks/useAnimationTiming";
+import { useEffect, useState } from "react";
 
 export const WelcomeScreen = () => {
   const { completeStep } = useOnboarding();
   const { framerPresets } = useAnimationTiming();
+  
+  // Add state to track animated words
+  const [titleVisible, setTitleVisible] = useState(false);
+  
+  // Create arrays of words for the title and subtitle to animate separately
+  const titleWords = "Meet Your EQ Coach".split(" ");
+  const [visibleTitleWords, setVisibleTitleWords] = useState<boolean[]>(
+    Array(titleWords.length).fill(false)
+  );
+  
+  // Set up animation timing for the word-by-word appearance
+  useEffect(() => {
+    // Small delay before starting title animation
+    const titleTimer = setTimeout(() => {
+      setTitleVisible(true);
+    }, 300);
+    
+    // Animate each title word sequentially
+    titleWords.forEach((_, index) => {
+      const delay = 500 + (index * 120); // Base delay plus staggered timing
+      
+      setTimeout(() => {
+        setVisibleTitleWords(prev => {
+          const updated = [...prev];
+          updated[index] = true;
+          return updated;
+        });
+      }, delay);
+    });
+    
+    return () => clearTimeout(titleTimer);
+  }, []);
   
   return (
     <motion.div 
@@ -32,13 +65,28 @@ export const WelcomeScreen = () => {
           {...framerPresets.fadeIn}
           transition={{ delay: 0.2, ...framerPresets.fadeIn.transition }}
         >
-          Meet Your EQ Coach
+          {titleWords.map((word, index) => (
+            <span
+              key={index}
+              className={`inline-block transition-opacity duration-300 ease-in-out ${
+                visibleTitleWords[index] ? 'opacity-100' : 'opacity-0'
+              }`}
+              style={{
+                transitionDelay: `${index * 0.12}s`,
+                marginRight: index < titleWords.length - 1 ? '0.15em' : '0',
+                transform: visibleTitleWords[index] ? 'translateY(0)' : 'translateY(5px)',
+                transition: 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out'
+              }}
+            >
+              {word}
+            </span>
+          ))}
         </motion.h1>
         
         <div className="space-y-6 mb-10">
           <TypewriterText 
             className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
-            delay={0.5}
+            delay={1.2} // Start after title animation completes
             showCursor={true}
             speed="normal"
             animationType="word"
@@ -49,7 +97,7 @@ export const WelcomeScreen = () => {
           
           <TypewriterText 
             className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
-            delay={3}
+            delay={3.2}
             speed="fast"
             animationType="word"
           >
@@ -58,7 +106,7 @@ export const WelcomeScreen = () => {
           
           <TypewriterText 
             className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
-            delay={5}
+            delay={4.5}
             speed="normal"
             animationType="word"
           >
