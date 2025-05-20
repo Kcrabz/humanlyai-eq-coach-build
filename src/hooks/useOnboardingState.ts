@@ -5,7 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const initialState: OnboardingState = {
-  currentStep: "name",
+  currentStep: "welcome",
   completedSteps: [],
   goal: null,
   firstName: null,
@@ -42,20 +42,20 @@ export const useOnboardingState = () => {
         if (user.first_name || user.last_name) {
           newState.firstName = user.first_name || '';
           newState.lastName = user.last_name || '';
-          newState.completedSteps = ["name"];
+          newState.completedSteps = ["welcome", "name"];
           newState.currentStep = "goal";
         }
         
         if (user.eq_archetype) {
           newState.archetype = user.eq_archetype;
-          newState.completedSteps = ["name", "goal", "archetype"];
+          newState.completedSteps = ["welcome", "name", "goal", "archetype"];
           newState.currentStep = "coaching";
         }
 
         if (user.coaching_mode) {
           newState.coachingMode = user.coaching_mode;
           if (newState.completedSteps.includes("archetype")) {
-            newState.completedSteps = ["name", "goal", "archetype", "coaching"];
+            newState.completedSteps = ["welcome", "name", "goal", "archetype", "coaching"];
             newState.currentStep = "complete";
           }
         }

@@ -29,7 +29,14 @@ export const useOnboardingActions = (
     
     try {
       // Save the step data based on which step it is
-      if (step === "name" && state.firstName) {
+      if (step === "welcome") {
+        // No backend saving needed for welcome step, just move to next step
+        // Add welcome to completed steps
+        const updatedCompletedSteps = [...state.completedSteps, "welcome"];
+        goToStep("name");
+        setProcessingStep(null);
+        return;
+      } else if (step === "name" && state.firstName) {
         try {
           // Use updateProfile instead of separate setFirstName/setLastName
           await updateProfile({
@@ -148,10 +155,17 @@ export const useOnboardingActions = (
 
       // Determine the next step
       let nextStep: OnboardingStep = step;
-      if (step === "name") nextStep = "goal";
+      if (step === "welcome") nextStep = "name";
+      else if (step === "name") nextStep = "goal";
       else if (step === "goal") nextStep = "archetype";
       else if (step === "archetype") nextStep = "coaching";
       else if (step === "coaching") nextStep = "complete";
+      
+      // Add the completed step to completedSteps
+      setState(prev => ({
+        ...prev,
+        completedSteps: [...prev.completedSteps, step]
+      }));
       
       goToStep(nextStep);
       setProcessingStep(null);

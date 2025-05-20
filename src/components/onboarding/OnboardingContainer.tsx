@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { useSearchParams, useLocation } from "react-router-dom";
 import { OnboardingProgress } from "./OnboardingProgress";
@@ -6,6 +7,7 @@ import { GoalSelector } from "./GoalSelector";
 import { ArchetypeSelectorWithQuiz } from "./ArchetypeSelectorWithQuiz";
 import { CoachingModeSelector } from "./CoachingModeSelector";
 import { OnboardingComplete } from "./OnboardingComplete";
+import { WelcomeScreen } from "./WelcomeScreen";
 import { useOnboarding } from "@/context/OnboardingContext";
 import { useAuth } from "@/context/AuthContext";
 import { CircleX } from "lucide-react";
@@ -28,7 +30,7 @@ export const OnboardingContainer = () => {
   // Effect to handle step parameter in URL
   useEffect(() => {
     const targetStep = searchParams.get('step');
-    if (targetStep && ['name', 'goal', 'archetype', 'coaching', 'complete'].includes(targetStep)) {
+    if (targetStep && ['welcome', 'name', 'goal', 'archetype', 'coaching', 'complete'].includes(targetStep)) {
       console.log(`Directing user to the ${targetStep} step from URL parameter`);
       goToStep(targetStep as any);
     }
@@ -56,8 +58,9 @@ export const OnboardingContainer = () => {
   
   return (
     <div className="max-w-5xl mx-auto p-4 py-12 relative">
-      <OnboardingProgress />
+      {currentStep !== "welcome" && <OnboardingProgress />}
       
+      {currentStep === "welcome" && <WelcomeScreen />}
       {currentStep === "name" && <NameInput />}
       {currentStep === "goal" && <GoalSelector />}
       {currentStep === "archetype" && <ArchetypeSelectorWithQuiz />}

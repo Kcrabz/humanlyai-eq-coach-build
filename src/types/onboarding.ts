@@ -1,5 +1,5 @@
 
-export type OnboardingStep = "goal" | "name" | "archetype" | "coaching" | "complete";
+export type OnboardingStep = "welcome" | "goal" | "name" | "archetype" | "coaching" | "complete";
 
 export interface OnboardingState {
   currentStep: OnboardingStep;
