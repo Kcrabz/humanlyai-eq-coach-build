@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -17,17 +16,15 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     // Use React SWC plugin with proper configuration for HMR
     react({
-      // Using SWC with Fast Refresh
-      swcOptions: {
-        jsc: {
-          transform: {
-            react: {
-              refresh: true,
-              development: mode === 'development',
-            }
-          }
-        }
-      }
+      // The newer versions of @vitejs/plugin-react-swc don't accept swcOptions directly
+      // Instead, we use the proper configuration format
+      plugins: [
+        ['@swc/plugin-emotion', {}]
+      ],
+      jsxImportSource: undefined,
+      // Set development mode based on the build mode
+      development: mode === 'development',
+      refresh: mode === 'development',
     }),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
