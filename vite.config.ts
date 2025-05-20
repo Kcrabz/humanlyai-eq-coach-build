@@ -19,10 +19,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     // Use React SWC plugin with default configuration
-    react({
-      // The 'refresh' option is not valid for plugin-react-swc
-      // Using the correct configuration options
-    }),
+    react(),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
