@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -13,9 +14,9 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react({
       // Use proper SWC configuration for React refresh
-      jsxImportSource: 'react',
-      dev: mode === 'development',
-      refresh: true,
+      plugins: [
+        ['@swc/plugin-react-refresh', { mode: mode === 'development' ? 'development' : 'production' }]
+      ],
       // Correctly specify which files to include
       include: "**/*.tsx",
     }),
