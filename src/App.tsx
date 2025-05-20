@@ -69,7 +69,15 @@ function App() {
 
 export default App;
 
-// Enable Hot Module Replacement with proper error handling
+// Enable Hot Module Replacement with enhanced error handling
 if (import.meta.hot) {
-  import.meta.hot.accept();
+  import.meta.hot.accept((err) => {
+    if (err) {
+      console.error("Error during App HMR update:", err);
+      // In case of severe error, you might want to reload the page
+      // window.location.reload();
+    } else {
+      console.log("App component successfully hot-updated");
+    }
+  });
 }

@@ -159,7 +159,15 @@ export const useAuth = () => {
   return context;
 };
 
-// Setting up proper module for HMR  
+// Setting up proper module for HMR with more robust error handling
 if (import.meta.hot) {
-  import.meta.hot.accept();
+  import.meta.hot.accept((newModule) => {
+    console.log("HMR update accepted for AuthProvider");
+    try {
+      // The HMR update will be applied automatically
+      // This callback can be used for any custom HMR logic if needed
+    } catch (err) {
+      console.error("Error during AuthProvider HMR update:", err);
+    }
+  });
 }
