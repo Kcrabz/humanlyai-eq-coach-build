@@ -17,10 +17,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    // Use React SWC plugin with HMR configuration
-    react({
-      plugins: [['@swc/plugin-react-refresh', {}]],
-    }),
+    // Use React SWC plugin with default configuration which includes HMR
+    react(),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
