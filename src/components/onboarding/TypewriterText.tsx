@@ -1,35 +1,95 @@
 
 import { motion } from "framer-motion";
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 
 interface TypewriterTextProps {
   children: string;
   delay?: number;
   duration?: number;
   className?: string;
+  showCursor?: boolean;
+  cursorStyle?: string;
+  speed?: "slow" | "normal" | "fast";
+  animationType?: "word" | "character";
 }
 
 export const TypewriterText = ({ 
   children, 
   delay = 0,
   duration = 2, 
-  className = ""
+  className = "",
+  showCursor = false,
+  cursorStyle = "|",
+  speed = "normal",
+  animationType = "word"
 }: TypewriterTextProps) => {
   const text = children.toString();
+  const [isComplete, setIsComplete] = useState(false);
   
-  // Split by words for animation similar to landing page
-  const words = text.split(" ");
+  // Calculate stagger delay based on speed setting
+  const getStaggerDelay = () => {
+    switch (speed) {
+      case "slow": return 0.15;
+      case "fast": return 0.05;
+      default: return 0.1;
+    }
+  };
   
-  // Animation configuration for staggered typing effect by word
+  // Handle different animation types
+  const getElements = () => {
+    if (animationType === "character") {
+      return text.split("").map((char, index) => (
+        <motion.span
+          key={`char-${index}`}
+          className="inline-block"
+          variants={charChild}
+          style={{ 
+            display: char === " " ? "inline" : "inline-block",
+            width: char === " " ? "0.25em" : "auto"
+          }}
+        >
+          {char}
+        </motion.span>
+      ));
+    }
+    
+    // Default to word animation
+    return text.split(" ").map((word, index) => (
+      <motion.span
+        key={`word-${index}`}
+        className="inline-block"
+        variants={wordChild}
+        style={{ marginRight: index < text.split(" ").length - 1 ? '0.15em' : '0' }}
+      >
+        {word}
+      </motion.span>
+    ));
+  };
+  
+  // Track animation completion to hide cursor
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsComplete(true);
+    }, delay * 1000 + (text.length * getStaggerDelay() * 1000) + 500);
+    
+    return () => clearTimeout(timer);
+  }, [text, delay, speed]);
+  
+  // Animation configuration for staggered typing effect
   const container = {
     hidden: { opacity: 0 },
     visible: (i = 1) => ({
       opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: delay * i }
-    })
+      transition: { 
+        staggerChildren: getStaggerDelay(), 
+        delayChildren: delay * i 
+      }
+    }),
+    exit: { opacity: 0 }
   };
   
-  const child = {
+  // Animation for word-level animation
+  const wordChild = {
     visible: {
       opacity: 1,
       y: 0,
@@ -44,24 +104,44 @@ export const TypewriterText = ({
       y: 5,
     }
   };
+  
+  // Animation for character-level animation
+  const charChild = {
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 16,
+        stiffness: 120,
+      }
+    },
+    hidden: {
+      opacity: 0,
+      y: 10,
+    }
+  };
 
   return (
     <motion.p
-      className={`${className} overflow-wrap-anywhere break-words`}
+      className={`${className} overflow-wrap-anywhere break-words relative`}
       variants={container}
       initial="hidden"
       animate="visible"
+      exit="exit"
     >
-      {words.map((word, index) => (
-        <motion.span
-          key={index}
+      {getElements()}
+      
+      {showCursor && !isComplete && (
+        <motion.span 
           className="inline-block"
-          variants={child}
-          style={{ marginRight: index < words.length - 1 ? '0.15em' : '0' }}
+          animate={{ opacity: [1, 0, 1] }}
+          transition={{ repeat: Infinity, duration: 0.8 }}
+          style={{ marginLeft: '0.1em' }}
         >
-          {word}
+          {cursorStyle}
         </motion.span>
-      ))}
+      )}
     </motion.p>
   );
 };

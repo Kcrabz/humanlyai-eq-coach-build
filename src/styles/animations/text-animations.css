@@ -17,6 +17,39 @@
   animation: fade-in-word 0.4s ease-in-out forwards;
 }
 
+/* Character-by-character animation */
+@keyframes fade-in-char {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.char-fade-in {
+  display: inline-block;
+  opacity: 0;
+  animation: fade-in-char 0.3s ease-in-out forwards;
+}
+
+/* Cursor animation */
+@keyframes blink-cursor {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  animation: blink-cursor 0.8s infinite;
+}
+
 /* Text wrapping utilities */
 .overflow-wrap-anywhere {
   overflow-wrap: anywhere;
