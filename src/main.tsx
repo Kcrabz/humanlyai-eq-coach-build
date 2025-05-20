@@ -63,14 +63,14 @@ window.isPwaMode = function(): boolean {
 // Initialize the application with error handling
 const initializeApp = () => {
   try {
-    const root = document.getElementById("root");
-    if (!root) {
+    const rootElement = document.getElementById("root");
+    if (!rootElement) {
       console.error("Root element not found!");
       return;
     }
 
     // Create root and render app
-    const reactRoot = createRoot(root);
+    const reactRoot = createRoot(rootElement);
     
     reactRoot.render(
       <BrowserRouter>
