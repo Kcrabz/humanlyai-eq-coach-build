@@ -3,6 +3,8 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Sprout } from "lucide-react";
 
 export const WelcomeScreen = () => {
   const { completeStep } = useOnboarding();
@@ -38,6 +40,21 @@ export const WelcomeScreen = () => {
   
   return (
     <div className="max-w-md mx-auto px-4 py-8 flex flex-col gap-4 items-start justify-center min-h-screen">
+      {/* Kai Avatar */}
+      <motion.div 
+        className="w-full flex justify-center mb-6"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Avatar className="h-24 w-24 border-2 border-humanly-purple-light/30 shadow-md">
+          <AvatarImage src="/lovable-uploads/1dce2472-8b9f-4db6-88aa-c24e5f2f5a35.png" alt="Kai EQ Coach" />
+          <AvatarFallback className="bg-gradient-to-br from-humanly-purple-light to-humanly-teal">
+            <Sprout className="h-12 w-12 text-white" />
+          </AvatarFallback>
+        </Avatar>
+      </motion.div>
+      
       {/* Chat messages */}
       <div className="space-y-4 w-full">
         {messages.map((message, index) => (
