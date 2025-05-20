@@ -20,12 +20,19 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    // Use React SWC plugin with development mode flag
+    // Use React SWC plugin with correct configuration
     react({
-      // The SWC plugin automatically handles React refresh in development mode
-      // No need for explicit configuration
-      development: mode === 'development',
-      refresh: mode === 'development',
+      // SWC plugin will handle React refresh automatically
+      swcOptions: {
+        jsc: {
+          transform: {
+            react: {
+              refresh: mode === 'development',
+              development: mode === 'development',
+            },
+          },
+        },
+      }
     }),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
