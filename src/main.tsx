@@ -69,7 +69,6 @@ const initializeApp = () => {
       return;
     }
 
-    // Create root and render app
     const reactRoot = createRoot(rootElement);
     
     reactRoot.render(
