@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -9,18 +10,11 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    hmr: {
-      // Enhanced HMR settings to avoid refresh issues
-      timeout: 120000,
-      overlay: true,
-      protocol: 'ws',
-      clientPort: undefined, // Let Vite handle the port automatically
-      host: undefined, // Let Vite determine the host
-    },
+    hmr: true, // Simplified HMR setting
   },
   plugins: [
-    // Use React SWC plugin without the incorrect fastRefresh option
-    react(), // Use default configuration which already includes Fast Refresh
+    // Use React SWC plugin with default configuration for proper HMR
+    react(),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
@@ -186,8 +180,5 @@ export default defineConfig(({ mode }) => ({
     esbuildOptions: {
       target: 'esnext'
     }
-  },
-  experimental: {
-    hmrPartialAccept: true,
   }
 }));
