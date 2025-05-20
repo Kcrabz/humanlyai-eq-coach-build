@@ -18,14 +18,12 @@ export const WelcomeScreen = () => {
     Array(titleWords.length).fill(false)
   );
   
-  // Create array of sentences for content
+  // Create array of sentences for content - updated with new text
   const contentSentences = [
-    "I'm Kai—your EQ coach.",
-    "I'm here to help you get better at the stuff that actually matters.",
-    "Communicating clearly. Managing your emotions. Responding instead of reacting.",
-    "No therapy talk. No fake hype. Just honest coaching to help you grow.",
-    "Before we begin, I'll ask you a few quick questions.",
-    "It helps me get to know you—and tailor the coaching experience to how you naturally operate."
+    "Hey, I'm Kai. Think of me as your EQ coach ... here to help you handle real life a little better each day.",
+    "Whether it's communication, emotion management, or just making fewer reactive decisions ... I've got you.",
+    "No fake hype. No heavy therapy talk. Just honest growth.",
+    "Before we dive in, I've got a few quick questions to help me coach you in a way that actually fits."
   ];
   
   // State to track visibility of content sentences
