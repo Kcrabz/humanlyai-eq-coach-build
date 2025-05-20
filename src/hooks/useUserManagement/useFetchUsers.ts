@@ -16,24 +16,28 @@ export const useFetchUsers = (
   const fetchUsers = useCallback(async (onboardedValue?: string): Promise<void> => {
     // Skip if not an admin or fetch already in progress
     if (!isAdmin || fetchInProgressRef.current) {
+      console.log("Fetch skipped: isAdmin=", isAdmin, "fetchInProgress=", fetchInProgressRef.current);
       return Promise.resolve();
     }
 
     try {
+      console.log("Fetching user data starting...");
+      
       // Mark fetch as in progress to prevent parallel fetches
       fetchInProgressRef.current = true;
       setIsLoading(true);
 
       // Fetch basic user data first
-      const users = await userData.fetchUserData(onboardedValue);
+      console.log("Fetching basic user data...");
+      const { userIds, emailData } = await userData.fetchUserData();
       
-      if (!users || users.length === 0) {
+      if (!emailData || emailData.length === 0) {
+        console.log("No user data found, returning empty array");
         setUsers([]);
         return Promise.resolve();
       }
       
-      // Extract user IDs for additional data fetching
-      const userIds = users.map(user => user.id);
+      console.log(`Found ${emailData.length} users, fetching additional data...`);
       
       // Fetch additional data in parallel
       const [loginMap, chatData, tokenData] = await Promise.all([
@@ -43,21 +47,26 @@ export const useFetchUsers = (
       ]);
       
       // Combine all data
-      const combinedUsers = users.map(user => ({
-        ...user,
-        last_login: loginMap.get(user.id) || 'Never',
-        chat_time: chatData.chatTimes.get(user.id) || '0 mins',
-        message_count: chatData.messageCounts.get(user.id) || 0,
-        tokenUsage: tokenData.usageMap.get(user.id) || 0,
-        tokenUsageLimit: tokenData.limitMap.get(user.id) || 0
-      }));
+      const combinedUsers = emailData.map(user => {
+        const userId = user.id;
+        return {
+          ...user,
+          last_login: loginMap.get(userId) || 'Never',
+          chat_time: chatData.chatTimes?.get(userId) || '0 mins',
+          message_count: chatData.messageCounts?.get(userId) || 0,
+          tokenUsage: tokenData.usageMap?.get(userId) || 0,
+          tokenUsageLimit: tokenData.limitMap?.get(userId) || 0
+        };
+      });
       
+      console.log(`Combined data for ${combinedUsers.length} users, updating state...`);
       setUsers(combinedUsers);
       return Promise.resolve();
     } catch (error) {
       console.error('Error fetching users:', error);
       return Promise.reject(error);
     } finally {
+      console.log("Fetch complete, resetting loading state");
       setIsLoading(false);
       fetchInProgressRef.current = false;
     }

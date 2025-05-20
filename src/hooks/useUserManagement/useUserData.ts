@@ -10,6 +10,8 @@ export const useUserData = () => {
   // Fetch all users data
   const fetchUserData = useCallback(async () => {
     try {
+      console.log("useUserData - Fetching profiles data");
+      
       // Build query to fetch all profiles
       const { data: profiles, error } = await supabase
         .from('profiles')
@@ -17,9 +19,12 @@ export const useUserData = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
+        console.error("Error fetching profiles:", error);
         throw error;
       }
 
+      console.log(`useUserData - Fetched ${profiles?.length || 0} profiles`);
+      
       if (!profiles || !Array.isArray(profiles)) {
         return { userIds: [], emailData: [] };
       }
@@ -33,7 +38,10 @@ export const useUserData = () => {
       }
       
       // Fetch emails from the admin edge function
+      console.log(`useUserData - Fetching emails for ${userIds.length} users`);
       const emailMap = await fetchUserEmails(userIds);
+      
+      console.log(`useUserData - Got ${emailMap.size} emails, combining data`);
       
       // Add emails to the profiles
       const emailData = profiles.map(profile => ({

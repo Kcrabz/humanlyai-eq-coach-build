@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { OnboardingStep } from "@/types/onboarding";
 import { useAuth } from "@/context/AuthContext";
@@ -150,24 +149,18 @@ export const useOnboardingActions = (
         }
       }
 
-      // Determine the next step
-      let nextStep: OnboardingStep;
+      // Define stepTransitions as a record to safely manage step transitions
+      const stepTransitions: Record<OnboardingStep, OnboardingStep> = {
+        "welcome": "name",
+        "name": "goal",
+        "goal": "archetype",
+        "archetype": "coaching",
+        "coaching": "complete",
+        "complete": "complete" // Default case
+      };
       
-      // Use a type-safe approach with a type assertion to handle the step transitions
-      if (step === "welcome") {
-        nextStep = "name";
-      } else if (step === "name") {
-        nextStep = "goal";
-      } else if (step === "goal") {
-        nextStep = "archetype";
-      } else if (step === "archetype") {
-        nextStep = "coaching";
-      } else if (step === "coaching") {
-        nextStep = "complete";
-      } else {
-        // Default case - shouldn't reach here due to our type definition
-        nextStep = step;
-      }
+      // Use the predefined transitions map for type safety
+      let nextStep: OnboardingStep = stepTransitions[step] || step;
       
       // Move to the next step
       goToStep(nextStep);

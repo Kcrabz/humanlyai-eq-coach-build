@@ -86,12 +86,16 @@ export const UserManagementProvider = ({
     };
   }, [users, isLoading, initialLoadDone]);
 
-  // Track if initial load has been triggered
+  // Trigger initial data load when component mounts and is ready
   useEffect(() => {
     if (mountingComplete && !initialLoadTriggeredRef.current) {
+      console.log("UserManagementContext - Initial data load triggered");
       initialLoadTriggeredRef.current = true;
+      fetchUsers(onboardedFilter).catch(err => {
+        console.error("Error in initial data fetch:", err);
+      });
     }
-  }, [mountingComplete]);
+  }, [mountingComplete, fetchUsers, onboardedFilter]);
 
   // Add a refreshUsers function to reload data with current filters - memoized to prevent recreating
   const refreshUsers = useCallback(async () => {
