@@ -17,18 +17,28 @@ import { useAuthActionWrappers } from "./useAuthActionWrappers";
 import { isRunningAsPWA } from "@/utils/loginRedirectUtils";
 import { useLocation } from "react-router-dom";
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+/**
+ * AuthProvider component that manages authentication state and provides it via context
+ */
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // State for auth error handling
   const [error, setError] = useState<string | null>(null);
   const location = useLocation();
   
   // Auth session
-  const { session, isLoading: isSessionLoading, setIsLoading: setIsSessionLoading, authEvent, profileLoaded, setProfileLoaded } = useAuthSession();
+  const { 
+    session, 
+    isLoading: isSessionLoading, 
+    setIsLoading: setIsSessionLoading, 
+    authEvent, 
+    profileLoaded, 
+    setProfileLoaded 
+  } = useAuthSession();
   
   // Profile state with unified loading
   const { user, setUser } = useProfileState(session, isSessionLoading, setIsSessionLoading, setProfileLoaded);
   
-  // Track login events - Fix: Pass isAuthenticated boolean and user object
+  // Track login events
   const isAuthenticated = !!user;
   useLoginTracking(isAuthenticated, user);
   
@@ -38,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Auth core for login/logout
   const authCore = useAuthCore(setUser);
   
-  // Auth signup - Pass the function through directly without wrapping it
+  // Auth signup
   const { signup } = useAuthSignup(setUser);
   
   // Auth actions
@@ -68,13 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Special handling for PWA navigation
   useEffect(() => {
     if (isAuthenticated && isRunningAsPWA()) {
-      console.log("Authenticated in PWA, current path:", location.pathname);
-      
       // Store current path for PWA after successful authentication
-      // This helps with navigation after login in PWA mode
       if (location.pathname !== '/login' && location.pathname !== '/signup') {
         sessionStorage.setItem('pwa_last_path', location.pathname);
-        console.log("Stored last path for PWA:", location.pathname);
       }
       
       // Store desired path for PWA after successful authentication
@@ -82,7 +88,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (location.pathname === '/login' || location.pathname === '/signup') {
           // After login/signup in PWA mode, direct to dashboard or last stored path
           const lastPath = sessionStorage.getItem('pwa_last_path') || '/dashboard';
-          console.log("Storing redirect target for PWA post-auth:", lastPath);
           sessionStorage.setItem('pwa_desired_path', lastPath);
         }
       }
@@ -130,7 +135,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// Export the hook for consuming the context
+/**
+ * Hook for consuming the auth context
+ */
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {

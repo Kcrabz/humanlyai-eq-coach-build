@@ -12,7 +12,12 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    react(),
+    react({
+      // Explicitly set fastRefresh to true and provide more configuration options
+      fastRefresh: true,
+      // Add specific component types to be handled by fast refresh
+      include: "**/*.tsx",
+    }),
     mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
