@@ -2,7 +2,6 @@
 import { useOnboarding } from "@/context/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { TypewriterText } from "./TypewriterText";
 import { useAnimationTiming } from "@/hooks/useAnimationTiming";
 import { useEffect, useState } from "react";
 
@@ -10,13 +9,21 @@ export const WelcomeScreen = () => {
   const { completeStep } = useOnboarding();
   const { framerPresets } = useAnimationTiming();
   
-  // Add state to track animated words
+  // State for tracking animated elements
   const [titleVisible, setTitleVisible] = useState(false);
   
-  // Create arrays of words for the title and subtitle to animate separately
+  // Create array of words for the title to animate separately
   const titleWords = "Meet Your EQ Coach".split(" ");
   const [visibleTitleWords, setVisibleTitleWords] = useState<boolean[]>(
     Array(titleWords.length).fill(false)
+  );
+  
+  // Create array of words for the main content
+  const contentWords = "I'm Kai—your EQ coach. I'm here to help you get better at the stuff that actually matters. Communicating clearly. Managing your emotions. Responding instead of reacting. No therapy talk. No fake hype. Just honest coaching to help you grow. Before we begin, I'll ask you a few quick questions. It helps me get to know you—and tailor the coaching experience to how you naturally operate.".split(" ");
+  
+  // State to track visibility of content words
+  const [visibleContentWords, setVisibleContentWords] = useState<boolean[]>(
+    Array(contentWords.length).fill(false)
   );
   
   // Set up animation timing for the word-by-word appearance
@@ -32,6 +39,21 @@ export const WelcomeScreen = () => {
       
       setTimeout(() => {
         setVisibleTitleWords(prev => {
+          const updated = [...prev];
+          updated[index] = true;
+          return updated;
+        });
+      }, delay);
+    });
+    
+    // Animate content words with a delay after title
+    const baseContentDelay = 500; // Base delay before starting content animation
+    
+    contentWords.forEach((_, index) => {
+      const delay = baseContentDelay + 1000 + (index * 40); // 40ms stagger as requested (0.04s)
+      
+      setTimeout(() => {
+        setVisibleContentWords(prev => {
           const updated = [...prev];
           updated[index] = true;
           return updated;
@@ -83,36 +105,25 @@ export const WelcomeScreen = () => {
           ))}
         </motion.h1>
         
-        <div className="space-y-6 mb-10">
-          <TypewriterText 
-            className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
-            delay={1.2} // Start after title animation completes
-            showCursor={true}
-            speed="normal"
-            animationType="word"
-          >
-            Hey there, I'm Kai, your EQ coach. I'm here to help you get better at the stuff that actually matters. 
-            Communicating clearly. Managing your emotions. Responding instead of reacting.
-          </TypewriterText>
-          
-          <TypewriterText 
-            className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
-            delay={3.2}
-            speed="fast"
-            animationType="word"
-          >
-            No therapy talk. No fake hype. Just honest coaching to help you grow.
-          </TypewriterText>
-          
-          <TypewriterText 
-            className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
-            delay={4.5}
-            speed="normal"
-            animationType="word"
-          >
-            Before we begin, I'll ask you a few quick questions. It helps me get to know you, 
-            and tailor the coaching experience to best suit your needs.
-          </TypewriterText>
+        {/* New animated content block that replaces TypewriterText components */}
+        <div className="mx-auto max-w-xl p-4 mb-10">
+          <p className="text-lg md:text-xl font-medium text-humanly-gray-dark leading-relaxed text-center">
+            {contentWords.map((word, index) => (
+              <span
+                key={index}
+                className={`inline-block transition-all duration-300 ease-out ${
+                  visibleContentWords[index] ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{
+                  transitionDelay: `${index * 0.04}s`,
+                  marginRight: '0.25em',
+                  transform: visibleContentWords[index] ? 'translateY(0)' : 'translateY(10px)',
+                }}
+              >
+                {word}
+              </span>
+            ))}
+          </p>
         </div>
         
         <div className="relative group">
