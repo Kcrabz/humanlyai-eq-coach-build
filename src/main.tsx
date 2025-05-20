@@ -69,6 +69,7 @@ const initializeApp = () => {
       return;
     }
 
+    // Create root and render app
     createRoot(root).render(
       <BrowserRouter>
         <App />
@@ -103,3 +104,8 @@ const initializeApp = () => {
 
 // Initialize the application
 initializeApp();
+
+// Enable Hot Module Replacement (HMR)
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}
