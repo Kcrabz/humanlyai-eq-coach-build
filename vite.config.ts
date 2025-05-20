@@ -13,7 +13,9 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     // Use React SWC plugin with default configuration for best HMR support
-    react(),
+    react({
+      fastRefresh: true,
+    }),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
