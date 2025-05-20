@@ -24,16 +24,22 @@ const queryClient = new QueryClient({
   },
 });
 
-// Set up global error handlers
-queryClient.setQueryDefaults(['*'], {
-  onError: (error) => {
-    console.error('Query error:', error);
-  }
-});
-
-queryClient.setMutationDefaults(['*'], {
-  onError: (error) => {
-    console.error('Mutation error:', error);
+// Set up global error handling using proper API
+// Use meta property for error handling which is the correct way in latest TanStack Query
+queryClient.setDefaultOptions({
+  queries: {
+    meta: {
+      onError: (error: Error) => {
+        console.error('Query error:', error);
+      }
+    }
+  },
+  mutations: {
+    meta: {
+      onError: (error: Error) => {
+        console.error('Mutation error:', error);
+      }
+    }
   }
 });
 

@@ -21,10 +21,8 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     // Use React SWC plugin with correct configuration
     react({
-      // Configure React refresh based on development mode
-      jsxImportSource: undefined,
-      tsDecorators: false,
-      plugins: mode === 'development' ? [['@swc/plugin-react-refresh', {}]] : []
+      // Simple configuration that works with HMR
+      swcReactRefresh: mode === 'development'
     }),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
