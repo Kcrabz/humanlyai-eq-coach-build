@@ -19,11 +19,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    // Use React SWC plugin with correct configuration for HMR support
-    react({
-      // The SWC React plugin doesn't use 'refresh' but enables HMR by default in dev mode
-      // We don't need to specify any special options for it
-    }),
+    // Use React SWC plugin for HMR support
+    react(),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration

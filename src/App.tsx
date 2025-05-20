@@ -69,7 +69,7 @@ function App() {
 
 export default App;
 
-// Enable Hot Module Replacement with error handling
+// Enable Hot Module Replacement with proper error handling
 if (import.meta.hot) {
   import.meta.hot.accept();
 }
