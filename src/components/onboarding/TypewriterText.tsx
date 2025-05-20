@@ -1,6 +1,7 @@
 
 import { motion } from "framer-motion";
 import { ReactNode, useState, useEffect } from "react";
+import { useAnimationTiming } from "@/hooks/useAnimationTiming";
 
 interface TypewriterTextProps {
   children: string;
@@ -25,14 +26,12 @@ export const TypewriterText = ({
 }: TypewriterTextProps) => {
   const text = children.toString();
   const [isComplete, setIsComplete] = useState(false);
+  const { getTypewriterTiming } = useAnimationTiming();
   
   // Calculate stagger delay based on speed setting
   const getStaggerDelay = () => {
-    switch (speed) {
-      case "slow": return 0.15;
-      case "fast": return 0.05;
-      default: return 0.1;
-    }
+    const { charStagger, wordStagger } = getTypewriterTiming(speed);
+    return animationType === "character" ? charStagger / 1000 : wordStagger / 1000;
   };
   
   // Handle different animation types
@@ -68,9 +67,12 @@ export const TypewriterText = ({
   
   // Track animation completion to hide cursor
   useEffect(() => {
+    const staggerDelay = getStaggerDelay();
+    const totalDuration = delay + (text.length * staggerDelay) + 0.5; // Add a small buffer
+    
     const timer = setTimeout(() => {
       setIsComplete(true);
-    }, delay * 1000 + (text.length * getStaggerDelay() * 1000) + 500);
+    }, totalDuration * 1000);
     
     return () => clearTimeout(timer);
   }, [text, delay, speed]);

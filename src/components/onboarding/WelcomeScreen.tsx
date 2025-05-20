@@ -3,9 +3,11 @@ import { useOnboarding } from "@/context/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { TypewriterText } from "./TypewriterText";
+import { useAnimationTiming } from "@/hooks/useAnimationTiming";
 
 export const WelcomeScreen = () => {
   const { completeStep } = useOnboarding();
+  const { framerPresets } = useAnimationTiming();
   
   return (
     <motion.div 
@@ -27,9 +29,8 @@ export const WelcomeScreen = () => {
         
         <motion.h1 
           className="text-2xl md:text-3xl font-bold mb-6 text-gray-800 tracking-tight"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          {...framerPresets.fadeIn}
+          transition={{ delay: 0.2, ...framerPresets.fadeIn.transition }}
         >
           Meet Your EQ Coach
         </motion.h1>
