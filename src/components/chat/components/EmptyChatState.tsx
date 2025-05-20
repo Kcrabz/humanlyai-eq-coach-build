@@ -1,31 +1,28 @@
 
 import React from "react";
+import { KaiAvatar } from "./KaiAvatar";
 
 export function EmptyChatState() {
   return (
-    <div className="flex flex-col items-center justify-center h-full text-center p-4">
-      <div className="mb-4">
-        <span className="inline-block p-4 rounded-full bg-humanly-teal-light/10">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-humanly-teal"
-          >
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-          </svg>
-        </span>
+    <div className="flex flex-col items-center justify-center h-full">
+      <div className="mb-6">
+        <KaiAvatar size="lg" />
       </div>
-      <h3 className="text-xl font-medium">Your EQ Coach is Ready</h3>
-      <p className="text-muted-foreground mt-2 max-w-md">
-        Ask a question or share what's on your mind to start your coaching session.
+      <h3 className="text-xl font-medium mb-2">Welcome to your EQ coaching session</h3>
+      <p className="text-center text-muted-foreground mb-6">
+        I'm Kai, your personal emotional intelligence coach. How can I help you today?
       </p>
+      <div className="space-y-3 max-w-md w-full">
+        <button className="w-full p-3 text-left hover:bg-gray-50 rounded-lg border border-gray-100 transition-colors">
+          What is emotional intelligence?
+        </button>
+        <button className="w-full p-3 text-left hover:bg-gray-50 rounded-lg border border-gray-100 transition-colors">
+          How can I improve my communication skills?
+        </button>
+        <button className="w-full p-3 text-left hover:bg-gray-50 rounded-lg border border-gray-100 transition-colors">
+          Help me understand my emotions better
+        </button>
+      </div>
     </div>
   );
 }

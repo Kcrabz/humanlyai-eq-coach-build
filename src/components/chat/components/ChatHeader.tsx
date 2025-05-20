@@ -2,6 +2,7 @@
 import { ChatLeftSidebarTrigger } from "@/components/chat/sidebar/ChatLeftSidebarTrigger";
 import { ChatRightSidebarTrigger } from "@/components/chat/sidebar/ChatRightSidebarTrigger";
 import { StartNewChatButton } from "./StartNewChatButton";
+import { KaiAvatar } from "./KaiAvatar";
 
 interface ChatHeaderProps {
   hasCompletedAssessment: boolean;
@@ -14,6 +15,7 @@ export function ChatHeader({ hasCompletedAssessment, userArchetype, onStartAsses
     <div className="enhanced-header p-3 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <ChatLeftSidebarTrigger />
+        <KaiAvatar size="sm" />
         <h1 className="font-medium text-lg bg-gradient-to-r from-humanly-indigo to-humanly-teal bg-clip-text text-transparent">
           Kai | EQ Coach
         </h1>

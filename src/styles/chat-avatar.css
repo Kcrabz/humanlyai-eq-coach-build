@@ -1,0 +1,49 @@
+
+/* Kai Avatar Animation */
+.kai-avatar-container {
+  position: relative;
+}
+
+.kai-avatar-container .kai-glow {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, #6366f1, #06b6d4);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+.kai-avatar-container:hover .kai-glow {
+  opacity: 0.5;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+}
+
+/* Style the avatar in typed responses */
+.typing-container .kai-avatar {
+  animation: subtle-bounce 2s infinite;
+}
+
+@keyframes subtle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
