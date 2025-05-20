@@ -12,8 +12,10 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    // Use React SWC plugin with default configuration for HMR support
-    react(),
+    // Use React SWC plugin with explicit configuration for HMR support
+    react({
+      plugins: [['@swc/plugin-react-refresh', {}]],
+    }),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
