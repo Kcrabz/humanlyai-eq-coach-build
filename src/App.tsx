@@ -17,17 +17,24 @@ const queryClient = new QueryClient({
       staleTime: 30000,
       refetchOnWindowFocus: false, // Disable automatic refetching when window gains focus
       refetchOnReconnect: true, // Enable refetching when reconnecting
-      onError: (error) => {
-        console.error('Query error:', error);
-      }
     },
     mutations: {
       retry: 1,
-      onError: (error) => {
-        console.error('Mutation error:', error);
-      }
     }
   },
+});
+
+// Set up global error handlers
+queryClient.setQueryDefaults(['*'], {
+  onError: (error) => {
+    console.error('Query error:', error);
+  }
+});
+
+queryClient.setMutationDefaults(['*'], {
+  onError: (error) => {
+    console.error('Mutation error:', error);
+  }
 });
 
 // Provider wrapper component for better organization
