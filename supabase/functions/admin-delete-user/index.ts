@@ -83,7 +83,46 @@ Deno.serve(async (req) => {
     
     console.log(`Admin user ${user.email} deleting user ${userId}`);
     
-    // Delete the user
+    // First, delete related records in the user_streaks table to avoid foreign key constraint violations
+    const { error: streaksDeleteError } = await supabaseAdmin
+      .from('user_streaks')
+      .delete()
+      .eq('user_id', userId);
+    
+    if (streaksDeleteError) {
+      console.error("Error deleting user streaks:", streaksDeleteError);
+      // Continue with deletion even if this fails - it may not exist
+    }
+    
+    // Delete other related records as needed
+    const tables = [
+      'user_engagement_metrics',
+      'email_preferences',
+      'user_login_history',
+      'user_archived_memories',
+      'chat_logs',
+      'chat_messages',
+      'usage_logs',
+      'user_api_keys',
+      'user_achievements',
+      'eq_breakthroughs',
+      'profiles'
+    ];
+    
+    // Delete data from related tables sequentially
+    for (const table of tables) {
+      const { error: tableDeleteError } = await supabaseAdmin
+        .from(table)
+        .delete()
+        .eq('user_id', userId);
+      
+      if (tableDeleteError) {
+        console.log(`Note: Could not delete from ${table}:`, tableDeleteError);
+        // Continue with other deletions even if one table fails - it may not exist or have records
+      }
+    }
+    
+    // Finally delete the user
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     
     if (deleteError) {
