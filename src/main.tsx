@@ -63,14 +63,28 @@ window.isPwaMode = function(): boolean {
 // Initialize the application with error handling
 const initializeApp = () => {
   try {
+    console.log("Initializing application...");
+    
+    // Add a global error handler to catch React refresh errors
+    window.addEventListener('error', (event) => {
+      console.error("Global error caught:", event.error);
+      if (event.error?.message?.includes("React refresh")) {
+        console.error("React refresh error detected. This might be a temporary issue. Trying to recover...");
+        // Attempt recovery by forcing a full page reload after a short delay
+        setTimeout(() => window.location.reload(), 1000);
+      }
+    });
+    
     const rootElement = document.getElementById("root");
     if (!rootElement) {
       console.error("Root element not found!");
       return;
     }
 
+    console.log("Creating React root...");
     const reactRoot = createRoot(rootElement);
     
+    console.log("Rendering app...");
     reactRoot.render(
       <BrowserRouter>
         <App />
@@ -87,6 +101,7 @@ const initializeApp = () => {
     const mediaQueryList = window.matchMedia('(display-mode: standalone)');
     mediaQueryList.addEventListener('change', initPwaFeatures);
     
+    console.log("Application initialized successfully");
   } catch (err) {
     console.error('Failed to initialize application:', err);
     // Display a fallback error message in the DOM
@@ -104,4 +119,5 @@ const initializeApp = () => {
 };
 
 // Initialize the application
+console.log("Starting application initialization...");
 initializeApp();
