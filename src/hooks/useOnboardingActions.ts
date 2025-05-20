@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { OnboardingStep } from "@/types/onboarding";
 import { useAuth } from "@/context/AuthContext";
@@ -32,7 +31,6 @@ export const useOnboardingActions = (
       if (step === "welcome") {
         // No backend saving needed for welcome step, just move to next step
         // Add welcome to completed steps
-        const updatedCompletedSteps = [...state.completedSteps, "welcome"];
         goToStep("name");
         setProcessingStep(null);
         return;
