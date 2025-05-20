@@ -14,11 +14,14 @@ export default defineConfig(({ mode }) => ({
       // Properly configure HMR to make sure it works reliably
       timeout: 120000,
       overlay: true,
+      protocol: 'ws',
     },
   },
   plugins: [
-    // Use React SWC plugin with default configuration which includes HMR
-    react(),
+    // Use React SWC plugin with explicit HMR configuration
+    react({
+      plugins: [["@swc/plugin-react-refresh", {}]],
+    }),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
