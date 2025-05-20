@@ -20,9 +20,10 @@ export const WelcomeScreen = () => {
     Array(messages.length).fill(false)
   );
   
-  // Set up animation timing for the staggered message appearance
+  // Set up animation timing with slower delays between each message
   useEffect(() => {
-    const delays = [500, 1400, 2300, 3200]; // Specific delays per message
+    // Increased delays between messages (in milliseconds)
+    const delays = [500, 2500, 4500, 6500]; // Much slower progression between bubbles
     
     messages.forEach((_, index) => {
       setTimeout(() => {
