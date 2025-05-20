@@ -151,16 +151,30 @@ export const useOnboardingActions = (
       }
 
       // Determine the next step
-      let nextStep: OnboardingStep = step;
-      if (step === "welcome") nextStep = "name";
-      else if (step === "name") nextStep = "goal";
-      else if (step === "goal") nextStep = "archetype";
-      else if (step === "archetype") nextStep = "coaching";
-      else if (step === "coaching") nextStep = "complete";
+      let nextStep: OnboardingStep;
       
-      // Add the completed step to completedSteps
-      // Fixed: Removed setState and using the function passed from useOnboardingState
-      // to properly update state in the parent component
+      // Use type-safe approach for step comparisons
+      switch (step) {
+        case "welcome":
+          nextStep = "name";
+          break;
+        case "name":
+          nextStep = "goal";
+          break;
+        case "goal":
+          nextStep = "archetype";
+          break;
+        case "archetype":
+          nextStep = "coaching";
+          break;
+        case "coaching":
+          nextStep = "complete";
+          break;
+        default:
+          nextStep = step;
+      }
+      
+      // Move to the next step
       goToStep(nextStep);
       setProcessingStep(null);
     } catch (error) {
