@@ -11,3 +11,8 @@ export { AuthProvider, useAuth, AuthContext };
 
 // Default export for convenience
 export default AuthContext;
+
+// Enable HMR for this module
+if (import.meta.hot) {
+  import.meta.hot.accept();
+}
