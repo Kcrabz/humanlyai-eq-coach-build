@@ -36,7 +36,7 @@ export const WelcomeScreen = () => {
         
         <div className="space-y-6 mb-10">
           <TypewriterText 
-            className="text-lg text-humanly-gray-dark leading-relaxed"
+            className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
             delay={0.5}
           >
             Hey there, I'm Kai, your EQ coach. I'm here to help you get better at the stuff that actually matters. 
@@ -44,14 +44,14 @@ export const WelcomeScreen = () => {
           </TypewriterText>
           
           <TypewriterText 
-            className="text-lg text-humanly-gray-dark leading-relaxed"
+            className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
             delay={4}
           >
             No therapy talk. No fake hype. Just honest coaching to help you grow.
           </TypewriterText>
           
           <TypewriterText 
-            className="text-lg text-humanly-gray-dark leading-relaxed"
+            className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
             delay={6}
           >
             Before we begin, I'll ask you a few quick questions. It helps me get to know you, 

@@ -17,15 +17,15 @@ export const TypewriterText = ({
 }: TypewriterTextProps) => {
   const text = children.toString();
   
-  // Create an array of letters for animation
-  const letters = Array.from(text);
+  // Split by words for animation similar to landing page
+  const words = text.split(" ");
   
-  // Animation configuration for staggered typing effect
+  // Animation configuration for staggered typing effect by word
   const container = {
     hidden: { opacity: 0 },
     visible: (i = 1) => ({
       opacity: 1,
-      transition: { staggerChildren: 0.03, delayChildren: delay * i }
+      transition: { staggerChildren: 0.1, delayChildren: delay * i }
     })
   };
   
@@ -47,17 +47,19 @@ export const TypewriterText = ({
 
   return (
     <motion.p
-      className={className}
+      className={`${className} overflow-wrap-anywhere break-words`}
       variants={container}
       initial="hidden"
       animate="visible"
     >
-      {letters.map((letter, index) => (
+      {words.map((word, index) => (
         <motion.span
           key={index}
+          className="inline-block"
           variants={child}
+          style={{ marginRight: index < words.length - 1 ? '0.15em' : '0' }}
         >
-          {letter === " " ? "\u00A0" : letter}
+          {word}
         </motion.span>
       ))}
     </motion.p>

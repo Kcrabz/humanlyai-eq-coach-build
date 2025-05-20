@@ -36,6 +36,12 @@
   animation: fade-in-word 0.4s ease-in-out forwards;
 }
 
+/* Text wrapping utilities */
+.overflow-wrap-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 /* Header fade-in animation - enhanced for visibility */
 @keyframes header-fade-in {
   from {
