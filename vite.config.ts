@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -11,7 +12,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    // Use the React SWC plugin with default settings for proper HMR
+    // Use React SWC plugin with default configuration
     react(),
     mode === 'development' && componentTagger(),
     VitePWA({
