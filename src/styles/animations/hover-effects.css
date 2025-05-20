@@ -1,0 +1,65 @@
+
+/* Input focus animation with easier transition */
+.input-focus-animation:focus {
+  @apply ring-2 ring-primary/30 transition-all duration-500;
+  transform: scale(1.01);
+}
+
+/* Selection card animation with smoother effects */
+.selection-card {
+  @apply transition-all duration-300 relative overflow-hidden shadow-soft;
+}
+
+.selection-card::after {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-humanly-indigo/5 to-humanly-teal/5 opacity-0 transition-opacity duration-300;
+}
+
+.selection-card:hover::after {
+  @apply opacity-100;
+}
+
+.selection-card.selected {
+  @apply scale-[1.02] shadow-zen;
+}
+
+.selection-card.selected::after {
+  @apply opacity-100 bg-gradient-to-r from-humanly-indigo/10 to-humanly-teal/10;
+}
+
+/* New hover link animation */
+.hover-link {
+  @apply relative inline-block;
+}
+
+.hover-link:after {
+  content: '';
+  @apply absolute w-full h-0.5 bg-humanly-indigo/70 bottom-0 left-0 scale-x-0 transition-transform duration-300 origin-bottom-right;
+}
+
+.hover-link:hover:after {
+  @apply scale-x-100 origin-bottom-left;
+}
+
+/* Zen hover effect for cards */
+.zen-hover {
+  @apply transition-all duration-500;
+}
+
+.zen-hover:hover {
+  @apply -translate-y-1 shadow-zen;
+}
+
+/* Subtle pulsing animation for CTA elements */
+@keyframes subtle-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 3s ease-in-out infinite;
+}

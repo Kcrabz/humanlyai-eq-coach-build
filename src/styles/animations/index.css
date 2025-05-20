@@ -1,0 +1,6 @@
+
+/* Import individual animation files */
+@import './basic-animations.css';
+@import './text-animations.css';
+@import './hover-effects.css';
+@import './transitions.css';

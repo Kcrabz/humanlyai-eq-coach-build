@@ -1,0 +1,69 @@
+
+/* Basic animation keyframes */
+@keyframes blob-float {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-15px) scale(1.03);
+  }
+}
+
+/* Blob animations with improved calmness */
+.blob-animation {
+  animation: blob-float 12s ease-in-out infinite;
+}
+
+.blob-animation-delayed {
+  animation: blob-float 12s ease-in-out infinite;
+  animation-delay: 3s;
+}
+
+/* Header fade-in animation - enhanced for visibility */
+@keyframes header-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.header-fade-in {
+  animation: header-fade-in 0.7s ease-out forwards;
+  will-change: opacity, transform;
+}
+
+/* Breathing animation for meditation elements */
+.breathe-animation {
+  animation: breathe 8s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Animation for gradient backgrounds */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
