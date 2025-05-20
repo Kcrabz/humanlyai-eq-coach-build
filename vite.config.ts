@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -14,12 +15,24 @@ export default defineConfig(({ mode }) => ({
       timeout: 120000,
       overlay: true,
       protocol: 'ws',
-      clientPort: 443, // Allow secure connections
+      clientPort: undefined, // Let Vite handle the port automatically
+      host: undefined, // Let Vite determine the host
     },
   },
   plugins: [
-    // Use React SWC plugin with default configuration
-    react(),
+    // Use React SWC plugin with React refresh explicitly enabled
+    react({
+      swcOptions: {
+        jsc: {
+          transform: {
+            react: {
+              refresh: true,
+              development: mode === 'development',
+            },
+          },
+        },
+      },
+    }),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration

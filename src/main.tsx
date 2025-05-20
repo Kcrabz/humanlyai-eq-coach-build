@@ -105,10 +105,26 @@ const initializeApp = () => {
 // Initialize the application
 initializeApp();
 
-// Enable Hot Module Replacement (HMR)
+// Enable Hot Module Replacement (HMR) 
+// Use more robust error handling for HMR
 if (import.meta.hot) {
-  import.meta.hot.accept('./App', () => {
+  import.meta.hot.accept(['./App'], (newModule) => {
     console.log('HMR update for App component');
-    initializeApp();
+    try {
+      initializeApp();
+    } catch (err) {
+      console.error('Error during HMR update:', err);
+      // Force reload the page if HMR fails
+      window.location.reload();
+    }
+  });
+  
+  // Add global error handler for HMR failures
+  import.meta.hot.on('vite:beforeUpdate', () => {
+    console.log('HMR update initiated');
+  });
+  
+  import.meta.hot.on('vite:error', (err) => {
+    console.error('Vite HMR error:', err);
   });
 }

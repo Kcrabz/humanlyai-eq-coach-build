@@ -9,13 +9,24 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ChatMemoryProvider } from "./context/ChatMemoryContext";
 import { THEME_STORAGE_KEY } from "./constants/storageKeys";
 
-// Create a new query client
+// Create a new query client with more robust error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
       staleTime: 30000,
+      refetchOnWindowFocus: false, // Disable automatic refetching when window gains focus
+      refetchOnReconnect: true, // Enable refetching when reconnecting
+      onError: (error) => {
+        console.error('Query error:', error);
+      }
     },
+    mutations: {
+      retry: 1,
+      onError: (error) => {
+        console.error('Mutation error:', error);
+      }
+    }
   },
 });
 
@@ -45,7 +56,7 @@ function App() {
 
 export default App;
 
-// Enable Hot Module Replacement
+// Enable Hot Module Replacement with error handling
 if (import.meta.hot) {
   import.meta.hot.accept();
 }
