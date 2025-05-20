@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -15,14 +14,11 @@ export default defineConfig(({ mode }) => ({
     react({
       // Use proper SWC configuration for React refresh
       plugins: [
-        ['@swc/plugin-react-refresh', { mode: mode === 'development' ? 'development' : 'production' }]
+        ['@swc/plugin-react-refresh']
       ],
-      // Correctly specify which files to include
-      include: "**/*.tsx",
     }),
     mode === 'development' && componentTagger(),
     VitePWA({
-      // ... keep existing code (PWA configuration options)
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
       manifest: {
