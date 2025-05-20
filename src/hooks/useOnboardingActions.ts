@@ -162,11 +162,8 @@ export const useOnboardingActions = (
       else if (step === "coaching") nextStep = "complete";
       
       // Add the completed step to completedSteps
-      setState(prev => ({
-        ...prev,
-        completedSteps: [...prev.completedSteps, step]
-      }));
-      
+      // Fixed: Removed setState and using the function passed from useOnboardingState
+      // to properly update state in the parent component
       goToStep(nextStep);
       setProcessingStep(null);
     } catch (error) {
