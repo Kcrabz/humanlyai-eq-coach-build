@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -12,10 +11,8 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    // Use React SWC plugin with explicit configuration for HMR support
-    react({
-      plugins: [['@swc/plugin-react-refresh', {}]],
-    }),
+    // Use React SWC plugin with default configuration which includes HMR support
+    react(),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
