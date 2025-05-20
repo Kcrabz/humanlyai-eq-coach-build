@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect, useContext } from "react";
 import AuthContext from "./AuthContext";
 import { useAuthSession } from "@/hooks/useAuthSession";
@@ -157,8 +158,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
-// Setting up proper module for HMR
-if (import.meta.hot) {
-  import.meta.hot.accept();
-}
