@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -12,8 +11,14 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [
-    // Use React SWC plugin with default configuration
-    react(),
+    // Use React SWC plugin with explicit refresh configuration
+    react({
+      plugins: [],
+      jsxImportSource: undefined,
+      tsDecorators: false,
+      devTarget: 'es2022',
+      swcrc: false
+    }),
     mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'autoUpdate',
