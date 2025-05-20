@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -19,11 +20,12 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    // Use React SWC plugin with React refresh explicitly enabled
+    // Use React SWC plugin with development mode flag
     react({
-      plugins: [
-        ['@swc/plugin-react-refresh', { development: mode === 'development' }]
-      ]
+      // The SWC plugin automatically handles React refresh in development mode
+      // No need for explicit configuration
+      development: mode === 'development',
+      refresh: mode === 'development',
     }),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),

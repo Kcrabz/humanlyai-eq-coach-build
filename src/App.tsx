@@ -22,12 +22,18 @@ const queryClient = new QueryClient({
       retry: 1,
     }
   },
-  logger: {
-    log: console.log,
-    warn: console.warn,
-    // Override error logger to include our custom handling
-    error: (error) => {
-      console.error('Query/mutation error:', error);
+});
+
+// Override the default error handling with a global error handler
+queryClient.setDefaultOptions({
+  queries: {
+    onError: (error) => {
+      console.error('Query error:', error);
+    }
+  },
+  mutations: {
+    onError: (error) => {
+      console.error('Mutation error:', error);
     }
   }
 });
