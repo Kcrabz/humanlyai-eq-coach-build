@@ -9,7 +9,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export default AuthContext;
 
-// Enable HMR for this module
+// Enable HMR for this module - using if statement instead of direct export
 if (import.meta.hot) {
   import.meta.hot.accept();
 }

@@ -159,7 +159,7 @@ export const useAuth = () => {
   return context;
 };
 
-// Enable HMR for this module using the standard vite approach
+// Enable HMR for this module - using if statement instead of direct export
 if (import.meta.hot) {
   import.meta.hot.accept();
 }
