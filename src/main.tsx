@@ -70,7 +70,9 @@ const initializeApp = () => {
     }
 
     // Create root and render app
-    createRoot(root).render(
+    const reactRoot = createRoot(root);
+    
+    reactRoot.render(
       <BrowserRouter>
         <App />
       </BrowserRouter>

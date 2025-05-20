@@ -10,11 +10,15 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
-    hmr: true, // Simplified HMR setting
+    hmr: {
+      overlay: true,
+    },
   },
   plugins: [
-    // Use React SWC plugin with default configuration for proper HMR
-    react(),
+    // Use React SWC plugin with proper configuration for HMR
+    react({
+      refresh: true,
+    }),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
