@@ -12,17 +12,10 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react({
-      // Configure React refresh properly
-      swcOptions: {
-        jsc: {
-          transform: {
-            react: {
-              refresh: true,
-              development: mode === 'development',
-            }
-          }
-        }
-      },
+      // Use proper SWC configuration for React refresh
+      jsxImportSource: 'react',
+      dev: mode === 'development',
+      refresh: true,
       // Correctly specify which files to include
       include: "**/*.tsx",
     }),
