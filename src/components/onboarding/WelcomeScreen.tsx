@@ -2,6 +2,7 @@
 import { useOnboarding } from "@/context/OnboardingContext";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { TypewriterText } from "./TypewriterText";
 
 export const WelcomeScreen = () => {
   const { completeStep } = useOnboarding();
@@ -34,49 +35,39 @@ export const WelcomeScreen = () => {
         </motion.h1>
         
         <div className="space-y-6 mb-10">
-          <motion.p 
+          <TypewriterText 
             className="text-lg text-humanly-gray-dark leading-relaxed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
+            delay={0.5}
           >
             Hey there, I'm Kai, your EQ coach. I'm here to help you get better at the stuff that actually matters. 
             Communicating clearly. Managing your emotions. Responding instead of reacting.
-          </motion.p>
+          </TypewriterText>
           
-          <motion.p 
+          <TypewriterText 
             className="text-lg text-humanly-gray-dark leading-relaxed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            delay={4}
           >
             No therapy talk. No fake hype. Just honest coaching to help you grow.
-          </motion.p>
+          </TypewriterText>
           
-          <motion.p 
+          <TypewriterText 
             className="text-lg text-humanly-gray-dark leading-relaxed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            delay={6}
           >
             Before we begin, I'll ask you a few quick questions. It helps me get to know you, 
             and tailor the coaching experience to best suit your needs.
-          </motion.p>
+          </TypewriterText>
         </div>
         
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6, duration: 0.5 }}
-        >
+        <div className="relative group">
           <Button 
             onClick={() => completeStep("welcome")}
-            size="lg"
-            className="bg-gradient-to-r from-humanly-indigo to-humanly-teal text-white px-8 py-6 h-auto font-medium text-lg rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+            className="py-6 px-8 text-base rounded-xl shadow-sm transition-all duration-300 hover:shadow-md hover:scale-[1.02] bg-gradient-to-r from-humanly-teal to-humanly-teal/90"
           >
             Let's get started
           </Button>
-        </motion.div>
+          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-humanly-teal/20 to-humanly-green/20 rounded-xl blur-md opacity-0 group-hover:opacity-30 transition-opacity duration-300"></div>
+        </div>
       </div>
     </motion.div>
   );
