@@ -4,6 +4,12 @@ import { corsHeaders, TIER_LIMITS } from "./utils.ts";
 
 // Check if user has exceeded usage limits
 export function checkUsageLimit(currentUsage: number, subscriptionTier: string): number {
+  // Handle trial users (users still within their first 24 hours)
+  if (subscriptionTier.toLowerCase() === 'trial') {
+    // For trial users, return a high limit (effectively unlimited)
+    return TIER_LIMITS.premium; // Using premium tier limit as a high cap for trial
+  }
+  
   // Get tier limit based on subscription tier
   const tierLimit = TIER_LIMITS[subscriptionTier.toLowerCase()] || TIER_LIMITS.free;
   

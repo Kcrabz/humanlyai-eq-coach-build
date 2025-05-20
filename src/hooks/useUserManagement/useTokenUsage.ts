@@ -45,10 +45,10 @@ export const useTokenUsage = () => {
         console.log(`Found token usage records for ${usageData.length} entries`);
       }
       
-      // Now get the users' subscription tiers to determine their limits
+      // Now get the users' subscription tiers and account creation dates to determine limits and trial status
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, subscription_tier')
+        .select('id, subscription_tier, created_at')
         .in('id', userIds);
       
       if (profilesError) {
@@ -60,16 +60,31 @@ export const useTokenUsage = () => {
             usageMap[profile.id] = { usage: 0, limit: 0 };
           }
           
+          // Check if user is in trial period (first 24 hours)
+          let isInTrial = false;
+          if (profile.created_at) {
+            const createdDate = new Date(profile.created_at);
+            const now = new Date();
+            const hoursSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60);
+            isInTrial = hoursSinceCreation <= 24;
+          }
+          
+          // Set effective subscription tier
+          const effectiveTier = isInTrial ? 'trial' : profile.subscription_tier;
+          
           // Set limit based on subscription tier
-          switch(profile.subscription_tier) {
+          switch(effectiveTier) {
+            case 'trial':
+              usageMap[profile.id].limit = 50000; // High limit for trial users
+              break;
             case 'premium':
-              usageMap[profile.id].limit = 100000; // 100k tokens for premium
+              usageMap[profile.id].limit = 25000; // 25k tokens for premium
               break;
             case 'basic':
-              usageMap[profile.id].limit = 50000;  // 50k tokens for basic
+              usageMap[profile.id].limit = 10000; // 10k tokens for basic
               break;
-            default: // free or trial
-              usageMap[profile.id].limit = 25000;  // 25k tokens for free/trial
+            default: // free
+              usageMap[profile.id].limit = 500;  // 500 tokens for free
           }
         });
       }

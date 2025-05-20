@@ -71,7 +71,7 @@ export async function getUserProfileAndUsage(supabaseClient: any, userId: string
     // Get user profile
     const { data: profile, error: profileError } = await supabaseClient
       .from('profiles')
-      .select('eq_archetype, coaching_mode, subscription_tier')
+      .select('eq_archetype, coaching_mode, subscription_tier, created_at')
       .eq('id', userId)
       .single();
       
@@ -80,6 +80,7 @@ export async function getUserProfileAndUsage(supabaseClient: any, userId: string
       
       // Try to create a default profile if none exists
       try {
+        const now = new Date().toISOString();
         await supabaseClient
           .from('profiles')
           .insert({
@@ -87,7 +88,8 @@ export async function getUserProfileAndUsage(supabaseClient: any, userId: string
             eq_archetype: 'Not set',
             coaching_mode: 'normal',
             subscription_tier: 'free',
-            onboarded: true
+            onboarded: true,
+            created_at: now
           });
       } catch (createError) {
         console.error(`Error creating default profile: ${createError.message || createError}`);
@@ -109,16 +111,35 @@ export async function getUserProfileAndUsage(supabaseClient: any, userId: string
     
     console.log(`Current usage: ${currentUsage} tokens for ${monthYear}`);
     
+    // If we don't have creation date, try to get it from auth.users
+    let createdAt = profile?.created_at;
+    if (!createdAt) {
+      try {
+        // Try to get user creation date from auth
+        const { data: authUser } = await supabaseClient.auth.admin.getUserById(userId);
+        if (authUser?.user?.created_at) {
+          createdAt = authUser.user.created_at;
+        }
+      } catch (authError) {
+        console.error("Error getting user creation date:", authError);
+      }
+    }
+    
     // Use profile if it exists, otherwise use defaults
     const result = {
       archetype: profile?.eq_archetype || 'Not set',
       coachingMode: profile?.coaching_mode || 'normal',
       subscriptionTier: profile?.subscription_tier || 'free',
+      createdAt: createdAt || null,
       currentUsage,
       monthYear
     };
     
     console.log(`User profile info - Archetype: ${result.archetype}, Mode: ${result.coachingMode}, Tier: ${result.subscriptionTier}`);
+    if (result.createdAt) {
+      const hoursSinceCreation = (new Date().getTime() - new Date(result.createdAt).getTime()) / (1000 * 60 * 60);
+      console.log(`Account age: ${hoursSinceCreation.toFixed(1)} hours`);
+    }
     
     return result;
   } catch (error) {
@@ -129,6 +150,7 @@ export async function getUserProfileAndUsage(supabaseClient: any, userId: string
       archetype: 'Not set',
       coachingMode: 'normal',
       subscriptionTier: 'free',
+      createdAt: null,
       currentUsage: 0,
       monthYear: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`
     };

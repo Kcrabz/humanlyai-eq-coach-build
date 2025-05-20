@@ -21,6 +21,30 @@ export function ChatUsage() {
   // Don't display anything if no usage info or if it's not relevant
   if (!usageInfo || !user) return null;
   
+  // Check if user is in trial period (first 24 hours)
+  const isInTrial = user.subscription_tier === 'trial';
+  
+  // For trial users, show different messaging
+  if (isInTrial) {
+    return (
+      <div className="p-2 text-xs bg-blue-50 border-b">
+        <div className="flex justify-between items-center mb-1">
+          <span className="font-medium">Free Trial Active</span>
+          <div className="text-xs text-blue-600">24 Hour Unlimited Access</div>
+        </div>
+        <div className="mt-1 flex justify-between">
+          <span>Upgrade before trial ends to keep unlimited access</span>
+          <button 
+            onClick={() => navigate("/pricing")}
+            className="text-xs text-blue-600 hover:underline"
+          >
+            View Plans
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
   const { currentUsage, limit, percentage } = usageInfo;
   
   // Only show for high usage (over 70%)

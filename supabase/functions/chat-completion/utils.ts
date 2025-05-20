@@ -12,7 +12,9 @@ export const corsHeaders = {
 // Usage tier limits
 export const TIER_LIMITS = {
   free: 500,
-  premium: 25000  // Increased from 10000 to 25000
+  trial: 50000, // High limit for 24-hour trial (effectively unlimited)
+  basic: 10000,
+  premium: 25000
 };
 
 // Create standardized error response

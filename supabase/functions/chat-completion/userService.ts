@@ -27,15 +27,30 @@ export async function prepareUserData(req: Request, reqBody: any) {
   const { 
     archetype, 
     coachingMode, 
-    subscriptionTier, 
+    subscriptionTier,
+    createdAt,
     currentUsage, 
     monthYear 
   } = await getUserProfileAndUsage(supabaseClient, user.id);
   
+  // Determine if user is still in trial period (first 24 hours)
+  let effectiveSubscriptionTier = subscriptionTier || clientSubscriptionTier || 'free';
+  
+  // If account was created less than 24 hours ago, consider them in trial
+  if (createdAt) {
+    const createdDate = new Date(createdAt);
+    const now = new Date();
+    const hoursSinceCreation = (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursSinceCreation <= 24) {
+      console.log(`User in trial period: ${hoursSinceCreation.toFixed(1)} hours since creation`);
+      effectiveSubscriptionTier = 'trial';
+    }
+  }
+  
   // Use client-provided values as fallbacks if available
   const effectiveArchetype = archetype || clientArchetype || 'unknown';
   const effectiveCoachingMode = coachingMode || clientCoachingMode || 'normal';
-  const effectiveSubscriptionTier = subscriptionTier || clientSubscriptionTier || 'free';
   const effectivePrimaryTopic = clientPrimaryTopic || undefined;
   
   console.log(`User settings: archetype=${effectiveArchetype}, coachingMode=${effectiveCoachingMode}, tier=${effectiveSubscriptionTier}`);
@@ -64,7 +79,10 @@ export async function prepareUserData(req: Request, reqBody: any) {
 export async function getChatHistory(supabaseClient: any, userId: string, subscriptionTier: string, clientProvidedHistory: any[] = []) {
   let chatHistory = [];
   
-  if (subscriptionTier === 'premium') {
+  // For trial users, treat them like premium for history access
+  const effectiveTier = subscriptionTier === 'trial' ? 'premium' : subscriptionTier;
+  
+  if (effectiveTier === 'premium') {
     // For premium users, get history from database
     chatHistory = await retrieveChatHistory(supabaseClient, userId, 5);
   } else if (clientProvidedHistory.length > 0) {
@@ -72,9 +90,9 @@ export async function getChatHistory(supabaseClient: any, userId: string, subscr
     // Filter out system messages and keep only recent history
     chatHistory = clientProvidedHistory
       .filter(msg => msg.role === 'user' || msg.role === 'assistant')
-      .slice(0, subscriptionTier === 'basic' ? 8 : 4); // Basic: 4 exchanges, Free: 2 exchanges
+      .slice(0, effectiveTier === 'basic' ? 8 : 4); // Basic: 4 exchanges, Free: 2 exchanges
     
-    console.log(`Using ${chatHistory.length} messages from client-provided history for ${subscriptionTier} user`);
+    console.log(`Using ${chatHistory.length} messages from client-provided history for ${effectiveTier} user`);
   }
   
   return chatHistory;

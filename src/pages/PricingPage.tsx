@@ -12,6 +12,9 @@ const PricingPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const navigate = useNavigate();
   
+  // Check if user is still in trial period
+  const isInTrial = user?.subscription_tier === 'trial';
+  
   const handleSelectPlan = (planId: string) => {
     if (!user) {
       navigate("/signup");
@@ -39,6 +42,12 @@ const PricingPage = () => {
       <div className="max-w-5xl mx-auto">
         <div className="text-center space-y-4 mb-12">
           <h1 className="text-3xl md:text-4xl font-bold">Choose Your Plan</h1>
+          {isInTrial && (
+            <div className="bg-blue-50 text-blue-800 p-4 rounded-lg mb-6 max-w-2xl mx-auto">
+              <p className="font-medium">You're currently in your 24-hour free trial period!</p>
+              <p className="mt-1">Enjoy unlimited access to all features. Select a plan below to continue after your trial ends.</p>
+            </div>
+          )}
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Select the subscription that fits your emotional intelligence growth journey
           </p>
