@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -20,10 +19,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    // Use React SWC plugin with explicit fastRefresh option
-    react({
-      fastRefresh: true, // Explicitly enable Fast Refresh
-    }),
+    // Use React SWC plugin without the incorrect fastRefresh option
+    react(), // Use default configuration which already includes Fast Refresh
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
