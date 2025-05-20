@@ -1,4 +1,3 @@
-
 // Import existing providers
 import { AuthProvider } from "./context/auth/AuthProvider"; 
 import { ThemeProvider } from "./context/ThemeContext";
@@ -69,15 +68,7 @@ function App() {
 
 export default App;
 
-// Enable Hot Module Replacement with enhanced error handling
+// Enable Hot Module Replacement
 if (import.meta.hot) {
-  import.meta.hot.accept((err) => {
-    if (err) {
-      console.error("Error during App HMR update:", err);
-      // In case of severe error, you might want to reload the page
-      // window.location.reload();
-    } else {
-      console.log("App component successfully hot-updated");
-    }
-  });
+  import.meta.hot.accept();
 }
