@@ -30,7 +30,6 @@ export const useOnboardingActions = (
       // Save the step data based on which step it is
       if (step === "welcome") {
         // No backend saving needed for welcome step, just move to next step
-        // Add welcome to completed steps
         goToStep("name");
         setProcessingStep(null);
         return;
