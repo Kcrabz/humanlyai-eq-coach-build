@@ -153,25 +153,20 @@ export const useOnboardingActions = (
       // Determine the next step
       let nextStep: OnboardingStep;
       
-      // Use type-safe approach for step comparisons
-      switch (step) {
-        case "welcome":
-          nextStep = "name";
-          break;
-        case "name":
-          nextStep = "goal";
-          break;
-        case "goal":
-          nextStep = "archetype";
-          break;
-        case "archetype":
-          nextStep = "coaching";
-          break;
-        case "coaching":
-          nextStep = "complete";
-          break;
-        default:
-          nextStep = step;
+      // Use a type-safe approach with a type assertion to handle the step transitions
+      if (step === "welcome") {
+        nextStep = "name";
+      } else if (step === "name") {
+        nextStep = "goal";
+      } else if (step === "goal") {
+        nextStep = "archetype";
+      } else if (step === "archetype") {
+        nextStep = "coaching";
+      } else if (step === "coaching") {
+        nextStep = "complete";
+      } else {
+        // Default case - shouldn't reach here due to our type definition
+        nextStep = step;
       }
       
       // Move to the next step
