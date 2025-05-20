@@ -41,6 +41,7 @@ export const WelcomeScreen = () => {
             delay={0.5}
             showCursor={true}
             speed="normal"
+            animationType="word"
           >
             Hey there, I'm Kai, your EQ coach. I'm here to help you get better at the stuff that actually matters. 
             Communicating clearly. Managing your emotions. Responding instead of reacting.
@@ -48,15 +49,16 @@ export const WelcomeScreen = () => {
           
           <TypewriterText 
             className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
-            delay={4}
+            delay={3}
             speed="fast"
+            animationType="word"
           >
             No therapy talk. No fake hype. Just honest coaching to help you grow.
           </TypewriterText>
           
           <TypewriterText 
             className="text-lg text-humanly-gray-dark leading-relaxed mx-auto"
-            delay={6}
+            delay={5}
             speed="normal"
             animationType="word"
           >

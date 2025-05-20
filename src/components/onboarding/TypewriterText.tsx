@@ -90,7 +90,7 @@ export const TypewriterText = ({
     exit: { opacity: 0 }
   };
   
-  // Animation for word-level animation
+  // Animation for word-level animation - Enhanced for smoother appearance
   const wordChild = {
     visible: {
       opacity: 1,
