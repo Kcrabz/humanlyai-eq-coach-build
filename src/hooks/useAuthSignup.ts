@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@/types";
 import { setSecurityQuestion } from "@/services/securityQuestionService";
-import { useNavigate } from "react-router-dom";
 
 export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
   /**
@@ -28,10 +27,23 @@ export const useAuthSignup = (setUser: React.Dispatch<React.SetStateAction<User 
         }
       });
       
-      console.log("Signup response:", { success: !error, userId: data?.user?.id });
+      console.log("Signup response:", { success: !error, userId: data?.user?.id, error: error?.message });
       
       if (error) {
-        console.error("Signup error:", error.message);
+        console.error("Signup error:", error.message, "Error code:", error.code);
+        
+        // Handle specific error cases with user-friendly messages
+        if (error.message?.includes("User already registered") || error.code === "user_already_registered") {
+          toast.error("Account already exists", { 
+            description: "This email address is already registered. Please sign in instead.",
+            action: {
+              label: "Go to Login",
+              onClick: () => window.location.href = "/login"
+            }
+          });
+          return false;
+        }
+        
         toast.error("Signup failed", { description: error.message });
         return false;
       }

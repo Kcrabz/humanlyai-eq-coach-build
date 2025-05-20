@@ -16,6 +16,7 @@ import { useAuthDerivedState } from "./useAuthDerivedState";
 import { useAuthActionWrappers } from "./useAuthActionWrappers";
 import { isRunningAsPWA } from "@/utils/loginRedirectUtils";
 import { useLocation } from "react-router-dom";
+import { toast } from "sonner";
 
 /**
  * AuthProvider component that manages authentication state and provides it via context
@@ -74,6 +75,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setOnboardedWrapper, 
     resetPasswordWrapper 
   } = useAuthActionWrappers(user, profileCore, profileActions, authCore);
+  
+  // Debug auth changes
+  useEffect(() => {
+    console.log("Auth state updated:", { 
+      isAuthenticated, 
+      authEvent, 
+      isLoading, 
+      profileLoaded,
+      userId: user?.id ?? "None",
+      currentPath: location.pathname
+    });
+  }, [isAuthenticated, authEvent, user?.id, isLoading, profileLoaded, location.pathname]);
   
   // Special handling for PWA navigation
   useEffect(() => {

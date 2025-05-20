@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import { AlertCircle } from "lucide-react";
 import { AuthError } from "./AuthError";
 import { AuthSubmitButton } from "./AuthSubmitButton";
 import { SecurityQuestionSelect } from "./SecurityQuestionSelect";
@@ -7,6 +8,7 @@ import { RateLimitWarning } from "./rate-limit/RateLimitWarning";
 import { FormFields } from "./signup/FormFields";
 import { TermsAgreement } from "./signup/TermsAgreement";
 import { useSignupForm } from "@/hooks/useSignupForm";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export function SignupForm() {
   const {
@@ -38,7 +40,23 @@ export function SignupForm() {
       </div>
       
       <form className="space-y-4" onSubmit={handleSubmit}>
-        {errorMessage && <AuthError message={errorMessage} />}
+        {errorMessage && (
+          <AuthError message={
+            errorMessage.includes("already registered") || errorMessage.includes("already exists") 
+              ? (
+                <div className="flex flex-col gap-2">
+                  <span>{errorMessage}</span>
+                  <Link 
+                    to="/login" 
+                    className="text-humanly-teal hover:underline text-sm font-medium mt-1 inline-block"
+                  >
+                    Go to login page →
+                  </Link>
+                </div>
+              ) 
+              : errorMessage
+          } />
+        )}
         
         <RateLimitWarning rateLimitInfo={rateLimitInfo} />
         
@@ -72,6 +90,7 @@ export function SignupForm() {
           text="Create Account" 
           loadingText="Creating Account..." 
           disabled={rateLimitInfo?.isLimited}
+          data-testid="signup-submit-button"
         />
       </form>
       

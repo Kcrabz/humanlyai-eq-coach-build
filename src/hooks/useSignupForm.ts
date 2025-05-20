@@ -4,6 +4,7 @@ import { useSignupValidation } from "./signup/useSignupValidation";
 import { useSignupRateLimit } from "./signup/useSignupRateLimit";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export function useSignupForm() {
   const {
@@ -86,6 +87,7 @@ export function useSignupForm() {
     
     // Validate the form
     if (!validateForm()) {
+      console.log("Form validation failed:", validationErrors);
       return;
     }
     
@@ -97,6 +99,7 @@ export function useSignupForm() {
       const serverRateLimitError = await checkServerRateLimit(email);
       if (serverRateLimitError) {
         setErrorMessage(serverRateLimitError);
+        setIsSubmitting(false);
         return;
       }
       
@@ -106,12 +109,21 @@ export function useSignupForm() {
       
       // If signup was successful, redirect to onboarding
       if (success) {
-        navigate("/onboarding", { replace: true });
+        console.log("Signup successful, redirecting to onboarding");
+        setTimeout(() => {
+          navigate("/onboarding", { replace: true });
+        }, 500);
+      } else {
+        // Set error message if signup failed but no specific error was shown
+        setErrorMessage("Signup failed. Please try again or contact support.");
       }
     } catch (error) {
       console.error(`Error during signup:`, error);
       const message = error instanceof Error ? error.message : "Signup failed";
       setErrorMessage(message);
+      toast.error("Signup Error", {
+        description: message
+      });
       
       // Update client-side rate limit info after failure
       updateRateLimitAfterFailure();
