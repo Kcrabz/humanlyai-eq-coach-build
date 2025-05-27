@@ -60,20 +60,10 @@ window.isPwaMode = function(): boolean {
          (window.navigator as any).standalone === true;
 };
 
-// Initialize the application with error handling
+// Initialize the application
 const initializeApp = () => {
   try {
     console.log("Initializing application...");
-    
-    // Add a global error handler to catch React refresh errors
-    window.addEventListener('error', (event) => {
-      console.error("Global error caught:", event.error);
-      if (event.error?.message?.includes("React refresh")) {
-        console.error("React refresh error detected. This might be a temporary issue. Trying to recover...");
-        // Attempt recovery by forcing a full page reload after a short delay
-        setTimeout(() => window.location.reload(), 1000);
-      }
-    });
     
     const rootElement = document.getElementById("root");
     if (!rootElement) {
