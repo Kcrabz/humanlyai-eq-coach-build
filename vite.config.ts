@@ -1,4 +1,3 @@
-
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -15,14 +14,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   plugins: [
-    // Use React SWC plugin with explicit refresh configuration for better compatibility
-    react({
-      jsxImportSource: '@emotion/react',
-      jsxRuntime: 'automatic',
-      plugins: [
-        ['@swc/plugin-emotion', {}]
-      ]
-    }),
+    // Use React SWC plugin with minimal configuration for React refresh
+    react(),
     // Only use component tagger in development
     mode === 'development' && componentTagger(),
     // PWA plugin configuration
